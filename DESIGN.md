@@ -1,4 +1,4 @@
-# Secor: kafka message persistence layer
+# Pinterest Secor: kafka message persistence layer
 
 ## Prerequisites
 
@@ -6,7 +6,7 @@ This document assumes familiarity with [Apache Kafka].
 
 ## Objectives
 
-*Secor* is a service persisting [Kafka] logs to [Amazon S3]. Its design is motivated by the following needs:
+*Pinterest Secor* is a service persisting [Kafka] logs to [Amazon S3]. Its design is motivated by the following needs:
 
 * **minimized chance of data loss and corruption:** this is by far the highest priority objective. Logs are the basis of billing and as such they cannot lie,
 
@@ -30,7 +30,7 @@ No-goals:
 
 * **minimized resource footprint:** this may become an important objective at some point but currently we don’t optimize for machine or storage footprint.
 
-Secor will be initially used to persist Ads impression logs but in the future it may be considered as a replacement of the current logging pipeline.
+Pinterest Secor will be initially used to persist Ads impression logs but in the future it may be considered as a replacement of the current logging pipeline.
 
 ## Related work
 
@@ -46,7 +46,7 @@ There is a number of open source [Kafka] consumers saving data to [S3]. To the b
 
 ## Design overview
 
-Secor is a distributed [Kafka] *consumer*. Individual consumers are divided into *groups*. For every partition (of a [Kafka] topic) there is exactly one consumer in each group processing messages posted to that partition. You may think of a group as an application implementing a specific message filtering and/or conversion logic.
+Pinterest Secor is a distributed [Kafka] *consumer*. Individual consumers are divided into *groups*. For every partition (of a [Kafka] topic) there is exactly one consumer in each group processing messages posted to that partition. You may think of a group as an application implementing a specific message filtering and/or conversion logic.
 
 In the initial implementation, there are two groups, the backup group, and the partition group. The *backup* group simply persists all messages on [S3] in the format they are received by [Kafka]. It does not look into message content. The *partition* group parses each message to extract application-defined partition names. Messages are then grouped and stored in a directory structure arranged according to those names. The name "partition" is a bit overloaded as it is used to describe both the numeric Kafka topic partition as well as an arbitrary string derived from the message content. To disambiguate those two, while talking about the former we will always explicitly call it *Kafka partition*.
 
@@ -80,7 +80,7 @@ The *uploader* moves log files from local directory to [S3] and commits the last
 
 ### Offset management
 
-A Secor consumer is built on top of [Kafka high level consumer API](https://kafka.apache.org/documentation.html#highlevelconsumerapi). The offset of the last committed (persisted in [S3]) message for each topic/Kafka partition pair is stored in zookeeper. Certain types of events such as join of a new consumer or crash of an existing one trigger so called *rebalance*. Rebalance may change the allocation of topic/Kafka partitions to consumers. A topic/Kafka partition that changes the ownership will be consumed from the last committed offset + 1 by the new owner (note: offsets increase by one between messages). The greatest challenge in the design of the consumer logic is to handle rebalance events while guaranteeing that each message is persisted (in [S3]) exactly once. Below we outline an algorithm implementing a logic with this property.
+A Pinterest Secor consumer is built on top of [Kafka high level consumer API](https://kafka.apache.org/documentation.html#highlevelconsumerapi). The offset of the last committed (persisted in [S3]) message for each topic/Kafka partition pair is stored in zookeeper. Certain types of events such as join of a new consumer or crash of an existing one trigger so called *rebalance*. Rebalance may change the allocation of topic/Kafka partitions to consumers. A topic/Kafka partition that changes the ownership will be consumed from the last committed offset + 1 by the new owner (note: offsets increase by one between messages). The greatest challenge in the design of the consumer logic is to handle rebalance events while guaranteeing that each message is persisted (in [S3]) exactly once. Below we outline an algorithm implementing a logic with this property.
 
 #### Data structures
 
@@ -158,7 +158,7 @@ uploader.check_policy() {
 
 ## Output file names
 
-The output of consumers is stored on local (or EBS) disks first and eventually uploaded to s3. The local and s3 file name format follows the same pattern. Directory paths track topic and partition names. File basename contains the Kafka partition number and the Kafka offset of the first message in that file. Additionally, files are labeled with generation count. Generation is basically a version number of the Secor software that increments between non-compatible releases. Generations allow us to separate outputs of Secor versions during testing, rolling upgrades, etc. The consumer group is not included explicitly in the output path. We expect that the output of different consumer groups will go to different top-level directories.
+The output of consumers is stored on local (or EBS) disks first and eventually uploaded to s3. The local and s3 file name format follows the same pattern. Directory paths track topic and partition names. File basename contains the Kafka partition number and the Kafka offset of the first message in that file. Additionally, files are labeled with generation count. Generation is basically a version number of the Pinterest Secor software that increments between non-compatible releases. Generations allow us to separate outputs of Pinterest Secor versions during testing, rolling upgrades, etc. The consumer group is not included explicitly in the output path. We expect that the output of different consumer groups will go to different top-level directories.
 
 Putting this all together, a message with timestamp `<some_date:some_time>` written to topic `<some_topic>`, Kafka partition `<some_kafka_partition>` at offset `<some_offset>` by software with generation `<generation>` will end up in file `s3://logs/<some_topic>/<some_date>/<generation>_<some_kafka_parition>_<first_message_offset>.seq` where `<first_message_offset>` <= `<some_offset>`.
 
@@ -196,7 +196,7 @@ Assume that a parser bug caused misformatted output being written to s3 starting
 
 ### Zookeeper failing
 
-Secor won't be able to commit offsets while zk is down. As soon as zk comes back, Secor will resume commits.
+Pinterest Secor won't be able to commit offsets while zk is down. As soon as zk comes back, Pinterest Secor will resume commits.
 
 [Apache Kafka]:http://kafka.apache.org/
 [Kafka]:http://kafka.apache.org/
