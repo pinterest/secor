@@ -1,4 +1,4 @@
-# Pinterest Secor: kafka message persistence layer
+# Pinterest Secor: log persistence layer
 
 ## Prerequisites
 
