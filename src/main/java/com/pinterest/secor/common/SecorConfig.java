@@ -136,6 +136,10 @@ public class SecorConfig {
         return getString("tsdb.hostport");
     }
 
+    public String getTsdbBlacklistTopics() {
+        return getString("tsdb.blacklist.topics");
+    }
+
     private void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
             throw new RuntimeException("Failed to find required configuration option '" +
