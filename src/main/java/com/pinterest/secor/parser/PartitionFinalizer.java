@@ -31,8 +31,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Topic finalizer writes _SUCCESS files to date partitions that very likely won't be receiving
- * any new messages.
+ * Partition finalizer writes _SUCCESS files to date partitions that very likely won't be receiving
+ * any new messages. It also adds those partitions to Hive.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
@@ -145,7 +145,13 @@ public class PartitionFinalizer {
             if (FileUtil.exists(successFilePath)) {
                 return;
             }
-            mQuboleClient.addPartition(topic, "dt='" + partitionStr + "'");
+            try {
+                mQuboleClient.addPartition(topic, "dt='" + partitionStr + "'");
+            } catch (Exception e) {
+                LOG.error("failed to finalize topic " + topic + " partition dt=" + partitionStr,
+                        e);
+                continue;
+            }
             LOG.info("touching file " + successFilePath);
             FileUtil.touch(successFilePath);
         }

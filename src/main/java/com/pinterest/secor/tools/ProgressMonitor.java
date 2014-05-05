@@ -22,7 +22,6 @@ import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.parser.ThriftMessageParser;
-import com.pinterest.secor.util.StatsUtil;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 import org.slf4j.Logger;
@@ -36,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Progress monitor exports offset lags par topic partition.
+ * Progress monitor exports offset lags per topic partition.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
@@ -114,6 +113,9 @@ public class ProgressMonitor {
     public void exportStats() throws Exception {
         List<String> topics = mZookeeperConnector.getCommittedOffsetTopics();
         for (String topic : topics) {
+            if (topic.matches(mConfig.getTsdbBlacklistTopics())) {
+                continue;
+            }
             List<Integer> partitions = mZookeeperConnector.getCommittedOffsetPartitions(topic);
             for (Integer partition : partitions) {
                 TopicPartition topicPartition = new TopicPartition(topic, partition);
