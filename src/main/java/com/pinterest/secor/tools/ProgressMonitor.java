@@ -113,7 +113,9 @@ public class ProgressMonitor {
     public void exportStats() throws Exception {
         List<String> topics = mZookeeperConnector.getCommittedOffsetTopics();
         for (String topic : topics) {
-            if (topic.matches(mConfig.getTsdbBlacklistTopics())) {
+            if (topic.matches(mConfig.getTsdbBlacklistTopics()) ||
+                    !topic.matches(mConfig.getKafkaTopicFilter())) {
+                LOG.info("skipping topic " + topic);
                 continue;
             }
             List<Integer> partitions = mZookeeperConnector.getCommittedOffsetPartitions(topic);
