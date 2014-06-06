@@ -95,8 +95,8 @@ stop_secor() {
 }
 
 create_topic() {
-    run_command "${base_dir}/run_kafka_class.sh kafka.admin.CreateTopicCommand --zookeeper \
-        localhost:2181 --replica 1 --partition 2 --topic test > \
+    run_command "${base_dir}/run_kafka_class.sh kafka.admin.TopicCommand --create --zookeeper \
+        localhost:2181 --replication-factor 1 --partitions 2 --topic test > \
         ${LOGS_DIR}/create_topic.log 2>&1"
 }
 

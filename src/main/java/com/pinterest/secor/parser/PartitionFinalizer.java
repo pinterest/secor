@@ -202,16 +202,21 @@ public class PartitionFinalizer {
     public void finalizePartitions() throws Exception {
         List<String> topics = mZookeeperConnector.getCommittedOffsetTopics();
         for (String topic : topics) {
-            LOG.info("finalizing topic " + topic);
-            long finalizedTimestampMillis = getFinalizedTimestampMillis(topic);
-            LOG.info("finalized timestamp for topic " + topic + " is " + finalizedTimestampMillis);
-            if (finalizedTimestampMillis != -1) {
-                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                calendar.setTimeInMillis(finalizedTimestampMillis);
-                // Introduce a lag of one day and one hour.
-                calendar.add(Calendar.HOUR, -1);
-                calendar.add(Calendar.DAY_OF_MONTH, -1);
-                finalizePartitionsUpTo(topic, calendar);
+            if (!topic.matches(mConfig.getKafkaTopicFilter())) {
+                LOG.info("skipping topic " + topic);
+            } else {
+                LOG.info("finalizing topic " + topic);
+                long finalizedTimestampMillis = getFinalizedTimestampMillis(topic);
+                LOG.info("finalized timestamp for topic " + topic + " is " +
+                        finalizedTimestampMillis);
+                if (finalizedTimestampMillis != -1) {
+                    Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                    calendar.setTimeInMillis(finalizedTimestampMillis);
+                    // Introduce a lag of one day and one hour.
+                    calendar.add(Calendar.HOUR, -1);
+                    calendar.add(Calendar.DAY_OF_MONTH, -1);
+                    finalizePartitionsUpTo(topic, calendar);
+                }
             }
         }
     }

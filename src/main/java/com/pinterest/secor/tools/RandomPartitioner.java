@@ -24,12 +24,13 @@ import kafka.utils.VerifiableProperties;
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
-public class RandomPartitioner implements Partitioner<String> {
+public class RandomPartitioner implements Partitioner {
     public RandomPartitioner(VerifiableProperties properties) {
     }
 
-    public int partition(String key, int numPartitions) {
-        int intKey = Integer.parseInt(key);
+    public int partition(Object key, int numPartitions) {
+        String stringKey = (String) key;
+        int intKey = Integer.parseInt(stringKey);
         return intKey % numPartitions;
     }
 }
