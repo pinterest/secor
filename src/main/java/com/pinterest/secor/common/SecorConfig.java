@@ -48,6 +48,10 @@ public class SecorConfig {
         return getInt("kafka.seed.broker.port");
     }
 
+    public String getKafkaZookeeperPath() {
+        return getString("kafka.zookeeper.path");
+    }
+
     public String getZookeeperQuorum() {
         return StringUtils.join(getStringArray("zookeeper.quorum"), ',');
     }

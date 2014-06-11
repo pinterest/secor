@@ -17,21 +17,29 @@
 package com.pinterest.secor.reader;
 
 import com.pinterest.secor.common.OffsetTracker;
-import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.RateLimitUtil;
 import com.pinterest.secor.util.StatsUtil;
-import kafka.consumer.*;
+import kafka.consumer.Consumer;
+import kafka.consumer.ConsumerConfig;
+import kafka.consumer.ConsumerIterator;
+import kafka.consumer.KafkaStream;
+import kafka.consumer.TopicFilter;
+import kafka.consumer.Whitelist;
 import kafka.javaapi.consumer.ConsumerConnector;
-
-import java.net.UnknownHostException;
-import java.util.*;
-
 import kafka.message.MessageAndMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Message reader consumer raw Kafka messages.
@@ -90,7 +98,7 @@ public class MessageReader {
 
     private ConsumerConfig createConsumerConfig() throws UnknownHostException {
         Properties props = new Properties();
-        props.put("zookeeper.connect", mConfig.getZookeeperQuorum());
+        props.put("zookeeper.connect", mConfig.getZookeeperQuorum() + mConfig.getKafkaZookeeperPath());
         props.put("group.id", mConfig.getKafkaGroup());
 
         props.put("zookeeper.session.timeout.ms",
