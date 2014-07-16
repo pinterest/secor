@@ -51,7 +51,9 @@ public class LogFilePathTest extends TestCase {
 
     public void testConstructFromMessage() throws Exception {
         ParsedMessage message = new ParsedMessage(TOPIC, KAFKA_PARTITION, 1000,
-                                                  "some_payload".getBytes(), PARTITIONS);
+                                                  "some_key".getBytes(),
+                                                  "some_payload".getBytes(),
+                                                  PARTITIONS);
         LogFilePath logFilePath = new LogFilePath(PREFIX, GENERATION, LAST_COMMITTED_OFFSET,
                                                   message);
         assertEquals(PATH, logFilePath.getLogFilePath());
