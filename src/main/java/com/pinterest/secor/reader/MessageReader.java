@@ -123,7 +123,8 @@ public class MessageReader {
         RateLimitUtil.acquire();
         MessageAndMetadata<byte[], byte[]> kafkaMessage = mIterator.next();
         Message message = new Message(kafkaMessage.topic(), kafkaMessage.partition(),
-                                      kafkaMessage.offset(), kafkaMessage.message());
+                                      kafkaMessage.offset(), kafkaMessage.key(),
+                                      kafkaMessage.message());
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         updateAccessTime(topicPartition);
