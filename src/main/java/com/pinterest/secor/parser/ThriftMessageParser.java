@@ -22,17 +22,13 @@ import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TException;
 import org.apache.thrift.TFieldIdEnum;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-
 /**
  * Thrift message parser extracts date partitions from thrift messages.
  * TODO(pawel): implement.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
-public class ThriftMessageParser extends MessageParser {
+public class ThriftMessageParser extends TimestampedMessageParser {
     private TDeserializer mDeserializer;
 
     public ThriftMessageParser(SecorConfig config) {
@@ -40,9 +36,12 @@ public class ThriftMessageParser extends MessageParser {
         mDeserializer = new TDeserializer();
     }
 
-    public long extractTimestampMillis(Message message) throws TException {
+    @Override
+    public long extractTimestampMillis(final Message message) throws TException {
         class ThriftTemplate implements TFieldIdEnum {
-            public ThriftTemplate() {
+            private final String mFieldName;
+            public ThriftTemplate(final String fieldName) {
+                this.mFieldName = fieldName;
             }
 
             @Override
@@ -52,32 +51,11 @@ public class ThriftMessageParser extends MessageParser {
 
             @Override
             public String getFieldName() {
-                return "timestamp";
+                return mFieldName;
             }
         }
         long timestamp = mDeserializer.partialDeserializeI64(message.getPayload(),
-                                                             new ThriftTemplate());
-        final long nanosecondDivider = (long) Math.pow(10, 9 + 9);
-        final long millisecondDivider = (long) Math.pow(10, 9 + 3);
-        long timestampMillis;
-        if (timestamp / nanosecondDivider > 0L) {
-            timestampMillis = timestamp / (long) Math.pow(10, 6);
-        } else if (timestamp / millisecondDivider > 0L) {
-            timestampMillis = timestamp;
-        } else {  // assume seconds
-            timestampMillis = timestamp * 1000L;
-        }
-        return timestampMillis;
-    }
-
-    @Override
-    public String[] extractPartitions(Message message) throws Exception {
-        // Date constructor takes milliseconds since epoch.
-        long timestampMillis = extractTimestampMillis(message);
-        Date date = new Date(timestampMillis);
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String[] result = {"dt=" + format.format(date)};
-        return result;
+                new ThriftTemplate(mConfig.getMessageTimestampName()));
+        return toMillis(timestamp);
     }
 }
