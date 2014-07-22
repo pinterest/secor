@@ -152,6 +152,10 @@ public class SecorConfig {
         return getString("tsdb.blacklist.topics");
     }
 
+    public String getMessageTimestampName() {
+        return getString("message.timestamp.name");
+    }
+
     private void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
             throw new RuntimeException("Failed to find required configuration option '" +
