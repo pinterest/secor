@@ -60,6 +60,10 @@ public class SecorConfig {
         return getInt("kafka.consumer.timeout.ms");
     }
 
+    public int getRebalanceRetriesMax() {
+        return getInt("kafka.rebalance.retries.max");
+    }
+
     public int getGeneration() {
         return getInt("secor.generation");
     }
@@ -118,6 +122,10 @@ public class SecorConfig {
 
     public int getTopicPartitionForgetSeconds() {
         return getInt("secor.topic_partition.forget.seconds");
+    }
+
+    public int getLocalLogDeleteAgeHours() {
+        return getInt("secor.local.log.delete.age.hours");
     }
 
     public int getOstrichPort() {

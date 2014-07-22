@@ -59,8 +59,8 @@ public class LogFilePrinterMain {
             CommandLine commandLine = parseArgs(args);
             SecorConfig config = SecorConfig.load();
             FileUtil.configure(config);
-            LogFilePrinter printer = new LogFilePrinter(config,
-                commandLine.hasOption("print_offsets_only"));
+            LogFilePrinter printer = new LogFilePrinter(
+                    commandLine.hasOption("print_offsets_only"));
             printer.printFile(commandLine.getOptionValue("file"));
         } catch (Throwable t) {
             LOG.error("Log file printer failed", t);
