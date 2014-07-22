@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,8 +107,8 @@ public class FileRegistry {
 			if (!files.contains(path)) {
 				files.add(path);
 			}
-			Path fsPath = new Path(path.getLogFilePath());
-			writer = wFactory.createWriter(fsPath);
+
+			writer = wFactory.createWriter(path);
 
 			mWriters.put(path, writer);
 			mCreationTimes.put(path, System.currentTimeMillis() / 1000L);

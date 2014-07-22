@@ -24,7 +24,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.storage.Reader;
 import com.pinterest.secor.storage.StorageFactory;
 import com.pinterest.secor.storage.Writer;
@@ -37,28 +40,47 @@ import com.pinterest.secor.storage.Writer;
  */
 public class HadoopSequenceFileStorageFactory implements StorageFactory {
 
+	private static final Logger LOG = LoggerFactory
+			.getLogger(HadoopSequenceFileStorageFactory.class);
+
 	@Override
-	public Writer createWriter(Path fsPath) throws IOException {
+	public Writer createWriter(LogFilePath path) throws IOException {
 
 		Configuration config = new Configuration();
 		FileSystem fs = FileSystem.get(config);
 
+		Path fsPath = new Path(path.getLogFilePath());
+
 		SequenceFile.Writer writer = SequenceFile.createWriter(fs, config,
 				fsPath, LongWritable.class, BytesWritable.class);
+
+		LOG.debug("Creating a Hadoop File Sequence writer for path '{}'.",
+				path.getLogFilePath());
 
 		return new HadoopSequenceFileWriter(writer);
 	}
 
 	@Override
-	public Reader createReader(Path path) throws Exception {
+	public Reader createReader(LogFilePath path) throws Exception {
 		Configuration config = new Configuration();
 		FileSystem fs = FileSystem.get(config);
-		return new HadoopSequenceFileReader(new SequenceFile.Reader(fs, path,
+
+		Path fsPath = new Path(path.getLogFilePath());
+
+		LOG.debug("Creating a Hadoop File Sequence reader for path '{}'.",
+				path.getLogFilePath());
+
+		return new HadoopSequenceFileReader(new SequenceFile.Reader(fs, fsPath,
 				config));
 	}
 
 	@Override
 	public boolean supportsTrim() {
 		return true;
+	}
+
+	@Override
+	public String addExtension(String fullPath) {
+		return fullPath;
 	}
 }

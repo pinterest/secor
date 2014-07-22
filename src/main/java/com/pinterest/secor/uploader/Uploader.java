@@ -18,7 +18,6 @@ package com.pinterest.secor.uploader;
 
 import java.util.Collection;
 
-import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,10 +73,12 @@ public class Uploader {
 		LogFilePath s3Path = new LogFilePath(s3Prefix, localPath.getTopic(),
 				localPath.getPartitions(), localPath.getGeneration(),
 				localPath.getKafkaPartition(), localPath.getOffset());
+
 		String localLogFilename = localPath.getLogFilePath();
 		LOG.info("uploading file " + localLogFilename + " to "
 				+ s3Path.getLogFilePath());
-		FileUtil.moveToS3(localLogFilename, s3Path.getLogFilePath());
+		FileUtil.moveToS3(localLogFilename,
+				mStorageFactory.addExtension(s3Path.getLogFilePath()));
 	}
 
 	private void uploadFiles(TopicPartition topicPartition) throws Exception {
@@ -118,9 +119,6 @@ public class Uploader {
 			return;
 		}
 
-		String srcFilename = srcPath.getLogFilePath();
-		Path srcFsPath = new Path(srcFilename);
-
 		Reader reader = null;
 		Writer writer = null;
 		LogFilePath dstPath = null;
@@ -130,7 +128,7 @@ public class Uploader {
 		mFileRegistry.deleteWriter(srcPath);
 		try {
 
-			reader = mStorageFactory.createReader(srcFsPath);
+			reader = mStorageFactory.createReader(srcPath);
 			while (reader.next()) {
 				if (reader.getOffset() >= startOffset) {
 					if (writer == null) {
@@ -149,7 +147,7 @@ public class Uploader {
 							srcPath.getTopic(), srcPath.getKafkaPartition(),
 							reader.getOffset(), reader.getBytes(),
 							srcPath.getPartitions());
-					
+
 					writer.append(copiedMessage);
 					copiedMessages++;
 				}
@@ -164,8 +162,9 @@ public class Uploader {
 			LOG.info("removed file " + srcPath.getLogFilePath());
 		} else {
 			LOG.info("trimmed " + copiedMessages + " messages from "
-					+ srcFilename + " to " + dstPath.getLogFilePath()
-					+ " with start offset " + startOffset);
+					+ srcPath.getLogFilePath() + " to "
+					+ dstPath.getLogFilePath() + " with start offset "
+					+ startOffset);
 		}
 	}
 
@@ -218,9 +217,9 @@ public class Uploader {
 					// of the current message. We need to trim local files.
 					trimFiles(topicPartition, newOffsetCount);
 				} else {
-					LOG.warn("Be careful: A rebalancing was occured but current storage does not support trimming file!");
+					LOG.warn("Be careful: A rebalancing was occured but current storage does not support trimming file! Deleting instead...");
+					mFileRegistry.deleteTopicPartition(topicPartition);
 				}
-
 			}
 		}
 	}

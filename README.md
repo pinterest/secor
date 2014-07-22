@@ -13,7 +13,7 @@ This fork provides the ability to customize the Writer. For instance, it's is us
   - **monitoring**: metrics tracking various performace properties are exposed through [Ostrich] and optionaly exported to [OpenTSDB],
   - **customizability**: external log message parser may be loaded by updating the configuration,
   - **Qubole interface**: Secor connects to [Qubole] to add finalized output partitions to Hive tables.
-  - **custom Write**: original [Pinterest Secor](https://github.com/pinterest/secor) relies on the Hadoop sequence files for storage. By now, property `secor.message.writer.class` defines the kind of storage. By default, `HadoopSequenceFileWriter` is used. We ship another class,`PlanTextGzippedWriter` which storages text message in gzipped format.
+  - **custom Write**: original [Pinterest Secor](https://github.com/pinterest/secor) relies on the Hadoop sequence files for storage. By now, property `secor.storage.factory.class` defines the kind of storage. By default, `HadoopSequenceFileStorageFactory` is used. Another class is also available,`PlainTextGzippedStorageFactory` which storages text message in gzipped format. However, be careful, `PlainTextGzippedStorageFactory` does not handle rebalancing process.
 
 ## Setup Guide
 
@@ -86,9 +86,9 @@ Progress monitor exports offset consumption lags per topic partition to [OpenTSD
 java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.ProgressMonitorMain
 ```
 
-## Develop on Eclipse
+## Eclipse  Developpement
 
-The project relies on Apache Maven. So, use Eclipse to import an existing Maven project.
+The project relies on Apache Maven and hence use Eclipse to import an existing Maven project.
 Ensure to build the project once and then add `target/generated-sources/thrift/gen-java` as source folder. Otherwise Eclipse will complain about genarated classes. 
 
 ## Detailed design
@@ -101,6 +101,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
 
 ## Maintainers
 Pawel Garbacki - original author from Pinterest Secor
+
 Leonardo Noleto - this fork
 
 ## Help

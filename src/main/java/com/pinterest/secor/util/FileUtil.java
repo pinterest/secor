@@ -16,99 +16,99 @@
  */
 package com.pinterest.secor.util;
 
-import com.pinterest.secor.common.SecorConfig;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import com.pinterest.secor.common.SecorConfig;
+
 /**
  * File util implements utilities for interactions with the file system.
- *
+ * 
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class FileUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(FileUtil.class);
-    private static SecorConfig mConfig = null;
+	private static SecorConfig mConfig = null;
 
-    public static void configure(SecorConfig config) {
-        mConfig = config;
-    }
+	public static void configure(SecorConfig config) {
+		mConfig = config;
+	}
 
-    public static FileSystem getFileSystem(String path) throws IOException {
-        Configuration conf = new Configuration();
-        if (mConfig != null) {
-            conf.set("fs.s3n.awsAccessKeyId", mConfig.getAwsAccessKey());
-            conf.set("fs.s3n.awsSecretAccessKey", mConfig.getAwsSecretKey());
-        }
-        return FileSystem.get(URI.create(path), conf);
-    }
+	public static FileSystem getFileSystem(String path) throws IOException {
+		Configuration conf = new Configuration();
+		if (mConfig != null) {
+			conf.set("fs.s3n.awsAccessKeyId", mConfig.getAwsAccessKey());
+			conf.set("fs.s3n.awsSecretAccessKey", mConfig.getAwsSecretKey());
+		}
+		return FileSystem.get(URI.create(path), conf);
+	}
 
-    public static String[] list(String path) throws IOException {
-        FileSystem fs = getFileSystem(path);
-        Path fsPath = new Path(path);
-        ArrayList<String> paths = new ArrayList<String>();
-        FileStatus[] statuses = fs.listStatus(fsPath);
-        if (statuses != null) {
-            for (FileStatus status : statuses) {
-                Path statusPath = status.getPath();
-                if (path.startsWith("s3://") || path.startsWith("s3n://")) {
-                    paths.add(statusPath.toUri().toString());
-                } else {
-                    paths.add(statusPath.toUri().getPath());
-                }
-            }
-        }
-        return paths.toArray(new String[] {});
-    }
+	public static String[] list(String path) throws IOException {
+		FileSystem fs = getFileSystem(path);
+		Path fsPath = new Path(path);
+		ArrayList<String> paths = new ArrayList<String>();
+		FileStatus[] statuses = fs.listStatus(fsPath);
+		if (statuses != null) {
+			for (FileStatus status : statuses) {
+				Path statusPath = status.getPath();
+				if (path.startsWith("s3://") || path.startsWith("s3n://")) {
+					paths.add(statusPath.toUri().toString());
+				} else {
+					paths.add(statusPath.toUri().getPath());
+				}
+			}
+		}
+		return paths.toArray(new String[] {});
+	}
 
-    public static String[] listRecursively(String path) throws IOException {
-        ArrayList<String> paths = new ArrayList<String>();
-        String[] directPaths = list(path);
-        for (String directPath : directPaths) {
-            if (directPath.equals(path)) {
-                assert directPaths.length == 1: Integer.toString(directPaths.length) + " == 1";
-                paths.add(directPath);
-            } else {
-                String[] recursivePaths = listRecursively(directPath);
-                paths.addAll(Arrays.asList(recursivePaths));
-            }
-        }
-        return paths.toArray(new String[] {});
-    }
+	public static String[] listRecursively(String path) throws IOException {
+		ArrayList<String> paths = new ArrayList<String>();
+		String[] directPaths = list(path);
+		for (String directPath : directPaths) {
+			if (directPath.equals(path)) {
+				assert directPaths.length == 1 : Integer
+						.toString(directPaths.length) + " == 1";
+				paths.add(directPath);
+			} else {
+				String[] recursivePaths = listRecursively(directPath);
+				paths.addAll(Arrays.asList(recursivePaths));
+			}
+		}
+		return paths.toArray(new String[] {});
+	}
 
-    public static boolean exists(String path) throws IOException {
-        FileSystem fs = getFileSystem(path);
-        Path fsPath = new Path(path);
-        return fs.exists(fsPath);
-    }
+	public static boolean exists(String path) throws IOException {
+		FileSystem fs = getFileSystem(path);
+		Path fsPath = new Path(path);
+		return fs.exists(fsPath);
+	}
 
-    public static void delete(String path) throws IOException {
-        if (exists(path)) {
-            Path fsPath = new Path(path);
-            boolean success = getFileSystem(path).delete(fsPath, true);  // recursive
-            if (!success) {
-                throw new IOException("Failed to delete " + path);
-            }
-        }
-    }
+	public static void delete(String path) throws IOException {
+		if (exists(path)) {
+			Path fsPath = new Path(path);
+			boolean success = getFileSystem(path).delete(fsPath, true); // recursive
+			if (!success) {
+				throw new IOException("Failed to delete " + path);
+			}
+		}
+	}
 
-    public static void moveToS3(String srcLocalPath, String dstS3Path) throws IOException {
-        Path srcPath = new Path(srcLocalPath);
-        Path dstPath = new Path(dstS3Path);
-        getFileSystem(dstS3Path).moveFromLocalFile(srcPath, dstPath);
-    }
+	public static void moveToS3(String srcLocalPath, String dstS3Path)
+			throws IOException {
+		Path srcPath = new Path(srcLocalPath);
+		Path dstPath = new Path(dstS3Path);
+		getFileSystem(dstS3Path).moveFromLocalFile(srcPath, dstPath);
+	}
 
-    public static void touch(String path) throws IOException {
-        FileSystem fs = getFileSystem(path);
-        Path fsPath = new Path(path);
-        fs.create(fsPath).close();
-    }
+	public static void touch(String path) throws IOException {
+		FileSystem fs = getFileSystem(path);
+		Path fsPath = new Path(path);
+		fs.create(fsPath).close();
+	}
 }

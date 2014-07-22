@@ -21,7 +21,6 @@ import java.util.HashSet;
 import junit.framework.TestCase;
 
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -106,8 +105,18 @@ public class UploaderTest extends TestCase {
 				return true;
 			}
 		});
-		Mockito.when(storageFactory.createReader(Mockito.any(Path.class)))
+		Mockito.when(
+				storageFactory.createReader(Mockito.any(LogFilePath.class)))
 				.thenReturn(reader);
+		Mockito.when(storageFactory.addExtension(Mockito.any(String.class)))
+				.thenAnswer(new Answer<String>() {
+
+					@Override
+					public String answer(InvocationOnMock invocation)
+							throws Throwable {
+						return (String) invocation.getArguments()[0];
+					}
+				});
 
 		Mockito.when(storageFactory.supportsTrim()).thenReturn(true);
 
