@@ -86,6 +86,11 @@ Progress monitor exports offset consumption lags per topic partition to [OpenTSD
 java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.ProgressMonitorMain
 ```
 
+## Develop on Eclipse
+
+The project relies on Apache Maven. So, use Eclipse to import an existing Maven project.
+Ensure to build the project once and then add `target/generated-sources/thrift/gen-java` as source folder. Otherwise Eclipse will complain about genarated classes. 
+
 ## Detailed design
 
 Design details are available in [DESIGN.md](DESIGN.md).
@@ -95,11 +100,13 @@ Design details are available in [DESIGN.md](DESIGN.md).
 Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Maintainers
-Pawel Garbacki
+Pawel Garbacki - original author from Pinterest Secor
+Leonardo Noleto - this fork
 
 ## Help
 
 If you have any questions or comments, you can reach us at [secor-users@googlegroups.com](secor-users@googlegroups.com)
+Please feel free to drop me a line if you have questions/suggestions at [noleto.leonardo@gmail.com](noleto.leonardo@gmail.com)
 
 [Kafka]:http://kafka.apache.org/
 [Amazon S3]:http://aws.amazon.com/s3/

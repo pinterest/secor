@@ -16,30 +16,38 @@
  */
 package com.pinterest.secor.util;
 
-import com.pinterest.secor.common.SecorConfig;
-
 import java.lang.reflect.Constructor;
 
+import com.pinterest.secor.common.SecorConfig;
+
 /**
- * ReflectionUtil implements utility methods to construct objects of classes specified by name.
- *
+ * ReflectionUtil implements utility methods to construct objects of classes
+ * specified by name.
+ * 
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class ReflectionUtil {
-    public static Object createMessageParser(String className,
-                                             SecorConfig config) throws Exception {
-        Class<?> clazz = Class.forName(className);
+	public static Object createMessageParser(String className,
+			SecorConfig config) throws Exception {
+		Class<?> clazz = Class.forName(className);
 
-        // Search for an "appropriate" constructor.
-        for (Constructor<?> ctor : clazz.getConstructors()) {
-            Class<?>[] paramTypes = ctor.getParameterTypes();
+		// Search for an "appropriate" constructor.
+		for (Constructor<?> ctor : clazz.getConstructors()) {
+			Class<?>[] paramTypes = ctor.getParameterTypes();
 
-            // If the arity matches, let's use it.
-            if (paramTypes.length == 1) {
-                Object[] args = {config};
-                return ctor.newInstance(args);
-            }
-        }
-        throw new IllegalArgumentException("Class not found " + className);
-    }
+			// If the arity matches, let's use it.
+			if (paramTypes.length == 1) {
+				Object[] args = { config };
+				return ctor.newInstance(args);
+			}
+		}
+		throw new IllegalArgumentException("Class not found " + className);
+	}
+
+	public static Object createStorageFactory(String className,
+			SecorConfig config) throws Exception {
+		Class<?> clazz = Class.forName(className);
+
+		return clazz.newInstance();
+	}
 }

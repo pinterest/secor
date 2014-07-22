@@ -16,8 +16,11 @@
  */
 package com.pinterest.secor.common;
 
-import com.pinterest.secor.util.FileUtil;
+import java.io.IOException;
+import java.util.Collection;
+
 import junit.framework.TestCase;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -30,129 +33,138 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.IOException;
-import java.util.Collection;
+import com.pinterest.secor.storage.Writer;
+import com.pinterest.secor.storage.seqfile.HadoopSequenceFileStorageFactory;
+import com.pinterest.secor.util.FileUtil;
 
 /**
  * FileRegistryTest tests the file registry logic.
- *
+ * 
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({FileRegistry.class, FileSystem.class, FileUtil.class, SequenceFile.class})
+@PrepareForTest({ FileRegistry.class, FileSystem.class, FileUtil.class,
+		SequenceFile.class })
 public class FileRegistryTest extends TestCase {
-    private static final String PATH =
-        "/some_parent_dir/some_topic/some_partition/some_other_partition/" +
-        "10_0_00000000000000000100";
-    private static final String CRC_PATH =
-            "/some_parent_dir/some_topic/some_partition/some_other_partition/" +
-            ".10_0_00000000000000000100.crc";
-    private LogFilePath mLogFilePath;
-    private TopicPartition mTopicPartition;
-    private FileRegistry mRegistry;
+	private static final String PATH = "/some_parent_dir/some_topic/some_partition/some_other_partition/"
+			+ "10_0_00000000000000000100";
+	private static final String CRC_PATH = "/some_parent_dir/some_topic/some_partition/some_other_partition/"
+			+ ".10_0_00000000000000000100.crc";
+	private LogFilePath mLogFilePath;
+	private TopicPartition mTopicPartition;
+	private FileRegistry mRegistry;
 
-    public void setUp() throws Exception {
-        super.setUp();
-        mLogFilePath = new LogFilePath("/some_parent_dir", PATH);
-        mTopicPartition = new TopicPartition("some_topic", 0);
-        mRegistry = new FileRegistry();
-    }
+	private HadoopSequenceFileStorageFactory mHadoopWriterFactory;
 
-    private void createWriter() throws IOException {
-        PowerMockito.mockStatic(FileUtil.class);
+	public void setUp() throws Exception {
+		super.setUp();
+		mLogFilePath = new LogFilePath("/some_parent_dir", PATH);
+		mTopicPartition = new TopicPartition("some_topic", 0);
+		mRegistry = new FileRegistry();
+		mHadoopWriterFactory = new HadoopSequenceFileStorageFactory();
+	}
 
-        PowerMockito.mockStatic(FileSystem.class);
-        FileSystem fs = Mockito.mock(FileSystem.class);
-        Mockito.when(FileSystem.get(Mockito.any(Configuration.class))).thenReturn(fs);
+	private void sequenceFileCreateWriter() throws IOException {
+		PowerMockito.mockStatic(FileUtil.class);
 
-        PowerMockito.mockStatic(SequenceFile.class);
-        Path fsPath = new Path(PATH);
-        SequenceFile.Writer writer = Mockito.mock(SequenceFile.Writer.class);
-        Mockito.when(SequenceFile.createWriter(Mockito.eq(fs),
-                Mockito.any(Configuration.class),
-                Mockito.eq(fsPath),
-                Mockito.eq(LongWritable.class),
-                Mockito.eq(BytesWritable.class))).thenReturn(
-                writer);
+		PowerMockito.mockStatic(FileSystem.class);
+		FileSystem fs = Mockito.mock(FileSystem.class);
+		Mockito.when(FileSystem.get(Mockito.any(Configuration.class)))
+				.thenReturn(fs);
 
-        Mockito.when(writer.getLength()).thenReturn(123L);
+		PowerMockito.mockStatic(SequenceFile.class);
+		Path fsPath = new Path(PATH);
+		SequenceFile.Writer writer = Mockito.mock(SequenceFile.Writer.class);
+		Mockito.when(
+				SequenceFile.createWriter(Mockito.eq(fs),
+						Mockito.any(Configuration.class), Mockito.eq(fsPath),
+						Mockito.eq(LongWritable.class),
+						Mockito.eq(BytesWritable.class))).thenReturn(writer);
 
-        SequenceFile.Writer createdWriter = mRegistry.getOrCreateWriter(mLogFilePath);
-        assertTrue(createdWriter == writer);
-    }
+		Mockito.when(writer.getLength()).thenReturn(123L);
 
-    public void testGetOrCreateWriter() throws Exception {
-        createWriter();
+		Writer createdWriter = mRegistry.getOrCreateWriter(
+				mHadoopWriterFactory, mLogFilePath);
+		assertTrue(createdWriter.getImpl() == writer);
+	}
 
-        // Call the method again.  This time it should return an existing writer.
-        mRegistry.getOrCreateWriter(mLogFilePath);
+	public void testGetOrCreateWriter() throws Exception {
+		sequenceFileCreateWriter();
 
-        // Verify that the method has been called exactly once (the default).
-        PowerMockito.verifyStatic();
-        FileSystem.get(Mockito.any(Configuration.class));
+		// Call the method again. This time it should return an existing writer.
+		mRegistry.getOrCreateWriter(mHadoopWriterFactory, mLogFilePath);
 
-        PowerMockito.verifyStatic();
-        FileUtil.delete(PATH);
-        PowerMockito.verifyStatic();
-        FileUtil.delete(CRC_PATH);
+		// Verify that the method has been called exactly once (the default).
+		PowerMockito.verifyStatic();
+		FileSystem.get(Mockito.any(Configuration.class));
 
-        Path fsPath = new Path(PATH);
-        PowerMockito.verifyStatic();
-        SequenceFile.createWriter(Mockito.any(FileSystem.class), Mockito.any(Configuration.class),
-                Mockito.eq(fsPath), Mockito.eq(LongWritable.class),
-                Mockito.eq(BytesWritable.class));
+		PowerMockito.verifyStatic();
+		FileUtil.delete(PATH);
+		PowerMockito.verifyStatic();
+		FileUtil.delete(CRC_PATH);
 
-        TopicPartition topicPartition = new TopicPartition("some_topic", 0);
-        Collection<TopicPartition> topicPartitions = mRegistry.getTopicPartitions();
-        assertEquals(1, topicPartitions.size());
-        assertTrue(topicPartitions.contains(topicPartition));
+		Path fsPath = new Path(PATH);
+		PowerMockito.verifyStatic();
+		SequenceFile
+				.createWriter(Mockito.any(FileSystem.class),
+						Mockito.any(Configuration.class), Mockito.eq(fsPath),
+						Mockito.eq(LongWritable.class),
+						Mockito.eq(BytesWritable.class));
 
-        Collection<LogFilePath> logFilePaths = mRegistry.getPaths(topicPartition);
-        assertEquals(1, logFilePaths.size());
-        assertTrue(logFilePaths.contains(mLogFilePath));
-    }
+		TopicPartition topicPartition = new TopicPartition("some_topic", 0);
+		Collection<TopicPartition> topicPartitions = mRegistry
+				.getTopicPartitions();
+		assertEquals(1, topicPartitions.size());
+		assertTrue(topicPartitions.contains(topicPartition));
 
-    public void testDeletePath() throws Exception {
-        createWriter();
+		Collection<LogFilePath> logFilePaths = mRegistry
+				.getPaths(topicPartition);
+		assertEquals(1, logFilePaths.size());
+		assertTrue(logFilePaths.contains(mLogFilePath));
+	}
 
-        PowerMockito.mockStatic(FileUtil.class);
+	public void testDeletePath() throws Exception {
+		sequenceFileCreateWriter();
 
-        mRegistry.deletePath(mLogFilePath);
-        PowerMockito.verifyStatic();
-        FileUtil.delete(PATH);
-        PowerMockito.verifyStatic();
-        FileUtil.delete(CRC_PATH);
+		PowerMockito.mockStatic(FileUtil.class);
 
-        assertTrue(mRegistry.getPaths(mTopicPartition).isEmpty());
-        assertTrue(mRegistry.getTopicPartitions().isEmpty());
-    }
+		mRegistry.deletePath(mLogFilePath);
+		PowerMockito.verifyStatic();
+		FileUtil.delete(PATH);
+		PowerMockito.verifyStatic();
+		FileUtil.delete(CRC_PATH);
 
-    public void testDeleteTopicPartition() throws Exception {
-        createWriter();
+		assertTrue(mRegistry.getPaths(mTopicPartition).isEmpty());
+		assertTrue(mRegistry.getTopicPartitions().isEmpty());
+	}
 
-        PowerMockito.mockStatic(FileUtil.class);
+	public void testDeleteTopicPartition() throws Exception {
+		sequenceFileCreateWriter();
 
-        mRegistry.deleteTopicPartition(mTopicPartition);
-        PowerMockito.verifyStatic();
-        FileUtil.delete(PATH);
-        PowerMockito.verifyStatic();
-        FileUtil.delete(CRC_PATH);
+		PowerMockito.mockStatic(FileUtil.class);
 
-        assertTrue(mRegistry.getTopicPartitions().isEmpty());
-        assertTrue(mRegistry.getPaths(mTopicPartition).isEmpty());
-    }
+		mRegistry.deleteTopicPartition(mTopicPartition);
+		PowerMockito.verifyStatic();
+		FileUtil.delete(PATH);
+		PowerMockito.verifyStatic();
+		FileUtil.delete(CRC_PATH);
 
-    public void testGetSize() throws Exception {
-        createWriter();
+		assertTrue(mRegistry.getTopicPartitions().isEmpty());
+		assertTrue(mRegistry.getPaths(mTopicPartition).isEmpty());
+	}
 
-        assertEquals(123L, mRegistry.getSize(mTopicPartition));
-    }
+	public void testGetSize() throws Exception {
+		sequenceFileCreateWriter();
 
-    public void testGetModificationAgeSec() throws Exception {
-        PowerMockito.mockStatic(System.class);
-        PowerMockito.when(System.currentTimeMillis()).thenReturn(10000L).thenReturn(100000L);
-        createWriter();
+		assertEquals(123L, mRegistry.getSize(mTopicPartition));
+	}
 
-        assertEquals(90, mRegistry.getModificationAgeSec(mTopicPartition));
-    }
+	public void testGetModificationAgeSec() throws Exception {
+		PowerMockito.mockStatic(System.class);
+		PowerMockito.when(System.currentTimeMillis()).thenReturn(10000L)
+				.thenReturn(100000L);
+		sequenceFileCreateWriter();
+
+		assertEquals(90, mRegistry.getModificationAgeSec(mTopicPartition));
+	}
 }

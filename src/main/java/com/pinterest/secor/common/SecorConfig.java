@@ -20,152 +20,165 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 
+import com.pinterest.secor.storage.seqfile.HadoopSequenceFileStorageFactory;
+
 /**
  * One-stop shop for Secor configuration options.
- *
+ * 
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class SecorConfig {
-    private final PropertiesConfiguration mProperties;
+	private final PropertiesConfiguration mProperties;
 
-    public static SecorConfig load() throws ConfigurationException {
-        // Load the default configuration file first
-        String configProperty = System.getProperty("config");
-        PropertiesConfiguration properties = new PropertiesConfiguration(configProperty);
+	public static SecorConfig load() throws ConfigurationException {
+		// Load the default configuration file first
+		String configProperty = System.getProperty("config");
+		PropertiesConfiguration properties = new PropertiesConfiguration(
+				configProperty);
 
-        return new SecorConfig(properties);
-    }
+		return new SecorConfig(properties);
+	}
 
-    private SecorConfig(PropertiesConfiguration properties) {
-        mProperties = properties;
-    }
+	private SecorConfig(PropertiesConfiguration properties) {
+		mProperties = properties;
+	}
 
-    public String getKafkaSeedBrokerHost() {
-        return getString("kafka.seed.broker.host");
-    }
+	public String getKafkaSeedBrokerHost() {
+		return getString("kafka.seed.broker.host");
+	}
 
-    public int getKafkaSeedBrokerPort() {
-        return getInt("kafka.seed.broker.port");
-    }
+	public int getKafkaSeedBrokerPort() {
+		return getInt("kafka.seed.broker.port");
+	}
 
-    public String getKafkaZookeeperPath() {
-        return getString("kafka.zookeeper.path");
-    }
+	public String getKafkaZookeeperPath() {
+		return getString("kafka.zookeeper.path");
+	}
 
-    public String getZookeeperQuorum() {
-        return StringUtils.join(getStringArray("zookeeper.quorum"), ',');
-    }
+	public String getZookeeperQuorum() {
+		return StringUtils.join(getStringArray("zookeeper.quorum"), ',');
+	}
 
-    public int getConsumerTimeoutMs() {
-        return getInt("kafka.consumer.timeout.ms");
-    }
+	public int getConsumerTimeoutMs() {
+		return getInt("kafka.consumer.timeout.ms");
+	}
 
-    public int getGeneration() {
-        return getInt("secor.generation");
-    }
+	public int getGeneration() {
+		return getInt("secor.generation");
+	}
 
-    public int getConsumerThreads() {
-        return getInt("secor.consumer.threads");
-    }
+	public int getConsumerThreads() {
+		return getInt("secor.consumer.threads");
+	}
 
-    public long getMaxFileSizeBytes() {
-        return getLong("secor.max.file.size.bytes");
-    }
+	public long getMaxFileSizeBytes() {
+		return getLong("secor.max.file.size.bytes");
+	}
 
-    public long getMaxFileAgeSeconds() {
-        return getLong("secor.max.file.age.seconds");
-    }
+	public long getMaxFileAgeSeconds() {
+		return getLong("secor.max.file.age.seconds");
+	}
 
-    public long getOffsetsPerPartition() {
-        return getLong("secor.offsets.per.partition");
-    }
+	public long getOffsetsPerPartition() {
+		return getLong("secor.offsets.per.partition");
+	}
 
-    public int getMessagesPerSecond() {
-        return getInt("secor.messages.per.second");
-    }
+	public int getMessagesPerSecond() {
+		return getInt("secor.messages.per.second");
+	}
 
-    public String getS3Bucket() {
-        return getString("secor.s3.bucket");
-    }
+	public String getS3Bucket() {
+		return getString("secor.s3.bucket");
+	}
 
-    public String getS3Path() {
-        return getString("secor.s3.path");
-    }
+	public String getS3Path() {
+		return getString("secor.s3.path");
+	}
 
-    public String getLocalPath() {
-        return getString("secor.local.path");
-    }
+	public String getLocalPath() {
+		return getString("secor.local.path");
+	}
 
-    public String getKafkaTopicFilter() {
-        return getString("secor.kafka.topic_filter");
-    }
+	public String getKafkaTopicFilter() {
+		return getString("secor.kafka.topic_filter");
+	}
 
-    public String getKafkaGroup() {
-        return getString("secor.kafka.group");
-    }
+	public String getKafkaGroup() {
+		return getString("secor.kafka.group");
+	}
 
-    public int getZookeeperSessionTimeoutMs() {
-        return getInt("zookeeper.session.timeout.ms");
-    }
+	public int getZookeeperSessionTimeoutMs() {
+		return getInt("zookeeper.session.timeout.ms");
+	}
 
-    public int getZookeeperSyncTimeMs() {
-        return getInt("zookeeper.sync.time.ms");
-    }
+	public int getZookeeperSyncTimeMs() {
+		return getInt("zookeeper.sync.time.ms");
+	}
 
-    public String getMessageParserClass() {
-        return getString("secor.message.parser.class");
-    }
+	public String getMessageParserClass() {
+		return getString("secor.message.parser.class");
+	}
 
-    public int getTopicPartitionForgetSeconds() {
-        return getInt("secor.topic_partition.forget.seconds");
-    }
+	public String getStorageFactoryClassOrDefault() {
 
-    public int getOstrichPort() {
-        return getInt("ostrich.port");
-    }
+		if (mProperties.containsKey("secor.storage.factory.class")) {
+			return getString("secor.storage.factory.class");
+		}
 
-    public String getAwsAccessKey() {
-        return getString("aws.access.key");
-    }
+		return HadoopSequenceFileStorageFactory.class.getName();
+	}
 
-    public String getAwsSecretKey() {
-        return getString("aws.secret.key");
-    }
+	public int getTopicPartitionForgetSeconds() {
+		return getInt("secor.topic_partition.forget.seconds");
+	}
 
-    public String getQuboleApiToken() {
-        return getString("qubole.api.token");
-    }
+	public int getOstrichPort() {
+		return getInt("ostrich.port");
+	}
 
-    public String getTsdbHostport() {
-        return getString("tsdb.hostport");
-    }
+	public String getAwsAccessKey() {
+		return getString("aws.access.key");
+	}
 
-    public String getTsdbBlacklistTopics() {
-        return getString("tsdb.blacklist.topics");
-    }
+	public String getAwsSecretKey() {
+		return getString("aws.secret.key");
+	}
 
-    private void checkProperty(String name) {
-        if (!mProperties.containsKey(name)) {
-            throw new RuntimeException("Failed to find required configuration option '" +
-                                       name + "'.");
-        }
-    }
+	public String getQuboleApiToken() {
+		return getString("qubole.api.token");
+	}
 
-    private String getString(String name) {
-        checkProperty(name);
-        return mProperties.getString(name);
-    }
+	public String getTsdbHostport() {
+		return getString("tsdb.hostport");
+	}
 
-    private int getInt(String name) {
-        checkProperty(name);
-        return mProperties.getInt(name);
-    }
+	public String getTsdbBlacklistTopics() {
+		return getString("tsdb.blacklist.topics");
+	}
 
-    private long getLong(String name) {
-        return mProperties.getLong(name);
-    }
+	private void checkProperty(String name) {
+		if (!mProperties.containsKey(name)) {
+			throw new RuntimeException(
+					"Failed to find required configuration option '" + name
+							+ "'.");
+		}
+	}
 
-    private String[] getStringArray(String name) {
-        return mProperties.getStringArray(name);
-    }
+	private String getString(String name) {
+		checkProperty(name);
+		return mProperties.getString(name);
+	}
+
+	private int getInt(String name) {
+		checkProperty(name);
+		return mProperties.getInt(name);
+	}
+
+	private long getLong(String name) {
+		return mProperties.getLong(name);
+	}
+
+	private String[] getStringArray(String name) {
+		return mProperties.getStringArray(name);
+	}
 }
