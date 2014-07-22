@@ -28,7 +28,6 @@ import java.util.TimeZone;
 
 /**
  * Thrift message parser extracts date partitions from thrift messages.
- * TODO(pawel): implement.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */

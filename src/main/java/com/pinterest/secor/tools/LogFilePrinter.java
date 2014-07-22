@@ -16,7 +16,6 @@
  */
 package com.pinterest.secor.tools;
 
-import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.util.FileUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,14 +32,9 @@ import java.io.IOException;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class LogFilePrinter {
-    private SecorConfig mConfig;
-    private FileSystem mFileSystem;
     private boolean mPrintOffsetsOnly;
 
-    public LogFilePrinter(SecorConfig config, boolean printOffsetsOnly) throws IOException {
-        mConfig = config;
-        Configuration configuration = new Configuration();
-        mFileSystem = FileSystem.get(configuration);
+    public LogFilePrinter(boolean printOffsetsOnly) throws IOException {
         mPrintOffsetsOnly = printOffsetsOnly;
     }
 

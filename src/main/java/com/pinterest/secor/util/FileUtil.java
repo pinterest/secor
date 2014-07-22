@@ -21,8 +21,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -35,7 +33,6 @@ import java.util.Arrays;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class FileUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(FileUtil.class);
     private static SecorConfig mConfig = null;
 
     public static void configure(SecorConfig config) {
@@ -110,5 +107,29 @@ public class FileUtil {
         FileSystem fs = getFileSystem(path);
         Path fsPath = new Path(path);
         fs.create(fsPath).close();
+    }
+
+    public static long getModificationTimeMsRecursive(String path) throws IOException {
+        FileSystem fs = getFileSystem(path);
+        Path fsPath = new Path(path);
+        FileStatus status = fs.getFileStatus(fsPath);
+        long modificationTime = status.getModificationTime();
+        FileStatus[] statuses = fs.listStatus(fsPath);
+        if (statuses != null) {
+            for (FileStatus fileStatus : statuses) {
+                Path statusPath = fileStatus.getPath();
+                String stringPath;
+                if (path.startsWith("s3://") || path.startsWith("s3n://")) {
+                    stringPath = statusPath.toUri().toString();
+                } else {
+                    stringPath = statusPath.toUri().getPath();
+                }
+                if (!stringPath.equals(path)) {
+                    modificationTime = Math.max(modificationTime,
+                            getModificationTimeMsRecursive(stringPath));
+                }
+            }
+        }
+        return modificationTime;
     }
 }
