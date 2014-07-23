@@ -26,6 +26,7 @@
 #     mkdir /tmp/test
 #     cd /tmp/test
 #     tar -zxvf ~/git/optimus/secor/target/secor-0.1-SNAPSHOT-bin.tar.gz
+#     # copy Hadoop native libs to lib/, or change HADOOP_NATIVE_LIB_PATH to point to them
 #     ./scripts/run_tests.sh
 #
 # Test logs are available in /tmp/secor_dev/logs/  The output files are in
@@ -39,6 +40,8 @@ PARENT_DIR=/tmp/secor_dev
 LOGS_DIR=${PARENT_DIR}/logs
 S3_LOGS_DIR=s3://pinterest-dev/secor_dev
 MESSAGES=1000
+# For the compression tests to work, set this to the path of the Hadoop native libs.
+HADOOP_NATIVE_LIB_PATH=lib
 
 # The minimum wait time is one minute plus delta.  Secor is configured to upload files older than
 # one minute and we need to make sure that everything ends up on s3 before starting verification.
@@ -66,8 +69,7 @@ start_zookeeper() {
 }
 
 stop_zookeeper() {
-    run_command "ps ax | grep -i 'org.apache.zookeeper.server.quorum.QuorumPeerMain' | \
-                 grep -v grep | awk '{print \$1}' | xargs kill"
+    run_command "pkill -f 'org.apache.zookeeper.server.quorum.QuorumPeerMain' | true"
 }
 
 start_kafka_server () {
@@ -76,8 +78,7 @@ start_kafka_server () {
 }
 
 stop_kafka_server() {
-    run_command "ps ax | grep -i 'kafka\.Kafka' | grep java | grep -v grep | awk '{print \$1}' | \
-        xargs kill"
+    run_command "pkill -f 'kafka.Kafka' | true"
 }
 
 start_secor() {
@@ -89,9 +90,21 @@ start_secor() {
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
 }
 
+start_secor_compressed() {
+    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+        -Dconfig=secor.dev.backup.properties -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
+        -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
+        -cp secor-0.1-SNAPSHOT.jar:lib/* \
+        com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
+    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+        -Dconfig=secor.dev.partition.properties -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
+        -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
+        -cp secor-0.1-SNAPSHOT.jar:lib/* \
+        com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
+}
+
 stop_secor() {
-    run_command "ps ax | grep -i 'com\.pinterest\.secor\.main\.ConsumerMain' | grep java | \
-        grep -v grep | awk '{print \$1}' | xargs kill"
+    run_command "pkill -f 'com.pinterest.secor.main.ConsumerMain' | true"
 }
 
 create_topic() {
@@ -159,7 +172,7 @@ initialize() {
     sleep 3
 }
 
-# Post some messages and verify that they are correctly processes.
+# Post some messages and verify that they are correctly processed.
 post_and_verify_test() {
     echo "running post_and_verify_test"
     initialize
@@ -212,6 +225,25 @@ move_offset_back_test() {
     echo "move_offset_back_test succeeded"
 }
 
+# Post some messages and verify that they are correctly processed and compressed.
+post_and_verify_compressed_test() {
+    echo "running post_and_verify_compressed_test"
+    initialize
+
+    start_secor_compressed
+    sleep 3
+    post_messages ${MESSAGES}
+    echo "Waiting ${WAIT_TIME} sec for Secor to upload logs to s3"
+    sleep ${WAIT_TIME}
+    verify ${MESSAGES}
+
+    stop_all
+    echo "post_and_verify_compressed_test succeeded"
+}
+
+
+
 post_and_verify_test
 start_from_non_zero_offset_test
 move_offset_back_test
+post_and_verify_compressed_test

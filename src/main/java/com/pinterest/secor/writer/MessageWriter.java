@@ -23,9 +23,11 @@ import com.pinterest.secor.message.ParsedMessage;
 import java.io.IOException;
 
 import com.pinterest.secor.util.IdUtil;
+import com.pinterest.secor.util.ReflectionUtil;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,12 +42,21 @@ public class MessageWriter {
     private SecorConfig mConfig;
     private OffsetTracker mOffsetTracker;
     private FileRegistry mFileRegistry;
+    private String mFileExtension;
+    private CompressionCodec mCodec;
 
     public MessageWriter(SecorConfig config, OffsetTracker offsetTracker,
-                         FileRegistry fileRegistry) {
+                         FileRegistry fileRegistry) throws Exception {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
+        if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
+            mCodec =
+                    ((CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec()));
+            mFileExtension = mCodec.getDefaultExtension();
+        } else {
+            mFileExtension = "";
+        }
     }
 
     private void adjustOffset(ParsedMessage message) throws IOException {
@@ -69,10 +80,11 @@ public class MessageWriter {
                                                            message.getKafkaPartition());
         long offset = mOffsetTracker.getAdjustedCommittedOffsetCount(topicPartition);
         String localPrefix = mConfig.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
-        LogFilePath path = new LogFilePath(localPrefix, mConfig.getGeneration(), offset, message);
+        LogFilePath path = new LogFilePath(localPrefix, mConfig.getGeneration(), offset, message, mFileExtension);
         LongWritable key = new LongWritable(message.getOffset());
         BytesWritable value = new BytesWritable(message.getPayload());
-        SequenceFile.Writer writer = mFileRegistry.getOrCreateWriter(path);
+        SequenceFile.Writer writer;
+        writer = mFileRegistry.getOrCreateWriter(path, mCodec);
         writer.append(key, value);
         LOG.debug("appended message " + message + " to file " + path.getLogFilePath() +
                   ".  File length " + writer.getLength());

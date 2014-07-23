@@ -156,6 +156,10 @@ public class SecorConfig {
         return getString("message.timestamp.name");
     }
 
+    public String getCompressionCodec() {
+        return getString("secor.compression.codec");
+    }
+
     private void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
             throw new RuntimeException("Failed to find required configuration option '" +

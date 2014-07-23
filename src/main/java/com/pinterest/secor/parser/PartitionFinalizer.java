@@ -19,6 +19,8 @@ package com.pinterest.secor.parser;
 import com.pinterest.secor.common.*;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.FileUtil;
+import com.pinterest.secor.util.ReflectionUtil;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,13 +46,20 @@ public class PartitionFinalizer {
     private ThriftMessageParser mThriftMessageParser;
     private KafkaClient mKafkaClient;
     private QuboleClient mQuboleClient;
+    private String mFileExtension;
 
-    public PartitionFinalizer(SecorConfig config) {
+    public PartitionFinalizer(SecorConfig config) throws Exception {
         mConfig = config;
         mKafkaClient = new KafkaClient(mConfig);
         mZookeeperConnector = new ZookeeperConnector(mConfig);
         mThriftMessageParser = new ThriftMessageParser(mConfig);
         mQuboleClient = new QuboleClient(mConfig);
+        if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
+            CompressionCodec codec = (CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec());
+            mFileExtension = codec.getDefaultExtension();
+        } else {
+            mFileExtension = "";
+        }
     }
 
     private long getLastTimestampMillis(TopicPartition topicPartition) throws TException {
@@ -108,7 +117,7 @@ public class PartitionFinalizer {
         final String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
         String[] partitions = {"dt="};
         LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, partitions,
-            mConfig.getGeneration(), 0, 0);
+            mConfig.getGeneration(), 0, 0, mFileExtension);
         String parentDir = logFilePath.getLogFileParentDir();
         String[] partitionDirs = FileUtil.list(parentDir);
         Pattern pattern = Pattern.compile(".*/dt=(\\d\\d\\d\\d-\\d\\d-\\d\\d)$");
@@ -138,7 +147,7 @@ public class PartitionFinalizer {
             String partitionStr = format.format(partition.getTime());
             String[] partitions = {"dt=" + partitionStr};
             LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, partitions,
-                mConfig.getGeneration(), 0, 0);
+                mConfig.getGeneration(), 0, 0, mFileExtension);
             String logFileDir = logFilePath.getLogFileDir();
             assert FileUtil.exists(logFileDir) : "FileUtil.exists(" + logFileDir + ")";
             String successFilePath = logFileDir + "/_SUCCESS";
