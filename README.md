@@ -95,11 +95,11 @@ Design details are available in [DESIGN.md](DESIGN.md).
 Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Maintainers
-[Pawel Garbacki](https://github.com/pgarbacki)
+  * [Pawel Garbacki](https://github.com/pgarbacki)
 
 ## Contributors
-[Andy Kramolisch](https://github.com/andykram)
-[Brenden Matthews](https://github.com/brndnmtthws)
+  * [Andy Kramolisch](https://github.com/andykram)
+  * [Brenden Matthews](https://github.com/brndnmtthws)
 
 ## Help
 
