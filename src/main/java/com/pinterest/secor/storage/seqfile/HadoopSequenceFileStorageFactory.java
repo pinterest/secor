@@ -75,7 +75,7 @@ public class HadoopSequenceFileStorageFactory implements StorageFactory {
 	}
 
 	@Override
-	public boolean supportsTrim() {
+	public boolean supportsRebalancing() {
 		return true;
 	}
 

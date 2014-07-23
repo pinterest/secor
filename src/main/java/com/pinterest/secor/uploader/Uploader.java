@@ -210,15 +210,14 @@ public class Uploader {
 						+ topicPartition.getTopic() + " partition "
 						+ topicPartition.getPartition());
 
-				if (mStorageFactory.supportsTrim()) {
+				if (mStorageFactory.supportsRebalancing()) {
 					// There was a rebalancing event and someone committed an
 					// offset
 					// lower than that
 					// of the current message. We need to trim local files.
 					trimFiles(topicPartition, newOffsetCount);
 				} else {
-					LOG.warn("Be careful: A rebalancing was occured but current storage does not support trimming file! Deleting instead...");
-					mFileRegistry.deleteTopicPartition(topicPartition);
+					LOG.warn("Be careful: A rebalancing was occured but current storage does not support trimming file!");
 				}
 			}
 		}

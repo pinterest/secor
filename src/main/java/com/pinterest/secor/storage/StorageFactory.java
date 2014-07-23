@@ -34,15 +34,15 @@ public interface StorageFactory {
 	Reader createReader(LogFilePath path) throws Exception;
 
 	/**
-	 * Tells if the storage format supports the process of trimming. Trimming a
-	 * file is needed when there was a rebalancing event and someone committed
+	 * Tells if the storage format supports the process of rebalacing. Trimming
+	 * a file is needed when there was a rebalancing event and someone committed
 	 * an offset lower than that of the current message being consumed. Local
 	 * file needs to be trimmed.
 	 * 
-	 * @return <tt>true</tt> if the storage format supports trim action.
+	 * @return <tt>true</tt> if the storage format supports rebalacing process.
 	 *         Otherwise, returns <tt>false</tt>.
 	 */
-	boolean supportsTrim();
+	boolean supportsRebalancing();
 
 	/**
 	 * Adds a extension to file before uploading to S3. For instance ".gz".

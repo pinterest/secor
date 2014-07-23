@@ -31,7 +31,7 @@ public class PlainTextGzippedStorageFactory implements StorageFactory {
 	}
 
 	@Override
-	public boolean supportsTrim() {
+	public boolean supportsRebalancing() {
 		return false;
 	}
 

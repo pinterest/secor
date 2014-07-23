@@ -118,7 +118,7 @@ public class UploaderTest extends TestCase {
 					}
 				});
 
-		Mockito.when(storageFactory.supportsTrim()).thenReturn(true);
+		Mockito.when(storageFactory.supportsRebalancing()).thenReturn(true);
 
 		mUploader = new Uploader(mConfig, mOffsetTracker, mFileRegistry,
 				mZookeeperConnector, storageFactory);
