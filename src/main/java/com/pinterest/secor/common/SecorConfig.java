@@ -69,8 +69,8 @@ public class SecorConfig {
         return getInt("kafka.consumer.timeout.ms");
     }
 
-    public int getRebalanceRetriesMax() {
-        return getInt("kafka.rebalance.retries.max");
+    public int getRebalanceMaxRetries() {
+        return getInt("kafka.rebalance.max.retries");
     }
 
     public int getGeneration() {
