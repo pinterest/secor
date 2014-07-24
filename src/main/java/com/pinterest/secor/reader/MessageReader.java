@@ -109,7 +109,7 @@ public class MessageReader {
         // topics whose number of partitions has changed.
         props.put("auto.offset.reset", "smallest");
         props.put("consumer.timeout.ms", Integer.toString(mConfig.getConsumerTimeoutMs()));
-        props.put("rebalance.retries.max", Integer.toString(mConfig.getRebalanceRetriesMax()));
+        props.put("rebalance.max.retries", Integer.toString(mConfig.getRebalanceMaxRetries()));
         props.put("consumer.id", IdUtil.getConsumerId());
 
         return new ConsumerConfig(props);
