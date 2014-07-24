@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,10 +79,11 @@ public class FileRegistry {
     /**
      * Retrieve a writer for a given path or create a new one if it does not exist.
      * @param path The path to retrieve writer for.
+     * @param codec Optional compression codec.
      * @return Writer for a given path.
      * @throws IOException
      */
-    public SequenceFile.Writer getOrCreateWriter(LogFilePath path) throws IOException {
+    public SequenceFile.Writer getOrCreateWriter(LogFilePath path, CompressionCodec codec) throws IOException {
         SequenceFile.Writer writer = mWriters.get(path);
         if (writer == null) {
             // Just in case.
@@ -98,10 +100,17 @@ public class FileRegistry {
                 files.add(path);
             }
             Configuration config = new Configuration();
-            Path fsPath = new Path(path.getLogFilePath());
             FileSystem fs = FileSystem.get(config);
-            writer = SequenceFile.createWriter(fs, config, fsPath, LongWritable.class,
-                                               BytesWritable.class);
+            if (codec != null) {
+                Path fsPath = new Path(path.getLogFilePath());
+                writer = SequenceFile.createWriter(fs, config, fsPath, LongWritable.class,
+                        BytesWritable.class,
+                        SequenceFile.CompressionType.BLOCK, codec);
+            } else {
+                Path fsPath = new Path(path.getLogFilePath());
+                writer = SequenceFile.createWriter(fs, config, fsPath, LongWritable.class,
+                        BytesWritable.class);
+            }
             mWriters.put(path, writer);
             mCreationTimes.put(path, System.currentTimeMillis() / 1000L);
             LOG.debug("created writer for path " + path.getLogFilePath());

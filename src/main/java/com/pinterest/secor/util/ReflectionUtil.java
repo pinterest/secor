@@ -26,6 +26,11 @@ import java.lang.reflect.Constructor;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class ReflectionUtil {
+    public static Object createCompressionCodec(String className) throws Exception {
+        Class<?> clazz = Class.forName(className);
+        return clazz.getConstructor().newInstance();
+    }
+
     public static Object createMessageParser(String className,
                                              SecorConfig config) throws Exception {
         Class<?> clazz = Class.forName(className);

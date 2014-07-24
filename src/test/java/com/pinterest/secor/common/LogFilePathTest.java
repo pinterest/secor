@@ -46,14 +46,14 @@ public class LogFilePathTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         mLogFilePath = new LogFilePath(PREFIX, TOPIC, PARTITIONS, GENERATION, KAFKA_PARTITION,
-                                       LAST_COMMITTED_OFFSET);
+                                       LAST_COMMITTED_OFFSET, "");
     }
 
     public void testConstructFromMessage() throws Exception {
         ParsedMessage message = new ParsedMessage(TOPIC, KAFKA_PARTITION, 1000,
                                                   "some_payload".getBytes(), PARTITIONS);
         LogFilePath logFilePath = new LogFilePath(PREFIX, GENERATION, LAST_COMMITTED_OFFSET,
-                                                  message);
+                                                  message, "");
         assertEquals(PATH, logFilePath.getLogFilePath());
     }
 

@@ -176,7 +176,7 @@ public class UploaderTest extends TestCase {
         LogFilePath dstLogFilePath = new LogFilePath("/some_parent_dir/some_message_dir",
                 "/some_parent_dir/some_message_dir/some_topic/some_partition/" +
                 "some_other_partition/10_0_00000000000000000021");
-        Mockito.when(mFileRegistry.getOrCreateWriter(dstLogFilePath)).thenReturn(writer);
+        Mockito.when(mFileRegistry.getOrCreateWriter(dstLogFilePath, null)).thenReturn(writer);
 
         mUploader.applyPolicy();
 

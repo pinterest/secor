@@ -48,25 +48,28 @@ public class LogFilePath {
     private int mGeneration;
     private int mKafkaPartition;
     private long mOffset;
+    private String mExtension;
 
     public LogFilePath(String prefix, int generation, long lastCommittedOffset,
-                       ParsedMessage message) {
+                       ParsedMessage message, String extension) {
         mPrefix = prefix;
         mTopic = message.getTopic();
         mPartitions = message.getPartitions();
         mGeneration = generation;
         mKafkaPartition = message.getKafkaPartition();
         mOffset = lastCommittedOffset;
+        mExtension = extension;
     }
 
     public LogFilePath(String prefix, String topic, String[] partitions, int generation,
-                       int kafkaPartition, long offset) {
+                       int kafkaPartition, long offset, String extension) {
         mPrefix = prefix;
         mTopic = topic;
         mPartitions = partitions;
         mGeneration = generation;
         mKafkaPartition = kafkaPartition;
         mOffset = offset;
+        mExtension = extension;
     }
 
     private static String[] subArray(String[] array, int startIndex, int endIndex) {
@@ -97,7 +100,13 @@ public class LogFilePath {
         // Parse basename.
         String basename = pathElements[pathElements.length - 1];
         // Remove extension.
-        basename = basename.split("\\.")[0];
+        int lastIndexOf = basename.lastIndexOf('.');
+        if (lastIndexOf >= 0) {
+            mExtension = basename.substring(lastIndexOf, basename.length());
+            basename = basename.substring(0, lastIndexOf);
+        } else {
+            mExtension = "";
+        }
         String[] basenameElements = basename.split("_");
         assert basenameElements.length == 3: Integer.toString(basenameElements.length) + " == 3";
         mGeneration = Integer.parseInt(basenameElements[0]);
@@ -136,7 +145,7 @@ public class LogFilePath {
         pathElements.add(getLogFileDir());
         pathElements.add(basename);
 
-        return StringUtils.join(pathElements, "/");
+        return StringUtils.join(pathElements, "/") + mExtension;
     }
 
     public String getLogFileCrcPath() {
@@ -167,6 +176,10 @@ public class LogFilePath {
 
     public long getOffset() {
         return mOffset;
+    }
+
+    public String getExtension() {
+        return mExtension;
     }
 
     @Override

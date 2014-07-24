@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
@@ -44,10 +45,14 @@ public class FileRegistryTest extends TestCase {
     private static final String PATH =
         "/some_parent_dir/some_topic/some_partition/some_other_partition/" +
         "10_0_00000000000000000100";
+    private static final String PATH_GZ =
+            "/some_parent_dir/some_topic/some_partition/some_other_partition/" +
+                    "10_0_00000000000000000100.gz";
     private static final String CRC_PATH =
             "/some_parent_dir/some_topic/some_partition/some_other_partition/" +
             ".10_0_00000000000000000100.crc";
     private LogFilePath mLogFilePath;
+    private LogFilePath mLogFilePathGz;
     private TopicPartition mTopicPartition;
     private FileRegistry mRegistry;
 
@@ -56,6 +61,7 @@ public class FileRegistryTest extends TestCase {
         mLogFilePath = new LogFilePath("/some_parent_dir", PATH);
         mTopicPartition = new TopicPartition("some_topic", 0);
         mRegistry = new FileRegistry();
+        mLogFilePathGz = new LogFilePath("/some_parent_dir", PATH_GZ);
     }
 
     private void createWriter() throws IOException {
@@ -77,7 +83,7 @@ public class FileRegistryTest extends TestCase {
 
         Mockito.when(writer.getLength()).thenReturn(123L);
 
-        SequenceFile.Writer createdWriter = mRegistry.getOrCreateWriter(mLogFilePath);
+        SequenceFile.Writer createdWriter = mRegistry.getOrCreateWriter(mLogFilePath, null);
         assertTrue(createdWriter == writer);
     }
 
@@ -85,7 +91,7 @@ public class FileRegistryTest extends TestCase {
         createWriter();
 
         // Call the method again.  This time it should return an existing writer.
-        mRegistry.getOrCreateWriter(mLogFilePath);
+        mRegistry.getOrCreateWriter(mLogFilePath, null);
 
         // Verify that the method has been called exactly once (the default).
         PowerMockito.verifyStatic();
@@ -101,6 +107,64 @@ public class FileRegistryTest extends TestCase {
         SequenceFile.createWriter(Mockito.any(FileSystem.class), Mockito.any(Configuration.class),
                 Mockito.eq(fsPath), Mockito.eq(LongWritable.class),
                 Mockito.eq(BytesWritable.class));
+
+        TopicPartition topicPartition = new TopicPartition("some_topic", 0);
+        Collection<TopicPartition> topicPartitions = mRegistry.getTopicPartitions();
+        assertEquals(1, topicPartitions.size());
+        assertTrue(topicPartitions.contains(topicPartition));
+
+        Collection<LogFilePath> logFilePaths = mRegistry.getPaths(topicPartition);
+        assertEquals(1, logFilePaths.size());
+        assertTrue(logFilePaths.contains(mLogFilePath));
+    }
+
+    private void createCompressedWriter() throws IOException {
+        PowerMockito.mockStatic(FileUtil.class);
+
+        PowerMockito.mockStatic(FileSystem.class);
+        FileSystem fs = Mockito.mock(FileSystem.class);
+        Mockito.when(FileSystem.get(Mockito.any(Configuration.class))).thenReturn(fs);
+
+        PowerMockito.mockStatic(SequenceFile.class);
+        Path fsPath = new Path(PATH_GZ);
+        SequenceFile.Writer writer = Mockito.mock(SequenceFile.Writer.class);
+        Mockito.when(SequenceFile.createWriter(Mockito.eq(fs),
+                Mockito.any(Configuration.class),
+                Mockito.eq(fsPath),
+                Mockito.eq(LongWritable.class),
+                Mockito.eq(BytesWritable.class),
+                Mockito.eq(SequenceFile.CompressionType.BLOCK),
+                Mockito.any(GzipCodec.class))).thenReturn(
+                writer);
+
+        Mockito.when(writer.getLength()).thenReturn(123L);
+
+        SequenceFile.Writer createdWriter = mRegistry.getOrCreateWriter(mLogFilePathGz, new GzipCodec());
+        assertTrue(createdWriter == writer);
+    }
+
+    public void testGetOrCreateWriterCompressed() throws Exception {
+        createCompressedWriter();
+
+        mRegistry.getOrCreateWriter(mLogFilePathGz, new GzipCodec());
+
+        // Verify that the method has been called exactly once (the default).
+        PowerMockito.verifyStatic();
+        FileSystem.get(Mockito.any(Configuration.class));
+
+        PowerMockito.verifyStatic();
+        FileUtil.delete(PATH_GZ);
+        PowerMockito.verifyStatic();
+        FileUtil.delete(CRC_PATH);
+
+        Path fsPath = new Path(PATH_GZ);
+        PowerMockito.verifyStatic();
+        SequenceFile.createWriter(Mockito.any(FileSystem.class), Mockito.any(Configuration.class),
+                Mockito.eq(fsPath), Mockito.eq(LongWritable.class),
+                Mockito.eq(BytesWritable.class),
+                Mockito.eq(SequenceFile.CompressionType.BLOCK),
+                Mockito.any(GzipCodec.class)
+        );
 
         TopicPartition topicPartition = new TopicPartition("some_topic", 0);
         Collection<TopicPartition> topicPartitions = mRegistry.getTopicPartitions();

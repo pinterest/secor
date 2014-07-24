@@ -20,10 +20,12 @@ import com.pinterest.secor.common.*;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
+import com.pinterest.secor.util.ReflectionUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +65,8 @@ public class Uploader {
                                              localPath.getPartitions(),
                                              localPath.getGeneration(),
                                              localPath.getKafkaPartition(),
-                                             localPath.getOffset());
+                                             localPath.getOffset(),
+                                             localPath.getExtension());
         String localLogFilename = localPath.getLogFilePath();
         LOG.info("uploading file " + localLogFilename + " to " + s3Path.getLogFilePath());
         FileUtil.moveToS3(localLogFilename, s3Path.getLogFilePath());
@@ -123,6 +126,12 @@ public class Uploader {
             reader = createReader(fs, srcFsPath, config);
             LongWritable key = (LongWritable) reader.getKeyClass().newInstance();
             BytesWritable value = (BytesWritable) reader.getValueClass().newInstance();
+            CompressionCodec codec = null;
+            String extension = "";
+            if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
+                codec = (CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec());
+                extension = codec.getDefaultExtension();
+            }
             while (reader.next(key, value)) {
                 if (key.get() >= startOffset) {
                     if (writer == null) {
@@ -130,8 +139,8 @@ public class Uploader {
                             IdUtil.getLocalMessageDir();
                         dstPath = new LogFilePath(localPrefix, srcPath.getTopic(),
                                                   srcPath.getPartitions(), srcPath.getGeneration(),
-                                                  srcPath.getKafkaPartition(), startOffset);
-                        writer = mFileRegistry.getOrCreateWriter(dstPath);
+                                                  srcPath.getKafkaPartition(), startOffset, extension);
+                        writer = mFileRegistry.getOrCreateWriter(dstPath, codec);
                     }
                     writer.append(key, value);
                     copiedMessages++;
