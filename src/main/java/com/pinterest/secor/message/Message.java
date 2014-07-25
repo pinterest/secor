@@ -29,12 +29,14 @@ public class Message {
     private String mTopic;
     private int mKafkaPartition;
     private long mOffset;
+    private byte[] mKey;
     private byte[] mPayload;
 
     protected String fieldsToString() {
         return "topic='" + mTopic + '\'' +
                ", kafkaPartition=" + mKafkaPartition +
                ", offset=" + mOffset +
+               ", key=" + mKey +
                ", payload=" + new String(mPayload);
 
     }
@@ -44,10 +46,12 @@ public class Message {
         return "Message{" + fieldsToString() + '}';
     }
 
-    public Message(String topic, int kafkaPartition, long offset, byte[] payload) {
+    public Message(String topic, int kafkaPartition, long offset, byte[] key,
+                   byte[] payload) {
         mTopic = topic;
         mKafkaPartition = kafkaPartition;
         mOffset = offset;
+        mKey = key;
         mPayload = payload;
     }
 
@@ -62,6 +66,10 @@ public class Message {
 
     public long getOffset() {
         return mOffset;
+    }
+
+    public byte[] getKey() {
+        return mKey;
     }
 
     public byte[] getPayload() {
