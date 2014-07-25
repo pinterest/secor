@@ -109,8 +109,16 @@ public class MessageReader {
         // topics whose number of partitions has changed.
         props.put("auto.offset.reset", "smallest");
         props.put("consumer.timeout.ms", Integer.toString(mConfig.getConsumerTimeoutMs()));
-        props.put("rebalance.max.retries", Integer.toString(mConfig.getRebalanceMaxRetries()));
         props.put("consumer.id", IdUtil.getConsumerId());
+        if (mConfig.getRebalanceMaxRetries() != null && !mConfig.getRebalanceMaxRetries().isEmpty()) {
+            props.put("rebalance.max.retries", mConfig.getRebalanceMaxRetries());
+        }
+        if (mConfig.getSocketReceieveBufferBytes() != null && !mConfig.getSocketReceieveBufferBytes().isEmpty()) {
+            props.put("socket.receive.buffer.bytes", mConfig.getSocketReceieveBufferBytes());
+        }
+        if (mConfig.getFetchMessageMaxBytes() != null && !mConfig.getFetchMessageMaxBytes().isEmpty()) {
+            props.put("fetch.message.max.bytes", mConfig.getFetchMessageMaxBytes());
+        }
 
         return new ConsumerConfig(props);
     }
