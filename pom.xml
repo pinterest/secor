@@ -299,7 +299,7 @@
 				<configuration>
 					<excludes>
 						<!-- Configuration is most flexible when files are outside of jar -->
-						<exclude>**/*.properties</exclude>
+						<exclude>*.properties</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
