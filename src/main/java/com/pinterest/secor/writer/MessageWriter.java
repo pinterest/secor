@@ -16,8 +16,6 @@
  */
 package com.pinterest.secor.writer;
 
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,10 +24,12 @@ import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.storage.StorageFactory;
 import com.pinterest.secor.storage.Writer;
 import com.pinterest.secor.util.IdUtil;
+import com.pinterest.secor.util.StatsUtil;
 
 /**
  * Message writer appends Kafka messages to local log files.
@@ -43,6 +43,7 @@ public class MessageWriter {
 	private final SecorConfig mConfig;
 	private final OffsetTracker mOffsetTracker;
 	private final FileRegistry mFileRegistry;
+	private final ZookeeperConnector mZookeeperConnector;
 
 	private final StorageFactory mStorageFactory;
 
@@ -51,26 +52,34 @@ public class MessageWriter {
 		mConfig = config;
 		mOffsetTracker = offsetTracker;
 		mFileRegistry = fileRegistry;
-		this.mStorageFactory = storageFactory;
+		mStorageFactory = storageFactory;
+		mZookeeperConnector = new ZookeeperConnector(config);
 	}
 
-	private void adjustOffset(ParsedMessage message) throws IOException {
+	private void adjustOffset(ParsedMessage message) throws Exception {
 		TopicPartition topicPartition = new TopicPartition(message.getTopic(),
 				message.getKafkaPartition());
 		long lastSeenOffset = mOffsetTracker.getLastSeenOffset(topicPartition);
 		if (message.getOffset() != lastSeenOffset + 1) {
 			// There was a rebalancing event since we read the last message.
-			LOG.debug("offset of message " + message
+			LOG.info("offset of message " + message
 					+ " does not follow sequentially the last seen offset "
 					+ lastSeenOffset + ".  Deleting files in topic "
 					+ topicPartition.getTopic() + " partition "
 					+ topicPartition.getPartition());
+
 			mFileRegistry.deleteTopicPartition(topicPartition);
+
+			// the committed offset has changed so we have to update tracker.
+			long zookeeperComittedOffsetCount = mZookeeperConnector
+					.getCommittedOffsetCount(topicPartition);
+			mOffsetTracker.setCommittedOffsetCount(topicPartition,
+					zookeeperComittedOffsetCount);
 		}
 		mOffsetTracker.setLastSeenOffset(topicPartition, message.getOffset());
 	}
 
-	public void write(ParsedMessage message) throws IOException {
+	public void write(ParsedMessage message) throws Exception {
 		adjustOffset(message);
 		TopicPartition topicPartition = new TopicPartition(message.getTopic(),
 				message.getKafkaPartition());
@@ -84,7 +93,12 @@ public class MessageWriter {
 		Writer writer = mFileRegistry.getOrCreateWriter(mStorageFactory, path);
 		writer.append(message);
 
-		LOG.debug("appended message " + message + " to file "
+		StatsUtil.setLabel(
+				String.format("secor.writer.last.offset.%s.%s",
+						message.getTopic(), message.getKafkaPartition()),
+				String.valueOf(message.getOffset()));
+
+		LOG.trace("appended message " + message + " to file "
 				+ path.getLogFilePath() + ".  File length "
 				+ writer.getLength());
 	}

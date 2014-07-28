@@ -18,57 +18,57 @@ package com.pinterest.secor.message;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.String;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Message represents a raw Kafka log message.
- *
+ * 
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class Message {
-    private String mTopic;
-    private int mKafkaPartition;
-    private long mOffset;
-    private byte[] mPayload;
+	private String mTopic;
+	private int mKafkaPartition;
+	private long mOffset;
+	private byte[] mPayload;
 
-    protected String fieldsToString() {
-        return "topic='" + mTopic + '\'' +
-               ", kafkaPartition=" + mKafkaPartition +
-               ", offset=" + mOffset +
-               ", payload=" + new String(mPayload);
+	protected String fieldsToString() {
+		return "topic='" + mTopic + '\'' + ", kafkaPartition="
+				+ mKafkaPartition + ", offset=" + mOffset + ", payload="
+				+ StringUtils.abbreviate(new String(mPayload), 140);
 
-    }
+	}
 
-    @Override
-    public String toString() {
-        return "Message{" + fieldsToString() + '}';
-    }
+	@Override
+	public String toString() {
+		return "Message{" + fieldsToString() + '}';
+	}
 
-    public Message(String topic, int kafkaPartition, long offset, byte[] payload) {
-        mTopic = topic;
-        mKafkaPartition = kafkaPartition;
-        mOffset = offset;
-        mPayload = payload;
-    }
+	public Message(String topic, int kafkaPartition, long offset, byte[] payload) {
+		mTopic = topic;
+		mKafkaPartition = kafkaPartition;
+		mOffset = offset;
+		mPayload = payload;
+	}
 
-    public String getTopic() {
+	public String getTopic() {
 
-        return mTopic;
-    }
+		return mTopic;
+	}
 
-    public int getKafkaPartition() {
-        return mKafkaPartition;
-    }
+	public int getKafkaPartition() {
+		return mKafkaPartition;
+	}
 
-    public long getOffset() {
-        return mOffset;
-    }
+	public long getOffset() {
+		return mOffset;
+	}
 
-    public byte[] getPayload() {
-        return mPayload;
-    }
+	public byte[] getPayload() {
+		return mPayload;
+	}
 
-    public void write(OutputStream output) throws IOException {
-        output.write(mPayload);
-    }
+	public void write(OutputStream output) throws IOException {
+		output.write(mPayload);
+	}
 }

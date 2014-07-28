@@ -16,8 +16,6 @@
  */
 package com.pinterest.secor.consumer;
 
-import java.io.IOException;
-
 import kafka.consumer.ConsumerTimeoutException;
 
 import org.slf4j.Logger;
@@ -48,7 +46,7 @@ import com.pinterest.secor.writer.MessageWriter;
  */
 public class Consumer extends Thread {
 	private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);
-	
+
 	private final double DECAY = 0.999;
 
 	private SecorConfig mConfig;
@@ -67,10 +65,11 @@ public class Consumer extends Thread {
 	private void init() throws Exception {
 		OffsetTracker offsetTracker = new OffsetTracker();
 		mMessageReader = new MessageReader(mConfig, offsetTracker);
-		
+
 		FileRegistry fileRegistry = new FileRegistry();
 		StorageFactory storageFactory = (StorageFactory) ReflectionUtil
-				.createStorageFactory(mConfig.getStorageFactoryClassOrDefault(), mConfig);
+				.createStorageFactory(
+						mConfig.getStorageFactoryClassOrDefault(), mConfig);
 
 		mMessageWriter = new MessageWriter(mConfig, offsetTracker,
 				fileRegistry, storageFactory);
@@ -123,7 +122,7 @@ public class Consumer extends Thread {
 				if (parsedMessage != null) {
 					try {
 						mMessageWriter.write(parsedMessage);
-					} catch (IOException e) {
+					} catch (Exception e) {
 						throw new RuntimeException("Failed to write message "
 								+ parsedMessage, e);
 					}

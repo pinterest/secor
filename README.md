@@ -2,6 +2,7 @@
 
 Secor is a service persisting [Kafka] logs to [Amazon S3].
 This fork provides the ability to customize the Writer. For instance, it's is useful  if you don't want to be dependent on Hadoop SequenceFile format (see custom Write below).
+In addition, this version discard systematically temporary data when committed offset has changed when consuming data (to keep things simple).
 
 ## Key features
   - **strong consistency**: as long as [Kafka] is not dropping messages (e.g., due to aggresive cleanup policy) before Secor is able to read them, it is guaranteed that each message will be saved in exacly one [S3] file. This property is not compromized by the notorious temporal inconsisteny of [S3] caused by the [eventual consistency] model,
@@ -13,7 +14,7 @@ This fork provides the ability to customize the Writer. For instance, it's is us
   - **monitoring**: metrics tracking various performace properties are exposed through [Ostrich] and optionaly exported to [OpenTSDB],
   - **customizability**: external log message parser may be loaded by updating the configuration,
   - **Qubole interface**: Secor connects to [Qubole] to add finalized output partitions to Hive tables.
-  - **custom Write**: original [Pinterest Secor](https://github.com/pinterest/secor) relies on the Hadoop sequence files for storage. By now, property `secor.storage.factory.class` defines the kind of storage. By default, `HadoopSequenceFileStorageFactory` is used. Another class is also available,`PlainTextGzippedStorageFactory` which storages text message in gzipped format. However, be careful, `PlainTextGzippedStorageFactory` does not handle rebalancing process.
+  - **custom Write**: original [Pinterest Secor](https://github.com/pinterest/secor) relies on the Hadoop Sequence File for storage. By now, property `secor.storage.factory.class` defines the kind of storage. By default, `HadoopSequenceFileStorageFactory` is used. Another class is also available,`PlainTextGzippedStorageFactory` which storages text message in gzipped format.
 
 ## Setup Guide
 

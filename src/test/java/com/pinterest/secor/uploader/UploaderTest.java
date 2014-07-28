@@ -35,10 +35,7 @@ import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.common.ZookeeperConnector;
-import com.pinterest.secor.message.ParsedMessage;
-import com.pinterest.secor.storage.Reader;
 import com.pinterest.secor.storage.StorageFactory;
-import com.pinterest.secor.storage.Writer;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
 
@@ -88,26 +85,7 @@ public class UploaderTest extends TestCase {
 		mZookeeperConnector = Mockito.mock(ZookeeperConnector.class);
 
 		storageFactory = Mockito.mock(StorageFactory.class);
-		final Reader reader = Mockito.mock(Reader.class);
 
-		// Mockito.doReturn(LongWritable.class).when(reader).getKeyClass();
-		// Mockito.doReturn(BytesWritable.class).when(reader).getValueClass();
-
-		Mockito.when(reader.next()).thenAnswer(new Answer<Boolean>() {
-			private int mCallCount = 0;
-
-			@Override
-			public Boolean answer(InvocationOnMock invocation) throws Throwable {
-				if (mCallCount == 2) {
-					return false;
-				}
-				Mockito.when(reader.getOffset()).thenReturn(20L + mCallCount++);
-				return true;
-			}
-		});
-		Mockito.when(
-				storageFactory.createReader(Mockito.any(LogFilePath.class)))
-				.thenReturn(reader);
 		Mockito.when(storageFactory.addExtension(Mockito.any(String.class)))
 				.thenAnswer(new Answer<String>() {
 
@@ -117,8 +95,6 @@ public class UploaderTest extends TestCase {
 						return (String) invocation.getArguments()[0];
 					}
 				});
-
-		Mockito.when(storageFactory.supportsRebalancing()).thenReturn(true);
 
 		mUploader = new Uploader(mConfig, mOffsetTracker, mFileRegistry,
 				mZookeeperConnector, storageFactory);
@@ -180,42 +156,5 @@ public class UploaderTest extends TestCase {
 		mUploader.applyPolicy();
 
 		Mockito.verify(mFileRegistry).deleteTopicPartition(mTopicPartition);
-	}
-
-	public void testSequenceFileTrimFiles() throws Exception {
-		Mockito.when(
-				mZookeeperConnector.getCommittedOffsetCount(mTopicPartition))
-				.thenReturn(21L);
-		Mockito.when(
-				mOffsetTracker.setCommittedOffsetCount(mTopicPartition, 21L))
-				.thenReturn(20L);
-		Mockito.when(mOffsetTracker.getLastSeenOffset(mTopicPartition))
-				.thenReturn(21L);
-
-		HashSet<LogFilePath> logFilePaths = new HashSet<LogFilePath>();
-		logFilePaths.add(mLogFilePath);
-		Mockito.when(mFileRegistry.getPaths(mTopicPartition)).thenReturn(
-				logFilePaths);
-
-		PowerMockito.mockStatic(FileSystem.class);
-
-		PowerMockito.mockStatic(IdUtil.class);
-		Mockito.when(IdUtil.getLocalMessageDir())
-				.thenReturn("some_message_dir");
-
-		Writer writer = Mockito.mock(Writer.class);
-		LogFilePath dstLogFilePath = new LogFilePath(
-				"/some_parent_dir/some_message_dir",
-				"/some_parent_dir/some_message_dir/some_topic/some_partition/"
-						+ "some_other_partition/10_0_00000000000000000021");
-
-		Mockito.when(
-				mFileRegistry.getOrCreateWriter(storageFactory, dstLogFilePath))
-				.thenReturn(writer);
-
-		mUploader.applyPolicy();
-
-		Mockito.verify(writer).append(Mockito.any(ParsedMessage.class));
-		Mockito.verify(mFileRegistry).deletePath(mLogFilePath);
 	}
 }

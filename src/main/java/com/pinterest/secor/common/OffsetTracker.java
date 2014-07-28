@@ -16,76 +16,89 @@
  */
 package com.pinterest.secor.common;
 
+import java.util.HashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-
 /**
  * Offset tracker stores offset related metadata.
- *
+ * 
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class OffsetTracker {
-    private static final Logger LOG = LoggerFactory.getLogger(OffsetTracker.class);
+	public static final int LAST_SEEN_OFFSET_UNINITIALIZED = -2;
 
-    private HashMap<TopicPartition, Long> mLastSeenOffset;
-    private HashMap<TopicPartition, Long> mFirstSeendOffset;
-    private HashMap<TopicPartition, Long> mCommittedOffsetCount;
+	public static final long COMMITTED_OFFSET_COUNT_UNINITIALIZED = -1L;
 
-    public OffsetTracker() {
-        mLastSeenOffset = new HashMap<TopicPartition, Long>();
-        mCommittedOffsetCount = new HashMap<TopicPartition, Long>();
-        mFirstSeendOffset = new HashMap<TopicPartition, Long>();
-    }
+	private static final Logger LOG = LoggerFactory
+			.getLogger(OffsetTracker.class);
 
-    public long getLastSeenOffset(TopicPartition topicPartition) {
-        Long offset = mLastSeenOffset.get(topicPartition);
-        if (offset == null) {
-            return -2;
-        }
-        return offset.longValue();
-    }
+	private HashMap<TopicPartition, Long> mLastSeenOffset;
+	private HashMap<TopicPartition, Long> mFirstSeendOffset;
+	private HashMap<TopicPartition, Long> mCommittedOffsetCount;
 
-    public long setLastSeenOffset(TopicPartition topicPartition, long offset) {
-        long lastSeenOffset = getLastSeenOffset(topicPartition);
-        mLastSeenOffset.put(topicPartition, offset);
-        if (lastSeenOffset + 1 != offset) {
-            LOG.warn("offset for topic " + topicPartition.getTopic() + " partition " +
-                     topicPartition.getPartition() + " changed from " + lastSeenOffset + " to " +
-                     offset);
-        }
-        if (mFirstSeendOffset.get(topicPartition) == null) {
-            mFirstSeendOffset.put(topicPartition, offset);
-        }
-        return lastSeenOffset;
-    }
+	public OffsetTracker() {
+		mLastSeenOffset = new HashMap<TopicPartition, Long>();
+		mCommittedOffsetCount = new HashMap<TopicPartition, Long>();
+		mFirstSeendOffset = new HashMap<TopicPartition, Long>();
+	}
 
-    public long getTrueCommittedOffsetCount(TopicPartition topicPartition) {
-        Long committedOffsetCount = mCommittedOffsetCount.get(topicPartition);
-        if (committedOffsetCount == null) {
-            return -1L;
-        }
-        return committedOffsetCount;
-    }
+	public long getLastSeenOffset(TopicPartition topicPartition) {
+		Long offset = mLastSeenOffset.get(topicPartition);
+		if (offset == null) {
+			return LAST_SEEN_OFFSET_UNINITIALIZED;
+		}
+		return offset.longValue();
+	}
 
-    public long getAdjustedCommittedOffsetCount(TopicPartition topicPartition) {
-        long trueCommittedOffsetCount = getTrueCommittedOffsetCount(topicPartition);
-        if (trueCommittedOffsetCount == -1L) {
-            Long firstSeenOffset = mFirstSeendOffset.get(topicPartition);
-            if (firstSeenOffset != null) {
-                return firstSeenOffset;
-            }
-        }
-        return trueCommittedOffsetCount;
-    }
+	public long setLastSeenOffset(TopicPartition topicPartition, long offset) {
+		long lastSeenOffset = getLastSeenOffset(topicPartition);
+		mLastSeenOffset.put(topicPartition, offset);
 
-    public long setCommittedOffsetCount(TopicPartition topicPartition, long count) {
-        long trueCommittedOffsetCount = getTrueCommittedOffsetCount(topicPartition);
-        // Committed offsets should never go back.
-        assert trueCommittedOffsetCount <= count: Long.toString(trueCommittedOffsetCount) +
-                " <= " + count;
-        mCommittedOffsetCount.put(topicPartition, count);
-        return trueCommittedOffsetCount;
-    }
+		if (mFirstSeendOffset.get(topicPartition) == null) {
+			mFirstSeendOffset.put(topicPartition, offset);
+		}
+
+		if (lastSeenOffset + 1 != offset) {
+			LOG.info("offset for topic " + topicPartition.getTopic()
+					+ " partition " + topicPartition.getPartition()
+					+ " changed from " + lastSeenOffset + " to " + offset);
+
+			mFirstSeendOffset.put(topicPartition, offset);
+		}
+
+		return lastSeenOffset;
+	}
+
+	public long getTrueCommittedOffsetCount(TopicPartition topicPartition) {
+		Long committedOffsetCount = mCommittedOffsetCount.get(topicPartition);
+		if (committedOffsetCount == null) {
+			return COMMITTED_OFFSET_COUNT_UNINITIALIZED;
+		}
+		return committedOffsetCount.longValue();
+	}
+
+	public long getAdjustedCommittedOffsetCount(TopicPartition topicPartition) {
+		long trueCommittedOffsetCount = getTrueCommittedOffsetCount(topicPartition);
+		if (trueCommittedOffsetCount == COMMITTED_OFFSET_COUNT_UNINITIALIZED) {
+			Long firstSeenOffset = mFirstSeendOffset.get(topicPartition);
+			if (firstSeenOffset != null) {
+				return firstSeenOffset.longValue();
+			}
+		}
+		return trueCommittedOffsetCount;
+	}
+
+	public long setCommittedOffsetCount(TopicPartition topicPartition,
+			long count) {
+		long trueCommittedOffsetCount = getTrueCommittedOffsetCount(topicPartition);
+
+		// Committed offsets should never go back.
+		assert trueCommittedOffsetCount <= count : Long
+				.toString(trueCommittedOffsetCount) + " <= " + count;
+
+		mCommittedOffsetCount.put(topicPartition, count);
+		return trueCommittedOffsetCount;
+	}
 }

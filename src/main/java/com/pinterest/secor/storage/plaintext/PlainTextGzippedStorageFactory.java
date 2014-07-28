@@ -2,12 +2,10 @@ package com.pinterest.secor.storage.plaintext;
 
 import java.io.IOException;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.storage.Reader;
 import com.pinterest.secor.storage.StorageFactory;
 import com.pinterest.secor.storage.Writer;
 
@@ -23,16 +21,6 @@ public class PlainTextGzippedStorageFactory implements StorageFactory {
 				path.getLogFilePath());
 
 		return new PlainTextGzippedWriter(path.getLogFilePath());
-	}
-
-	@Override
-	public Reader createReader(LogFilePath path) throws Exception {
-		throw new NotImplementedException();
-	}
-
-	@Override
-	public boolean supportsRebalancing() {
-		return false;
 	}
 
 	@Override

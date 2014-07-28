@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.storage.Reader;
 import com.pinterest.secor.storage.StorageFactory;
 import com.pinterest.secor.storage.Writer;
 
@@ -58,25 +57,6 @@ public class HadoopSequenceFileStorageFactory implements StorageFactory {
 				path.getLogFilePath());
 
 		return new HadoopSequenceFileWriter(writer);
-	}
-
-	@Override
-	public Reader createReader(LogFilePath path) throws Exception {
-		Configuration config = new Configuration();
-		FileSystem fs = FileSystem.get(config);
-
-		Path fsPath = new Path(path.getLogFilePath());
-
-		LOG.debug("Creating a Hadoop File Sequence reader for path '{}'.",
-				path.getLogFilePath());
-
-		return new HadoopSequenceFileReader(new SequenceFile.Reader(fs, fsPath,
-				config));
-	}
-
-	@Override
-	public boolean supportsRebalancing() {
-		return true;
 	}
 
 	@Override
