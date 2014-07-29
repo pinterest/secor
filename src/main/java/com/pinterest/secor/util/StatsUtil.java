@@ -16,23 +16,46 @@
  */
 package com.pinterest.secor.util;
 
+import com.pinterest.secor.common.TopicPartition;
 import com.twitter.ostrich.stats.Stats;
 
 /**
  * Utilities to interact with Ostrich stats exporter.
- *
+ * 
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class StatsUtil {
-    public static void setLabel(String name, String value) {
-        long threadId = Thread.currentThread().getId();
-        name += "." + threadId;
-        Stats.setLabel(name, value);
-    }
+	public static void setLabel(String name, String value) {
+		long threadId = Thread.currentThread().getId();
+		String fqName = "secor_t" + String.valueOf(threadId) + "_" + name;
+		Stats.setLabel(fqName, value);
+	}
 
-    public static void clearLabel(String name) {
-        long threadId = Thread.currentThread().getId();
-        name += "." + threadId;
-        Stats.clearLabel(name);
-    }
+	public static void clearLabel(TopicPartition topicPartition, String name) {
+		String underscoredName = prepareName(topicPartition, name);
+		Stats.clearLabel(underscoredName);
+	}
+
+	private static String prepareName(TopicPartition topicPartition, String name) {
+		long threadId = Thread.currentThread().getId();
+		String fqName = "secor_t" + String.valueOf(threadId) + "_"
+				+ topicPartition.getTopic() + "_"
+				+ String.valueOf(topicPartition.getPartition()) + "_" + name;
+		return fqName;
+	}
+
+	public static void incCounter(TopicPartition topicPartition, String name) {
+		String fqName = prepareName(topicPartition, name);
+		Stats.incr(fqName);
+	}
+
+	public static void setLabel(TopicPartition topicPartition, String name,
+			String value) {
+		String fqName = prepareName(topicPartition, name);
+		Stats.setLabel(fqName, value);
+	}
+
+	public static void setRawLabel(String confName, String value) {
+		Stats.setLabel(confName, value);
+	}
 }

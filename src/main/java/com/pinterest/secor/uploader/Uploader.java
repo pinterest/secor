@@ -29,6 +29,7 @@ import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.storage.StorageFactory;
 import com.pinterest.secor.util.FileUtil;
+import com.pinterest.secor.util.StatsUtil;
 
 /**
  * Uploader applies a set of policies to determine if any of the locally stored
@@ -75,6 +76,10 @@ public class Uploader {
 				+ s3Path.getLogFilePath());
 		FileUtil.moveToS3(localLogFilename,
 				mStorageFactory.addExtension(s3Path.getLogFilePath()));
+
+		TopicPartition topicPartition = new TopicPartition(
+				localPath.getTopic(), localPath.getKafkaPartition());
+		StatsUtil.incCounter(topicPartition, "s3_uploads");
 	}
 
 	private void uploadFiles(TopicPartition topicPartition) throws Exception {

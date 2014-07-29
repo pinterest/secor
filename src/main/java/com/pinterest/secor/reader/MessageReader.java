@@ -70,7 +70,7 @@ public class MessageReader {
 		KafkaStream<byte[], byte[]> stream = streams.get(0);
 		mIterator = stream.iterator();
 		mLastAccessTime = new HashMap<TopicPartition, Long>();
-		StatsUtil.setLabel("secor.kafka.consumer.id", IdUtil.getConsumerId());
+		StatsUtil.setLabel("kafka_consumer_id", IdUtil.getConsumerId());
 	}
 
 	private void updateAccessTime(TopicPartition topicPartition) {
@@ -95,13 +95,7 @@ public class MessageReader {
 			topicPartitions.append(topicPartition.getTopic() + '/'
 					+ topicPartition.getPartition());
 		}
-		StatsUtil
-				.setLabel("secor.topic_partitions", topicPartitions.toString());
-
-		StatsUtil.setLabel(
-				String.format("secor.reader.last.offset.%s.%s",
-						message.getTopic(), message.getKafkaPartition()),
-				String.valueOf(message.getOffset()));
+		StatsUtil.setLabel("topic_partitions", topicPartitions.toString());
 	}
 
 	private ConsumerConfig createConsumerConfig() throws UnknownHostException {
@@ -140,6 +134,9 @@ public class MessageReader {
 		TopicPartition topicPartition = new TopicPartition(message.getTopic(),
 				message.getKafkaPartition());
 		updateAccessTime(topicPartition);
+
+		StatsUtil.setLabel(topicPartition, "reader_last_offset",
+				String.valueOf(message.getOffset()));
 
 		LOG.trace("read message [{}]", message);
 		exportStats(message);

@@ -21,6 +21,8 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.pinterest.secor.util.StatsUtil;
+
 /**
  * Offset tracker stores offset related metadata.
  * 
@@ -97,6 +99,9 @@ public class OffsetTracker {
 		// Committed offsets should never go back.
 		assert trueCommittedOffsetCount <= count : Long
 				.toString(trueCommittedOffsetCount) + " <= " + count;
+
+		StatsUtil.setLabel(topicPartition, "committed_offset",
+				String.valueOf(count));
 
 		mCommittedOffsetCount.put(topicPartition, count);
 		return trueCommittedOffsetCount;

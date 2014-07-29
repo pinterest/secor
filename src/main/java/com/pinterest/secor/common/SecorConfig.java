@@ -16,11 +16,14 @@
  */
 package com.pinterest.secor.common;
 
+import java.util.Iterator;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 
 import com.pinterest.secor.storage.seqfile.HadoopSequenceFileStorageFactory;
+import com.pinterest.secor.util.StatsUtil;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -154,6 +157,22 @@ public class SecorConfig {
 
 	public String getTsdbBlacklistTopics() {
 		return getString("tsdb.blacklist.topics");
+	}
+
+	public void publishConfToOstrich() {
+
+		final Iterator<String> keys = mProperties.getKeys();
+		while (keys.hasNext()) {
+			String key = keys.next();
+
+			if (!key.equals("aws.access.key") && !key.equals("aws.secret.key")) {
+
+				String undescored = key.replaceAll("\\.", "_");
+				StatsUtil.setRawLabel(
+						String.format("secor_conf_%s", undescored),
+						getString(key));
+			}
+		}
 	}
 
 	private void checkProperty(String name) {

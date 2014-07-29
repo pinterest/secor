@@ -93,9 +93,7 @@ public class MessageWriter {
 		Writer writer = mFileRegistry.getOrCreateWriter(mStorageFactory, path);
 		writer.append(message);
 
-		StatsUtil.setLabel(
-				String.format("secor.writer.last.offset.%s.%s",
-						message.getTopic(), message.getKafkaPartition()),
+		StatsUtil.setLabel(topicPartition, "writer_last_offset",
 				String.valueOf(message.getOffset()));
 
 		LOG.trace("appended message " + message + " to file "

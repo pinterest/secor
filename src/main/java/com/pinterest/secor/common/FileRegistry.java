@@ -131,11 +131,8 @@ public class FileRegistry {
 		paths.remove(path);
 		if (paths.isEmpty()) {
 			mFiles.remove(topicPartition);
-			StatsUtil.clearLabel("secor.size." + topicPartition.getTopic()
-					+ "." + topicPartition.getPartition());
-			StatsUtil.clearLabel("secor.modification_age_sec."
-					+ topicPartition.getTopic() + "."
-					+ topicPartition.getPartition());
+			StatsUtil.clearLabel(topicPartition, "most_recently_created_file_sec");
+			StatsUtil.clearLabel(topicPartition, "aggregated_size_bytes");
 		}
 		deleteWriter(path);
 		FileUtil.delete(path.getLogFilePath());
@@ -218,8 +215,8 @@ public class FileRegistry {
 				result += writer.getLength();
 			}
 		}
-		StatsUtil.setLabel("secor.size." + topicPartition.getTopic() + "."
-				+ topicPartition.getPartition(), Long.toString(result));
+		StatsUtil.setLabel(topicPartition, "aggregated_size_bytes",
+				Long.toString(result));
 		return result;
 	}
 
@@ -252,9 +249,8 @@ public class FileRegistry {
 		if (result == Long.MAX_VALUE) {
 			result = -1;
 		}
-		StatsUtil.setLabel(
-				"secor.modification_age_sec." + topicPartition.getTopic() + "."
-						+ topicPartition.getPartition(), Long.toString(result));
+		StatsUtil.setLabel(topicPartition, "most_recently_created_file_sec",
+				Long.toString(result));
 		return result;
 	}
 }
