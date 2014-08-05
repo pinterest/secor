@@ -17,6 +17,7 @@
 package com.pinterest.secor.common;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,7 +64,7 @@ public class FileRegistry {
 		}
 		// Return a copy of the collection to prevent the caller from modifying
 		// internals.
-		return Collections.unmodifiableSet(topicPartitions);
+		return new ArrayList<TopicPartition>(topicPartitions);
 	}
 
 	/**
@@ -131,8 +132,7 @@ public class FileRegistry {
 		paths.remove(path);
 		if (paths.isEmpty()) {
 			mFiles.remove(topicPartition);
-			StatsUtil.clearLabel(topicPartition, "most_recently_created_file_sec");
-			StatsUtil.clearLabel(topicPartition, "aggregated_size_bytes");
+			StatsUtil.clearStats(topicPartition);
 		}
 		deleteWriter(path);
 		FileUtil.delete(path.getLogFilePath());
