@@ -54,7 +54,7 @@ public class MessageReader {
 
 	private SecorConfig mConfig;
 	private ConsumerConnector mConsumerConnector;
-	private ConsumerIterator mIterator;
+	private ConsumerIterator<byte[], byte[]> mIterator;
 	private HashMap<TopicPartition, Long> mLastAccessTime;
 
 	public MessageReader(SecorConfig config, OffsetTracker offsetTracker)
@@ -76,9 +76,10 @@ public class MessageReader {
 	private void updateAccessTime(TopicPartition topicPartition) {
 		long now = System.currentTimeMillis() / 1000L;
 		mLastAccessTime.put(topicPartition, now);
-		Iterator iterator = mLastAccessTime.entrySet().iterator();
+		Iterator<Map.Entry<TopicPartition, Long>> iterator = mLastAccessTime
+				.entrySet().iterator();
 		while (iterator.hasNext()) {
-			Map.Entry pair = (Map.Entry) iterator.next();
+			Map.Entry<TopicPartition, Long> pair = iterator.next();
 			long lastAccessTime = (Long) pair.getValue();
 			if (now - lastAccessTime > mConfig.getTopicPartitionForgetSeconds()) {
 				iterator.remove();
