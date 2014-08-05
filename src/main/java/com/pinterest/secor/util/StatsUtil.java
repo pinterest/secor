@@ -49,6 +49,11 @@ public class StatsUtil {
 		Stats.incr(fqName);
 	}
 
+	public static void clearCounter(TopicPartition topicPartition, String name) {
+		String fqName = prepareName(topicPartition, name);
+		Stats.removeCounter(fqName);
+	}
+
 	public static void setLabel(TopicPartition topicPartition, String name,
 			String value) {
 		String fqName = prepareName(topicPartition, name);
@@ -57,5 +62,14 @@ public class StatsUtil {
 
 	public static void setRawLabel(String confName, String value) {
 		Stats.setLabel(confName, value);
+	}
+
+	public static void clearStats(TopicPartition topicPartition) {
+		StatsUtil.clearLabel(topicPartition, "most_recently_created_file_sec");
+		StatsUtil.clearLabel(topicPartition, "aggregated_size_bytes");
+		StatsUtil.clearLabel(topicPartition, "committed_offset");
+		StatsUtil.clearLabel(topicPartition, "reader_last_offset");
+		StatsUtil.clearLabel(topicPartition, "writer_last_offset");
+		StatsUtil.clearCounter(topicPartition, "s3_uploads");
 	}
 }
