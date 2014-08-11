@@ -172,6 +172,10 @@ public class SecorConfig {
     public String getMessageTimestampName() {
         return getString("message.timestamp.name");
     }
+    
+    public String getMessageTimestampInputPattern() {
+        return getString("message.timestamp.input.pattern");
+    }
 
     public String getCompressionCodec() {
         return getString("secor.compression.codec");
