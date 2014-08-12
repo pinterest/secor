@@ -100,6 +100,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
 ## Contributors
   * [Andy Kramolisch](https://github.com/andykram)
   * [Brenden Matthews](https://github.com/brndnmtthws)
+  * [Lucas Zago](https://github.com/zago)
 
 ## Help
 
