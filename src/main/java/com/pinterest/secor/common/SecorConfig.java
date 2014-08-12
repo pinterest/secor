@@ -194,6 +194,14 @@ public class SecorConfig {
         return getString("secor.compression.codec");
     }
 
+    public boolean getProgressMonitorAsJson() {
+        return getBoolean("secor.progress_monitor.json");
+    }
+
+    public int getMaxMessageSizeBytes() {
+        return getInt("secor.max_message_size.bytes");
+    }
+
     private void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
             throw new RuntimeException("Failed to find required configuration option '" +
@@ -217,5 +225,9 @@ public class SecorConfig {
 
     private String[] getStringArray(String name) {
         return mProperties.getStringArray(name);
+    }
+
+    private boolean getBoolean(String name) {
+        return mProperties.getBoolean(name, false);
     }
 }

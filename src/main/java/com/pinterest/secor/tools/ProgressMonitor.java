@@ -16,21 +16,30 @@
  */
 package com.pinterest.secor.tools;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.pinterest.secor.common.KafkaClient;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
-import com.pinterest.secor.parser.ThriftMessageParser;
+import com.pinterest.secor.parser.MessageParser;
+import com.pinterest.secor.parser.TimestampedMessageParser;
+import com.pinterest.secor.util.ReflectionUtil;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,13 +53,16 @@ public class ProgressMonitor {
     private SecorConfig mConfig;
     private ZookeeperConnector mZookeeperConnector;
     private KafkaClient mKafkaClient;
-    private ThriftMessageParser mThriftMessageParser;
+    private MessageParser mMessageParser;
 
-    public ProgressMonitor(SecorConfig config) {
+    public ProgressMonitor(SecorConfig config)
+            throws Exception
+    {
         mConfig = config;
         mZookeeperConnector = new ZookeeperConnector(mConfig);
         mKafkaClient = new KafkaClient(mConfig);
-        mThriftMessageParser = new ThriftMessageParser(mConfig);
+        mMessageParser = (MessageParser) ReflectionUtil.createMessageParser(
+                mConfig.getMessageParserClass(), mConfig);
     }
 
     private void makeRequest(String body) throws IOException {
@@ -111,7 +123,21 @@ public class ProgressMonitor {
     }
 
     public void exportStats() throws Exception {
+        List<Stat> stats = getStats();
+        if (mConfig.getProgressMonitorAsJson()) {
+            System.out.println(JSONArray.toJSONString(stats));
+        } else {
+            for (Stat stat : stats) {
+                exportToTsdb(stat.getMetric(), stat.getTags(), stat.getValue());
+            }
+        }
+
+    }
+
+    private List<Stat> getStats() throws Exception {
         List<String> topics = mZookeeperConnector.getCommittedOffsetTopics();
+        List<Stat> stats = Lists.newArrayList();
+
         for (String topic : topics) {
             if (topic.matches(mConfig.getTsdbBlacklistTopics()) ||
                     !topic.matches(mConfig.getKafkaTopicFilter())) {
@@ -129,8 +155,7 @@ public class ProgressMonitor {
                         partition);
                 } else {
                     committedOffset = committedMessage.getOffset();
-                    committedTimestampMillis = mThriftMessageParser.extractTimestampMillis(
-                        committedMessage);
+                    committedTimestampMillis = getTimestamp(committedMessage);
                 }
 
                 Message lastMessage = mKafkaClient.getLastMessage(topicPartition);
@@ -138,18 +163,20 @@ public class ProgressMonitor {
                     LOG.warn("no message found in topic " + topic + " partition " + partition);
                 } else {
                     long lastOffset = lastMessage.getOffset();
-                    long lastTimestampMillis = mThriftMessageParser.extractTimestampMillis(
-                        lastMessage);
+                    long lastTimestampMillis = getTimestamp(lastMessage);
                     assert committedOffset <= lastOffset: Long.toString(committedOffset) + " <= " +
                         lastOffset;
+
                     long offsetLag = lastOffset - committedOffset;
                     long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
-                    HashMap<String, String> tags = new HashMap<String, String>();
-                    tags.put("topic", topic);
-                    tags.put("partition", Integer.toString(partition));
-                    exportToTsdb("secor.lag.offsets", tags, Long.toString(offsetLag));
-                    exportToTsdb("secor.lag.seconds", tags,
-                        Long.toString(timestampMillisLag / 1000));
+                    Map<String, String> tags = ImmutableMap.of(
+                            "topic", topic,
+                            "partition", Integer.toString(partition)
+                    );
+
+                    stats.add(new Stat("secor.lag.offsets", tags, Long.toString(offsetLag)));
+                    stats.add(new Stat("secor.lag.seconds", tags, Long.toString(timestampMillisLag / 1000)));
+
                     LOG.debug("topic " + topic + " partition " + partition + " committed offset " +
                         committedOffset + " last offset " + lastOffset + " committed timestamp " +
                             (committedTimestampMillis / 1000) + " last timestamp " +
@@ -157,5 +184,76 @@ public class ProgressMonitor {
                 }
             }
         }
+
+        return stats;
+    }
+
+    private long getTimestamp(Message message) throws Exception {
+        if (mMessageParser instanceof TimestampedMessageParser) {
+            return ((TimestampedMessageParser)mMessageParser).extractTimestampMillis(message);
+        } else {
+            return -1;
+        }
+    }
+
+    private static class Stat {
+        final String metric;
+        final Map<String, String> tags;
+        final String value;
+
+        public Stat(String metric, Map<String, String> tags, String value)
+        {
+            this.metric = metric;
+            this.tags = tags;
+            this.value = value;
+        }
+
+        public String getMetric() {
+            return this.metric;
+        }
+
+        public Map<String, String> getTags() {
+            return this.tags;
+        }
+
+        public String getValue() {
+            return this.value;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof Stat)) {
+                return false;
+            }
+
+            Stat stat = (Stat) o;
+
+            if (metric != null ? !metric.equals(stat.metric) : stat.metric != null) {
+                return false;
+            }
+            if (tags != null ? !tags.equals(stat.tags) : stat.tags != null) {
+                return false;
+            }
+            if (value != null ? !value.equals(stat.value) : stat.value != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = metric != null ? metric.hashCode() : 0;
+            result = 31 * result + (tags != null ? tags.hashCode() : 0);
+            result = 31 * result + (value != null ? value.hashCode() : 0);
+            return result;
+        }
+
+        public String toString() {return "com.pinterest.secor.tools.ProgressMonitor.Stat(metric=" + this.metric + ", tags=" + this.tags + ", value=" + this.value + ")";}
     }
 }

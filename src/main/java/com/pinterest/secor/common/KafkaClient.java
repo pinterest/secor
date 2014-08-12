@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +59,7 @@ public class KafkaClient {
     private HostAndPort findLeader(TopicPartition topicPartition) {
         SimpleConsumer consumer = null;
         try {
-            LOG.info("looking up lader for topic " + topicPartition.getTopic() + " partition " +
+            LOG.info("looking up leader for topic " + topicPartition.getTopic() + " partition " +
                 topicPartition.getPartition());
             consumer = new SimpleConsumer(mConfig.getKafkaSeedBrokerHost(),
                     mConfig.getKafkaSeedBrokerPort(),
@@ -114,7 +115,7 @@ public class KafkaClient {
                                SimpleConsumer consumer) {
         LOG.info("fetching message topic " + topicPartition.getTopic() + " partition " +
                 topicPartition.getPartition() + " offset " + offset);
-        final int MAX_MESSAGE_SIZE_BYTES = 100000;
+        final int MAX_MESSAGE_SIZE_BYTES = mConfig.getMaxMessageSizeBytes();
         final String clientName = getClientName(topicPartition);
         kafka.api.FetchRequest request = new FetchRequestBuilder().clientId(clientName)
                 .addFetch(topicPartition.getTopic(), topicPartition.getPartition(), offset,
@@ -126,13 +127,17 @@ public class KafkaClient {
             throw new RuntimeException("Error fetching offset data. Reason: " +
                     response.errorCode(topicPartition.getTopic(), topicPartition.getPartition()));
         }
-        MessageAndOffset messageAndOffset = response.messageSet(
-                topicPartition.getTopic(), topicPartition.getPartition()).iterator().next();
-        ByteBuffer payload = messageAndOffset.message().payload();
-        byte[] payloadBytes = new byte[payload.limit()];
-        payload.get(payloadBytes);
-        return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
-                messageAndOffset.offset(), payloadBytes);
+        Iterator<MessageAndOffset> messageSetIterator = response.messageSet(topicPartition.getTopic(), topicPartition.getPartition()).iterator();
+        if (messageSetIterator.hasNext()) {
+            MessageAndOffset messageAndOffset = messageSetIterator.next();
+            ByteBuffer payload = messageAndOffset.message().payload();
+            byte[] payloadBytes = new byte[payload.limit()];
+            payload.get(payloadBytes);
+            return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
+                    messageAndOffset.offset(), payloadBytes);
+        } else {
+            return null;
+        }
     }
 
     private SimpleConsumer createConsumer(TopicPartition topicPartition) {
