@@ -31,18 +31,31 @@ import java.util.Properties;
 public class SecorConfig {
     private final PropertiesConfiguration mProperties;
 
-    public static SecorConfig load() throws ConfigurationException {
-        // Load the default configuration file first
-        Properties systemProperties = System.getProperties();
-        String configProperty = systemProperties.getProperty("config");
+    private static final ThreadLocal<SecorConfig> mSecorConfig = new ThreadLocal<SecorConfig>() {
 
-        PropertiesConfiguration properties = new PropertiesConfiguration(configProperty);
+        @Override
+        protected SecorConfig initialValue() {
+            // Load the default configuration file first
+            Properties systemProperties = System.getProperties();
+            String configProperty = systemProperties.getProperty("config");
 
-        for (final Map.Entry<Object, Object> entry : systemProperties.entrySet()) {
-            properties.setProperty(entry.getKey().toString(), entry.getValue());
+            PropertiesConfiguration properties;
+            try {
+                properties = new PropertiesConfiguration(configProperty);
+            } catch (ConfigurationException e) {
+                throw new RuntimeException("Error loading configuration from " + configProperty);
+            }
+
+            for (final Map.Entry<Object, Object> entry : systemProperties.entrySet()) {
+                properties.setProperty(entry.getKey().toString(), entry.getValue());
+            }
+
+            return new SecorConfig(properties);
         }
+    };
 
-        return new SecorConfig(properties);
+    public static SecorConfig load() throws ConfigurationException {
+        return mSecorConfig.get();
     }
 
     private SecorConfig(PropertiesConfiguration properties) {
