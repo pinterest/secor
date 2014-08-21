@@ -16,11 +16,14 @@
  */
 package com.pinterest.secor.common;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.twitter.common.quantity.Amount;
 import com.twitter.common.quantity.Time;
 import com.twitter.common.zookeeper.DistributedLock;
 import com.twitter.common.zookeeper.DistributedLockImpl;
 import com.twitter.common.zookeeper.ZooKeeperClient;
+import org.apache.commons.lang.StringUtils;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs;
@@ -44,6 +47,10 @@ public class ZookeeperConnector {
     private SecorConfig mConfig;
     private ZooKeeperClient mZookeeperClient;
     private HashMap<String, DistributedLock> mLocks;
+    private String mCommittedOffsetGroupPath;
+
+    protected ZookeeperConnector() {
+    }
 
     public ZookeeperConnector(SecorConfig config) {
         mConfig = config;
@@ -79,8 +86,18 @@ public class ZookeeperConnector {
         mLocks.remove(lockPath);
     }
 
-    private String getCommittedOffsetGroupPath() {
-        return "/consumers/" + mConfig.getKafkaGroup() + "/offsets";
+    protected String getCommittedOffsetGroupPath() {
+        if (Strings.isNullOrEmpty(mCommittedOffsetGroupPath)) {
+            String stripped = StringUtils.strip(mConfig.getKafkaZookeeperPath(), "/");
+            mCommittedOffsetGroupPath = Joiner.on("/").skipNulls().join(
+                    "",
+                    stripped.equals("") ? null : stripped,
+                    "consumers",
+                    mConfig.getKafkaGroup(),
+                    "offsets"
+            );
+        }
+        return mCommittedOffsetGroupPath;
     }
 
     private String getCommittedOffsetTopicPath(String topic) {
@@ -178,5 +195,9 @@ public class ZookeeperConnector {
         ZooKeeper zookeeper = mZookeeperClient.get();
         LOG.info("deleting path " + offsetPath);
         zookeeper.delete(offsetPath, -1);
+    }
+
+    protected void setConfig(SecorConfig config) {
+        this.mConfig = config;
     }
 }
