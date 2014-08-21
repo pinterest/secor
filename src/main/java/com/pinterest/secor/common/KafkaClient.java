@@ -18,7 +18,8 @@ package com.pinterest.secor.common;
 
 import com.google.common.net.HostAndPort;
 import com.pinterest.secor.message.Message;
-import kafka.api.*;
+import kafka.api.FetchRequestBuilder;
+import kafka.api.PartitionOffsetRequestInfo;
 import kafka.common.TopicAndPartition;
 import kafka.javaapi.FetchResponse;
 import kafka.javaapi.OffsetRequest;
@@ -36,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -127,17 +127,13 @@ public class KafkaClient {
             throw new RuntimeException("Error fetching offset data. Reason: " +
                     response.errorCode(topicPartition.getTopic(), topicPartition.getPartition()));
         }
-        Iterator<MessageAndOffset> messageSetIterator = response.messageSet(topicPartition.getTopic(), topicPartition.getPartition()).iterator();
-        if (messageSetIterator.hasNext()) {
-            MessageAndOffset messageAndOffset = messageSetIterator.next();
-            ByteBuffer payload = messageAndOffset.message().payload();
-            byte[] payloadBytes = new byte[payload.limit()];
-            payload.get(payloadBytes);
-            return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
-                    messageAndOffset.offset(), payloadBytes);
-        } else {
-            return null;
-        }
+        MessageAndOffset messageAndOffset = response.messageSet(
+                topicPartition.getTopic(), topicPartition.getPartition()).iterator().next();
+        ByteBuffer payload = messageAndOffset.message().payload();
+        byte[] payloadBytes = new byte[payload.limit()];
+        payload.get(payloadBytes);
+        return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
+                messageAndOffset.offset(), payloadBytes);
     }
 
     private SimpleConsumer createConsumer(TopicPartition topicPartition) {

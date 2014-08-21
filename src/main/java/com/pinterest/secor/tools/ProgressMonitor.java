@@ -16,7 +16,6 @@
  */
 package com.pinterest.secor.tools;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.pinterest.secor.common.KafkaClient;
@@ -131,7 +130,6 @@ public class ProgressMonitor {
                 exportToTsdb(stat.getMetric(), stat.getTags(), stat.getValue());
             }
         }
-
     }
 
     private List<Stat> getStats() throws Exception {
@@ -200,12 +198,14 @@ public class ProgressMonitor {
         final String metric;
         final Map<String, String> tags;
         final String value;
+        final long timeStamp;
 
         public Stat(String metric, Map<String, String> tags, String value)
         {
             this.metric = metric;
             this.tags = tags;
             this.value = value;
+            this.timeStamp = System.currentTimeMillis() / 1000;
         }
 
         public String getMetric() {
@@ -254,6 +254,19 @@ public class ProgressMonitor {
             return result;
         }
 
-        public String toString() {return "com.pinterest.secor.tools.ProgressMonitor.Stat(metric=" + this.metric + ", tags=" + this.tags + ", value=" + this.value + ")";}
+        public String toString() {
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("metric", metric);
+            bodyJson.put("timestamp", timeStamp);
+            bodyJson.put("value", value);
+            JSONObject tagsJson = new JSONObject();
+            for (Map.Entry<String, String> entry : tags.entrySet()) {
+                tagsJson.put(entry.getKey(), entry.getValue());
+            }
+            bodyJson.put("tags", tagsJson);
+
+            LOG.info("exporting metric to tsdb " + bodyJson);
+            return bodyJson.toString();
+        }
     }
 }

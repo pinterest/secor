@@ -199,7 +199,7 @@ public class SecorConfig {
     }
 
     public int getMaxMessageSizeBytes() {
-        return getInt("secor.max_message_size.bytes");
+        return getInt("secor.max.message.size.bytes");
     }
 
     private void checkProperty(String name) {
