@@ -58,7 +58,7 @@ public class SecorConfig {
         return mSecorConfig.get();
     }
 
-    private SecorConfig(PropertiesConfiguration properties) {
+    protected SecorConfig(PropertiesConfiguration properties) {
         mProperties = properties;
     }
 
