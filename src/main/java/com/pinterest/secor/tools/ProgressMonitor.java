@@ -106,28 +106,18 @@ public class ProgressMonitor {
         }
     }
 
-    private void exportToTsdb(String metric, Map<String, String> tags, String value)
+    private void exportToTsdb(Stat stat)
             throws IOException {
-        JSONObject bodyJson = new JSONObject();
-        bodyJson.put("metric", metric);
-        bodyJson.put("timestamp", System.currentTimeMillis() / 1000);
-        bodyJson.put("value", value);
-        JSONObject tagsJson = new JSONObject();
-        for (Map.Entry<String, String> entry : tags.entrySet()) {
-            tagsJson.put(entry.getKey(), entry.getValue());
-        }
-        bodyJson.put("tags", tagsJson);
-        LOG.info("exporting metric to tsdb " + bodyJson);
-        makeRequest(bodyJson.toString());
+        LOG.info("exporting metric to tsdb " + stat);
+        makeRequest(stat.toString());
     }
 
     public void exportStats() throws Exception {
         List<Stat> stats = getStats();
-        if (mConfig.getProgressMonitorAsJson()) {
-            System.out.println(JSONArray.toJSONString(stats));
-        } else {
+        System.out.println(JSONArray.toJSONString(stats));
+        if (mConfig.getTsdbHostport() != null && !mConfig.getTsdbHostport().isEmpty()) {
             for (Stat stat : stats) {
-                exportToTsdb(stat.getMetric(), stat.getTags(), stat.getValue());
+                exportToTsdb(stat);
             }
         }
     }
@@ -172,8 +162,9 @@ public class ProgressMonitor {
                             "partition", Integer.toString(partition)
                     );
 
-                    stats.add(new Stat("secor.lag.offsets", tags, Long.toString(offsetLag)));
-                    stats.add(new Stat("secor.lag.seconds", tags, Long.toString(timestampMillisLag / 1000)));
+                    long timestamp = System.currentTimeMillis() / 1000;
+                    stats.add(Stat.createInstance("secor.lag.offsets", tags, Long.toString(offsetLag), timestamp));
+                    stats.add(Stat.createInstance("secor.lag.seconds", tags, Long.toString(timestampMillisLag / 1000), timestamp));
 
                     LOG.debug("topic " + topic + " partition " + partition + " committed offset " +
                         committedOffset + " last offset " + lastOffset + " committed timestamp " +
@@ -194,79 +185,20 @@ public class ProgressMonitor {
         }
     }
 
-    private static class Stat {
-        final String metric;
-        final Map<String, String> tags;
-        final String value;
-        final long timeStamp;
+    private static class Stat extends JSONObject {
 
-        public Stat(String metric, Map<String, String> tags, String value)
+        public static Stat createInstance(String metric, Map<String, String> tags, String value, long timestamp)
         {
-            this.metric = metric;
-            this.tags = tags;
-            this.value = value;
-            this.timeStamp = System.currentTimeMillis() / 1000;
+            return new Stat(ImmutableMap.of(
+                    "metric", metric,
+                    "tags", tags,
+                    "value", value,
+                    "timestamp", timestamp
+            ));
         }
 
-        public String getMetric() {
-            return this.metric;
-        }
-
-        public Map<String, String> getTags() {
-            return this.tags;
-        }
-
-        public String getValue() {
-            return this.value;
-        }
-
-        @Override
-        public boolean equals(Object o)
-        {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof Stat)) {
-                return false;
-            }
-
-            Stat stat = (Stat) o;
-
-            if (metric != null ? !metric.equals(stat.metric) : stat.metric != null) {
-                return false;
-            }
-            if (tags != null ? !tags.equals(stat.tags) : stat.tags != null) {
-                return false;
-            }
-            if (value != null ? !value.equals(stat.value) : stat.value != null) {
-                return false;
-            }
-
-            return true;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int result = metric != null ? metric.hashCode() : 0;
-            result = 31 * result + (tags != null ? tags.hashCode() : 0);
-            result = 31 * result + (value != null ? value.hashCode() : 0);
-            return result;
-        }
-
-        public String toString() {
-            JSONObject bodyJson = new JSONObject();
-            bodyJson.put("metric", metric);
-            bodyJson.put("timestamp", timeStamp);
-            bodyJson.put("value", value);
-            JSONObject tagsJson = new JSONObject();
-            for (Map.Entry<String, String> entry : tags.entrySet()) {
-                tagsJson.put(entry.getKey(), entry.getValue());
-            }
-            bodyJson.put("tags", tagsJson);
-
-            LOG.info("exporting metric to tsdb " + bodyJson);
-            return bodyJson.toString();
+        public Stat(Map<String, Object> map) {
+            super(map);
         }
     }
 }

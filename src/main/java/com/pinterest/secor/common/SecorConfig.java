@@ -185,17 +185,13 @@ public class SecorConfig {
     public String getMessageTimestampName() {
         return getString("message.timestamp.name");
     }
-    
+
     public String getMessageTimestampInputPattern() {
         return getString("message.timestamp.input.pattern");
     }
 
     public String getCompressionCodec() {
         return getString("secor.compression.codec");
-    }
-
-    public boolean getProgressMonitorAsJson() {
-        return getBoolean("secor.progress_monitor.json");
     }
 
     public int getMaxMessageSizeBytes() {
@@ -225,9 +221,5 @@ public class SecorConfig {
 
     private String[] getStringArray(String name) {
         return mProperties.getStringArray(name);
-    }
-
-    private boolean getBoolean(String name) {
-        return mProperties.getBoolean(name, false);
     }
 }
