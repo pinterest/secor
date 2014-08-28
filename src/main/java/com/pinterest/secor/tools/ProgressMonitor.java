@@ -187,8 +187,7 @@ public class ProgressMonitor {
 
     private static class Stat extends JSONObject {
 
-        public static Stat createInstance(String metric, Map<String, String> tags, String value, long timestamp)
-        {
+        public static Stat createInstance(String metric, Map<String, String> tags, String value, long timestamp) {
             return new Stat(ImmutableMap.of(
                     "metric", metric,
                     "tags", tags,

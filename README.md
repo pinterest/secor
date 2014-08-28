@@ -86,8 +86,6 @@ Progress monitor exports offset consumption lags per topic partition to [OpenTSD
 java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.ProgressMonitorMain
 ```
 
-Alternatively, you can tell the progress monitor to simply dump metrics, as JSON, to stdout. To do this, set `secor.progress_monitor.json=true`.
-
 ## Detailed design
 
 Design details are available in [DESIGN.md](DESIGN.md).
