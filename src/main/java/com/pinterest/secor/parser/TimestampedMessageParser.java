@@ -39,7 +39,7 @@ public abstract class TimestampedMessageParser extends MessageParser {
         super(config);
     }
 
-    abstract protected long extractTimestampMillis(final Message message) throws Exception;
+    public abstract long extractTimestampMillis(final Message message) throws Exception;
 
     protected static long toMillis(final long timestamp) {
         final long nanosecondDivider = (long) Math.pow(10, 9 + 9);

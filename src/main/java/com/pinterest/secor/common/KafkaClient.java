@@ -18,7 +18,8 @@ package com.pinterest.secor.common;
 
 import com.google.common.net.HostAndPort;
 import com.pinterest.secor.message.Message;
-import kafka.api.*;
+import kafka.api.FetchRequestBuilder;
+import kafka.api.PartitionOffsetRequestInfo;
 import kafka.common.TopicAndPartition;
 import kafka.javaapi.FetchResponse;
 import kafka.javaapi.OffsetRequest;
@@ -58,7 +59,7 @@ public class KafkaClient {
     private HostAndPort findLeader(TopicPartition topicPartition) {
         SimpleConsumer consumer = null;
         try {
-            LOG.info("looking up lader for topic " + topicPartition.getTopic() + " partition " +
+            LOG.info("looking up leader for topic " + topicPartition.getTopic() + " partition " +
                 topicPartition.getPartition());
             consumer = new SimpleConsumer(mConfig.getKafkaSeedBrokerHost(),
                     mConfig.getKafkaSeedBrokerPort(),
@@ -114,7 +115,7 @@ public class KafkaClient {
                                SimpleConsumer consumer) {
         LOG.info("fetching message topic " + topicPartition.getTopic() + " partition " +
                 topicPartition.getPartition() + " offset " + offset);
-        final int MAX_MESSAGE_SIZE_BYTES = 100000;
+        final int MAX_MESSAGE_SIZE_BYTES = mConfig.getMaxMessageSizeBytes();
         final String clientName = getClientName(topicPartition);
         kafka.api.FetchRequest request = new FetchRequestBuilder().clientId(clientName)
                 .addFetch(topicPartition.getTopic(), topicPartition.getPartition(), offset,

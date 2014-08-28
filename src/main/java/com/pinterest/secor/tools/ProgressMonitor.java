@@ -16,21 +16,29 @@
  */
 package com.pinterest.secor.tools;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.pinterest.secor.common.KafkaClient;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
-import com.pinterest.secor.parser.ThriftMessageParser;
+import com.pinterest.secor.parser.MessageParser;
+import com.pinterest.secor.parser.TimestampedMessageParser;
+import com.pinterest.secor.util.ReflectionUtil;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,13 +52,16 @@ public class ProgressMonitor {
     private SecorConfig mConfig;
     private ZookeeperConnector mZookeeperConnector;
     private KafkaClient mKafkaClient;
-    private ThriftMessageParser mThriftMessageParser;
+    private MessageParser mMessageParser;
 
-    public ProgressMonitor(SecorConfig config) {
+    public ProgressMonitor(SecorConfig config)
+            throws Exception
+    {
         mConfig = config;
         mZookeeperConnector = new ZookeeperConnector(mConfig);
         mKafkaClient = new KafkaClient(mConfig);
-        mThriftMessageParser = new ThriftMessageParser(mConfig);
+        mMessageParser = (MessageParser) ReflectionUtil.createMessageParser(
+                mConfig.getMessageParserClass(), mConfig);
     }
 
     private void makeRequest(String body) throws IOException {
@@ -95,23 +106,26 @@ public class ProgressMonitor {
         }
     }
 
-    private void exportToTsdb(String metric, Map<String, String> tags, String value)
+    private void exportToTsdb(Stat stat)
             throws IOException {
-        JSONObject bodyJson = new JSONObject();
-        bodyJson.put("metric", metric);
-        bodyJson.put("timestamp", System.currentTimeMillis() / 1000);
-        bodyJson.put("value", value);
-        JSONObject tagsJson = new JSONObject();
-        for (Map.Entry<String, String> entry : tags.entrySet()) {
-            tagsJson.put(entry.getKey(), entry.getValue());
-        }
-        bodyJson.put("tags", tagsJson);
-        LOG.info("exporting metric to tsdb " + bodyJson);
-        makeRequest(bodyJson.toString());
+        LOG.info("exporting metric to tsdb " + stat);
+        makeRequest(stat.toString());
     }
 
     public void exportStats() throws Exception {
+        List<Stat> stats = getStats();
+        System.out.println(JSONArray.toJSONString(stats));
+        if (mConfig.getTsdbHostport() != null && !mConfig.getTsdbHostport().isEmpty()) {
+            for (Stat stat : stats) {
+                exportToTsdb(stat);
+            }
+        }
+    }
+
+    private List<Stat> getStats() throws Exception {
         List<String> topics = mZookeeperConnector.getCommittedOffsetTopics();
+        List<Stat> stats = Lists.newArrayList();
+
         for (String topic : topics) {
             if (topic.matches(mConfig.getTsdbBlacklistTopics()) ||
                     !topic.matches(mConfig.getKafkaTopicFilter())) {
@@ -129,8 +143,7 @@ public class ProgressMonitor {
                         partition);
                 } else {
                     committedOffset = committedMessage.getOffset();
-                    committedTimestampMillis = mThriftMessageParser.extractTimestampMillis(
-                        committedMessage);
+                    committedTimestampMillis = getTimestamp(committedMessage);
                 }
 
                 Message lastMessage = mKafkaClient.getLastMessage(topicPartition);
@@ -138,24 +151,53 @@ public class ProgressMonitor {
                     LOG.warn("no message found in topic " + topic + " partition " + partition);
                 } else {
                     long lastOffset = lastMessage.getOffset();
-                    long lastTimestampMillis = mThriftMessageParser.extractTimestampMillis(
-                        lastMessage);
+                    long lastTimestampMillis = getTimestamp(lastMessage);
                     assert committedOffset <= lastOffset: Long.toString(committedOffset) + " <= " +
                         lastOffset;
+
                     long offsetLag = lastOffset - committedOffset;
                     long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
-                    HashMap<String, String> tags = new HashMap<String, String>();
-                    tags.put("topic", topic);
-                    tags.put("partition", Integer.toString(partition));
-                    exportToTsdb("secor.lag.offsets", tags, Long.toString(offsetLag));
-                    exportToTsdb("secor.lag.seconds", tags,
-                        Long.toString(timestampMillisLag / 1000));
+                    Map<String, String> tags = ImmutableMap.of(
+                            "topic", topic,
+                            "partition", Integer.toString(partition)
+                    );
+
+                    long timestamp = System.currentTimeMillis() / 1000;
+                    stats.add(Stat.createInstance("secor.lag.offsets", tags, Long.toString(offsetLag), timestamp));
+                    stats.add(Stat.createInstance("secor.lag.seconds", tags, Long.toString(timestampMillisLag / 1000), timestamp));
+
                     LOG.debug("topic " + topic + " partition " + partition + " committed offset " +
                         committedOffset + " last offset " + lastOffset + " committed timestamp " +
                             (committedTimestampMillis / 1000) + " last timestamp " +
                             (lastTimestampMillis / 1000));
                 }
             }
+        }
+
+        return stats;
+    }
+
+    private long getTimestamp(Message message) throws Exception {
+        if (mMessageParser instanceof TimestampedMessageParser) {
+            return ((TimestampedMessageParser)mMessageParser).extractTimestampMillis(message);
+        } else {
+            return -1;
+        }
+    }
+
+    private static class Stat extends JSONObject {
+
+        public static Stat createInstance(String metric, Map<String, String> tags, String value, long timestamp) {
+            return new Stat(ImmutableMap.of(
+                    "metric", metric,
+                    "tags", tags,
+                    "value", value,
+                    "timestamp", timestamp
+            ));
+        }
+
+        public Stat(Map<String, Object> map) {
+            super(map);
         }
     }
 }
