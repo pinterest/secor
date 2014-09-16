@@ -18,6 +18,7 @@ package com.pinterest.secor.writer;
 
 import com.pinterest.secor.common.*;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 
 import java.io.IOException;
@@ -61,7 +62,7 @@ public class MessageWriter {
         mLocalPrefix = mConfig.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
     }
 
-    private void adjustOffset(ParsedMessage message) throws IOException {
+    public void adjustOffset(Message message) throws IOException {
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         long lastSeenOffset = mOffsetTracker.getLastSeenOffset(topicPartition);
@@ -77,7 +78,6 @@ public class MessageWriter {
     }
 
     public void write(ParsedMessage message) throws IOException {
-        adjustOffset(message);
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         long offset = mOffsetTracker.getAdjustedCommittedOffsetCount(topicPartition);
