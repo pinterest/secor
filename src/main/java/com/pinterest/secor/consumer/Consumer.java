@@ -93,6 +93,12 @@ public class Consumer extends Thread {
                 LOG.trace("Consumer timed out", e);
             }
             if (rawMessage != null) {
+                // Before parsing, update the offset and remove any redundant data
+                try {
+                    mMessageWriter.adjustOffset(rawMessage);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to adjust offset.", e);
+                }
                 ParsedMessage parsedMessage = null;
                 try {
                     parsedMessage = mMessageParser.parse(rawMessage);
