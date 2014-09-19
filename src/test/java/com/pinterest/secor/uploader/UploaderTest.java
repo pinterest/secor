@@ -17,13 +17,13 @@
 package com.pinterest.secor.uploader;
 
 import com.pinterest.secor.common.*;
+import com.pinterest.secor.io.FileReader;
+import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
+
 import junit.framework.TestCase;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.*;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -41,24 +41,23 @@ import java.util.HashSet;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({FileUtil.class, FileSystem.class, IdUtil.class})
+@PrepareForTest({FileUtil.class, IdUtil.class})
 public class UploaderTest extends TestCase {
     private static class TestUploader extends Uploader {
-        private SequenceFile.Reader mReader;
+        private FileReader mReader;
 
         public TestUploader(SecorConfig config, OffsetTracker offsetTracker,
                             FileRegistry fileRegistry, ZookeeperConnector zookeeperConnector) {
             super(config, offsetTracker, fileRegistry, zookeeperConnector);
-            mReader = Mockito.mock(SequenceFile.Reader.class);
+            mReader = Mockito.mock(FileReader.class);
         }
 
         @Override
-        protected SequenceFile.Reader createReader(FileSystem fileSystem, Path path,
-                Configuration configuration) throws IOException {
+        protected FileReader createReader(LogFilePath srcPath) throws IOException {
             return mReader;
         }
 
-        public SequenceFile.Reader getReader() {
+        public FileReader getReader() {
             return mReader;
         }
     }
@@ -149,30 +148,23 @@ public class UploaderTest extends TestCase {
         logFilePaths.add(mLogFilePath);
         Mockito.when(mFileRegistry.getPaths(mTopicPartition)).thenReturn(logFilePaths);
 
-        PowerMockito.mockStatic(FileSystem.class);
+        FileReader reader = mUploader.getReader();
 
-        SequenceFile.Reader reader = mUploader.getReader();
-        Mockito.doReturn(LongWritable.class).when(reader).getKeyClass();
-        Mockito.doReturn(BytesWritable.class).when(reader).getValueClass();
-
-        Mockito.when(reader.next(Mockito.any(Writable.class),
-                Mockito.any(Writable.class))).thenAnswer(new Answer<Boolean>() {
+        Mockito.when(reader.next()).thenAnswer(new Answer<KeyValue>() {
             private int mCallCount = 0;
             @Override
-            public Boolean answer(InvocationOnMock invocation) throws Throwable {
+            public KeyValue answer(InvocationOnMock invocation) throws Throwable {
                 if (mCallCount == 2) {
-                    return false;
+                    return null;
                 }
-                LongWritable key = (LongWritable) invocation.getArguments()[0];
-                key.set(20 + mCallCount++);
-                return true;
+                return new KeyValue(20 + mCallCount++, null);
             }
         });
 
         PowerMockito.mockStatic(IdUtil.class);
         Mockito.when(IdUtil.getLocalMessageDir()).thenReturn("some_message_dir");
 
-        SequenceFile.Writer writer = Mockito.mock(SequenceFile.Writer.class);
+        FileWriter writer = Mockito.mock(FileWriter.class);
         LogFilePath dstLogFilePath = new LogFilePath("/some_parent_dir/some_message_dir",
                 "/some_parent_dir/some_message_dir/some_topic/some_partition/" +
                 "some_other_partition/10_0_00000000000000000021");
@@ -180,8 +172,8 @@ public class UploaderTest extends TestCase {
 
         mUploader.applyPolicy();
 
-        Mockito.verify(writer).append(Mockito.any(LongWritable.class),
-                                      Mockito.any(BytesWritable.class));
+        Mockito.verify(writer).write(Mockito.any(long.class),
+                                      Mockito.any(byte[].class));
         Mockito.verify(mFileRegistry).deletePath(mLogFilePath);
     }
 }

@@ -26,7 +26,9 @@ import com.pinterest.secor.uploader.Uploader;
 import com.pinterest.secor.reader.MessageReader;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.writer.MessageWriter;
+
 import kafka.consumer.ConsumerTimeoutException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +64,7 @@ public class Consumer extends Thread {
     private void init() throws Exception {
         OffsetTracker offsetTracker = new OffsetTracker();
         mMessageReader = new MessageReader(mConfig, offsetTracker);
-        FileRegistry fileRegistry = new FileRegistry();
+        FileRegistry fileRegistry = new FileRegistry(mConfig);
         mMessageWriter = new MessageWriter(mConfig, offsetTracker, fileRegistry);
         mMessageParser = (MessageParser) ReflectionUtil.createMessageParser(
                 mConfig.getMessageParserClass(), mConfig);
@@ -116,7 +118,7 @@ public class Consumer extends Thread {
                 if (parsedMessage != null) {
                     try {
                         mMessageWriter.write(parsedMessage);
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         throw new RuntimeException("Failed to write message " + parsedMessage, e);
                     }
                 }

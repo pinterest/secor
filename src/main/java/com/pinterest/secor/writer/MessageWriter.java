@@ -17,6 +17,7 @@
 package com.pinterest.secor.writer;
 
 import com.pinterest.secor.common.*;
+import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
@@ -24,11 +25,6 @@ import com.pinterest.secor.message.ParsedMessage;
 import java.io.IOException;
 
 import com.pinterest.secor.util.IdUtil;
-import com.pinterest.secor.util.ReflectionUtil;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +39,7 @@ public class MessageWriter {
     private SecorConfig mConfig;
     private OffsetTracker mOffsetTracker;
     private FileRegistry mFileRegistry;
-    private String mFileExtension;
-    private CompressionCodec mCodec;
+    private LogFilePathAttributes mFilePathAttributes;
     private String mLocalPrefix;
 
     public MessageWriter(SecorConfig config, OffsetTracker offsetTracker,
@@ -52,13 +47,7 @@ public class MessageWriter {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
-        if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
-            mCodec =
-                    ((CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec()));
-            mFileExtension = mCodec.getDefaultExtension();
-        } else {
-            mFileExtension = "";
-        }
+        mFilePathAttributes = new LogFilePathAttributes(config);
         mLocalPrefix = mConfig.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
     }
 
@@ -77,16 +66,16 @@ public class MessageWriter {
         mOffsetTracker.setLastSeenOffset(topicPartition, message.getOffset());
     }
 
-    public void write(ParsedMessage message) throws IOException {
+    public void write(ParsedMessage message) throws Exception {
+        adjustOffset(message);
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         long offset = mOffsetTracker.getAdjustedCommittedOffsetCount(topicPartition);
-        LogFilePath path = new LogFilePath(mLocalPrefix, mConfig.getGeneration(), offset, message, mFileExtension);
-        LongWritable key = new LongWritable(message.getOffset());
-        BytesWritable value = new BytesWritable(message.getPayload());
-        SequenceFile.Writer writer;
-        writer = mFileRegistry.getOrCreateWriter(path, mCodec);
-        writer.append(key, value);
+        LogFilePath path = new LogFilePath(mLocalPrefix, mConfig.getGeneration(), offset, message,
+        		mFilePathAttributes.getLogFileExtension());
+        FileWriter writer;
+        writer = mFileRegistry.getOrCreateWriter(path, mFilePathAttributes.getCompressionCodec());
+        writer.write(message.getOffset(), message.getPayload());
         LOG.debug("appended message " + message + " to file " + path.getLogFilePath() +
                   ".  File length " + writer.getLength());
     }
