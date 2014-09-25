@@ -16,6 +16,8 @@
  */
 package com.pinterest.secor.io.impl;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -38,13 +40,15 @@ public class GzipFileWriter implements FileWriter {
 	private static final byte DELIMITER = '\n';
 	
 	private final CountingOutputStream countingStream;
-	private final GZIPOutputStream writer;
+	private final BufferedOutputStream writer;
 
 	// constructor
 	public GzipFileWriter(LogFilePath path) throws FileNotFoundException,
 			IOException {
-		this.countingStream = new CountingOutputStream(new FileOutputStream(path.getLogFilePath()));
-		this.writer = new GZIPOutputStream(this.countingStream);
+		File logFile = new File(path.getLogFilePath());
+		logFile.getParentFile().mkdirs();
+		this.countingStream = new CountingOutputStream(new FileOutputStream(logFile));
+		this.writer = new BufferedOutputStream(new GZIPOutputStream(this.countingStream));
 	}
 
 	@Override

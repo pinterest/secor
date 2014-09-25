@@ -16,8 +16,10 @@
  */
 package com.pinterest.secor.io.impl;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
@@ -36,12 +38,12 @@ public class GzipFileReader implements FileReader {
 	
 	private static final byte DELIMITER = '\n';
 	
-	private final GZIPInputStream reader;
+	private final BufferedInputStream reader;
 	private long offset;
 	
 	// constructor
 	public GzipFileReader(LogFilePath path) throws Exception {
-		reader = new GZIPInputStream(new FileInputStream(path.getLogFilePath()));
+		reader = new BufferedInputStream(new GZIPInputStream(new FileInputStream(new File(path.getLogFilePath()))));
 		this.offset = path.getOffset();
 	}
 	

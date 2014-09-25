@@ -23,9 +23,7 @@ import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
-import com.pinterest.secor.util.ReflectionUtil;
 
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,12 +117,7 @@ public class Uploader {
         mFileRegistry.deleteWriter(srcPath);
         try {
             reader = createReader(srcPath);
-            CompressionCodec codec = null;
-            String extension = "";
-            if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
-                codec = (CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec());
-                extension = codec.getDefaultExtension();
-            }
+            LogFilePathAttributes mFilePathAttributes = new LogFilePathAttributes(mConfig);
             KeyValue keyVal;
             while ((keyVal = reader.next()) != null) {
                 if (keyVal.getKey() >= startOffset) {
@@ -133,8 +126,10 @@ public class Uploader {
                             IdUtil.getLocalMessageDir();
                         dstPath = new LogFilePath(localPrefix, srcPath.getTopic(),
                                                   srcPath.getPartitions(), srcPath.getGeneration(),
-                                                  srcPath.getKafkaPartition(), startOffset, extension);
-                        writer = mFileRegistry.getOrCreateWriter(dstPath, codec);
+                                                  srcPath.getKafkaPartition(), startOffset,
+                                                  mFilePathAttributes.getLogFileExtension());
+                        writer = mFileRegistry.getOrCreateWriter(dstPath,
+                        		mFilePathAttributes.getCompressionCodec());
                     }
                     writer.write(keyVal.getKey(), keyVal.getValue());
                     copiedMessages++;

@@ -34,7 +34,7 @@ public class FileWriterFactory {
 	public static FileWriter create(LogFilePath path, CompressionCodec codec, SecorConfig mConfig) throws Exception {
 		if (mConfig.getFileWriter() != null && !mConfig.getFileWriter().isEmpty()) {
 			return ((FileWriter) ReflectionUtil.createFileWriter(mConfig.getFileWriter(), path, codec));
-        } 
+        }
 		throw new IllegalArgumentException("File Writer not defined or empty");
 	}
 

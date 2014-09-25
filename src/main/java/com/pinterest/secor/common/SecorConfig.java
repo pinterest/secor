@@ -198,6 +198,10 @@ public class SecorConfig {
     public String getCompressionCodec() {
         return getString("secor.compression.codec");
     }
+    
+    public String getFileExtension() {
+    	return getString("secor.file.extension");
+    }
 
     public int getMaxMessageSizeBytes() {
         return getInt("secor.max.message.size.bytes");
@@ -209,6 +213,10 @@ public class SecorConfig {
     
     public String getFileReader() {
     	return getString("secor.file.reader");
+    }
+    
+    public String getPerfTestTopicPrefix() {
+    	return getString("secor.kafka.perf_topic_prefix");
     }
 
     private void checkProperty(String name) {

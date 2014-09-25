@@ -19,6 +19,7 @@ package com.pinterest.secor.consumer;
 import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.parser.MessageParser;
@@ -53,6 +54,7 @@ public class Consumer extends Thread {
     private MessageReader mMessageReader;
     private MessageWriter mMessageWriter;
     private MessageParser mMessageParser;
+    private OffsetTracker offsetTracker;
     private Uploader mUploader;
     // TODO(pawel): we should keep a count per topic partition.
     private double mUnparsableMessages;
@@ -62,7 +64,7 @@ public class Consumer extends Thread {
     }
 
     private void init() throws Exception {
-        OffsetTracker offsetTracker = new OffsetTracker();
+        offsetTracker = new OffsetTracker();
         mMessageReader = new MessageReader(mConfig, offsetTracker);
         FileRegistry fileRegistry = new FileRegistry(mConfig);
         mMessageWriter = new MessageWriter(mConfig, offsetTracker, fileRegistry);
@@ -132,4 +134,17 @@ public class Consumer extends Thread {
             }
         }
     }
+    
+    /**
+     * Helper to get the last offset for a topic partition (used in tests)
+     * @param topic
+     * @param partition
+     * @return
+     */
+    public long getOffset(String topic, int partition) {
+		if (this.offsetTracker == null)
+			return -1;
+		return this.offsetTracker.getLastSeenOffset(new TopicPartition(topic,
+				partition)) + 1;
+	}
 }
