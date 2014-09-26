@@ -67,7 +67,6 @@ public class MessageWriter {
     }
 
     public void write(ParsedMessage message) throws Exception {
-        adjustOffset(message);
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         long offset = mOffsetTracker.getAdjustedCommittedOffsetCount(topicPartition);

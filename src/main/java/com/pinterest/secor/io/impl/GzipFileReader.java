@@ -22,7 +22,9 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.zip.GZIPInputStream;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.compress.GzipCodec;
 
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.FileReader;
@@ -43,7 +45,9 @@ public class GzipFileReader implements FileReader {
 	
 	// constructor
 	public GzipFileReader(LogFilePath path) throws Exception {
-		reader = new BufferedInputStream(new GZIPInputStream(new FileInputStream(new File(path.getLogFilePath()))));
+		GzipCodec codec = new GzipCodec();
+		codec.setConf(new Configuration());
+		reader = new BufferedInputStream(codec.createInputStream(new FileInputStream(new File(path.getLogFilePath()))));
 		this.offset = path.getOffset();
 	}
 	

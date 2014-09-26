@@ -170,6 +170,8 @@ public class PerformanceTest {
 				long endMillis = System.currentTimeMillis();
 				System.out.println("Completed in:" + (endMillis - startMillis));
 				System.out.println("Total bytes:" + size);
+				// wait for the last file to be written
+				Thread.sleep(60000);
 				break;
 			}
 		}

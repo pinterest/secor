@@ -21,7 +21,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.zip.GZIPOutputStream;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.compress.GzipCodec;
 
 import com.google.common.io.CountingOutputStream;
 import com.pinterest.secor.common.LogFilePath;
@@ -45,10 +47,12 @@ public class GzipFileWriter implements FileWriter {
 	// constructor
 	public GzipFileWriter(LogFilePath path) throws FileNotFoundException,
 			IOException {
+		GzipCodec codec = new GzipCodec();
+		codec.setConf(new Configuration());
 		File logFile = new File(path.getLogFilePath());
 		logFile.getParentFile().mkdirs();
 		this.countingStream = new CountingOutputStream(new FileOutputStream(logFile));
-		this.writer = new BufferedOutputStream(new GZIPOutputStream(this.countingStream));
+		this.writer = new BufferedOutputStream(codec.createOutputStream((this.countingStream)));
 	}
 
 	@Override
