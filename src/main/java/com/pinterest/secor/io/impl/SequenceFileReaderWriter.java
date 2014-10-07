@@ -76,10 +76,10 @@ public class SequenceFileReaderWriter implements FileReaderWriter {
 
     @Override
     public void close() throws IOException {
-        if (this.writer == null) {
+        if (this.writer != null) {
             this.writer.close();
         }
-        if (this.reader == null) {
+        if (this.reader != null) {
             this.reader.close();
         }
     }
