@@ -17,7 +17,7 @@
 package com.pinterest.secor.writer;
 
 import com.pinterest.secor.common.*;
-import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.FileReaderWriter;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
@@ -25,6 +25,9 @@ import com.pinterest.secor.message.ParsedMessage;
 import java.io.IOException;
 
 import com.pinterest.secor.util.IdUtil;
+import com.pinterest.secor.util.ReflectionUtil;
+
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +42,8 @@ public class MessageWriter {
     private SecorConfig mConfig;
     private OffsetTracker mOffsetTracker;
     private FileRegistry mFileRegistry;
-    private LogFilePathAttributes mFilePathAttributes;
+    private String mFileExtension;
+    private CompressionCodec mCodec;
     private String mLocalPrefix;
 
     public MessageWriter(SecorConfig config, OffsetTracker offsetTracker,
@@ -47,7 +51,12 @@ public class MessageWriter {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
-        mFilePathAttributes = new LogFilePathAttributes(config);
+        if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
+            mCodec = ((CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec()));
+            mFileExtension = mCodec.getDefaultExtension();
+        } else {
+            mFileExtension = "";
+        }
         mLocalPrefix = mConfig.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
     }
 
@@ -71,9 +80,8 @@ public class MessageWriter {
                                                            message.getKafkaPartition());
         long offset = mOffsetTracker.getAdjustedCommittedOffsetCount(topicPartition);
         LogFilePath path = new LogFilePath(mLocalPrefix, mConfig.getGeneration(), offset, message,
-        		mFilePathAttributes.getLogFileExtension());
-        FileWriter writer;
-        writer = mFileRegistry.getOrCreateWriter(path, mFilePathAttributes.getCompressionCodec());
+        		mFileExtension);
+        FileReaderWriter writer = mFileRegistry.getOrCreateWriter(path, mCodec);
         writer.write(message.getOffset(), message.getPayload());
         LOG.debug("appended message " + message + " to file " + path.getLogFilePath() +
                   ".  File length " + writer.getLength());

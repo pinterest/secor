@@ -16,9 +16,9 @@
  */
 package com.pinterest.secor.common;
 
-import com.pinterest.secor.io.FileWriter;
-import com.pinterest.secor.io.FileWriterFactory;
+import com.pinterest.secor.io.FileReaderWriter;
 import com.pinterest.secor.util.FileUtil;
+import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.util.StatsUtil;
 
 import org.apache.hadoop.io.compress.CompressionCodec;
@@ -39,13 +39,13 @@ public class FileRegistry {
 
     private final SecorConfig mConfig;
     private HashMap<TopicPartition, HashSet<LogFilePath>> mFiles;
-    private HashMap<LogFilePath, FileWriter> mWriters;
+    private HashMap<LogFilePath, FileReaderWriter> mWriters;
     private HashMap<LogFilePath, Long> mCreationTimes;
 
     public FileRegistry(SecorConfig mConfig) {
     	this.mConfig = mConfig;
         mFiles = new HashMap<TopicPartition, HashSet<LogFilePath>>();
-        mWriters = new HashMap<LogFilePath, FileWriter>();
+        mWriters = new HashMap<LogFilePath, FileReaderWriter>();
         mCreationTimes = new HashMap<LogFilePath, Long>();
     }
 
@@ -82,8 +82,9 @@ public class FileRegistry {
      * @return Writer for a given path.
      * @throws Exception 
      */
-    public FileWriter getOrCreateWriter(LogFilePath path, CompressionCodec codec) throws Exception {
-        FileWriter writer = mWriters.get(path);
+    public FileReaderWriter getOrCreateWriter(LogFilePath path, CompressionCodec codec)
+            throws Exception {
+        FileReaderWriter writer = mWriters.get(path);
         if (writer == null) {
             // Just in case.
             FileUtil.delete(path.getLogFilePath());
@@ -98,7 +99,7 @@ public class FileRegistry {
             if (!files.contains(path)) {
                 files.add(path);
             }
-            writer = FileWriterFactory.create(path, codec, this.mConfig);
+            writer = ((FileReaderWriter) ReflectionUtil.createFileReaderWriter(mConfig.getFileReaderWriter(), path, codec));
             mWriters.put(path, writer);
             mCreationTimes.put(path, System.currentTimeMillis() / 1000L);
             LOG.debug("created writer for path " + path.getLogFilePath());
@@ -149,7 +150,7 @@ public class FileRegistry {
      * @param path The path to remove the writer for.
      */
     public void deleteWriter(LogFilePath path) throws IOException {
-        FileWriter writer = mWriters.get(path);
+        FileReaderWriter writer = mWriters.get(path);
         if (writer == null) {
             LOG.warn("No writer found for path " + path.getLogFilePath());
         } else {
@@ -187,7 +188,7 @@ public class FileRegistry {
         Collection<LogFilePath> paths = getPaths(topicPartition);
         long result = 0;
         for (LogFilePath path : paths) {
-            FileWriter writer = mWriters.get(path);
+            FileReaderWriter writer = mWriters.get(path);
             if (writer != null) {
                 result += writer.getLength();
             }

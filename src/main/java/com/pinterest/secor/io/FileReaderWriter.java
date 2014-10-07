@@ -19,33 +19,43 @@ package com.pinterest.secor.io;
 import java.io.IOException;
 
 /**
- * Generic file writer interface for all secor files
+ * Generic file reader/writer interface for all secor files
  * 
  * @author Praveen Murugesan (praveen@uber.com)
  *
  */
-public interface FileWriter {
-	
-	/**
-	 * Close the file
-	 * @throws IOException
-	 */
-	public void close() throws IOException;
-	
-	/**
-	 * Get length of data written up to now to the underlying file
-	 * @return
-	 * @throws IOException
-	 */
-	public long getLength() throws IOException;
-	
-	/**
-	 * Write the given key and value to the file
-	 * 
-	 * @param key
-	 * @param value
-	 * @throws IOException
-	 */
-	public void write(long key, byte[] value) throws IOException;
+public interface FileReaderWriter {
+
+    /**
+     * Get the next key/value from the file
+     * 
+     * @return
+     * @throws IOException
+     */
+    public KeyValue next() throws IOException;
+
+    /**
+     * Close the file
+     * 
+     * @throws IOException
+     */
+    public void close() throws IOException;
+
+    /**
+     * Get length of data written up to now to the underlying file
+     * 
+     * @return
+     * @throws IOException
+     */
+    public long getLength() throws IOException;
+
+    /**
+     * Write the given key and value to the file
+     * 
+     * @param key
+     * @param value
+     * @throws IOException
+     */
+    public void write(long key, byte[] value) throws IOException;
 
 }

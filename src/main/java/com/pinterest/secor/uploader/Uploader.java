@@ -17,13 +17,13 @@
 package com.pinterest.secor.uploader;
 
 import com.pinterest.secor.common.*;
-import com.pinterest.secor.io.FileReader;
-import com.pinterest.secor.io.FileReaderFactory;
-import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.FileReaderWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
+import com.pinterest.secor.util.ReflectionUtil;
 
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,23 +101,31 @@ public class Uploader {
      * This method is intended to be overwritten in tests.
      * @throws Exception 
      */
-    protected FileReader createReader(LogFilePath srcPath) throws Exception {
-        return FileReaderFactory.create(srcPath, this.mConfig);
+    protected FileReaderWriter createReader(LogFilePath srcPath, CompressionCodec codec) throws Exception {
+        return (FileReaderWriter) ReflectionUtil.createFileReaderWriter(
+                mConfig.getFileReaderWriter(),
+                srcPath,
+                codec);
     }
 
     private void trim(LogFilePath srcPath, long startOffset) throws Exception {
         if (startOffset == srcPath.getOffset()) {
             return;
         } 
-        FileReader reader = null;
-        FileWriter writer = null;
+        FileReaderWriter reader = null;
+        FileReaderWriter writer = null;
         LogFilePath dstPath = null;
         int copiedMessages = 0;
         // Deleting the writer closes its stream flushing all pending data to the disk.
         mFileRegistry.deleteWriter(srcPath);
         try {
-            reader = createReader(srcPath);
-            LogFilePathAttributes mFilePathAttributes = new LogFilePathAttributes(mConfig);
+            CompressionCodec codec = null;
+            String extension = "";
+            if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
+                codec = ((CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec()));
+                extension = codec.getDefaultExtension();
+            } 
+            reader = createReader(srcPath, codec);
             KeyValue keyVal;
             while ((keyVal = reader.next()) != null) {
                 if (keyVal.getKey() >= startOffset) {
@@ -127,9 +135,9 @@ public class Uploader {
                         dstPath = new LogFilePath(localPrefix, srcPath.getTopic(),
                                                   srcPath.getPartitions(), srcPath.getGeneration(),
                                                   srcPath.getKafkaPartition(), startOffset,
-                                                  mFilePathAttributes.getLogFileExtension());
+                                                  extension);
                         writer = mFileRegistry.getOrCreateWriter(dstPath,
-                        		mFilePathAttributes.getCompressionCodec());
+                        		codec);
                     }
                     writer.write(keyVal.getKey(), keyVal.getValue());
                     copiedMessages++;

@@ -207,12 +207,8 @@ public class SecorConfig {
         return getInt("secor.max.message.size.bytes");
     }
     
-    public String getFileWriter() {
-    	return getString("secor.file.writer");
-    }
-    
-    public String getFileReader() {
-    	return getString("secor.file.reader");
+    public String getFileReaderWriter() {
+    	return getString("secor.file.reader.writer");
     }
     
     public String getPerfTestTopicPrefix() {

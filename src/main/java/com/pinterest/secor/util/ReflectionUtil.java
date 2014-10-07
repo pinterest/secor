@@ -53,41 +53,20 @@ public class ReflectionUtil {
 		throw new IllegalArgumentException("Class not found " + className);
 	}
 
-	public static Object createFileWriter(String className,
-			LogFilePath logFilePath, CompressionCodec compressionCodec)
-			throws Exception {
-		Class<?> clazz = Class.forName(className);
-		// Search for an "appropriate" constructor.
-		for (Constructor<?> ctor : clazz.getConstructors()) {
-			Class<?>[] paramTypes = ctor.getParameterTypes();
+    public static Object createFileReaderWriter(String className,
+            LogFilePath logFilePath, CompressionCodec compressionCodec)
+            throws Exception {
+        Class<?> clazz = Class.forName(className);
+        // Search for an "appropriate" constructor.
+        for (Constructor<?> ctor : clazz.getConstructors()) {
+            Class<?>[] paramTypes = ctor.getParameterTypes();
 
-			// If the arity matches, let's use it.
-			if (paramTypes.length == 1) {
-				Object[] args = { logFilePath };
-				return ctor.newInstance(args);
-			} else if (paramTypes.length == 2) {
-				Object[] args = { logFilePath, compressionCodec };
-				return ctor.newInstance(args);
-			}
-		}
-		throw new IllegalArgumentException("Class not found " + className);
-
-	}
-
-	public static Object createFileReader(String className, LogFilePath path)
-			throws Exception {
-		Class<?> clazz = Class.forName(className);
-
-		// Search for an "appropriate" constructor.
-		for (Constructor<?> ctor : clazz.getConstructors()) {
-			Class<?>[] paramTypes = ctor.getParameterTypes();
-
-			// If the arity matches, let's use it.
-			if (paramTypes.length == 1) {
-				Object[] args = { path };
-				return ctor.newInstance(args);
-			}
-		}
-		throw new IllegalArgumentException("Class not found " + className);
-	}
+            // If the arity matches, let's use it.
+            if (paramTypes.length == 2) {
+                Object[] args = { logFilePath, compressionCodec };
+                return ctor.newInstance(args);
+            }
+        }
+        throw new IllegalArgumentException("Class not found " + className);
+    }
 }
