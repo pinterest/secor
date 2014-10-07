@@ -45,22 +45,33 @@ public class SequenceFileReaderWriter implements FileReaderWriter {
     private final BytesWritable value;
 
     // constructor
-    public SequenceFileReaderWriter(LogFilePath path, CompressionCodec codec)
-            throws Exception {
+    public SequenceFileReaderWriter(LogFilePath path, CompressionCodec codec,
+            FileReaderWriter.Type type) throws Exception {
         Configuration config = new Configuration();
         FileSystem fs = FileSystem.get(config);
         Path fsPath = new Path(path.getLogFilePath());
-        if (codec != null) {
-            this.writer = SequenceFile.createWriter(fs, config, fsPath,
-                    LongWritable.class, BytesWritable.class,
-                    SequenceFile.CompressionType.BLOCK, codec);
+
+        if (type == FileReaderWriter.Type.Reader) {
+            this.reader = new SequenceFile.Reader(fs, fsPath, config);
+            this.key = (LongWritable) reader.getKeyClass().newInstance();
+            this.value = (BytesWritable) reader.getValueClass().newInstance();
+            this.writer = null;
+        } else if (type == FileReaderWriter.Type.Writer) {
+            if (codec != null) {
+                this.writer = SequenceFile.createWriter(fs, config, fsPath,
+                        LongWritable.class, BytesWritable.class,
+                        SequenceFile.CompressionType.BLOCK, codec);
+            } else {
+                this.writer = SequenceFile.createWriter(fs, config, fsPath,
+                        LongWritable.class, BytesWritable.class);
+            }
+            this.reader = null;
+            this.key = null;
+            this.value = null;
         } else {
-            this.writer = SequenceFile.createWriter(fs, config, fsPath,
-                    LongWritable.class, BytesWritable.class);
+            throw new IllegalArgumentException("Undefined File Type: " + type);
         }
-        this.reader = new SequenceFile.Reader(fs, fsPath, config);
-        this.key = (LongWritable) reader.getKeyClass().newInstance();
-        this.value = (BytesWritable) reader.getValueClass().newInstance();
+
     }
 
     @Override

@@ -73,7 +73,8 @@ public class FileRegistryTest extends TestCase {
                 ReflectionUtil.createFileReaderWriter(
                         Mockito.any(String.class),
                         Mockito.any(LogFilePath.class),
-                        Mockito.any(CompressionCodec.class)))
+                        Mockito.any(CompressionCodec.class),
+                        Mockito.any(FileReaderWriter.Type.class)))
                 .thenReturn(writer);
 
         Mockito.when(writer.getLength()).thenReturn(123L);
@@ -93,7 +94,8 @@ public class FileRegistryTest extends TestCase {
         PowerMockito.verifyStatic();
         ReflectionUtil.createFileReaderWriter(Mockito.any(String.class),
                 Mockito.any(LogFilePath.class),
-                Mockito.any(CompressionCodec.class));
+                Mockito.any(CompressionCodec.class),
+                Mockito.any(FileReaderWriter.Type.class));
 
         PowerMockito.verifyStatic();
         FileUtil.delete(PATH);
@@ -121,7 +123,8 @@ public class FileRegistryTest extends TestCase {
                 ReflectionUtil.createFileReaderWriter(
                         Mockito.any(String.class),
                         Mockito.any(LogFilePath.class),
-                        Mockito.any(CompressionCodec.class)))
+                        Mockito.any(CompressionCodec.class),
+                        Mockito.any(FileReaderWriter.Type.class)))
                 .thenReturn(writer);
 
         Mockito.when(writer.getLength()).thenReturn(123L);
@@ -145,7 +148,8 @@ public class FileRegistryTest extends TestCase {
         PowerMockito.verifyStatic();
         ReflectionUtil.createFileReaderWriter(Mockito.any(String.class),
                 Mockito.any(LogFilePath.class),
-                Mockito.any(CompressionCodec.class));
+                Mockito.any(CompressionCodec.class),
+                Mockito.any(FileReaderWriter.Type.class));
 
         TopicPartition topicPartition = new TopicPartition("some_topic", 0);
         Collection<TopicPartition> topicPartitions = mRegistry

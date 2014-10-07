@@ -24,6 +24,7 @@ import com.pinterest.secor.message.ParsedMessage;
 
 import java.io.IOException;
 
+import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.ReflectionUtil;
 
@@ -52,7 +53,7 @@ public class MessageWriter {
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
         if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
-            mCodec = ((CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec()));
+            mCodec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
             mFileExtension = mCodec.getDefaultExtension();
         } else {
             mFileExtension = "";

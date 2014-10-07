@@ -19,6 +19,7 @@ package com.pinterest.secor.uploader;
 import com.pinterest.secor.common.*;
 import com.pinterest.secor.io.FileReaderWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.ReflectionUtil;
@@ -105,7 +106,8 @@ public class Uploader {
         return (FileReaderWriter) ReflectionUtil.createFileReaderWriter(
                 mConfig.getFileReaderWriter(),
                 srcPath,
-                codec);
+                codec,
+                FileReaderWriter.Type.Reader);
     }
 
     private void trim(LogFilePath srcPath, long startOffset) throws Exception {
@@ -122,7 +124,7 @@ public class Uploader {
             CompressionCodec codec = null;
             String extension = "";
             if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
-                codec = ((CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec()));
+                codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
                 extension = codec.getDefaultExtension();
             } 
             reader = createReader(srcPath, codec);

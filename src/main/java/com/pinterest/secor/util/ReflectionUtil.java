@@ -18,6 +18,7 @@ package com.pinterest.secor.util;
 
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.io.FileReaderWriter;
 
 import java.lang.reflect.Constructor;
 
@@ -30,11 +31,6 @@ import org.apache.hadoop.io.compress.CompressionCodec;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class ReflectionUtil {
-	public static Object createCompressionCodec(String className)
-			throws Exception {
-		Class<?> clazz = Class.forName(className);
-		return clazz.getConstructor().newInstance();
-	}
 
 	public static Object createMessageParser(String className,
 			SecorConfig config) throws Exception {
@@ -54,7 +50,8 @@ public class ReflectionUtil {
 	}
 
     public static Object createFileReaderWriter(String className,
-            LogFilePath logFilePath, CompressionCodec compressionCodec)
+            LogFilePath logFilePath, CompressionCodec compressionCodec,
+            FileReaderWriter.Type type)
             throws Exception {
         Class<?> clazz = Class.forName(className);
         // Search for an "appropriate" constructor.
@@ -62,8 +59,8 @@ public class ReflectionUtil {
             Class<?>[] paramTypes = ctor.getParameterTypes();
 
             // If the arity matches, let's use it.
-            if (paramTypes.length == 2) {
-                Object[] args = { logFilePath, compressionCodec };
+            if (paramTypes.length == 3) {
+                Object[] args = { logFilePath, compressionCodec, type };
                 return ctor.newInstance(args);
             }
         }

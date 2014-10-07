@@ -25,6 +25,11 @@ import java.io.IOException;
  *
  */
 public interface FileReaderWriter {
+    
+    public enum Type {
+        Reader, 
+        Writer;
+    }
 
     /**
      * Get the next key/value from the file

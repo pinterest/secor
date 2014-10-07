@@ -154,7 +154,7 @@ public class FileReaderWriterTest extends TestCase {
         setupSequenceFileReaderConfig();
         mockSequenceFileReaderWriter(false);
         ReflectionUtil.createFileReaderWriter(mConfig.getFileReaderWriter(),
-                mLogFilePath, null);
+                mLogFilePath, null, FileReaderWriter.Type.Reader);
 
         // Verify that the method has been called exactly once (the default).
         PowerMockito.verifyStatic();
@@ -167,7 +167,7 @@ public class FileReaderWriterTest extends TestCase {
 
         FileReaderWriter writer = (FileReaderWriter) ReflectionUtil
                 .createFileReaderWriter(mConfig.getFileReaderWriter(),
-                        mLogFilePath, null);
+                        mLogFilePath, null, FileReaderWriter.Type.Writer);
 
         // Verify that the method has been called exactly once (the default).
         PowerMockito.verifyStatic();
@@ -178,7 +178,7 @@ public class FileReaderWriterTest extends TestCase {
         mockSequenceFileReaderWriter(true);
 
         ReflectionUtil.createFileReaderWriter(mConfig.getFileReaderWriter(),
-                mLogFilePathGz, new GzipCodec());
+                mLogFilePathGz, new GzipCodec(), FileReaderWriter.Type.Writer);
 
         // Verify that the method has been called exactly once (the default).
         PowerMockito.verifyStatic();
@@ -192,7 +192,7 @@ public class FileReaderWriterTest extends TestCase {
         mockGzipFileReaderWriter();
         FileReaderWriter writer = (FileReaderWriter) ReflectionUtil
                 .createFileReaderWriter(mConfig.getFileReaderWriter(),
-                        mLogFilePathGz, new GzipCodec());
+                        mLogFilePathGz, new GzipCodec(), FileReaderWriter.Type.Writer);
         assert writer.getLength() == 0L;
     }
 
@@ -200,6 +200,6 @@ public class FileReaderWriterTest extends TestCase {
         setupGzipFileReaderConfig();
         mockGzipFileReaderWriter();
         ReflectionUtil.createFileReaderWriter(mConfig.getFileReaderWriter(),
-                mLogFilePathGz, new GzipCodec());
+                mLogFilePathGz, new GzipCodec(), FileReaderWriter.Type.Reader);
     }
 }

@@ -53,20 +53,30 @@ public class DelimitedTextFileReaderWriter implements FileReaderWriter {
 
     // constructor
     public DelimitedTextFileReaderWriter(LogFilePath path,
-            CompressionCodec codec) throws FileNotFoundException, IOException {
+            CompressionCodec codec, FileReaderWriter.Type type)
+            throws FileNotFoundException, IOException {
+
         File logFile = new File(path.getLogFilePath());
         logFile.getParentFile().mkdirs();
-        this.countingStream = new CountingOutputStream(new FileOutputStream(
-                logFile));
-        this.writer = (codec == null) ? new BufferedOutputStream(
-                this.countingStream) : new BufferedOutputStream(
-                codec.createOutputStream(this.countingStream));
-
-        InputStream inputStream = new FileInputStream(new File(
-                path.getLogFilePath()));
-        this.reader = (codec == null) ? new BufferedInputStream(inputStream)
-                : new BufferedInputStream(codec.createInputStream(inputStream));
-        this.offset = path.getOffset();
+        if (type == FileReaderWriter.Type.Reader) {
+            InputStream inputStream = new FileInputStream(new File(
+                    path.getLogFilePath()));
+            this.reader = (codec == null) ? new BufferedInputStream(inputStream)
+                    : new BufferedInputStream(
+                            codec.createInputStream(inputStream));
+            this.offset = path.getOffset();
+            this.countingStream = null;
+            this.writer = null;
+        } else if (type == FileReaderWriter.Type.Writer) {
+            this.countingStream = new CountingOutputStream(
+                    new FileOutputStream(logFile));
+            this.writer = (codec == null) ? new BufferedOutputStream(
+                    this.countingStream) : new BufferedOutputStream(
+                    codec.createOutputStream(this.countingStream));
+            this.reader = null;
+        } else {
+            throw new IllegalArgumentException("Undefined File Type: " + type);
+        }
     }
 
     @Override
@@ -81,17 +91,20 @@ public class DelimitedTextFileReaderWriter implements FileReaderWriter {
 
     @Override
     public long getLength() throws IOException {
+        assert this.countingStream != null;
         return this.countingStream.getCount();
     }
 
     @Override
     public void write(long key, byte[] value) throws IOException {
+        assert this.writer != null;
         this.writer.write(value);
         this.writer.write(DELIMITER);
     }
 
     @Override
     public KeyValue next() throws IOException {
+        assert this.reader != null;
         ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
         int nextByte;
         while ((nextByte = reader.read()) != DELIMITER) {
