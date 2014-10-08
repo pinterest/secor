@@ -26,7 +26,6 @@ import java.io.IOException;
 
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.IdUtil;
-import com.pinterest.secor.util.ReflectionUtil;
 
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
