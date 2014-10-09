@@ -61,6 +61,6 @@ public interface FileReaderWriter {
      * @param value
      * @throws IOException
      */
-    public void write(long key, byte[] value) throws IOException;
+    public void write(KeyValue keyValue) throws IOException;
 
 }

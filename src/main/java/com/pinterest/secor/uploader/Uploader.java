@@ -141,7 +141,7 @@ public class Uploader {
                         writer = mFileRegistry.getOrCreateWriter(dstPath,
                         		codec);
                     }
-                    writer.write(keyVal.getKey(), keyVal.getValue());
+                    writer.write(keyVal);
                     copiedMessages++;
                 }
             }

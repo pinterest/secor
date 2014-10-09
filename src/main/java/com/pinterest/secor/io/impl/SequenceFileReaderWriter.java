@@ -39,10 +39,10 @@ import com.pinterest.secor.io.KeyValue;
  */
 public class SequenceFileReaderWriter implements FileReaderWriter {
 
-    private final SequenceFile.Writer writer;
-    private final SequenceFile.Reader reader;
-    private final LongWritable key;
-    private final BytesWritable value;
+    private final SequenceFile.Writer mWriter;
+    private final SequenceFile.Reader mReader;
+    private final LongWritable mKey;
+    private final BytesWritable mValue;
 
     // constructor
     public SequenceFileReaderWriter(LogFilePath path, CompressionCodec codec,
@@ -52,22 +52,22 @@ public class SequenceFileReaderWriter implements FileReaderWriter {
         Path fsPath = new Path(path.getLogFilePath());
 
         if (type == FileReaderWriter.Type.Reader) {
-            this.reader = new SequenceFile.Reader(fs, fsPath, config);
-            this.key = (LongWritable) reader.getKeyClass().newInstance();
-            this.value = (BytesWritable) reader.getValueClass().newInstance();
-            this.writer = null;
+            this.mReader = new SequenceFile.Reader(fs, fsPath, config);
+            this.mKey = (LongWritable) mReader.getKeyClass().newInstance();
+            this.mValue = (BytesWritable) mReader.getValueClass().newInstance();
+            this.mWriter = null;
         } else if (type == FileReaderWriter.Type.Writer) {
             if (codec != null) {
-                this.writer = SequenceFile.createWriter(fs, config, fsPath,
+                this.mWriter = SequenceFile.createWriter(fs, config, fsPath,
                         LongWritable.class, BytesWritable.class,
                         SequenceFile.CompressionType.BLOCK, codec);
             } else {
-                this.writer = SequenceFile.createWriter(fs, config, fsPath,
+                this.mWriter = SequenceFile.createWriter(fs, config, fsPath,
                         LongWritable.class, BytesWritable.class);
             }
-            this.reader = null;
-            this.key = null;
-            this.value = null;
+            this.mReader = null;
+            this.mKey = null;
+            this.mValue = null;
         } else {
             throw new IllegalArgumentException("Undefined File Type: " + type);
         }
@@ -76,30 +76,30 @@ public class SequenceFileReaderWriter implements FileReaderWriter {
 
     @Override
     public void close() throws IOException {
-        if (this.writer != null) {
-            this.writer.close();
+        if (this.mWriter != null) {
+            this.mWriter.close();
         }
-        if (this.reader != null) {
-            this.reader.close();
+        if (this.mReader != null) {
+            this.mReader.close();
         }
     }
 
     @Override
     public long getLength() throws IOException {
-        return this.writer.getLength();
+        return this.mWriter.getLength();
     }
 
     @Override
-    public void write(long key, byte[] value) throws IOException {
-        LongWritable writeableKey = new LongWritable(key);
-        BytesWritable writeableValue = new BytesWritable(value);
-        this.writer.append(writeableKey, writeableValue);
+    public void write(KeyValue keyValue) throws IOException {
+        LongWritable writeableKey = new LongWritable(keyValue.getKey());
+        BytesWritable writeableValue = new BytesWritable(keyValue.getValue());
+        this.mWriter.append(writeableKey, writeableValue);
     }
 
     @Override
     public KeyValue next() throws IOException {
-        if (reader.next(key, value)) {
-            return new KeyValue(key.get(), value.getBytes());
+        if (mReader.next(mKey, mValue)) {
+            return new KeyValue(mKey.get(), mValue.getBytes());
         } else {
             return null;
         }

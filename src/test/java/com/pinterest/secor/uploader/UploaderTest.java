@@ -204,8 +204,7 @@ public class UploaderTest extends TestCase {
 
         mUploader.applyPolicy();
 
-        Mockito.verify(writer).write(Mockito.any(long.class),
-                Mockito.any(byte[].class));
+        Mockito.verify(writer).write(Mockito.any(KeyValue.class));
         Mockito.verify(mFileRegistry).deletePath(mLogFilePath);
     }
 }

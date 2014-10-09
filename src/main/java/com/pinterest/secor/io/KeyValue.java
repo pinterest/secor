@@ -25,21 +25,21 @@ package com.pinterest.secor.io;
  */
 public class KeyValue {
 	
-	private final long key;
-	private final byte[] value;
+	private final long mKey;
+	private final byte[] mValue;
 	
 	//constructor
 	public KeyValue(long key, byte[] value) {
-		this.key = key;
-		this.value = value;
+		this.mKey = key;
+		this.mValue = value;
 	}
 	
 	public long getKey() {
-		return this.key;
+		return this.mKey;
 	}
 	
 	public byte[] getValue() {
-		return this.value;
+		return this.mValue;
 	}
 
 }

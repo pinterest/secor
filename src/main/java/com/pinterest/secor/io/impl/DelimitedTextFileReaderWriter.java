@@ -45,11 +45,11 @@ public class DelimitedTextFileReaderWriter implements FileReaderWriter {
     // delimiter used between messages
     private static final byte DELIMITER = '\n';
 
-    private final CountingOutputStream countingStream;
-    private final BufferedOutputStream writer;
+    private final CountingOutputStream mCountingStream;
+    private final BufferedOutputStream mWriter;
 
-    private final BufferedInputStream reader;
-    private long offset;
+    private final BufferedInputStream mReader;
+    private long mOffset;
 
     // constructor
     public DelimitedTextFileReaderWriter(LogFilePath path,
@@ -61,19 +61,19 @@ public class DelimitedTextFileReaderWriter implements FileReaderWriter {
         if (type == FileReaderWriter.Type.Reader) {
             InputStream inputStream = new FileInputStream(new File(
                     path.getLogFilePath()));
-            this.reader = (codec == null) ? new BufferedInputStream(inputStream)
+            this.mReader = (codec == null) ? new BufferedInputStream(inputStream)
                     : new BufferedInputStream(
                             codec.createInputStream(inputStream));
-            this.offset = path.getOffset();
-            this.countingStream = null;
-            this.writer = null;
+            this.mOffset = path.getOffset();
+            this.mCountingStream = null;
+            this.mWriter = null;
         } else if (type == FileReaderWriter.Type.Writer) {
-            this.countingStream = new CountingOutputStream(
+            this.mCountingStream = new CountingOutputStream(
                     new FileOutputStream(logFile));
-            this.writer = (codec == null) ? new BufferedOutputStream(
-                    this.countingStream) : new BufferedOutputStream(
-                    codec.createOutputStream(this.countingStream));
-            this.reader = null;
+            this.mWriter = (codec == null) ? new BufferedOutputStream(
+                    this.mCountingStream) : new BufferedOutputStream(
+                    codec.createOutputStream(this.mCountingStream));
+            this.mReader = null;
         } else {
             throw new IllegalArgumentException("Undefined File Type: " + type);
         }
@@ -81,33 +81,33 @@ public class DelimitedTextFileReaderWriter implements FileReaderWriter {
 
     @Override
     public void close() throws IOException {
-        if (this.writer != null) {
-            this.writer.close();
+        if (this.mWriter != null) {
+            this.mWriter.close();
         }
-        if (this.reader != null) {
-            this.reader.close();
+        if (this.mReader != null) {
+            this.mReader.close();
         }
     }
 
     @Override
     public long getLength() throws IOException {
-        assert this.countingStream != null;
-        return this.countingStream.getCount();
+        assert this.mCountingStream != null;
+        return this.mCountingStream.getCount();
     }
 
     @Override
-    public void write(long key, byte[] value) throws IOException {
-        assert this.writer != null;
-        this.writer.write(value);
-        this.writer.write(DELIMITER);
+    public void write(KeyValue keyValue) throws IOException {
+        assert this.mWriter != null;
+        this.mWriter.write(keyValue.getValue());
+        this.mWriter.write(DELIMITER);
     }
 
     @Override
     public KeyValue next() throws IOException {
-        assert this.reader != null;
+        assert this.mReader != null;
         ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
         int nextByte;
-        while ((nextByte = reader.read()) != DELIMITER) {
+        while ((nextByte = mReader.read()) != DELIMITER) {
             if (nextByte == -1) { // end of stream?
                 if (messageBuffer.size() == 0) { // if no byte read
                     return null;
@@ -118,7 +118,7 @@ public class DelimitedTextFileReaderWriter implements FileReaderWriter {
             }
             messageBuffer.write(nextByte);
         }
-        return new KeyValue(this.offset++, messageBuffer.toByteArray());
+        return new KeyValue(this.mOffset++, messageBuffer.toByteArray());
     }
 
 }
