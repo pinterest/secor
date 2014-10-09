@@ -16,6 +16,8 @@
  */
 package com.pinterest.secor.io;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -51,7 +53,8 @@ import junit.framework.TestCase;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ FileSystem.class, DelimitedTextFileReaderWriter.class,
-        SequenceFile.class, SequenceFileReaderWriter.class, GzipCodec.class })
+        SequenceFile.class, SequenceFileReaderWriter.class, GzipCodec.class,
+        FileInputStream.class, FileOutputStream.class})
 public class FileReaderWriterTest extends TestCase {
 
     private static final String PATH = "/some_parent_dir/some_topic/some_partition/some_other_partition/"
@@ -88,6 +91,15 @@ public class FileReaderWriterTest extends TestCase {
         GzipCodec codec = PowerMockito.mock(GzipCodec.class);
         PowerMockito.whenNew(GzipCodec.class).withNoArguments()
                 .thenReturn(codec);
+
+        FileInputStream fileInputStream = Mockito.mock(FileInputStream.class);
+        FileOutputStream fileOutputStream = Mockito.mock(FileOutputStream.class);
+
+        PowerMockito.whenNew(FileInputStream.class).withAnyArguments()
+                .thenReturn(fileInputStream);
+
+        PowerMockito.whenNew(FileOutputStream.class).withAnyArguments()
+                .thenReturn(fileOutputStream);
 
         CompressionInputStream inputStream = Mockito
                 .mock(CompressionInputStream.class);
