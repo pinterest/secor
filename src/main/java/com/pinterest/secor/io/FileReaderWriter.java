@@ -18,9 +18,16 @@ package com.pinterest.secor.io;
 
 import java.io.IOException;
 
+
 /**
  * Generic file reader/writer interface for all secor files
  * 
+ * All implementations should define the constructor with the signature:
+ * FileReaderWriter(LogFilePath path, CompressionCodec codec, FileReaderWriter.Type type)
+ *
+ * example: public SequenceFileReaderWriter(LogFilePath path, CompressionCodec codec,
+ *           FileReaderWriter.Type type)
+ *
  * @author Praveen Murugesan (praveen@uber.com)
  *
  */
