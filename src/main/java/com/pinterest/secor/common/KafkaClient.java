@@ -136,7 +136,7 @@ public class KafkaClient {
                 messageAndOffset.offset(), payloadBytes);
     }
 
-    private SimpleConsumer createConsumer(TopicPartition topicPartition) {
+   public SimpleConsumer createConsumer(TopicPartition topicPartition) {
         HostAndPort leader = findLeader(topicPartition);
         LOG.info("leader for topic " + topicPartition.getTopic() + " partition " +
                  topicPartition.getPartition() + " is " + leader.toString());

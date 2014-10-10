@@ -16,14 +16,11 @@
  */
 package com.pinterest.secor.common;
 
+import com.pinterest.secor.io.FileReaderWriter;
 import com.pinterest.secor.util.FileUtil;
+import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.util.StatsUtil;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.SequenceFile;
+
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,13 +37,15 @@ import java.util.*;
 public class FileRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(FileRegistry.class);
 
+    private final SecorConfig mConfig;
     private HashMap<TopicPartition, HashSet<LogFilePath>> mFiles;
-    private HashMap<LogFilePath, SequenceFile.Writer> mWriters;
+    private HashMap<LogFilePath, FileReaderWriter> mWriters;
     private HashMap<LogFilePath, Long> mCreationTimes;
 
-    public FileRegistry() {
+    public FileRegistry(SecorConfig mConfig) {
+    	this.mConfig = mConfig;
         mFiles = new HashMap<TopicPartition, HashSet<LogFilePath>>();
-        mWriters = new HashMap<LogFilePath, SequenceFile.Writer>();
+        mWriters = new HashMap<LogFilePath, FileReaderWriter>();
         mCreationTimes = new HashMap<LogFilePath, Long>();
     }
 
@@ -81,10 +80,11 @@ public class FileRegistry {
      * @param path The path to retrieve writer for.
      * @param codec Optional compression codec.
      * @return Writer for a given path.
-     * @throws IOException
+     * @throws Exception 
      */
-    public SequenceFile.Writer getOrCreateWriter(LogFilePath path, CompressionCodec codec) throws IOException {
-        SequenceFile.Writer writer = mWriters.get(path);
+    public FileReaderWriter getOrCreateWriter(LogFilePath path, CompressionCodec codec)
+            throws Exception {
+        FileReaderWriter writer = mWriters.get(path);
         if (writer == null) {
             // Just in case.
             FileUtil.delete(path.getLogFilePath());
@@ -99,18 +99,9 @@ public class FileRegistry {
             if (!files.contains(path)) {
                 files.add(path);
             }
-            Configuration config = new Configuration();
-            FileSystem fs = FileSystem.get(config);
-            if (codec != null) {
-                Path fsPath = new Path(path.getLogFilePath());
-                writer = SequenceFile.createWriter(fs, config, fsPath, LongWritable.class,
-                        BytesWritable.class,
-                        SequenceFile.CompressionType.BLOCK, codec);
-            } else {
-                Path fsPath = new Path(path.getLogFilePath());
-                writer = SequenceFile.createWriter(fs, config, fsPath, LongWritable.class,
-                        BytesWritable.class);
-            }
+            writer = ((FileReaderWriter) ReflectionUtil.createFileReaderWriter(
+                    mConfig.getFileReaderWriter(), path, codec,
+                    FileReaderWriter.Type.Writer));
             mWriters.put(path, writer);
             mCreationTimes.put(path, System.currentTimeMillis() / 1000L);
             LOG.debug("created writer for path " + path.getLogFilePath());
@@ -161,7 +152,7 @@ public class FileRegistry {
      * @param path The path to remove the writer for.
      */
     public void deleteWriter(LogFilePath path) throws IOException {
-        SequenceFile.Writer writer = mWriters.get(path);
+        FileReaderWriter writer = mWriters.get(path);
         if (writer == null) {
             LOG.warn("No writer found for path " + path.getLogFilePath());
         } else {
@@ -199,7 +190,7 @@ public class FileRegistry {
         Collection<LogFilePath> paths = getPaths(topicPartition);
         long result = 0;
         for (LogFilePath path : paths) {
-            SequenceFile.Writer writer = mWriters.get(path);
+            FileReaderWriter writer = mWriters.get(path);
             if (writer != null) {
                 result += writer.getLength();
             }

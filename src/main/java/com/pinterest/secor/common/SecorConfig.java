@@ -58,7 +58,12 @@ public class SecorConfig {
         return mSecorConfig.get();
     }
 
-    protected SecorConfig(PropertiesConfiguration properties) {
+    /**
+     * Exposed for testability
+     * 
+     * @param properties
+     */
+    public SecorConfig(PropertiesConfiguration properties) {
         mProperties = properties;
     }
 
@@ -196,6 +201,14 @@ public class SecorConfig {
 
     public int getMaxMessageSizeBytes() {
         return getInt("secor.max.message.size.bytes");
+    }
+    
+    public String getFileReaderWriter() {
+    	return getString("secor.file.reader.writer");
+    }
+    
+    public String getPerfTestTopicPrefix() {
+    	return getString("secor.kafka.perf_topic_prefix");
     }
 
     private void checkProperty(String name) {

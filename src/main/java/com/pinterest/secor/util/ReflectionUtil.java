@@ -16,23 +16,24 @@
  */
 package com.pinterest.secor.util;
 
+import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.io.FileReaderWriter;
 
 import java.lang.reflect.Constructor;
 
+import org.apache.hadoop.io.compress.CompressionCodec;
+
 /**
- * ReflectionUtil implements utility methods to construct objects of classes specified by name.
+ * ReflectionUtil implements utility methods to construct objects of classes
+ * specified by name.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class ReflectionUtil {
-    public static Object createCompressionCodec(String className) throws Exception {
-        Class<?> clazz = Class.forName(className);
-        return clazz.getConstructor().newInstance();
-    }
 
     public static Object createMessageParser(String className,
-                                             SecorConfig config) throws Exception {
+            SecorConfig config) throws Exception {
         Class<?> clazz = Class.forName(className);
 
         // Search for an "appropriate" constructor.
@@ -41,7 +42,24 @@ public class ReflectionUtil {
 
             // If the arity matches, let's use it.
             if (paramTypes.length == 1) {
-                Object[] args = {config};
+                Object[] args = { config };
+                return ctor.newInstance(args);
+            }
+        }
+        throw new IllegalArgumentException("Class not found " + className);
+    }
+
+    public static Object createFileReaderWriter(String className,
+            LogFilePath logFilePath, CompressionCodec compressionCodec,
+            FileReaderWriter.Type type) throws Exception {
+        Class<?> clazz = Class.forName(className);
+        // Search for an "appropriate" constructor.
+        for (Constructor<?> ctor : clazz.getConstructors()) {
+            Class<?>[] paramTypes = ctor.getParameterTypes();
+
+            // If the arity matches, let's use it.
+            if (paramTypes.length == 3) {
+                Object[] args = { logFilePath, compressionCodec, type };
                 return ctor.newInstance(args);
             }
         }

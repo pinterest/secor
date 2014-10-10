@@ -26,7 +26,9 @@ import com.pinterest.secor.uploader.Uploader;
 import com.pinterest.secor.reader.MessageReader;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.writer.MessageWriter;
+
 import kafka.consumer.ConsumerTimeoutException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +53,7 @@ public class Consumer extends Thread {
     private MessageReader mMessageReader;
     private MessageWriter mMessageWriter;
     private MessageParser mMessageParser;
+    private OffsetTracker mOffsetTracker;
     private Uploader mUploader;
     // TODO(pawel): we should keep a count per topic partition.
     private double mUnparsableMessages;
@@ -60,13 +63,13 @@ public class Consumer extends Thread {
     }
 
     private void init() throws Exception {
-        OffsetTracker offsetTracker = new OffsetTracker();
-        mMessageReader = new MessageReader(mConfig, offsetTracker);
-        FileRegistry fileRegistry = new FileRegistry();
-        mMessageWriter = new MessageWriter(mConfig, offsetTracker, fileRegistry);
+        mOffsetTracker = new OffsetTracker();
+        mMessageReader = new MessageReader(mConfig, mOffsetTracker);
+        FileRegistry fileRegistry = new FileRegistry(mConfig);
+        mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry);
         mMessageParser = (MessageParser) ReflectionUtil.createMessageParser(
                 mConfig.getMessageParserClass(), mConfig);
-        mUploader = new Uploader(mConfig, offsetTracker, fileRegistry);
+        mUploader = new Uploader(mConfig, mOffsetTracker, fileRegistry);
         mUnparsableMessages = 0.;
     }
 
@@ -116,7 +119,7 @@ public class Consumer extends Thread {
                 if (parsedMessage != null) {
                     try {
                         mMessageWriter.write(parsedMessage);
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         throw new RuntimeException("Failed to write message " + parsedMessage, e);
                     }
                 }
@@ -130,4 +133,16 @@ public class Consumer extends Thread {
             }
         }
     }
+
+    /**
+     * Helper to get the offset tracker (used in tests)
+     * 
+     * @param topic
+     * @param partition
+     * @return
+     */
+    public OffsetTracker getOffsetTracker() {
+        return this.mOffsetTracker;
+    }
+		
 }

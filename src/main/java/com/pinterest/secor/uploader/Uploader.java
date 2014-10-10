@@ -17,19 +17,17 @@
 package com.pinterest.secor.uploader;
 
 import com.pinterest.secor.common.*;
-import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.io.FileReaderWriter;
+import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.ReflectionUtil;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.*;
+
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -102,47 +100,48 @@ public class Uploader {
 
     /**
      * This method is intended to be overwritten in tests.
+     * @throws Exception 
      */
-    protected SequenceFile.Reader createReader(FileSystem fileSystem, Path path,
-                                               Configuration configuration) throws IOException {
-        return new SequenceFile.Reader(fileSystem, path, configuration);
+    protected FileReaderWriter createReader(LogFilePath srcPath, CompressionCodec codec) throws Exception {
+        return (FileReaderWriter) ReflectionUtil.createFileReaderWriter(
+                mConfig.getFileReaderWriter(),
+                srcPath,
+                codec,
+                FileReaderWriter.Type.Reader);
     }
 
     private void trim(LogFilePath srcPath, long startOffset) throws Exception {
         if (startOffset == srcPath.getOffset()) {
             return;
-        }
-        Configuration config = new Configuration();
-        FileSystem fs = FileSystem.get(config);
-        String srcFilename = srcPath.getLogFilePath();
-        Path srcFsPath = new Path(srcFilename);
-        SequenceFile.Reader reader = null;
-        SequenceFile.Writer writer = null;
+        } 
+        FileReaderWriter reader = null;
+        FileReaderWriter writer = null;
         LogFilePath dstPath = null;
         int copiedMessages = 0;
         // Deleting the writer closes its stream flushing all pending data to the disk.
         mFileRegistry.deleteWriter(srcPath);
         try {
-            reader = createReader(fs, srcFsPath, config);
-            LongWritable key = (LongWritable) reader.getKeyClass().newInstance();
-            BytesWritable value = (BytesWritable) reader.getValueClass().newInstance();
             CompressionCodec codec = null;
             String extension = "";
             if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
-                codec = (CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec());
+                codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
                 extension = codec.getDefaultExtension();
-            }
-            while (reader.next(key, value)) {
-                if (key.get() >= startOffset) {
+            } 
+            reader = createReader(srcPath, codec);
+            KeyValue keyVal;
+            while ((keyVal = reader.next()) != null) {
+                if (keyVal.getKey() >= startOffset) {
                     if (writer == null) {
                         String localPrefix = mConfig.getLocalPath() + '/' +
                             IdUtil.getLocalMessageDir();
                         dstPath = new LogFilePath(localPrefix, srcPath.getTopic(),
                                                   srcPath.getPartitions(), srcPath.getGeneration(),
-                                                  srcPath.getKafkaPartition(), startOffset, extension);
-                        writer = mFileRegistry.getOrCreateWriter(dstPath, codec);
+                                                  srcPath.getKafkaPartition(), startOffset,
+                                                  extension);
+                        writer = mFileRegistry.getOrCreateWriter(dstPath,
+                        		codec);
                     }
-                    writer.append(key, value);
+                    writer.write(keyVal);
                     copiedMessages++;
                 }
             }
@@ -155,7 +154,7 @@ public class Uploader {
         if (dstPath == null) {
             LOG.info("removed file " + srcPath.getLogFilePath());
         } else {
-            LOG.info("trimmed " + copiedMessages + " messages from " + srcFilename + " to " +
+            LOG.info("trimmed " + copiedMessages + " messages from " + srcPath.getLogFilePath() + " to " +
                     dstPath.getLogFilePath() + " with start offset " + startOffset);
         }
     }

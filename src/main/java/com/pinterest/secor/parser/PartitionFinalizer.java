@@ -18,8 +18,9 @@ package com.pinterest.secor.parser;
 
 import com.pinterest.secor.common.*;
 import com.pinterest.secor.message.Message;
+import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
-import com.pinterest.secor.util.ReflectionUtil;
+
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -55,7 +56,7 @@ public class PartitionFinalizer {
         mThriftMessageParser = new ThriftMessageParser(mConfig);
         mQuboleClient = new QuboleClient(mConfig);
         if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
-            CompressionCodec codec = (CompressionCodec) ReflectionUtil.createCompressionCodec(mConfig.getCompressionCodec());
+            CompressionCodec codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
             mFileExtension = codec.getDefaultExtension();
         } else {
             mFileExtension = "";
