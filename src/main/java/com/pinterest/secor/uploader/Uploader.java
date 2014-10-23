@@ -28,7 +28,11 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Uploader applies a set of policies to determine if any of the locally stored files should be
@@ -38,6 +42,8 @@ import java.util.*;
  */
 public class Uploader {
     private static final Logger LOG = LoggerFactory.getLogger(Uploader.class);
+
+    private static final ExecutorService executor = Executors.newFixedThreadPool(256);
 
     private SecorConfig mConfig;
     private OffsetTracker mOffsetTracker;
@@ -57,7 +63,7 @@ public class Uploader {
         mZookeeperConnector = zookeeperConnector;
     }
 
-    private void upload(LogFilePath localPath) throws Exception {
+    private Future<?> upload(LogFilePath localPath) throws Exception {
         String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
         LogFilePath s3Path = new LogFilePath(s3Prefix, localPath.getTopic(),
                                              localPath.getPartitions(),
@@ -65,9 +71,19 @@ public class Uploader {
                                              localPath.getKafkaPartition(),
                                              localPath.getOffset(),
                                              localPath.getExtension());
-        String localLogFilename = localPath.getLogFilePath();
-        LOG.info("uploading file " + localLogFilename + " to " + s3Path.getLogFilePath());
-        FileUtil.moveToS3(localLogFilename, s3Path.getLogFilePath());
+        final String localLogFilename = localPath.getLogFilePath();
+        final String s3LogFilename = s3Path.getLogFilePath();
+        LOG.info("uploading file " + localLogFilename + " to " + s3LogFilename);
+        return executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    FileUtil.moveToS3(localLogFilename, s3LogFilename);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     private void uploadFiles(TopicPartition topicPartition) throws Exception {
@@ -86,8 +102,12 @@ public class Uploader {
                 LOG.info("uploading topic " + topicPartition.getTopic() + " partition " +
                          topicPartition.getPartition());
                 Collection<LogFilePath> paths = mFileRegistry.getPaths(topicPartition);
+                List<Future<?>> uploadFutures = new ArrayList<Future<?>>();
                 for (LogFilePath path : paths) {
-                    upload(path);
+                    uploadFutures.add(upload(path));
+                }
+                for (Future<?> uploadFuture : uploadFutures) {
+                    uploadFuture.get();
                 }
                 mFileRegistry.deleteTopicPartition(topicPartition);
                 mZookeeperConnector.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
@@ -100,7 +120,7 @@ public class Uploader {
 
     /**
      * This method is intended to be overwritten in tests.
-     * @throws Exception 
+     * @throws Exception
      */
     protected FileReaderWriter createReader(LogFilePath srcPath, CompressionCodec codec) throws Exception {
         return (FileReaderWriter) ReflectionUtil.createFileReaderWriter(
@@ -113,7 +133,7 @@ public class Uploader {
     private void trim(LogFilePath srcPath, long startOffset) throws Exception {
         if (startOffset == srcPath.getOffset()) {
             return;
-        } 
+        }
         FileReaderWriter reader = null;
         FileReaderWriter writer = null;
         LogFilePath dstPath = null;
@@ -126,7 +146,7 @@ public class Uploader {
             if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
                 codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
                 extension = codec.getDefaultExtension();
-            } 
+            }
             reader = createReader(srcPath, codec);
             KeyValue keyVal;
             while ((keyVal = reader.next()) != null) {
