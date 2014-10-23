@@ -82,56 +82,78 @@ public class Consumer extends Thread {
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize the consumer", e);
         }
+        // check upload policy every N seconds or 10,000 messages/consumer timeouts
+        long checkEveryNSeconds = Math.min(10 * 60, mConfig.getMaxFileAgeSeconds() / 2);
+        long nMessages = 0;
+        long lastChecked = System.currentTimeMillis();
         while (true) {
-            Message rawMessage = null;
-            try {
-                boolean hasNext = mMessageReader.hasNext();
-                if (!hasNext) {
-                    return;
-                }
-                rawMessage = mMessageReader.read();
-            } catch (ConsumerTimeoutException e) {
-                // We wait for a new message with a timeout to periodically apply the upload policy
-                // even if no messages are delivered.
-                LOG.trace("Consumer timed out", e);
+            boolean hasMoreMessages = consumeNextMessage();
+            if (!hasMoreMessages) {
+                break;
             }
-            if (rawMessage != null) {
-                // Before parsing, update the offset and remove any redundant data
-                try {
-                    mMessageWriter.adjustOffset(rawMessage);
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to adjust offset.", e);
-                }
-                ParsedMessage parsedMessage = null;
-                try {
-                    parsedMessage = mMessageParser.parse(rawMessage);
-                    final double DECAY = 0.999;
-                    mUnparsableMessages *= DECAY;
-                } catch (Exception e) {
-                    mUnparsableMessages++;
-                    final double MAX_UNPARSABLE_MESSAGES = 1000.;
-                    if (mUnparsableMessages > MAX_UNPARSABLE_MESSAGES) {
-                        throw new RuntimeException("Failed to parse message " + rawMessage, e);
-                    }
-                    LOG.warn("Failed to parse message " + rawMessage, e);
-                    continue;
-                }
-                if (parsedMessage != null) {
-                    try {
-                        mMessageWriter.write(parsedMessage);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Failed to write message " + parsedMessage, e);
-                    }
-                }
-            }
-            // TODO(pawel): it may make sense to invoke the uploader less frequently than after
-            // each message.
-            try {
-                mUploader.applyPolicy();
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to apply upload policy", e);
+
+            long now = System.currentTimeMillis();
+            if (nMessages++ % 10000 == 0 ||
+                    (now - lastChecked) > checkEveryNSeconds * 1000) {
+                lastChecked = now;
+                checkUploadPolicy();
             }
         }
+        checkUploadPolicy();
+    }
+
+    private void checkUploadPolicy() {
+        try {
+            mUploader.applyPolicy();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to apply upload policy", e);
+        }
+    }
+
+    // @return whether there are more messages left to consume
+    private boolean consumeNextMessage() {
+        Message rawMessage = null;
+        try {
+            boolean hasNext = mMessageReader.hasNext();
+            if (!hasNext) {
+                return false;
+            }
+            rawMessage = mMessageReader.read();
+        } catch (ConsumerTimeoutException e) {
+            // We wait for a new message with a timeout to periodically apply the upload policy
+            // even if no messages are delivered.
+            LOG.trace("Consumer timed out", e);
+        }
+        if (rawMessage != null) {
+            // Before parsing, update the offset and remove any redundant data
+            try {
+                mMessageWriter.adjustOffset(rawMessage);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to adjust offset.", e);
+            }
+            ParsedMessage parsedMessage = null;
+            try {
+                parsedMessage = mMessageParser.parse(rawMessage);
+                final double DECAY = 0.999;
+                mUnparsableMessages *= DECAY;
+            } catch (Exception e) {
+                mUnparsableMessages++;
+                final double MAX_UNPARSABLE_MESSAGES = 1000.;
+                if (mUnparsableMessages > MAX_UNPARSABLE_MESSAGES) {
+                    throw new RuntimeException("Failed to parse message " + rawMessage, e);
+                }
+                LOG.warn("Failed to parse message " + rawMessage, e);
+            }
+
+            if (parsedMessage != null) {
+                try {
+                    mMessageWriter.write(parsedMessage);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to write message " + parsedMessage, e);
+                }
+            }
+        }
+        return true;
     }
 
     /**
