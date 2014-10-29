@@ -195,6 +195,10 @@ public class SecorConfig {
         return getString("message.timestamp.input.pattern");
     }
 
+    public String getMessagePartitionTimestampPattern() {
+        return getString("message.partition.timestamp.pattern");
+    }
+
     public String getCompressionCodec() {
         return getString("secor.compression.codec");
     }
