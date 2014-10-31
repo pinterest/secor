@@ -36,7 +36,8 @@
 
 PARENT_DIR=/tmp/secor_dev
 LOGS_DIR=${PARENT_DIR}/logs
-S3_LOGS_DIR=s3://sk-cloud-staging/secor_dev
+BUCKET=${SECOR_BUCKET:-test-bucket}
+S3_LOGS_DIR=s3://${BUCKET}/secor_dev
 MESSAGES=1000
 MESSAGE_TYPE=binary
 # For the compression tests to work, set this to the path of the Hadoop native libs.
@@ -51,68 +52,100 @@ READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriterFacto
 
 # The minimum wait time is one minute plus delta.  Secor is configured to upload files older than
 # one minute and we need to make sure that everything ends up on s3 before starting verification.
-WAIT_TIME=120
-base_dir=$(dirname $0)
+WAIT_TIME=${SECOR_WAIT_TIME:-120}
+BASE_DIR=$(dirname $0)
+CONF_DIR=${BASE_DIR}/..
 
-source ${base_dir}/run_common.sh
+source ${BASE_DIR}/run_common.sh
 
 run_command() {
     echo "running $@"
     eval "$@"
 }
 
+check_for_native_libs() {
+    files=($(find "${HADOOP_NATIVE_LIB_PATH}" -maxdepth 1 -name "*.so" 2> /dev/null))
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "Couldn't find Hadoop native libraries, skipping compressed binary tests"
+        SKIP_COMPRESSED_BINARY="true"
+    fi
+}
+
 recreate_dirs() {
     run_command "rm -r -f ${PARENT_DIR}"
-    run_command "s3cmd del --recursive ${S3_LOGS_DIR}"
+    if [ -n ${SECOR_LOCAL_S3} ]; then
+        run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls ${S3_LOGS_DIR} | awk '{ print \$4 }' | xargs -L 1 s3cmd -c ${CONF_DIR}/test.s3cfg del"
+    else
+        run_command "s3cmd del --recursive ${S3_LOGS_DIR}"
+    fi
     # create logs directory
     if [ ! -d ${LOGS_DIR} ]; then
         run_command "mkdir -p ${LOGS_DIR}"
     fi
 }
 
+start_s3() {
+    if [ -n ${SECOR_LOCAL_S3} ]; then
+        if command -v fakes3 > /dev/null 2>&1; then
+            run_command "fakes3 --root=/tmp/fakes3 --port=5000 --hostname=localhost > /tmp/fakes3.log 2>&1 &"
+            sleep 2
+            run_command "s3cmd -c ${CONF_DIR}/test.s3cfg mb s3://${BUCKET}"
+        else
+            echo "Couldn't find FakeS3 binary, please install it using `gem install fakes3`"
+        fi
+    fi
+}
+
+stop_s3() {
+    if [ -n ${SECOR_LOCAL_S3} ]; then
+        run_command "pkill -9 'fakes3' > /dev/null 2>&1 || true"
+        run_command "rm -r -f /tmp/fakes3"
+    fi
+}
+
 start_zookeeper() {
-    run_command "${base_dir}/run_kafka_class.sh \
-        org.apache.zookeeper.server.quorum.QuorumPeerMain zookeeper.test.properties > \
+    run_command "${BASE_DIR}/run_kafka_class.sh \
+        org.apache.zookeeper.server.quorum.QuorumPeerMain ${CONF_DIR}/zookeeper.test.properties > \
         ${LOGS_DIR}/zookeeper.log 2>&1 &"
 }
 
 stop_zookeeper() {
-    run_command "pkill -f 'org.apache.zookeeper.server.quorum.QuorumPeerMain' | true"
+    run_command "pkill -f 'org.apache.zookeeper.server.quorum.QuorumPeerMain' || true"
 }
 
 start_kafka_server () {
-    run_command "${base_dir}/run_kafka_class.sh kafka.Kafka kafka.test.properties > \
+    run_command "${BASE_DIR}/run_kafka_class.sh kafka.Kafka ${CONF_DIR}/kafka.test.properties > \
         ${LOGS_DIR}/kafka_server.log 2>&1 &"
 }
 
 stop_kafka_server() {
-    run_command "pkill -f 'kafka.Kafka' | true"
+    run_command "pkill -f 'kafka.Kafka' || true"
 }
 
 start_secor() {
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.dev.backup.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
+        -Dconfig=secor.test.backup.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
     if [ "${MESSAGE_TYPE}" = "binary" ]; then
        run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-           -Dconfig=secor.dev.partition.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
+           -Dconfig=secor.test.partition.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
            com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
     fi
 }
 
 stop_secor() {
-    run_command "pkill -f 'com.pinterest.secor.main.ConsumerMain' | true"
+    run_command "pkill -f 'com.pinterest.secor.main.ConsumerMain' || true"
 }
 
 create_topic() {
-    run_command "${base_dir}/run_kafka_class.sh kafka.admin.TopicCommand --create --zookeeper \
+    run_command "${BASE_DIR}/run_kafka_class.sh kafka.admin.TopicCommand --create --zookeeper \
         localhost:2181 --replication-factor 1 --partitions 2 --topic test > \
         ${LOGS_DIR}/create_topic.log 2>&1"
 }
 
 post_messages() {
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.dev.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
+        -Dconfig=secor.test.backup.properties -cp ${CLASSPATH} \
         com.pinterest.secor.main.TestLogMessageProducerMain -t test -m $1 -p 1 -type ${MESSAGE_TYPE} > \
         ${LOGS_DIR}/test_log_message_producer.log 2>&1"
 }
@@ -124,7 +157,7 @@ verify() {
     fi
     for RUNMODE in ${RUNMODE_0} ${RUNMODE_1}; do
       run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-          -Dconfig=secor.dev.${RUNMODE}.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
+          -Dconfig=secor.test.${RUNMODE}.properties ${ADDITIONAL_OPTS} -cp ${CLASSPATH} \
           com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
           ${LOGS_DIR}/log_verifier_${RUNMODE}.log 2>&1"
       VERIFICATION_EXIT_CODE=$?
@@ -132,6 +165,8 @@ verify() {
         echo -e "\e[1;41;97mVerification FAILED\e[0m"
         echo "See log ${LOGS_DIR}/log_verifier_${RUNMODE}.log for more details"
         tail -n 50 ${LOGS_DIR}/log_verifier_${RUNMODE}.log
+        stop_all
+        stop_s3
         exit ${VERIFICATION_EXIT_CODE}
       fi
     done
@@ -140,16 +175,15 @@ verify() {
 set_offsets_in_zookeeper() {
     for group in secor_backup secor_partition; do
         for partition in 0 1; do
-            run_command "${base_dir}/run_zookeeper_command.sh localhost:2181 create \
+            run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 create \
                 /consumers \'\' > ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
-            run_command "${base_dir}/run_zookeeper_command.sh localhost:2181 create \
+            run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 create \
                 /consumers/${group} \'\' > ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
-            run_command "${base_dir}/run_zookeeper_command.sh localhost:2181 create \
+            run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 create \
                 /consumers/${group}/offsets \'\' > ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
-            run_command "${base_dir}/run_zookeeper_command.sh localhost:2181 create \
+            run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 create \
                 /consumers/${group}/offsets/test \'\' > ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
-
-            run_command "${base_dir}/run_zookeeper_command.sh localhost:2181 create \
+            run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 create \
                 /consumers/${group}/offsets/test/${partition} $1 > \
                 ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
         done
@@ -250,6 +284,8 @@ post_and_verify_compressed_test() {
     echo -e "\e[1;42;97mpost_and_verify_compressed_test succeeded\e[0m"
 }
 
+check_for_native_libs
+start_s3
 
 for key in ${!READER_WRITERS[@]}; do
    MESSAGE_TYPE=${key}
@@ -258,6 +294,13 @@ for key in ${!READER_WRITERS[@]}; do
    post_and_verify_test
    start_from_non_zero_offset_test
    move_offset_back_test
-   post_and_verify_compressed_test
+   if [ ${key} = "json" ]; then
+       post_and_verify_compressed_test
+   elif [ -z ${SKIP_COMPRESSED_BINARY} ]; then
+       post_and_verify_compressed_test
+   else
+       echo "Skipping compressed tests for ${key}"
+   fi
 done
 
+stop_s3
