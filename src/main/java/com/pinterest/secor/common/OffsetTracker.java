@@ -51,9 +51,14 @@ public class OffsetTracker {
         long lastSeenOffset = getLastSeenOffset(topicPartition);
         mLastSeenOffset.put(topicPartition, offset);
         if (lastSeenOffset + 1 != offset) {
-            LOG.warn("offset for topic " + topicPartition.getTopic() + " partition " +
-                     topicPartition.getPartition() + " changed from " + lastSeenOffset + " to " +
-                     offset);
+            if (lastSeenOffset >= 0) {
+                LOG.warn("offset for topic " + topicPartition.getTopic() + " partition " +
+                        topicPartition.getPartition() + " changed from " + lastSeenOffset + " to " +
+                        offset);
+            } else {
+                LOG.info("starting to consume topic " + topicPartition.getTopic() + " partition " +
+                        topicPartition.getPartition() + " from offset " + offset);
+            }
         }
         if (mFirstSeendOffset.get(topicPartition) == null) {
             mFirstSeendOffset.put(topicPartition, offset);
