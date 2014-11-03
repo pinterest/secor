@@ -83,6 +83,7 @@ public class Consumer extends Thread {
         }
         // check upload policy every N seconds or 10,000 messages/consumer timeouts
         long checkEveryNSeconds = Math.min(10 * 60, mConfig.getMaxFileAgeSeconds() / 2);
+        long checkMessagesPerSecond = mConfig.getMessagesPerSecond();
         long nMessages = 0;
         long lastChecked = System.currentTimeMillis();
         while (true) {
@@ -92,7 +93,7 @@ public class Consumer extends Thread {
             }
 
             long now = System.currentTimeMillis();
-            if (nMessages++ % 10000 == 0 ||
+            if (nMessages++ % checkMessagesPerSecond == 0 ||
                     (now - lastChecked) > checkEveryNSeconds * 1000) {
                 lastChecked = now;
                 checkUploadPolicy();
