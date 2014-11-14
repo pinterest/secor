@@ -151,6 +151,11 @@
             <version>1.5.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.msgpack</groupId>
+            <artifactId>msgpack</artifactId>
+            <version>0.6.11</version>
+        </dependency>
     </dependencies>
 
     <build>
