@@ -195,6 +195,13 @@ public class SecorConfig {
         return getString("message.timestamp.input.pattern");
     }
 
+    /**
+     * hive tables are generally named after the topics. For instance if the topic is request_log
+     * the hive table is also called request_log. If you want this to be pinlog_request_log you can
+     * set this config to "pinlog_"
+     * @return prefix from the config file or empty string
+     */
+    public String getHivePrefix() { return getString("secor.hive.prefix", ""); }
     public String getCompressionCodec() {
         return getString("secor.compression.codec");
     }
@@ -221,6 +228,11 @@ public class SecorConfig {
     private String getString(String name) {
         checkProperty(name);
         return mProperties.getString(name);
+    }
+
+    private String getString(String name, String defaultValue) {
+      checkProperty(name);
+      return mProperties.getString(name, defaultValue);
     }
 
     private int getInt(String name) {
