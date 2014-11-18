@@ -29,10 +29,11 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.FileReaderWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.FileUtil;
 
 /**
  * 
- * Sequence file writer implementation
+ * Sequence file reader writer implementation
  * 
  * @author Praveen Murugesan (praveen@uber.com)
  *
@@ -48,8 +49,8 @@ public class SequenceFileReaderWriter implements FileReaderWriter {
     public SequenceFileReaderWriter(LogFilePath path, CompressionCodec codec,
             FileReaderWriter.Type type) throws Exception {
         Configuration config = new Configuration();
-        FileSystem fs = FileSystem.get(config);
         Path fsPath = new Path(path.getLogFilePath());
+        FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
 
         if (type == FileReaderWriter.Type.Reader) {
             this.mReader = new SequenceFile.Reader(fs, fsPath, config);

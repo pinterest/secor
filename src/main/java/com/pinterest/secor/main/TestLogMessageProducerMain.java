@@ -57,6 +57,12 @@ public class TestLogMessageProducerMain {
                 .withArgName("<num_producer_threads>")
                 .withType(Number.class)
                 .create("p"));
+        options.addOption(OptionBuilder.withLongOpt("type")
+                .withDescription("type of producer - [json, binary]")
+                .hasArg()
+                .withArgName("<type>")
+                .withType(String.class)
+                .create("type"));
 
         CommandLineParser parser = new GnuParser();
         return parser.parse(options, args);
@@ -68,8 +74,9 @@ public class TestLogMessageProducerMain {
             String topic = commandLine.getOptionValue("topic");
             int messages = ((Number) commandLine.getParsedOptionValue("messages")).intValue();
             int producers = ((Number) commandLine.getParsedOptionValue("producers")).intValue();
+            String type = commandLine.getOptionValue("type");
             for (int i = 0; i < producers; ++i) {
-                TestLogMessageProducer producer = new TestLogMessageProducer(topic, messages);
+                TestLogMessageProducer producer = new TestLogMessageProducer(topic, messages, type);
                 producer.start();
             }
         } catch (Throwable t) {
