@@ -40,8 +40,16 @@ PARENT_DIR=/tmp/secor_dev
 LOGS_DIR=${PARENT_DIR}/logs
 S3_LOGS_DIR=s3://pinterest-dev/secor_dev
 MESSAGES=1000
+MESSAGE_TYPE=binary
 # For the compression tests to work, set this to the path of the Hadoop native libs.
 HADOOP_NATIVE_LIB_PATH=lib
+# by default additional opts is empty
+ADDITIONAL_OPTS=
+
+# various reader writer options to be used for testing
+declare -A READER_WRITERS
+READER_WRITERS[json]=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriter
+READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriter
 
 # The minimum wait time is one minute plus delta.  Secor is configured to upload files older than
 # one minute and we need to make sure that everything ends up on s3 before starting verification.
@@ -83,24 +91,28 @@ stop_kafka_server() {
 
 start_secor() {
     run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.dev.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
+        -Dconfig=secor.dev.backup.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.dev.partition.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
-        com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
+    if [ "${MESSAGE_TYPE}" = "binary" ]; then
+       run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+           -Dconfig=secor.dev.partition.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
+           com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
+    fi
 }
 
 start_secor_compressed() {
     run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.dev.backup.properties -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
+        -Dconfig=secor.dev.backup.properties ${ADDITIONAL_OPTS} -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
         -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
         -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.dev.partition.properties -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
-        -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
-        -cp secor-0.1-SNAPSHOT.jar:lib/* \
-        com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
+    if [ "${MESSAGE_TYPE}" = "binary" ]; then
+       run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+           -Dconfig=secor.dev.partition.properties ${ADDITIONAL_OPTS} -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
+           -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
+           -cp secor-0.1-SNAPSHOT.jar:lib/* \
+           com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
+    fi
 }
 
 stop_secor() {
@@ -116,19 +128,21 @@ create_topic() {
 post_messages() {
     run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
-        com.pinterest.secor.main.TestLogMessageProducerMain -t test -m $1 -p 1 > \
+        com.pinterest.secor.main.TestLogMessageProducerMain -t test -m $1 -p 1 -type ${MESSAGE_TYPE} > \
         ${LOGS_DIR}/test_log_message_producer.log 2>&1"
 }
 
 verify() {
     run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.dev.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
+        -Dconfig=secor.dev.backup.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
         ${LOGS_DIR}/log_verifier_backup.log 2>&1"
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.dev.partition.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
-        com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
-        ${LOGS_DIR}/log_verifier_partition.log 2>&1"
+    if [ "${MESSAGE_TYPE}" = "binary" ]; then
+       run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+           -Dconfig=secor.dev.partition.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
+           com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
+           ${LOGS_DIR}/log_verifier_partition.log 2>&1"
+    fi
 }
 
 set_offsets_in_zookeeper() {
@@ -205,7 +219,7 @@ start_from_non_zero_offset_test() {
 }
 
 # Set offset after consumers processed some of the messages.  This scenario simulates a
-# rebalancing event and potential topic reassignment triggering the need to trim local log files.
+# re-balancing event and potential topic reassignment triggering the need to trim local log files.
 move_offset_back_test() {
     echo "running move_offset_back_test"
     initialize
@@ -218,7 +232,7 @@ move_offset_back_test() {
 
     echo "Waiting ${WAIT_TIME} sec for Secor to upload logs to s3"
     sleep ${WAIT_TIME}
-    # 4 because we skept 2 messages per topic partition and there are 2 partitions per topic.
+    # 4 because we skipped 2 messages per topic partition and there are 2 partitions per topic.
     verify $((${MESSAGES}-4))
 
     stop_all
@@ -242,8 +256,12 @@ post_and_verify_compressed_test() {
 }
 
 
-
-post_and_verify_test
-start_from_non_zero_offset_test
-move_offset_back_test
-post_and_verify_compressed_test
+for key in ${!READER_WRITERS[@]}; do
+   MESSAGE_TYPE=${key}
+   ADDITIONAL_OPTS=-Dsecor.file.reader.writer=${READER_WRITERS[${key}]}
+   echo "Running tests for Message Type: ${MESSAGE_TYPE} and ReaderWriter: ${READER_WRITERS[${key}]}"
+   post_and_verify_test
+   start_from_non_zero_offset_test
+   move_offset_back_test
+   post_and_verify_compressed_test
+done

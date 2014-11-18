@@ -19,13 +19,13 @@ package com.pinterest.secor.tools;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.io.FileReaderWriter;
+import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.SequenceFile;
+import com.pinterest.secor.util.ReflectionUtil;
+
+import org.apache.hadoop.io.compress.CompressionCodec;
 
 import java.io.IOException;
 import java.util.*;
@@ -107,15 +107,9 @@ public class LogFileVerifier {
     }
 
     private int getMessageCount(LogFilePath logFilePath) throws Exception {
-        String path = logFilePath.getLogFilePath();
-        Path fsPath = new Path(path);
-        FileSystem fileSystem = FileUtil.getFileSystem(path);
-        SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, fsPath,
-            new Configuration());
-        LongWritable key = (LongWritable) reader.getKeyClass().newInstance();
-        BytesWritable value = (BytesWritable) reader.getValueClass().newInstance();
+        FileReaderWriter reader = createFileReaderWriter(logFilePath);
         int result = 0;
-        while (reader.next(key, value)) {
+        while (reader.next() != null) {
             result++;
         }
         reader.close();
@@ -162,16 +156,11 @@ public class LogFileVerifier {
     }
 
     private void getOffsets(LogFilePath logFilePath, Set<Long> offsets) throws Exception {
-        String path = logFilePath.getLogFilePath();
-        Path fsPath = new Path(path);
-        FileSystem fileSystem = FileUtil.getFileSystem(path);
-        SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, fsPath,
-            new Configuration());
-        LongWritable key = (LongWritable) reader.getKeyClass().newInstance();
-        BytesWritable value = (BytesWritable) reader.getValueClass().newInstance();
-        while (reader.next(key, value)) {
-            if (!offsets.add(key.get())) {
-                throw new RuntimeException("duplicate key " + key.get() + " found in file " +
+        FileReaderWriter reader = createFileReaderWriter(logFilePath);
+        KeyValue record;
+        while ((record = reader.next()) != null) {
+            if (!offsets.add(record.getKey())) {
+                throw new RuntimeException("duplicate key " + record.getKey() + " found in file " +
                     logFilePath.getLogFilePath());
             }
         }
@@ -204,5 +193,25 @@ public class LogFileVerifier {
                 lastOffset = offset;
             }
         }
+    }
+
+    /**
+     * Helper to create a file reader writer from config
+     *
+     * @param logFilePath
+     * @return
+     * @throws Exception
+     */
+    private FileReaderWriter createFileReaderWriter(LogFilePath logFilePath) throws Exception {
+        CompressionCodec codec = null;
+        if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
+            codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
+        }
+        FileReaderWriter fileReader = (FileReaderWriter) ReflectionUtil.createFileReaderWriter(
+                mConfig.getFileReaderWriter(),
+                logFilePath,
+                codec,
+                FileReaderWriter.Type.Reader);
+        return fileReader;
     }
 }

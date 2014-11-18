@@ -19,9 +19,13 @@ package com.pinterest.secor.tools;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
+
 import org.apache.thrift.TException;
 import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocolFactory;
+import org.apache.thrift.protocol.TSimpleJSONProtocol;
+
 import com.pinterest.secor.thrift.TestMessage;
 import com.pinterest.secor.thrift.TestEnum;
 
@@ -33,12 +37,14 @@ import java.util.Properties;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class TestLogMessageProducer extends Thread {
-    private String mTopic;
-    private int mNumMessages;
+    private final String mTopic;
+    private final int mNumMessages;
+    private final String mType;
 
-    public TestLogMessageProducer(String topic, int numMessages) {
+    public TestLogMessageProducer(String topic, int numMessages, String type) {
         mTopic = topic;
         mNumMessages = numMessages;
+        mType = type;
     }
 
     public void run() {
@@ -52,7 +58,16 @@ public class TestLogMessageProducer extends Thread {
         ProducerConfig config = new ProducerConfig(properties);
         Producer<String, byte[]> producer = new Producer<String, byte[]>(config);
 
-        TSerializer serializer = new TSerializer(new TBinaryProtocol.Factory());
+        TProtocolFactory protocol = null;
+        if(mType.equals("json")) {
+            protocol = new TSimpleJSONProtocol.Factory();
+        } else if (mType.equals("binary")) {
+            protocol = new TBinaryProtocol.Factory();
+        } else {
+            throw new RuntimeException("Undefined message encoding type");
+        }
+
+        TSerializer serializer = new TSerializer(protocol);
         for (int i = 0; i < mNumMessages; ++i) {
             TestMessage testMessage = new TestMessage(System.currentTimeMillis() * 1000000L + i,
                                                       "some_value_" + i);

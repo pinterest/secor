@@ -20,18 +20,19 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
 
 import com.google.common.io.CountingOutputStream;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.FileReaderWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.FileUtil;
 
 /**
  * 
@@ -56,11 +57,10 @@ public class DelimitedTextFileReaderWriter implements FileReaderWriter {
             CompressionCodec codec, FileReaderWriter.Type type)
             throws FileNotFoundException, IOException {
 
-        File logFile = new File(path.getLogFilePath());
-        logFile.getParentFile().mkdirs();
+        Path fsPath = new Path(path.getLogFilePath());
+        FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
         if (type == FileReaderWriter.Type.Reader) {
-            InputStream inputStream = new FileInputStream(new File(
-                    path.getLogFilePath()));
+            InputStream inputStream = fs.open(fsPath);
             this.mReader = (codec == null) ? new BufferedInputStream(inputStream)
                     : new BufferedInputStream(
                             codec.createInputStream(inputStream));
@@ -68,8 +68,7 @@ public class DelimitedTextFileReaderWriter implements FileReaderWriter {
             this.mCountingStream = null;
             this.mWriter = null;
         } else if (type == FileReaderWriter.Type.Writer) {
-            this.mCountingStream = new CountingOutputStream(
-                    new FileOutputStream(logFile));
+            this.mCountingStream = new CountingOutputStream(fs.create(fsPath));
             this.mWriter = (codec == null) ? new BufferedOutputStream(
                     this.mCountingStream) : new BufferedOutputStream(
                     codec.createOutputStream(this.mCountingStream));
