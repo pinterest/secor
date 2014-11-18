@@ -90,14 +90,14 @@ public class FileReaderWriterTest extends TestCase {
         mConfig = new SecorConfig(properties);
     }
 
-    private void mockDelimitedTextFileReaderWriter() throws Exception {
+    private void mockDelimitedTextFileReaderWriter(boolean isCompressed) throws Exception {
         PowerMockito.mockStatic(FileSystem.class);
         FileSystem fs = Mockito.mock(FileSystem.class);
         Mockito.when(
                 FileSystem.get(Mockito.any(URI.class),
                         Mockito.any(Configuration.class))).thenReturn(fs);
 
-        Path fsPath = new Path(PATH_GZ);
+        Path fsPath = (!isCompressed) ? new Path(PATH) : new Path(PATH_GZ);
 
         GzipCodec codec = PowerMockito.mock(GzipCodec.class);
         PowerMockito.whenNew(GzipCodec.class).withNoArguments()
@@ -182,6 +182,14 @@ public class FileReaderWriterTest extends TestCase {
 
         // Verify that the method has been called exactly once (the default).
         PowerMockito.verifyStatic();
+        FileSystem.get(Mockito.any(URI.class), Mockito.any(Configuration.class));
+
+        mockSequenceFileReaderWriter(true);
+        ReflectionUtil.createFileReaderWriter(mConfig.getFileReaderWriter(),
+                mLogFilePathGz, new GzipCodec(), FileReaderWriter.Type.Reader);
+
+        // Verify that the method has been called exactly once (the default).
+        PowerMockito.verifyStatic();
         FileSystem
                 .get(Mockito.any(URI.class), Mockito.any(Configuration.class));
     }
@@ -203,7 +211,7 @@ public class FileReaderWriterTest extends TestCase {
 
         mockSequenceFileReaderWriter(true);
 
-        ReflectionUtil.createFileReaderWriter(mConfig.getFileReaderWriter(),
+        writer = (FileReaderWriter) ReflectionUtil.createFileReaderWriter(mConfig.getFileReaderWriter(),
                 mLogFilePathGz, new GzipCodec(), FileReaderWriter.Type.Writer);
 
         // Verify that the method has been called exactly once (the default).
@@ -216,8 +224,15 @@ public class FileReaderWriterTest extends TestCase {
 
     public void testDelimitedTextFileWriter() throws Exception {
         setupDelimitedTextFileReaderWriterConfig();
-        mockDelimitedTextFileReaderWriter();
+        mockDelimitedTextFileReaderWriter(false);
         FileReaderWriter writer = (FileReaderWriter) ReflectionUtil
+                .createFileReaderWriter(mConfig.getFileReaderWriter(),
+                        mLogFilePath, null,
+                        FileReaderWriter.Type.Writer);
+        assert writer.getLength() == 0L;
+
+        mockDelimitedTextFileReaderWriter(true);
+        writer = (FileReaderWriter) ReflectionUtil
                 .createFileReaderWriter(mConfig.getFileReaderWriter(),
                         mLogFilePathGz, new GzipCodec(),
                         FileReaderWriter.Type.Writer);
@@ -226,7 +241,12 @@ public class FileReaderWriterTest extends TestCase {
 
     public void testDelimitedTextFileReader() throws Exception {
         setupDelimitedTextFileReaderWriterConfig();
-        mockDelimitedTextFileReaderWriter();
+
+        mockDelimitedTextFileReaderWriter(false);
+        ReflectionUtil.createFileReaderWriter(mConfig.getFileReaderWriter(),
+                mLogFilePath, null, FileReaderWriter.Type.Reader);
+
+        mockDelimitedTextFileReaderWriter(true);
         ReflectionUtil.createFileReaderWriter(mConfig.getFileReaderWriter(),
                 mLogFilePathGz, new GzipCodec(), FileReaderWriter.Type.Reader);
     }

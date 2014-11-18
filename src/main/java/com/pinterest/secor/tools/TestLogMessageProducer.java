@@ -64,7 +64,7 @@ public class TestLogMessageProducer extends Thread {
         } else if (mType.equals("binary")) {
             protocol = new TBinaryProtocol.Factory();
         } else {
-            throw new RuntimeException("Undefined message encoding type");
+            throw new RuntimeException("Undefined message encoding type: " + mType);
         }
 
         TSerializer serializer = new TSerializer(protocol);

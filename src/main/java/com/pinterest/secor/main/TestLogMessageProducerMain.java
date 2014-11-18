@@ -58,7 +58,7 @@ public class TestLogMessageProducerMain {
                 .withType(Number.class)
                 .create("p"));
         options.addOption(OptionBuilder.withLongOpt("type")
-                .withDescription("type of producer")
+                .withDescription("type of producer - [json, binary]")
                 .hasArg()
                 .withArgName("<type>")
                 .withType(String.class)
