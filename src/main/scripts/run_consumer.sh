@@ -19,12 +19,25 @@
 
 mkdir -p /mnt/secor_data/logs
 
+# Which java to use
+if [ -z "${JAVA_HOME}" ]; then
+    # try to use Java7 by default
+    JAVA_HOME=/usr/lib/jvm/java-7-oracle
+    if [ -e $JAVA_HOME ]; then
+        JAVA=${JAVA_HOME}/bin/java
+    else
+        JAVA="java"
+    fi
+else
+    JAVA="${JAVA_HOME}/bin/java"
+fi
+
 echo "starting backup group"
-nohup java -ea -Dsecor_group=backup -Dlog4j.configuration=log4j.prod.properties \
+nohup ${JAVA} -ea -Dsecor_group=backup -Dlog4j.configuration=log4j.prod.properties \
     -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" \
     com.pinterest.secor.main.ConsumerMain > /mnt/secor_data/logs/run_consumer_backup.log 2>&1 &
 
 echo "starting partition group"
-nohup java -ea -Dsecor_group=partition -Dlog4j.configuration=log4j.prod.properties \
+nohup ${JAVA} -ea -Dsecor_group=partition -Dlog4j.configuration=log4j.prod.properties \
     -Dconfig=secor.prod.partition.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" \
     com.pinterest.secor.main.ConsumerMain > /mnt/secor_data/logs/run_secor_partition.log 2>&1 &
