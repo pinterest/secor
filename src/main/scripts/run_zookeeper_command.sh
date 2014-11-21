@@ -22,4 +22,12 @@ if [ $# -lt 3 ]; then
     exit 1
 fi
 
-java -ea -cp "secor-0.1-SNAPSHOT.jar:lib/*" org.apache.zookeeper.ZooKeeperMain -server $@
+#which java to use
+if [ -n "$JAVA_HOME" ]; then
+   JAVA=$JAVA_HOME/bin/java
+else
+   JAVA=java
+fi
+
+
+$JAVA -ea -cp "secor-0.1-SNAPSHOT.jar:lib/*" org.apache.zookeeper.ZooKeeperMain -server $@

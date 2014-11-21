@@ -36,6 +36,13 @@
 
 set -e
 
+#which java to use
+if [ -n "$JAVA_HOME" ]; then
+   JAVA=$JAVA_HOME/bin/java
+else
+   JAVA=java
+fi
+
 PARENT_DIR=/tmp/secor_dev
 LOGS_DIR=${PARENT_DIR}/logs
 S3_LOGS_DIR=s3://pinterest-dev/secor_dev
@@ -82,21 +89,21 @@ stop_kafka_server() {
 }
 
 start_secor() {
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "$JAVA -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "$JAVA -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.partition.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
 }
 
 start_secor_compressed() {
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "$JAVA -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.backup.properties -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
         -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
         -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "$JAVA -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.partition.properties -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
         -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
         -cp secor-0.1-SNAPSHOT.jar:lib/* \
@@ -114,18 +121,18 @@ create_topic() {
 }
 
 post_messages() {
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "$JAVA -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.TestLogMessageProducerMain -t test -m $1 -p 1 > \
         ${LOGS_DIR}/test_log_message_producer.log 2>&1"
 }
 
 verify() {
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "$JAVA -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
         ${LOGS_DIR}/log_verifier_backup.log 2>&1"
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "$JAVA -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.partition.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
         ${LOGS_DIR}/log_verifier_partition.log 2>&1"
