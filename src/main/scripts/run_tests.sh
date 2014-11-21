@@ -56,6 +56,19 @@ READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriter
 WAIT_TIME=120
 base_dir=$(dirname $0)
 
+# Which java to use
+if [ -z "${JAVA_HOME}" ]; then
+    # try to use Java7 by default
+    JAVA_HOME=/usr/lib/jvm/java-7-oracle
+    if [ -e $JAVA_HOME ]; then
+        JAVA=${JAVA_HOME}/bin/java
+    else
+        JAVA="java"
+    fi
+else
+    JAVA="${JAVA_HOME}/bin/java"
+fi
+
 run_command() {
     echo "running $@"
     eval "$@"
@@ -90,24 +103,24 @@ stop_kafka_server() {
 }
 
 start_secor() {
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.backup.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
     if [ "${MESSAGE_TYPE}" = "binary" ]; then
-       run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+       run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
            -Dconfig=secor.dev.partition.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
            com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
     fi
 }
 
 start_secor_compressed() {
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.backup.properties ${ADDITIONAL_OPTS} -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
         -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
         -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
     if [ "${MESSAGE_TYPE}" = "binary" ]; then
-       run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+       run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
            -Dconfig=secor.dev.partition.properties ${ADDITIONAL_OPTS} -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
            -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
            -cp secor-0.1-SNAPSHOT.jar:lib/* \
@@ -126,19 +139,19 @@ create_topic() {
 }
 
 post_messages() {
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.TestLogMessageProducerMain -t test -m $1 -p 1 -type ${MESSAGE_TYPE} > \
         ${LOGS_DIR}/test_log_message_producer.log 2>&1"
 }
 
 verify() {
-    run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.dev.backup.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
         com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
         ${LOGS_DIR}/log_verifier_backup.log 2>&1"
     if [ "${MESSAGE_TYPE}" = "binary" ]; then
-       run_command "java -server -ea -Dlog4j.configuration=log4j.dev.properties \
+       run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
            -Dconfig=secor.dev.partition.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
            com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
            ${LOGS_DIR}/log_verifier_partition.log 2>&1"
