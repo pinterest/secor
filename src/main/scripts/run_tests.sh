@@ -56,18 +56,8 @@ READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriter
 WAIT_TIME=120
 base_dir=$(dirname $0)
 
-# Which java to use
-if [ -z "${JAVA_HOME}" ]; then
-    # try to use Java7 by default
-    JAVA_HOME=/usr/lib/jvm/java-7-oracle
-    if [ -e $JAVA_HOME ]; then
-        JAVA=${JAVA_HOME}/bin/java
-    else
-        JAVA="java"
-    fi
-else
-    JAVA="${JAVA_HOME}/bin/java"
-fi
+CURR_DIR=`dirname $0`
+source ${CURR_DIR}/run_common.sh
 
 run_command() {
     echo "running $@"
