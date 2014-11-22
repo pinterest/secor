@@ -22,17 +22,7 @@ if [ $# -lt 3 ]; then
     exit 1
 fi
 
-# Which java to use
-if [ -z "${JAVA_HOME}" ]; then
-    # try to use Java7 by default
-    JAVA_HOME=/usr/lib/jvm/java-7-oracle
-    if [ -e $JAVA_HOME ]; then
-        JAVA=${JAVA_HOME}/bin/java
-    else
-        JAVA="java"
-    fi
-else
-    JAVA="${JAVA_HOME}/bin/java"
-fi
+CURR_DIR=`dirname $0`
+source ${CURR_DIR}/run_common.sh
 
 ${JAVA} -ea -cp "secor-0.1-SNAPSHOT.jar:lib/*" org.apache.zookeeper.ZooKeeperMain -server $@
