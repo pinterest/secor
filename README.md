@@ -9,7 +9,7 @@ Secor is a service persisting [Kafka] logs to [Amazon S3].
   - **horizontal scalability**: scaling the system out to handle more load is as easy as starting extra Secor processes. Reducing the resource footprint can be achieved by killing any of the running Secor processes. Neither ramping up nor down has any impact on data consistency,
   - **output partitioning**: Secor parses incoming messages and puts them under partitioned s3 paths to enable direct import into systems like [Hive],
   - **configurable upload policies**: commit points controlling when data is persisted in S3 are configured through size-based and time-based policies (e.g., upload data when local buffer reaches size of 100MB and at least once per hour),
-  - **monitoring**: metrics tracking various performace properties are exposed through [Ostrich] and optionaly exported to [OpenTSDB],
+  - **monitoring**: metrics tracking various performace properties are exposed through [Ostrich] and optionaly exported to [OpenTSDB] / [statsD],
   - **customizability**: external log message parser may be loaded by updating the configuration,
   - **Qubole interface**: Secor connects to [Qubole] to add finalized output partitions to Hive tables.
 
@@ -83,7 +83,7 @@ java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.
 ```
 
 ##### Progress monitor
-Progress monitor exports offset consumption lags per topic partition to [OpenTSDB]. Lags track how far Secor is behind the producers.
+Progress monitor exports offset consumption lags per topic partition to [OpenTSDB] / [statsD]. Lags track how far Secor is behind the producers.
 
 ```sh
 java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.ProgressMonitorMain
@@ -120,4 +120,5 @@ If you have any questions or comments, you can reach us at [secor-users@googlegr
 [Ostrich]: https://github.com/twitter/ostrich
 [OpenTSDB]: http://opentsdb.net/
 [Qubole]: http://www.qubole.com/
+[statsD]: https://github.com/etsy/statsd/
 
