@@ -18,6 +18,7 @@ package com.pinterest.secor.tools;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.net.HostAndPort;
 import com.pinterest.secor.common.KafkaClient;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
@@ -26,9 +27,12 @@ import com.pinterest.secor.message.Message;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.parser.TimestampedMessageParser;
 import com.pinterest.secor.util.ReflectionUtil;
+import com.timgroup.statsd.NonBlockingStatsDClient;
+
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +52,10 @@ import java.util.Map;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class ProgressMonitor {
+
     private static final Logger LOG = LoggerFactory.getLogger(ProgressMonitor.class);
+    private static final String PERIOD = ".";
+
     private SecorConfig mConfig;
     private ZookeeperConnector mZookeeperConnector;
     private KafkaClient mKafkaClient;
@@ -115,10 +122,40 @@ public class ProgressMonitor {
     public void exportStats() throws Exception {
         List<Stat> stats = getStats();
         System.out.println(JSONArray.toJSONString(stats));
+
+        // if there is a valid openTSDB port configured export to openTSDB
         if (mConfig.getTsdbHostport() != null && !mConfig.getTsdbHostport().isEmpty()) {
             for (Stat stat : stats) {
                 exportToTsdb(stat);
             }
+        }
+
+        // if there is a valid statsD port configured export to statsD
+        if (mConfig.getStatsDHostPort() != null && !mConfig.getStatsDHostPort().isEmpty()) {
+            exportToStatsD(stats);
+        }
+    }
+
+    /**
+     * Helper to publish stats to statsD client
+     */
+    private void exportToStatsD(List<Stat> stats) {
+        HostAndPort hostPort = HostAndPort.fromString(mConfig.getStatsDHostPort());
+
+        // group stats by kafka group
+        NonBlockingStatsDClient client = new NonBlockingStatsDClient(mConfig.getKafkaGroup(),
+                hostPort.getHostText(), hostPort.getPort());
+
+        for (Stat stat : stats) {
+            @SuppressWarnings("unchecked")
+            Map<String, String> tags = (Map<String, String>) stat.get(Stat.STAT_KEYS.TAGS.getName());
+            String aspect = new StringBuilder((String)stat.get(Stat.STAT_KEYS.METRIC.getName()))
+                    .append(PERIOD)
+                    .append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
+                    .append(PERIOD)
+                    .append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
+                    .toString();
+            client.recordGaugeValue(aspect, (Long)stat.get(Stat.STAT_KEYS.VALUE.getName()));
         }
     }
 
@@ -127,7 +164,7 @@ public class ProgressMonitor {
         List<Stat> stats = Lists.newArrayList();
 
         for (String topic : topics) {
-            if (topic.matches(mConfig.getTsdbBlacklistTopics()) ||
+            if (topic.matches(mConfig.getMonitoringBlacklistTopics()) ||
                     !topic.matches(mConfig.getKafkaTopicFilter())) {
                 LOG.info("skipping topic " + topic);
                 continue;
@@ -158,8 +195,8 @@ public class ProgressMonitor {
                     long offsetLag = lastOffset - committedOffset;
                     long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
                     Map<String, String> tags = ImmutableMap.of(
-                            "topic", topic,
-                            "partition", Integer.toString(partition)
+                            Stat.STAT_KEYS.TOPIC.getName(), topic,
+                            Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition)
                     );
 
                     long timestamp = System.currentTimeMillis() / 1000;
@@ -185,14 +222,39 @@ public class ProgressMonitor {
         }
     }
 
+    /**
+     *
+     * JSON hash map extension to store statistics
+     *
+     */
     private static class Stat extends JSONObject {
+
+        // definition of all the stat keys
+        public enum STAT_KEYS {
+            METRIC("metric"),
+            TAGS("tags"),
+            VALUE("value"),
+            TIMESTAMP("timestamp"),
+            TOPIC("topic"),
+            PARTITION("partition");
+
+            STAT_KEYS(String name) {
+                this.mName = name;
+            }
+
+            private final String mName;
+
+            public String getName() {
+                return this.mName;
+            }
+        }
 
         public static Stat createInstance(String metric, Map<String, String> tags, String value, long timestamp) {
             return new Stat(ImmutableMap.of(
-                    "metric", metric,
-                    "tags", tags,
-                    "value", value,
-                    "timestamp", timestamp
+                    STAT_KEYS.METRIC.getName(), metric,
+                    STAT_KEYS.TAGS.getName(), tags,
+                    STAT_KEYS.VALUE.getName(), value,
+                    STAT_KEYS.TIMESTAMP.getName(), timestamp
             ));
         }
 
@@ -200,4 +262,5 @@ public class ProgressMonitor {
             super(map);
         }
     }
+
 }

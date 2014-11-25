@@ -187,8 +187,12 @@ public class SecorConfig {
         return getString("tsdb.hostport");
     }
 
-    public String getTsdbBlacklistTopics() {
-        return getString("tsdb.blacklist.topics");
+    public String getStatsDHostPort() {
+        return getString("statsd.hostport");
+    }
+
+    public String getMonitoringBlacklistTopics() {
+        return getString("monitoring.blacklist.topics");
     }
 
     public String getMessageTimestampName() {
