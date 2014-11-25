@@ -49,12 +49,8 @@ KAFKA_LOG4J_OPTS="-Dlog4j.configuration=log4j.dev.properties"
 # Generic jvm settings you want to add
 KAFKA_OPTS=""
 
-# Which java to use
-if [ -z "${JAVA_HOME}" ]; then
-    JAVA="java"
-else
-    JAVA="${JAVA_HOME}/bin/java"
-fi
+CURR_DIR=`dirname $0`
+source ${CURR_DIR}/run_common.sh
 
 # Memory options
 KAFKA_HEAP_OPTS="-Xmx256M"
