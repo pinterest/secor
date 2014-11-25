@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Which java to use
 if [ -z "${JAVA_HOME}" ]; then

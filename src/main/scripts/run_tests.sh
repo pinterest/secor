@@ -56,8 +56,7 @@ READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriter
 WAIT_TIME=120
 base_dir=$(dirname $0)
 
-CURR_DIR=`dirname $0`
-source ${CURR_DIR}/run_common.sh
+source ${base_dir}/run_common.sh
 
 run_command() {
     echo "running $@"
