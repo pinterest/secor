@@ -110,10 +110,16 @@ public class MessageReader {
         props.put("auto.offset.reset", "smallest");
         props.put("consumer.timeout.ms", Integer.toString(mConfig.getConsumerTimeoutMs()));
         props.put("consumer.id", IdUtil.getConsumerId());
-        if (mConfig.getRebalanceMaxRetries() != null && !mConfig.getRebalanceMaxRetries().isEmpty()) {
+        if (mConfig.getRebalanceMaxRetries() != null &&
+            !mConfig.getRebalanceMaxRetries().isEmpty()) {
             props.put("rebalance.max.retries", mConfig.getRebalanceMaxRetries());
         }
-        if (mConfig.getSocketReceieveBufferBytes() != null && !mConfig.getSocketReceieveBufferBytes().isEmpty()) {
+        if (mConfig.getRebalanceBackoffMs() != null &&
+            !mConfig.getRebalanceBackoffMs().isEmpty()) {
+            props.put("rebalance.backoff.ms", mConfig.getRebalanceBackoffMs());
+        }
+        if (mConfig.getSocketReceieveBufferBytes() != null &&
+            !mConfig.getSocketReceieveBufferBytes().isEmpty()) {
             props.put("socket.receive.buffer.bytes", mConfig.getSocketReceieveBufferBytes());
         }
         if (mConfig.getFetchMessageMaxBytes() != null && !mConfig.getFetchMessageMaxBytes().isEmpty()) {
