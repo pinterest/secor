@@ -249,6 +249,7 @@ post_and_verify_compressed_test() {
     post_messages ${MESSAGES}
     echo "Waiting ${WAIT_TIME} sec for Secor to upload logs to s3"
     sleep ${WAIT_TIME}
+    ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec"
     verify ${MESSAGES}
 
     stop_all
