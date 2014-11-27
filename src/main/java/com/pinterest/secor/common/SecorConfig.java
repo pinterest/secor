@@ -191,6 +191,10 @@ public class SecorConfig {
         return getString("message.type.name");
     }
 
+    public String getMessageTimestampBucketFormat() {
+        return getString("message.timestamp.bucket.format");
+    }
+
     public String getMessageTimestampName() {
         return getString("message.timestamp.name");
     }

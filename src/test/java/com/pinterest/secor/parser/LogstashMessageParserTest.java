@@ -35,7 +35,7 @@ public class LogstashMessageParserTest extends TestCase {
     private Message mFormat2;
     private Message mFormat3;
     private Message mFormat4;
-    private Message mInvalidDate;
+    private Message mInvalidPath;
     private OngoingStubbing<String> getTimestamp;
 
 
@@ -43,6 +43,7 @@ public class LogstashMessageParserTest extends TestCase {
     public void setUp() throws Exception {
         mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getMessageTypeName()).thenReturn("type");
+        Mockito.when(mConfig.getMessageTimestampBucketFormat()).thenReturn("yyyy/MM/dd/HH");
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("@timestamp");
 
         byte format1[] = "{\"@timestamp\":\"2014-10-17T01:34:22.450+00:00\",\"type\":\"restaurant-service-v1\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
@@ -60,6 +61,11 @@ public class LogstashMessageParserTest extends TestCase {
         byte format4[] = "{\"@timestamp\":\"33333333333\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
                 .getBytes("UTF-8");
         mFormat4 = new Message("test", 0, 0, format4);
+
+
+        byte invalid_path[] = "{\"@timestamp\":\"33333333333\",\"type\":\"Task Scheduler - Task Published Event - V 1.0\",\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\"}".getBytes("UTF-8");
+        mInvalidPath = new Message("test", 0, 0, invalid_path);
+
     }
 
     @Test
@@ -86,4 +92,10 @@ public class LogstashMessageParserTest extends TestCase {
         assertEquals("untyped", result[0]);
         assertEquals("1970/01/01/00", result[1]);
     }
+
+    public void testSanitizePath() throws Exception {
+        String result[] = new LogstashMessageParser(mConfig).extractPartitions(mInvalidPath);
+        assertEquals("taskscheduler-taskpublishedevent-v1-0", result[0]);
+    }
+
 }

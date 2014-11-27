@@ -40,7 +40,6 @@ public class LogstashMessageParser extends MessageParser {
     private static final Logger LOG = LoggerFactory.getLogger(LogstashMessageParser.class);
     protected static final String defaultType = "untyped";
     protected static final String defaultDate = "1970/01/01/00";
-    protected static final String defaultFormatter = "yyyy/MM/dd/hh";
 
     public LogstashMessageParser(SecorConfig config) {
         super(config);
@@ -55,13 +54,14 @@ public class LogstashMessageParser extends MessageParser {
             Object fieldType  = jsonObject.get(mConfig.getMessageTypeName());       //type
             Object fieldValue = jsonObject.get(mConfig.getMessageTimestampName());  //@timestamp
             if (fieldType != null) {
-                result[0] = fieldType.toString();
+                result[0] = sanitizePath(fieldType.toString());
             }
             if (fieldValue != null) {
                 try {
+
                     DateTimeFormatter inputFormatter = ISODateTimeFormat.dateTime();
                     LocalDateTime datetime = LocalDateTime.parse(fieldValue.toString(), inputFormatter);
-                    result[1] = datetime.toString(defaultFormatter);
+                    result[1] = datetime.toString(mConfig.getMessageTimestampBucketFormat());
                 } catch (Exception e) {
                     LOG.warn("date = " + fieldValue.toString()
                             + " could not be parsed with ISODateTimeFormat."
@@ -71,6 +71,10 @@ public class LogstashMessageParser extends MessageParser {
         }
 
         return result;
+    }
+
+    private String sanitizePath(String path_type) {
+      return path_type.replaceAll(" ","").replaceAll("\\.","-").toLowerCase();
     }
 
 }
