@@ -91,6 +91,10 @@ public class SecorConfig {
         return getString("kafka.rebalance.max.retries");
     }
 
+    public String getRebalanceBackoffMs() {
+        return getString("kafka.rebalance.backoff.ms");
+    }
+
     public String getFetchMessageMaxBytes() {
         return getString("kafka.fetch.message.max.bytes");
     }
