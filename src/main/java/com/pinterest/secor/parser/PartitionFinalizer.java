@@ -65,6 +65,12 @@ public class PartitionFinalizer {
 
     private long getLastTimestampMillis(TopicPartition topicPartition) throws TException {
         Message message = mKafkaClient.getLastMessage(topicPartition);
+        if (message == null) {
+            // This will happen if no messages have been posted to the given topic partition.
+            LOG.error("No message found for topic " + topicPartition.getTopic() + " partition " +
+                topicPartition.getPartition());
+            return -1;
+        }
         return mThriftMessageParser.extractTimestampMillis(message);
     }
 
