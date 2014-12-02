@@ -102,21 +102,6 @@ start_secor() {
     fi
 }
 
-start_secor_compressed() {
-    run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.dev.backup.properties ${ADDITIONAL_OPTS} -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
-        -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
-        -cp secor-0.1-SNAPSHOT.jar:lib/* \
-        com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
-    if [ "${MESSAGE_TYPE}" = "binary" ]; then
-       run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-           -Dconfig=secor.dev.partition.properties ${ADDITIONAL_OPTS} -Djava.library.path=$HADOOP_NATIVE_LIB_PATH \
-           -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
-           -cp secor-0.1-SNAPSHOT.jar:lib/* \
-           com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
-    fi
-}
-
 stop_secor() {
     run_command "pkill -f 'com.pinterest.secor.main.ConsumerMain' | true"
 }
@@ -246,12 +231,14 @@ post_and_verify_compressed_test() {
     echo "running post_and_verify_compressed_test"
     initialize
 
-    start_secor_compressed
+    # add compression options
+    ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
+        -Djava.library.path=$HADOOP_NATIVE_LIB_PATH"
+    start_secor
     sleep 3
     post_messages ${MESSAGES}
     echo "Waiting ${WAIT_TIME} sec for Secor to upload logs to s3"
     sleep ${WAIT_TIME}
-    ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec"
     verify ${MESSAGES}
 
     stop_all
