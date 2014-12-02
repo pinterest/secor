@@ -58,6 +58,15 @@ One of the convenience features of Secor is the ability to group messages and sa
 
 If none of the parsers available out-of-the-box is suitable for your use case, note that it is very easy to implement a custom parser. All you have to do is to extend [MessageParser](src/main/java/com/pinterest/secor/parser/MessageParser.java) and tell Secor to use your parser by setting ```secor.message.parser.class``` in the properties file.
 
+
+## Output File Formats
+
+Currently secor supports the following output formats
+
+- **Sequence Files**: Flat file containing binary key value pairs.
+
+- **Delimited Text Files**: A new line delimited raw text file.
+
 ## Tools
 Secor comes with a number of tools impelementing interactions with the environment.
 
@@ -104,8 +113,8 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Andy Kramolisch](https://github.com/andykram)
   * [Brenden Matthews](https://github.com/brndnmtthws)
   * [Lucas Zago](https://github.com/zago)
-  * [James Green] (https://github.com/jfgreen)
-  * [Praveen Murugesan] (https://github.com/lefthandmagic)
+  * [James Green](https://github.com/jfgreen)
+  * [Praveen Murugesan](https://github.com/lefthandmagic)
   * [Zack Dever](https://github.com/zackdever)
 
 ## Help
