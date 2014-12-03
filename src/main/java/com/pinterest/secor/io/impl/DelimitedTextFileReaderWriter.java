@@ -41,7 +41,7 @@ import com.pinterest.secor.util.FileUtil;
  * @author Praveen Murugesan (praveen@uber.com)
  *
  */
-public class DelimitedTextFileReaderWriter implements FileReaderWriter {
+public class DelimitedTextFileReaderWriter extends FileReaderWriter {
 
     // delimiter used between messages
     private static final byte DELIMITER = '\n';

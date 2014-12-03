@@ -16,58 +16,68 @@
  */
 package com.pinterest.secor.io;
 
+import com.pinterest.secor.common.LogFilePath;
+import org.apache.hadoop.io.compress.CompressionCodec;
+
 import java.io.IOException;
 
 
 /**
  * Generic file reader/writer interface for all secor files
- * 
+ * <p/>
  * All implementations should define the constructor with the signature:
  * FileReaderWriter(LogFilePath path, CompressionCodec codec, FileReaderWriter.Type type)
- *
+ * <p/>
  * example: public SequenceFileReaderWriter(LogFilePath path, CompressionCodec codec,
- *           FileReaderWriter.Type type)
+ * FileReaderWriter.Type type)
  *
  * @author Praveen Murugesan (praveen@uber.com)
- *
  */
-public interface FileReaderWriter {
-    
+public abstract class FileReaderWriter {
+
+    protected FileReaderWriter() {
+    }
+
     public enum Type {
-        Reader, 
-        Writer;
+        Reader,
+        Writer
+    }
+
+    public FileReaderWriter(LogFilePath path, CompressionCodec codec, FileReaderWriter.Type type)
+            throws Exception {
+
     }
 
     /**
      * Get the next key/value from the file
-     * 
+     *
      * @return
      * @throws IOException
      */
-    public KeyValue next() throws IOException;
+    public abstract KeyValue next() throws IOException;
 
     /**
      * Close the file
-     * 
+     *
      * @throws IOException
      */
-    public void close() throws IOException;
+    public abstract void close() throws IOException;
 
     /**
      * Get length of data written up to now to the underlying file
-     * 
+     *
      * @return
      * @throws IOException
      */
-    public long getLength() throws IOException;
+    public abstract long getLength() throws IOException;
 
     /**
      * Write the given key and value to the file
-     * 
+     *
      * @param key
      * @param value
      * @throws IOException
      */
-    public void write(KeyValue keyValue) throws IOException;
+    public abstract void write(KeyValue keyValue) throws IOException;
 
 }
