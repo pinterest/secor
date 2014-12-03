@@ -22,6 +22,7 @@ import com.pinterest.secor.io.FileReaderWriter;
 
 import java.lang.reflect.Constructor;
 
+import com.pinterest.secor.parser.MessageParser;
 import org.apache.hadoop.io.compress.CompressionCodec;
 
 /**
@@ -32,37 +33,29 @@ import org.apache.hadoop.io.compress.CompressionCodec;
  */
 public class ReflectionUtil {
 
-    public static Object createMessageParser(String className,
-            SecorConfig config) throws Exception {
+    public static MessageParser createMessageParser(String className,
+                                                    SecorConfig config) throws Exception {
         Class<?> clazz = Class.forName(className);
-
-        // Search for an "appropriate" constructor.
-        for (Constructor<?> ctor : clazz.getConstructors()) {
-            Class<?>[] paramTypes = ctor.getParameterTypes();
-
-            // If the arity matches, let's use it.
-            if (paramTypes.length == 1) {
-                Object[] args = { config };
-                return ctor.newInstance(args);
-            }
+        if (!MessageParser.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
+                    className, MessageParser.class.getName()));
         }
-        throw new IllegalArgumentException("Class not found " + className);
+
+        // Assume that possible subclass of MessageParser has a constructor with the same signature as MessageParser
+        return (MessageParser) clazz.getConstructor(SecorConfig.class).newInstance(config);
     }
 
-    public static Object createFileReaderWriter(String className,
-            LogFilePath logFilePath, CompressionCodec compressionCodec,
-            FileReaderWriter.Type type) throws Exception {
+    public static FileReaderWriter createFileReaderWriter(String className, LogFilePath logFilePath,
+                                                          CompressionCodec compressionCodec,
+                                                          FileReaderWriter.Type type) throws Exception {
         Class<?> clazz = Class.forName(className);
-        // Search for an "appropriate" constructor.
-        for (Constructor<?> ctor : clazz.getConstructors()) {
-            Class<?>[] paramTypes = ctor.getParameterTypes();
-
-            // If the arity matches, let's use it.
-            if (paramTypes.length == 3) {
-                Object[] args = { logFilePath, compressionCodec, type };
-                return ctor.newInstance(args);
-            }
+        if (!FileReaderWriter.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
+                    className, FileReaderWriter.class.getName()));
         }
-        throw new IllegalArgumentException("Class not found " + className);
+
+        // Assume that possible subclass of FileReaderWriter has a constructor with the same signature as FileReaderWriter
+        return (FileReaderWriter) clazz.getConstructor(LogFilePath.class,
+                CompressionCodec.class, FileReaderWriter.Type.class).newInstance(logFilePath, compressionCodec, type);
     }
 }

@@ -38,7 +38,7 @@ import com.pinterest.secor.util.FileUtil;
  * @author Praveen Murugesan (praveen@uber.com)
  *
  */
-public class SequenceFileReaderWriter implements FileReaderWriter {
+public class SequenceFileReaderWriter extends FileReaderWriter {
 
     private final SequenceFile.Writer mWriter;
     private final SequenceFile.Reader mReader;
@@ -47,7 +47,8 @@ public class SequenceFileReaderWriter implements FileReaderWriter {
 
     // constructor
     public SequenceFileReaderWriter(LogFilePath path, CompressionCodec codec,
-            FileReaderWriter.Type type) throws Exception {
+        FileReaderWriter.Type type) throws Exception {
+        super(path, codec, type);
         Configuration config = new Configuration();
         Path fsPath = new Path(path.getLogFilePath());
         FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
@@ -72,7 +73,6 @@ public class SequenceFileReaderWriter implements FileReaderWriter {
         } else {
             throw new IllegalArgumentException("Undefined File Type: " + type);
         }
-
     }
 
     @Override

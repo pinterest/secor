@@ -67,8 +67,7 @@ public class Consumer extends Thread {
         mMessageReader = new MessageReader(mConfig, mOffsetTracker);
         FileRegistry fileRegistry = new FileRegistry(mConfig);
         mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry);
-        mMessageParser = (MessageParser) ReflectionUtil.createMessageParser(
-                mConfig.getMessageParserClass(), mConfig);
+        mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
         mUploader = new Uploader(mConfig, mOffsetTracker, fileRegistry);
         mUnparsableMessages = 0.;
     }
