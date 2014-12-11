@@ -125,6 +125,12 @@ public class MessageReader {
         if (mConfig.getFetchMessageMaxBytes() != null && !mConfig.getFetchMessageMaxBytes().isEmpty()) {
             props.put("fetch.message.max.bytes", mConfig.getFetchMessageMaxBytes());
         }
+        if (mConfig.getFetchMinBytes() != null && !mConfig.getFetchMinBytes().isEmpty()) {
+            props.put("fetch.min.bytes", mConfig.getFetchMinBytes());
+        }
+        if (mConfig.getFetchWaitMaxMs() != null && !mConfig.getFetchWaitMaxMs().isEmpty()) {
+            props.put("fetch.wait.max.ms", mConfig.getFetchWaitMaxMs());
+        }
 
         return new ConsumerConfig(props);
     }

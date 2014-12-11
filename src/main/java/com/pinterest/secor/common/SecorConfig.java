@@ -103,6 +103,14 @@ public class SecorConfig {
         return getString("kafka.socket.receive.buffer.bytes");
     }
 
+    public String getFetchMinBytes() {
+        return getString("kafka.fetch.min.bytes");
+    }
+
+    public String getFetchWaitMaxMs() {
+        return getString("kafka.fetch.wait.max.ms");
+    }
+
     public int getGeneration() {
         return getInt("secor.generation");
     }
