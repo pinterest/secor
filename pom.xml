@@ -153,8 +153,8 @@
         </dependency>
         <dependency>
             <groupId>org.msgpack</groupId>
-            <artifactId>msgpack</artifactId>
-            <version>0.6.11</version>
+            <artifactId>jackson-dataformat-msgpack</artifactId>
+            <version>0.7.0-p2</version>
         </dependency>
         <dependency>
             <groupId>com.timgroup</groupId>

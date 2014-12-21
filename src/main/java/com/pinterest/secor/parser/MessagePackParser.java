@@ -16,14 +16,13 @@
  */
 package com.pinterest.secor.parser;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
-import org.msgpack.MessagePack;
-import org.msgpack.MessageTypeException;
-import org.msgpack.type.MapValue;
-import org.msgpack.type.RawValue;
-import org.msgpack.type.Value;
-import org.msgpack.type.ValueFactory;
+import org.msgpack.jackson.dataformat.MessagePackFactory;
+
+import java.util.HashMap;
 
 /**
  * MessagePack timestamped message parser.
@@ -33,27 +32,27 @@ import org.msgpack.type.ValueFactory;
  * @author Zack Dever (zack@rd.io)
  */
 public class MessagePackParser extends TimestampedMessageParser {
-    private MessagePack mMessagePack = new MessagePack();
-    private RawValue mTimestampField;
+    private ObjectMapper mMessagePackObjectMapper;
+    private TypeReference mTypeReference;
 
     public MessagePackParser(SecorConfig config) {
         super(config);
-        String timestampName = mConfig.getMessageTimestampName();
-        mTimestampField = ValueFactory.createRawValue(timestampName);
+        mMessagePackObjectMapper = new ObjectMapper(new MessagePackFactory());
+        mTypeReference = new TypeReference<HashMap<String, Object>>(){};
     }
 
     @Override
     public long extractTimestampMillis(Message message) throws Exception {
-        MapValue msgMap = mMessagePack.read(message.getPayload()).asMapValue();
-        Value timestampValue = msgMap.get(mTimestampField);
+        HashMap<String, Object> msgHash = mMessagePackObjectMapper.readValue(message.getPayload(),
+                mTypeReference);
+        Object timestampValue = msgHash.get(mConfig.getMessageTimestampName());
 
-        if (timestampValue.isIntegerValue()) {
-            return toMillis(timestampValue.asIntegerValue().getLong());
-        } else if (timestampValue.isFloatValue()) {
-            return toMillis(timestampValue.asFloatValue().longValue());
+        if (timestampValue instanceof Number) {
+            return toMillis(((Number) timestampValue).longValue());
+        } else if (timestampValue instanceof String) {
+            return toMillis(Long.parseLong((String) timestampValue));
         } else {
-            String timestampString = timestampValue.asRawValue().getString();
-            return toMillis(Long.parseLong(timestampString));
+            return toMillis((Long) timestampValue);
         }
     }
 }
