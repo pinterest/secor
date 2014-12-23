@@ -34,8 +34,6 @@
 
 # Author: Pawel Garbacki (pawel@pinterest.com)
 
-#set -e
-
 PARENT_DIR=/tmp/secor_dev
 LOGS_DIR=${PARENT_DIR}/logs
 S3_LOGS_DIR=s3://pinterest-dev/secor_dev
