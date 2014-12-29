@@ -41,6 +41,7 @@ public class DateMessageParser extends MessageParser {
     private static final Logger LOG = LoggerFactory.getLogger(DateMessageParser.class);
     protected static final String defaultDate = "dt=1970-01-01";
     protected static final String defaultFormatter = "yyyy-MM-dd";
+    protected static final String defaultPrefix = "dt=";
 
     public DateMessageParser(SecorConfig config) {
         super(config);
@@ -53,17 +54,20 @@ public class DateMessageParser extends MessageParser {
 
         if (jsonObject != null) {
             Object fieldValue = jsonObject.get(mConfig.getMessageTimestampName());
-            Object inputPattern = mConfig.getMessageTimestampInputPattern();
-            if (fieldValue != null && inputPattern != null) {
+            String inputPattern = mConfig.getMessageTimestampInputPattern();
+            String partitionPattern = mConfig.getMessagePartitionTimestampPattern();
+
+            if (fieldValue != null && inputPattern != null && !inputPattern.isEmpty()) {
                 try {
-                    SimpleDateFormat inputFormatter = new SimpleDateFormat(inputPattern.toString());
-                    SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter);
+                    SimpleDateFormat inputFormatter = new SimpleDateFormat(inputPattern);
+                    SimpleDateFormat outputFormatter = new SimpleDateFormat(partitionPattern != null && !partitionPattern.isEmpty() ? partitionPattern : defaultFormatter);
+                    String prefix = partitionPattern != null && !partitionPattern.isEmpty() ? "" : defaultPrefix;
                     Date dateFormat = inputFormatter.parse(fieldValue.toString());
-                    result[0] = "dt=" + outputFormatter.format(dateFormat);
+                    result[0] = prefix + outputFormatter.format(dateFormat);
                     return result;
                 } catch (Exception e) {
                     LOG.warn("Impossible to convert date = " + fieldValue.toString()
-                            + " for the input pattern = " + inputPattern.toString()
+                            + " for the input pattern = " + inputPattern
                             + ". Using date default=" + result[0]);
                 }
             }
