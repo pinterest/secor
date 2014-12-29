@@ -34,8 +34,6 @@
 
 # Author: Pawel Garbacki (pawel@pinterest.com)
 
-set -e
-
 PARENT_DIR=/tmp/secor_dev
 LOGS_DIR=${PARENT_DIR}/logs
 S3_LOGS_DIR=s3://pinterest-dev/secor_dev
@@ -120,16 +118,23 @@ post_messages() {
 }
 
 verify() {
-    run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.dev.backup.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
-        com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
-        ${LOGS_DIR}/log_verifier_backup.log 2>&1"
+    RUNMODE_0="backup"
     if [ "${MESSAGE_TYPE}" = "binary" ]; then
-       run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-           -Dconfig=secor.dev.partition.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
-           com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
-           ${LOGS_DIR}/log_verifier_partition.log 2>&1"
+      RUNMODE_1="partition"
     fi
+    for RUNMODE in ${RUNMODE_0} ${RUNMODE_1}; do
+      run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
+          -Dconfig=secor.dev.${RUNMODE}.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
+          com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
+          ${LOGS_DIR}/log_verifier_${RUNMODE}.log 2>&1"
+      VERIFICATION_EXIT_CODE=$?
+      if [ ${VERIFICATION_EXIT_CODE} -ne 0 ]; then
+        echo -e "\e[1;41;97mVerification FAILED\e[0m"
+        echo "See log ${LOGS_DIR}/log_verifier_${RUNMODE}.log for more details"
+        tail -n 50 ${LOGS_DIR}/log_verifier_${RUNMODE}.log
+        exit ${VERIFICATION_EXIT_CODE}
+      fi
+    done
 }
 
 set_offsets_in_zookeeper() {
@@ -186,7 +191,7 @@ post_and_verify_test() {
     verify ${MESSAGES}
 
     stop_all
-    echo "post_and_verify_test succeeded"
+    echo -e "\e[1;42;97mpost_and_verify_test succeeded\e[0m"
 }
 
 # Adjust offsets so that Secor consumes only half of the messages.
@@ -202,7 +207,7 @@ start_from_non_zero_offset_test() {
     verify $((${MESSAGES}/2))
 
     stop_all
-    echo "start_from_non_zero_offset_test succeeded"
+    echo -e "\e[1;42;97mstart_from_non_zero_offset_test succeeded\e[0m"
 }
 
 # Set offset after consumers processed some of the messages.  This scenario simulates a
@@ -223,7 +228,7 @@ move_offset_back_test() {
     verify $((${MESSAGES}-4))
 
     stop_all
-    echo "move_offset_back_test succeeded"
+    echo -e "\e[1;42;97mmove_offset_back_test succeeded\e[0m"
 }
 
 # Post some messages and verify that they are correctly processed and compressed.
@@ -242,7 +247,7 @@ post_and_verify_compressed_test() {
     verify ${MESSAGES}
 
     stop_all
-    echo "post_and_verify_compressed_test succeeded"
+    echo -e "\e[1;42;97mpost_and_verify_compressed_test succeeded\e[0m"
 }
 
 
@@ -255,3 +260,4 @@ for key in ${!READER_WRITERS[@]}; do
    move_offset_back_test
    post_and_verify_compressed_test
 done
+
