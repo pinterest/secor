@@ -20,9 +20,8 @@ import com.pinterest.secor.common.*;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
-
+import com.pinterest.secor.util.ReflectionUtil;
 import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +43,7 @@ public class PartitionFinalizer {
 
     private SecorConfig mConfig;
     private ZookeeperConnector mZookeeperConnector;
-    private ThriftMessageParser mThriftMessageParser;
+    private TimestampedMessageParser mMessageParser;
     private KafkaClient mKafkaClient;
     private QuboleClient mQuboleClient;
     private String mFileExtension;
@@ -53,7 +52,8 @@ public class PartitionFinalizer {
         mConfig = config;
         mKafkaClient = new KafkaClient(mConfig);
         mZookeeperConnector = new ZookeeperConnector(mConfig);
-        mThriftMessageParser = new ThriftMessageParser(mConfig);
+        mMessageParser = (TimestampedMessageParser) ReflectionUtil.createMessageParser(
+          mConfig.getMessageParserClass(), mConfig);
         mQuboleClient = new QuboleClient(mConfig);
         if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
             CompressionCodec codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
@@ -63,7 +63,7 @@ public class PartitionFinalizer {
         }
     }
 
-    private long getLastTimestampMillis(TopicPartition topicPartition) throws TException {
+    private long getLastTimestampMillis(TopicPartition topicPartition) throws Exception {
         Message message = mKafkaClient.getLastMessage(topicPartition);
         if (message == null) {
             // This will happen if no messages have been posted to the given topic partition.
@@ -71,10 +71,10 @@ public class PartitionFinalizer {
                 topicPartition.getPartition());
             return -1;
         }
-        return mThriftMessageParser.extractTimestampMillis(message);
+        return mMessageParser.extractTimestampMillis(message);
     }
 
-    private long getLastTimestampMillis(String topic) throws TException {
+    private long getLastTimestampMillis(String topic) throws Exception {
         final int numPartitions = mKafkaClient.getNumPartitions(topic);
         long max_timestamp = Long.MIN_VALUE;
         for (int partition = 0; partition < numPartitions; ++partition) {
@@ -97,7 +97,7 @@ public class PartitionFinalizer {
                     topicPartition.getPartition());
             return -1;
         }
-        return mThriftMessageParser.extractTimestampMillis(message);
+        return mMessageParser.extractTimestampMillis(message);
     }
 
     private long getCommittedTimestampMillis(String topic) throws Exception {
@@ -162,7 +162,7 @@ public class PartitionFinalizer {
                 return;
             }
             try {
-                mQuboleClient.addPartition(topic, "dt='" + partitionStr + "'");
+                mQuboleClient.addPartition(mConfig.getHivePrefix() + topic, "dt='" + partitionStr + "'");
             } catch (Exception e) {
                 LOG.error("failed to finalize topic " + topic + " partition dt=" + partitionStr,
                         e);
