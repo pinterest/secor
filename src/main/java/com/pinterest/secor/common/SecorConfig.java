@@ -204,7 +204,7 @@ public class SecorConfig {
     }
 
     public String getHivePrefix() { 
-        return getString("secor.hive.prefix", ""); 
+        return getString("secor.hive.prefix"); 
     }
 
     public String getCompressionCodec() {
@@ -233,11 +233,6 @@ public class SecorConfig {
     private String getString(String name) {
         checkProperty(name);
         return mProperties.getString(name);
-    }
-
-    private String getString(String name, String defaultValue) {
-      checkProperty(name);
-      return mProperties.getString(name, defaultValue);
     }
 
     private int getInt(String name) {
