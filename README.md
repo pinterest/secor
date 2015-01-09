@@ -119,7 +119,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
 
 ## Help
 
-If you have any questions or comments, you can reach us at [secor-users@googlegroups.com](secor-users@googlegroups.com)
+If you have any questions or comments, you can reach us at [secor-users@googlegroups.com](https://groups.google.com/forum/#!forum/secor-users)
 
 [Kafka]:http://kafka.apache.org/
 [Amazon S3]:http://aws.amazon.com/s3/
