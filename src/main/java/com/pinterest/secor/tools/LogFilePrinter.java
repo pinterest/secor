@@ -50,7 +50,9 @@ public class LogFilePrinter {
             if (mPrintOffsetsOnly) {
                 System.out.println(Long.toString(key.get()));
             } else {
-                System.out.println(Long.toString(key.get()) + ": " + new String(value.getBytes()));
+                byte[] nonPaddedBytes = new byte[value.getLength()];
+                System.arraycopy(value.getBytes(), 0, nonPaddedBytes, 0, value.getLength());
+                System.out.println(Long.toString(key.get()) + ": " + new String(nonPaddedBytes)); 
             }
         }
     }
