@@ -116,6 +116,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [James Green](https://github.com/jfgreen)
   * [Praveen Murugesan](https://github.com/lefthandmagic)
   * [Zack Dever](https://github.com/zackdever)
+  * [Leo Woessner](https://github.com/estezz)
 
 ## Help
 
