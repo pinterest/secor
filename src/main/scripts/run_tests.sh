@@ -36,7 +36,7 @@
 
 PARENT_DIR=/tmp/secor_dev
 LOGS_DIR=${PARENT_DIR}/logs
-S3_LOGS_DIR=s3://pinterest-dev/secor_dev
+S3_LOGS_DIR=s3://sk-cloud-staging/secor_dev
 MESSAGES=1000
 MESSAGE_TYPE=binary
 # For the compression tests to work, set this to the path of the Hadoop native libs.
@@ -46,8 +46,8 @@ ADDITIONAL_OPTS=
 
 # various reader writer options to be used for testing
 declare -A READER_WRITERS
-READER_WRITERS[json]=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriter
-READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriter
+READER_WRITERS[json]=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFactory
+READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory
 
 # The minimum wait time is one minute plus delta.  Secor is configured to upload files older than
 # one minute and we need to make sure that everything ends up on s3 before starting verification.
@@ -253,7 +253,7 @@ post_and_verify_compressed_test() {
 
 for key in ${!READER_WRITERS[@]}; do
    MESSAGE_TYPE=${key}
-   ADDITIONAL_OPTS=-Dsecor.file.reader.writer=${READER_WRITERS[${key}]}
+   ADDITIONAL_OPTS=-Dsecor.file.reader.writer.factory=${READER_WRITERS[${key}]}
    echo "Running tests for Message Type: ${MESSAGE_TYPE} and ReaderWriter: ${READER_WRITERS[${key}]}"
    post_and_verify_test
    start_from_non_zero_offset_test

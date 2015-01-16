@@ -17,7 +17,8 @@
 package com.pinterest.secor.uploader;
 
 import com.pinterest.secor.common.*;
-import com.pinterest.secor.io.FileReaderWriter;
+import com.pinterest.secor.io.FileReader;
+import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
@@ -122,20 +123,20 @@ public class Uploader {
      * This method is intended to be overwritten in tests.
      * @throws Exception
      */
-    protected FileReaderWriter createReader(LogFilePath srcPath, CompressionCodec codec) throws Exception {
-        return (FileReaderWriter) ReflectionUtil.createFileReaderWriter(
-                mConfig.getFileReaderWriter(),
+    protected FileReader createReader(LogFilePath srcPath, CompressionCodec codec) throws Exception {
+        return ReflectionUtil.createFileReader(
+                mConfig.getFileReaderWriterFactory(),
                 srcPath,
-                codec,
-                FileReaderWriter.Type.Reader);
+                codec
+        );
     }
 
     private void trim(LogFilePath srcPath, long startOffset) throws Exception {
         if (startOffset == srcPath.getOffset()) {
             return;
         }
-        FileReaderWriter reader = null;
-        FileReaderWriter writer = null;
+        FileReader reader = null;
+        FileWriter writer = null;
         LogFilePath dstPath = null;
         int copiedMessages = 0;
         // Deleting the writer closes its stream flushing all pending data to the disk.

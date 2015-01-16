@@ -17,7 +17,8 @@
 package com.pinterest.secor.uploader;
 
 import com.pinterest.secor.common.*;
-import com.pinterest.secor.io.FileReaderWriter;
+import com.pinterest.secor.io.FileReader;
+import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
@@ -45,21 +46,21 @@ import java.util.HashSet;
 @PrepareForTest({ FileUtil.class, IdUtil.class })
 public class UploaderTest extends TestCase {
     private static class TestUploader extends Uploader {
-        private FileReaderWriter mReader;
+        private FileReader mReader;
 
         public TestUploader(SecorConfig config, OffsetTracker offsetTracker,
                 FileRegistry fileRegistry, ZookeeperConnector zookeeperConnector) {
             super(config, offsetTracker, fileRegistry, zookeeperConnector);
-            mReader = Mockito.mock(FileReaderWriter.class);
+            mReader = Mockito.mock(FileReader.class);
         }
 
         @Override
-        protected FileReaderWriter createReader(LogFilePath srcPath,
+        protected FileReader createReader(LogFilePath srcPath,
                 CompressionCodec codec) throws IOException {
             return mReader;
         }
 
-        public FileReaderWriter getReader() {
+        public FileReader getReader() {
             return mReader;
         }
     }
@@ -175,7 +176,7 @@ public class UploaderTest extends TestCase {
         Mockito.when(mFileRegistry.getPaths(mTopicPartition)).thenReturn(
                 logFilePaths);
 
-        FileReaderWriter reader = mUploader.getReader();
+        FileReader reader = mUploader.getReader();
 
         Mockito.when(reader.next()).thenAnswer(new Answer<KeyValue>() {
             private int mCallCount = 0;
@@ -194,7 +195,7 @@ public class UploaderTest extends TestCase {
         Mockito.when(IdUtil.getLocalMessageDir())
                 .thenReturn("some_message_dir");
 
-        FileReaderWriter writer = Mockito.mock(FileReaderWriter.class);
+        FileWriter writer = Mockito.mock(FileWriter.class);
         LogFilePath dstLogFilePath = new LogFilePath(
                 "/some_parent_dir/some_message_dir",
                 "/some_parent_dir/some_message_dir/some_topic/some_partition/"
