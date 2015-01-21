@@ -16,7 +16,7 @@
  */
 package com.pinterest.secor.common;
 
-import com.pinterest.secor.io.FileReaderWriter;
+import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
 
@@ -55,8 +55,8 @@ public class FileRegistryTest extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
         PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.addProperty("secor.file.reader.writer",
-                "com.pinterest.secor.io.impl.SequenceFileWriter");
+        properties.addProperty("secor.file.reader.writer.factory",
+                "com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory");
         SecorConfig secorConfig = new SecorConfig(properties);
         mRegistry = new FileRegistry(secorConfig);
         mLogFilePath = new LogFilePath("/some_parent_dir", PATH);
@@ -68,18 +68,18 @@ public class FileRegistryTest extends TestCase {
         PowerMockito.mockStatic(FileUtil.class);
 
         PowerMockito.mockStatic(ReflectionUtil.class);
-        FileReaderWriter writer = Mockito.mock(FileReaderWriter.class);
+        FileWriter writer = Mockito.mock(FileWriter.class);
         Mockito.when(
-                ReflectionUtil.createFileReaderWriter(
+                ReflectionUtil.createFileWriter(
                         Mockito.any(String.class),
                         Mockito.any(LogFilePath.class),
-                        Mockito.any(CompressionCodec.class),
-                        Mockito.any(FileReaderWriter.Type.class)))
+                        Mockito.any(CompressionCodec.class)
+                ))
                 .thenReturn(writer);
 
         Mockito.when(writer.getLength()).thenReturn(123L);
 
-        FileReaderWriter createdWriter = mRegistry.getOrCreateWriter(
+        FileWriter createdWriter = mRegistry.getOrCreateWriter(
                 mLogFilePath, null);
         assertTrue(createdWriter == writer);
     }
@@ -92,10 +92,10 @@ public class FileRegistryTest extends TestCase {
 
         // Verify that the method has been called exactly once (the default).
         PowerMockito.verifyStatic();
-        ReflectionUtil.createFileReaderWriter(Mockito.any(String.class),
+        ReflectionUtil.createFileWriter(Mockito.any(String.class),
                 Mockito.any(LogFilePath.class),
-                Mockito.any(CompressionCodec.class),
-                Mockito.any(FileReaderWriter.Type.class));
+                Mockito.any(CompressionCodec.class)
+        );
 
         PowerMockito.verifyStatic();
         FileUtil.delete(PATH);
@@ -118,18 +118,18 @@ public class FileRegistryTest extends TestCase {
         PowerMockito.mockStatic(FileUtil.class);
 
         PowerMockito.mockStatic(ReflectionUtil.class);
-        FileReaderWriter writer = Mockito.mock(FileReaderWriter.class);
+        FileWriter writer = Mockito.mock(FileWriter.class);
         Mockito.when(
-                ReflectionUtil.createFileReaderWriter(
+                ReflectionUtil.createFileWriter(
                         Mockito.any(String.class),
                         Mockito.any(LogFilePath.class),
-                        Mockito.any(CompressionCodec.class),
-                        Mockito.any(FileReaderWriter.Type.class)))
+                        Mockito.any(CompressionCodec.class)
+                ))
                 .thenReturn(writer);
 
         Mockito.when(writer.getLength()).thenReturn(123L);
 
-        FileReaderWriter createdWriter = mRegistry.getOrCreateWriter(
+        FileWriter createdWriter = mRegistry.getOrCreateWriter(
                 mLogFilePathGz, new GzipCodec());
         assertTrue(createdWriter == writer);
     }
@@ -146,10 +146,10 @@ public class FileRegistryTest extends TestCase {
         FileUtil.delete(CRC_PATH);
 
         PowerMockito.verifyStatic();
-        ReflectionUtil.createFileReaderWriter(Mockito.any(String.class),
+        ReflectionUtil.createFileWriter(Mockito.any(String.class),
                 Mockito.any(LogFilePath.class),
-                Mockito.any(CompressionCodec.class),
-                Mockito.any(FileReaderWriter.Type.class));
+                Mockito.any(CompressionCodec.class)
+        );
 
         TopicPartition topicPartition = new TopicPartition("some_topic", 0);
         Collection<TopicPartition> topicPartitions = mRegistry

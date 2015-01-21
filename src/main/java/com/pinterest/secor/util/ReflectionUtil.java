@@ -18,10 +18,11 @@ package com.pinterest.secor.util;
 
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.io.FileReaderWriter;
 
-import java.lang.reflect.Constructor;
-
+import com.pinterest.secor.io.FileReader;
+import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.FileReaderWriterFactory;
+import com.pinterest.secor.parser.MessageParser;
 import org.apache.hadoop.io.compress.CompressionCodec;
 
 /**
@@ -29,40 +30,83 @@ import org.apache.hadoop.io.compress.CompressionCodec;
  * specified by name.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
+ * @author Silas Davis (github-code@silasdavis.net)
  */
 public class ReflectionUtil {
 
-    public static Object createMessageParser(String className,
-            SecorConfig config) throws Exception {
+    /**
+     * Create a MessageParser from it's fully qualified class name.
+     * The class passed in by name must be assignable to MessageParser and have 1-parameter constructor accepting a SecorConfig.
+     * Allows the MessageParser to be pluggable by providing the class name of a desired MessageParser in config.
+     *
+     * See the secor.message.parser.class config option.
+     *
+     * @param className The class name of a subclass of MessageParser
+     * @param config The SecorCondig to initialize the MessageParser with
+     * @return a MessageParser instance with the runtime type of the class passed by name
+     * @throws Exception
+     */
+    public static MessageParser createMessageParser(String className,
+                                                    SecorConfig config) throws Exception {
         Class<?> clazz = Class.forName(className);
-
-        // Search for an "appropriate" constructor.
-        for (Constructor<?> ctor : clazz.getConstructors()) {
-            Class<?>[] paramTypes = ctor.getParameterTypes();
-
-            // If the arity matches, let's use it.
-            if (paramTypes.length == 1) {
-                Object[] args = { config };
-                return ctor.newInstance(args);
-            }
+        if (!MessageParser.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
+                    className, MessageParser.class.getName()));
         }
-        throw new IllegalArgumentException("Class not found " + className);
+
+        // Assume that subclass of MessageParser has a constructor with the same signature as MessageParser
+        return (MessageParser) clazz.getConstructor(SecorConfig.class).newInstance(config);
     }
 
-    public static Object createFileReaderWriter(String className,
-            LogFilePath logFilePath, CompressionCodec compressionCodec,
-            FileReaderWriter.Type type) throws Exception {
+    /**
+     * Create a FileReaderWriterFactory that is able to read and write a specific type of output log file.
+     * The class passed in by name must be assignable to FileReaderWriterFactory.
+     * Allows for pluggable FileReader and FileWriter instances to be constructed for a particular type of log file.
+     *
+     * See the secor.file.reader.writer.factory config option.
+     *
+     * @param className the class name of a subclass of FileReaderWriterFactory
+     * @return a FileReaderWriterFactory with the runtime type of the class passed by name
+     * @throws Exception
+     */
+    private static FileReaderWriterFactory createFileReaderWriterFactory(String className) throws Exception {
         Class<?> clazz = Class.forName(className);
-        // Search for an "appropriate" constructor.
-        for (Constructor<?> ctor : clazz.getConstructors()) {
-            Class<?>[] paramTypes = ctor.getParameterTypes();
-
-            // If the arity matches, let's use it.
-            if (paramTypes.length == 3) {
-                Object[] args = { logFilePath, compressionCodec, type };
-                return ctor.newInstance(args);
-            }
+        if (!FileReaderWriterFactory.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
+                    className, FileReaderWriterFactory.class.getName()));
         }
-        throw new IllegalArgumentException("Class not found " + className);
+
+        // We assume a parameterless constructor
+        return (FileReaderWriterFactory) clazz.newInstance();
+    }
+
+    /**
+     * Use the FileReaderWriterFactory specified by className to build a FileWriter
+     *
+     * @param className the class name of a subclass of FileReaderWriterFactory to create a FileWriter from
+     * @param logFilePath the LogFilePath that the returned FileWriter should write to
+     * @param codec an instance CompressionCodec to compress the file written with, or null for no compression
+     * @return a FileWriter specialised to write the type of files supported by the FileReaderWriterFactory
+     * @throws Exception
+     */
+    public static FileWriter createFileWriter(String className, LogFilePath logFilePath,
+                                              CompressionCodec codec)
+            throws Exception {
+        return createFileReaderWriterFactory(className).BuildFileWriter(logFilePath, codec);
+    }
+
+    /**
+     * Use the FileReaderWriterFactory specified by className to build a FileReader
+     *
+     * @param className the class name of a subclass of FileReaderWriterFactory to create a FileReader from
+     * @param logFilePath the LogFilePath that the returned FileReader should read from
+     * @param codec an instance CompressionCodec to decompress the file being read, or null for no compression
+     * @return a FileReader specialised to read the type of files supported by the FileReaderWriterFactory
+     * @throws Exception
+     */
+    public static FileReader createFileReader(String className, LogFilePath logFilePath,
+                                              CompressionCodec codec)
+            throws Exception {
+        return createFileReaderWriterFactory(className).BuildFileReader(logFilePath, codec);
     }
 }

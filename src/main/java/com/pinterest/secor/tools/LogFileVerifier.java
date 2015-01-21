@@ -19,7 +19,7 @@ package com.pinterest.secor.tools;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
-import com.pinterest.secor.io.FileReaderWriter;
+import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
@@ -107,7 +107,7 @@ public class LogFileVerifier {
     }
 
     private int getMessageCount(LogFilePath logFilePath) throws Exception {
-        FileReaderWriter reader = createFileReaderWriter(logFilePath);
+        FileReader reader = createFileReader(logFilePath);
         int result = 0;
         while (reader.next() != null) {
             result++;
@@ -156,7 +156,7 @@ public class LogFileVerifier {
     }
 
     private void getOffsets(LogFilePath logFilePath, Set<Long> offsets) throws Exception {
-        FileReaderWriter reader = createFileReaderWriter(logFilePath);
+        FileReader reader = createFileReader(logFilePath);
         KeyValue record;
         while ((record = reader.next()) != null) {
             if (!offsets.add(record.getKey())) {
@@ -202,16 +202,16 @@ public class LogFileVerifier {
      * @return
      * @throws Exception
      */
-    private FileReaderWriter createFileReaderWriter(LogFilePath logFilePath) throws Exception {
+    private FileReader createFileReader(LogFilePath logFilePath) throws Exception {
         CompressionCodec codec = null;
         if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
             codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
         }
-        FileReaderWriter fileReader = (FileReaderWriter) ReflectionUtil.createFileReaderWriter(
-                mConfig.getFileReaderWriter(),
+        FileReader fileReader = ReflectionUtil.createFileReader(
+                mConfig.getFileReaderWriterFactory(),
                 logFilePath,
-                codec,
-                FileReaderWriter.Type.Reader);
+                codec
+        );
         return fileReader;
     }
 }

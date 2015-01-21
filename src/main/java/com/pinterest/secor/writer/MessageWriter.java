@@ -17,7 +17,7 @@
 package com.pinterest.secor.writer;
 
 import com.pinterest.secor.common.*;
-import com.pinterest.secor.io.FileReaderWriter;
+import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
@@ -82,7 +82,7 @@ public class MessageWriter {
         long offset = mOffsetTracker.getAdjustedCommittedOffsetCount(topicPartition);
         LogFilePath path = new LogFilePath(mLocalPrefix, mConfig.getGeneration(), offset, message,
         		mFileExtension);
-        FileReaderWriter writer = mFileRegistry.getOrCreateWriter(path, mCodec);
+        FileWriter writer = mFileRegistry.getOrCreateWriter(path, mCodec);
         writer.write(new KeyValue(message.getOffset(), message.getPayload()));
         LOG.debug("appended message " + message + " to file " + path.getLogFilePath() +
                   ".  File length " + writer.getLength());
