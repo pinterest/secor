@@ -190,7 +190,7 @@ public class KafkaClient {
         }
     }
 
-  public Message getLastMessage(TopicPartition topicPartition) throws TException {
+    public Message getLastMessage(TopicPartition topicPartition) throws TException {
         SimpleConsumer consumer = createConsumer(topicPartition);
         long lastOffset = findLastOffset(topicPartition, consumer);
         if (lastOffset < 1) {
