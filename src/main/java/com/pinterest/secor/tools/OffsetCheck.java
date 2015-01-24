@@ -89,16 +89,14 @@ public class OffsetCheck {
           //LOG.warn("No committed offset found for {}", topicPartition);
         }
 
-        if (committedOffset < earliestOffset || committedOffset > lastOffset || committedOffset <
-            1   ) {
+        if (committedOffset < earliestOffset || committedOffset > lastOffset) {
           System.out.print("WARNING: Committed offset out of range for ");
         }
         System.out.println("topic " + topic + " partition " + part.partitionId() +
             " earliest offset:" + earliestOffset +
             ", committed offset:" + committedOffset +
             ", last offset:" + lastOffset + ". ");
-        if (fix && (committedOffset < earliestOffset || committedOffset > lastOffset ||
-            committedOffset < 1 )) {
+        if (fix && (committedOffset < earliestOffset || committedOffset > lastOffset)) {
             System.out.printf("Updating to : %d\n", earliestOffset);
             mZookeeperConnector.setCommittedOffsetCount(topicPartition, earliestOffset);
         }
