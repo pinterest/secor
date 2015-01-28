@@ -203,6 +203,10 @@ public class SecorConfig {
         return getString("message.timestamp.input.pattern");
     }
 
+    public String getOutputPattern() {
+        return getString("secor.output.pattern");
+    }
+
     public String getHivePrefix() { 
         return getString("secor.hive.prefix"); 
     }
