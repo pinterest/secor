@@ -60,7 +60,7 @@ public class SecorConfig {
 
     /**
      * Exposed for testability
-     * 
+     *
      * @param properties
      */
     public SecorConfig(PropertiesConfiguration properties) {
@@ -207,8 +207,8 @@ public class SecorConfig {
         return getString("secor.output.pattern");
     }
 
-    public String getHivePrefix() { 
-        return getString("secor.hive.prefix"); 
+    public String getHivePrefix() {
+        return getString("secor.hive.prefix");
     }
 
     public String getCompressionCodec() {
@@ -218,13 +218,13 @@ public class SecorConfig {
     public int getMaxMessageSizeBytes() {
         return getInt("secor.max.message.size.bytes");
     }
-    
+
     public String getFileReaderWriterFactory() {
-    	return getString("secor.file.reader.writer.factory");
+        return getString("secor.file.reader.writer.factory");
     }
-    
+
     public String getPerfTestTopicPrefix() {
-    	return getString("secor.kafka.perf_topic_prefix");
+        return getString("secor.kafka.perf_topic_prefix");
     }
 
     private void checkProperty(String name) {
