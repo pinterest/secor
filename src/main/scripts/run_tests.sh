@@ -38,6 +38,9 @@ PARENT_DIR=/tmp/secor_dev
 LOGS_DIR=${PARENT_DIR}/logs
 BUCKET=${SECOR_BUCKET:-test-bucket}
 S3_LOGS_DIR=s3://${BUCKET}/secor_dev
+SWIFT_CONTAINER=logsContainer
+# Should match the secor.swift.containers.for.each.topic value
+CONTAINER_PER_TOPIC=false
 MESSAGES=100
 MESSAGE_TYPE=binary
 # For the compression tests to work, set this to the path of the Hadoop native libs.
@@ -58,6 +61,12 @@ WAIT_TIME=${SECOR_WAIT_TIME:-120}
 BASE_DIR=$(dirname $0)
 CONF_DIR=${BASE_DIR}/..
 
+
+cloudService="s3"
+if [ "$#" != "0" ]; then
+   cloudService=${1}
+fi
+
 source ${BASE_DIR}/run_common.sh
 
 run_command() {
@@ -75,12 +84,24 @@ check_for_native_libs() {
 
 recreate_dirs() {
     run_command "rm -r -f ${PARENT_DIR}"
-    if [ -n "${SECOR_LOCAL_S3}" ]; then
-        run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR} | awk '{ print \$4 }' | xargs -L 1 s3cmd -c ${CONF_DIR}/test.s3cfg del"
-        run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR}"
+
+    if [ ${cloudService} = "swift" ]; then
+	if ${CONTAINER_PER_TOPIC}; then
+	   run_command "swift delete test"
+        else
+           run_command "swift delete ${SWIFT_CONTAINER}"
+           sleep 3
+           run_command "swift post ${SWIFT_CONTAINER}"
+        fi
     else
-        run_command "s3cmd del --recursive ${S3_LOGS_DIR}"
-        run_command "s3cmd ls -r ${S3_LOGS_DIR}"
+        if [ -n "${SECOR_LOCAL_S3}" ]; then
+            run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR} | awk '{ print \$4 }' | xargs -L 1 s3cmd -c ${CONF_DIR}/test.s3cfg del"
+            run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR}"
+
+        else
+            run_command "s3cmd del --recursive ${S3_LOGS_DIR}"
+            run_command "s3cmd ls -r ${S3_LOGS_DIR}"
+        fi
     fi
     # create logs directory
     if [ ! -d ${LOGS_DIR} ]; then
@@ -200,10 +221,14 @@ verify() {
       fi
 
       # Verify SUCCESS file
-      if [ -n "${SECOR_LOCAL_S3}" ]; then
-          run_command "s3cmd ls -c ${CONF_DIR}/test.s3cfg -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+      if [ ${cloudService} = "swift" ]; then
+        run_command "swift list ${SWIFT_CONTAINER} |  grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
       else
-          run_command "s3cmd ls -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+        if [ -n "${SECOR_LOCAL_S3}" ]; then
+            run_command "s3cmd ls -c ${CONF_DIR}/test.s3cfg -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+        else
+            run_command "s3cmd ls -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+        fi
       fi
       count=$(</tmp/secor_tests_output.txt)
       count="${count//[[:space:]]/}"
@@ -213,6 +238,7 @@ verify() {
         exit 1
       fi
     done
+
 }
 
 set_offsets_in_zookeeper() {
@@ -397,8 +423,10 @@ post_and_verify_compressed_test() {
 }
 
 check_for_native_libs
-stop_s3
-start_s3
+if [ ${cloudService} = "s3" ]; then
+    stop_s3
+    start_s3
+fi
 
 for key in ${!READER_WRITERS[@]}; do
    MESSAGE_TYPE=${key}
@@ -422,4 +450,6 @@ for key in ${!READER_WRITERS[@]}; do
    fi
 done
 
-stop_s3
+if [ ${cloudService} = "s3" ]; then
+    stop_s3
+fi

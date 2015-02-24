@@ -80,7 +80,7 @@ public class LogFileVerifierMain {
                 commandLine.getOptionValue("topic"));
             long startOffset = -2;
             long endOffset = Long.MAX_VALUE;
-            if (commandLine.hasOption("start_offset")) {
+       	    if (commandLine.hasOption("start_offset")) {
                 startOffset = Long.parseLong(commandLine.getOptionValue("start_offset"));
                 if (commandLine.hasOption("end_offset")) {
                     endOffset = Long.parseLong(commandLine.getOptionValue("end_offset"));

@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/pinterest/secor)
 
-Secor is a service persisting [Kafka] logs to [Amazon S3].
+Secor is a service persisting [Kafka] logs to [Amazon S3] and [Openstack Swift].
 
 ## Key features
   - **strong consistency**: as long as [Kafka] is not dropping messages (e.g., due to aggressive cleanup policy) before Secor is able to read them, it is guaranteed that each message will be saved in exactly one [S3] file. This property is not compromised by the notorious temporal inconsistency of [S3] caused by the [eventual consistency] model,
@@ -133,3 +133,4 @@ If you have any questions or comments, you can reach us at [secor-users@googlegr
 [OpenTSDB]: http://opentsdb.net/
 [Qubole]: http://www.qubole.com/
 [statsD]: https://github.com/etsy/statsd/
+[Openstack Swift]: http://swift.openstack.org
