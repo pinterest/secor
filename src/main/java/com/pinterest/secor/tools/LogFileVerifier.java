@@ -48,12 +48,12 @@ public class LogFileVerifier {
             new HashMap<TopicPartition, SortedMap<Long, HashSet<LogFilePath>>>();
     }
 
-    private String getTopicPrefix() {
-        return mConfig.getS3Prefix() + "/" + mTopic;
+    private String getTopicPrefix() throws IOException {
+        return FileUtil.getPrefix(mTopic, mConfig) + "/" + mTopic;
     }
 
     private void populateTopicPartitionToOffsetToFiles() throws IOException {
-        String prefix = mConfig.getS3Prefix();
+        String prefix = FileUtil.getPrefix(mTopic, mConfig);
         String topicPrefix = getTopicPrefix();
         String[] paths = FileUtil.listRecursively(topicPrefix);
         for (String path : paths) {
