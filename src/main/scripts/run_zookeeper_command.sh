@@ -25,4 +25,4 @@ fi
 CURR_DIR=`dirname $0`
 source ${CURR_DIR}/run_common.sh
 
-${JAVA} -ea -cp "secor-0.1-SNAPSHOT.jar:lib/*" org.apache.zookeeper.ZooKeeperMain -server $@
+${JAVA} -ea -cp "$CLASSPATH" org.apache.zookeeper.ZooKeeperMain -server $@

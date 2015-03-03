@@ -1,0 +1,12 @@
+[default]
+access_key = TESTACCESSKEY
+bucket_location = US
+default_mime_type = binary/octet-stream
+encoding = UTF-8
+get_continue = False
+guess_mime_type = True
+host_base = localhost:5000
+host_bucket = %(bucket)s.localhost:5000
+secret_key = TESTSECRETKEY
+use_https = False
+verbosity = WARNING

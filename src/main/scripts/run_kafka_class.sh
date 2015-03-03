@@ -24,22 +24,6 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-base_dir=$(dirname $0)/..
-
-SCALA_VERSION=2.8.0
-
-# assume all dependencies have been packaged into one jar with sbt-assembly's task
-# "assembly-package-dependency"
-# for file in lib/*.jar; do
-#   CLASSPATH=$CLASSPATH:$file
-# done
-
-# for file in $base_dir/kafka*.jar; do
-#   CLASSPATH=$CLASSPATH:$file
-# done
-
-CLASSPATH=${CLASSPATH}:${base_dir}/lib/*
-
 # JMX settings
 KAFKA_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false "
 

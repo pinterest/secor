@@ -12,3 +12,7 @@ if [ -z "${JAVA_HOME}" ]; then
 else
     JAVA="${JAVA_HOME}/bin/java"
 fi
+
+DEFAULT_CLASSPATH="*:lib/*"
+CLASSPATH=${CLASSPATH:-$DEFAULT_CLASSPATH}
+
