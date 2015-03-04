@@ -40,16 +40,18 @@ public class TestLogMessageProducer extends Thread {
     private final String mTopic;
     private final int mNumMessages;
     private final String mType;
+    private String brokerList = "localhost:9092";
 
-    public TestLogMessageProducer(String topic, int numMessages, String type) {
+    public TestLogMessageProducer(String topic, int numMessages, String type, String brokerList) {
         mTopic = topic;
         mNumMessages = numMessages;
         mType = type;
+        this.brokerList = brokerList;
     }
 
     public void run() {
         Properties properties = new Properties();
-        properties.put("metadata.broker.list", "localhost:9092");
+        properties.put("metadata.broker.list", brokerList);
         properties.put("partitioner.class", "com.pinterest.secor.tools.RandomPartitioner");
         properties.put("serializer.class", "kafka.serializer.DefaultEncoder");
         properties.put("key.serializer.class", "kafka.serializer.StringEncoder");
