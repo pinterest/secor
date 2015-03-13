@@ -1,5 +1,7 @@
 # Pinterest Secor
 
+[![Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/pinterest/secor)
+
 Secor is a service persisting [Kafka] logs to [Amazon S3].
 
 ## Key features
