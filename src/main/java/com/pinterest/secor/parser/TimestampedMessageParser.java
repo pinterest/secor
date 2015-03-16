@@ -26,11 +26,21 @@ import java.util.TimeZone;
 public abstract class TimestampedMessageParser extends MessageParser {
 
     private SimpleDateFormat mFormatter;
+    String outputPattern = null;
 
     public TimestampedMessageParser(SecorConfig config) {
         super(config);
-        mFormatter = new SimpleDateFormat("yyyy-MM-dd");
-        mFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Object outputPatternObj = mConfig.getOutputPattern();
+        if (outputPatternObj != null) {
+            outputPattern = outputPatternObj.toString();
+        }
+
+        if (outputPattern == null) {
+            mFormatter = new SimpleDateFormat("yyyy-MM-dd");
+            mFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        } else {
+            mFormatter = new SimpleDateFormat(outputPattern);
+        }
     }
 
     public abstract long extractTimestampMillis(final Message message) throws Exception;
@@ -54,7 +64,12 @@ public abstract class TimestampedMessageParser extends MessageParser {
         // Date constructor takes milliseconds since epoch.
         long timestampMillis = extractTimestampMillis(message);
         Date date = new Date(timestampMillis);
-        String result[] = {"dt=" + mFormatter.format(date)};
+        String[] result = {""};
+        if (outputPattern == null) {
+            result[0] = "dt=" + mFormatter.format(date);
+        } else {
+            result[0] = mFormatter.format(date);
+        }
         return result;
     }
 }
