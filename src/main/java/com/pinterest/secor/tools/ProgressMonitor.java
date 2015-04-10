@@ -155,7 +155,7 @@ public class ProgressMonitor {
                     .append(PERIOD)
                     .append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
                     .toString();
-            client.recordGaugeValue(aspect, (Long)stat.get(Stat.STAT_KEYS.VALUE.getName()));
+            client.recordGaugeValue(aspect, Long.parseLong((String)stat.get(Stat.STAT_KEYS.VALUE.getName())));
         }
     }
 

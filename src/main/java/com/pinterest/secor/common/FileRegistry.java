@@ -43,7 +43,7 @@ public class FileRegistry {
     private HashMap<LogFilePath, Long> mCreationTimes;
 
     public FileRegistry(SecorConfig mConfig) {
-    	this.mConfig = mConfig;
+        this.mConfig = mConfig;
         mFiles = new HashMap<TopicPartition, HashSet<LogFilePath>>();
         mWriters = new HashMap<LogFilePath, FileWriter>();
         mCreationTimes = new HashMap<LogFilePath, Long>();
