@@ -5,7 +5,7 @@
 Secor is a service persisting [Kafka] logs to [Amazon S3].
 
 ## Key features
-  - **strong consistency**: as long as [Kafka] is not dropping messages (e.g., due to aggresive cleanup policy) before Secor is able to read them, it is guaranteed that each message will be saved in exacly one [S3] file. This property is not compromized by the notorious temporal inconsisteny of [S3] caused by the [eventual consistency] model,
+  - **strong consistency**: as long as [Kafka] is not dropping messages (e.g., due to aggresive cleanup policy) before Secor is able to read them, it is guaranteed that each message will be saved in exacly one [S3] file. This property is not compromised by the notorious temporal inconsisteny of [S3] caused by the [eventual consistency] model,
   - **fault tolerance**: any component of Secor is allowed to crash at any given point without compromising data integrity,
   - **load distribution**: Secor may be distributed across multiple machines,
   - **horizontal scalability**: scaling the system out to handle more load is as easy as starting extra Secor processes. Reducing the resource footprint can be achieved by killing any of the running Secor processes. Neither ramping up nor down has any impact on data consistency,
