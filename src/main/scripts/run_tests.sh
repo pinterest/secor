@@ -73,7 +73,7 @@ check_for_native_libs() {
 
 recreate_dirs() {
     run_command "rm -r -f ${PARENT_DIR}"
-    if [ -n ${SECOR_LOCAL_S3} ]; then
+    if [ -n "${SECOR_LOCAL_S3}" ]; then
         run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls ${S3_LOGS_DIR} | awk '{ print \$4 }' | xargs -L 1 s3cmd -c ${CONF_DIR}/test.s3cfg del"
     else
         run_command "s3cmd del --recursive ${S3_LOGS_DIR}"
@@ -85,7 +85,7 @@ recreate_dirs() {
 }
 
 start_s3() {
-    if [ -n ${SECOR_LOCAL_S3} ]; then
+    if [ -n "${SECOR_LOCAL_S3}" ]; then
         if command -v fakes3 > /dev/null 2>&1; then
             run_command "fakes3 --root=/tmp/fakes3 --port=5000 --hostname=localhost > /tmp/fakes3.log 2>&1 &"
             sleep 2
@@ -97,7 +97,7 @@ start_s3() {
 }
 
 stop_s3() {
-    if [ -n ${SECOR_LOCAL_S3} ]; then
+    if [ -n "${SECOR_LOCAL_S3}" ]; then
         run_command "pkill -9 'fakes3' > /dev/null 2>&1 || true"
         run_command "rm -r -f /tmp/fakes3"
     fi

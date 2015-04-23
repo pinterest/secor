@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  *     $ cd target
  *     $ java -ea -Dlog4j.configuration=log4j.dev.properties -Dconfig=secor.dev.backup.properties \
  *         -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.LogFilePrinterMain -f \
- *         s3n://bucket/path
+ *         s3a://bucket/path
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
