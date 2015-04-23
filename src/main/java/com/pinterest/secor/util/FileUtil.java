@@ -44,6 +44,13 @@ public class FileUtil {
         if (mConfig != null) {
             conf.set("fs.s3n.awsAccessKeyId", mConfig.getAwsAccessKey());
             conf.set("fs.s3n.awsSecretAccessKey", mConfig.getAwsSecretKey());
+            // if access key is absent, s3a will attempt to use IAM role-based authentication.
+            if (!mConfig.getAwsAccessKey().isEmpty()) {
+                conf.set("fs.s3a.awsAccessKeyId", mConfig.getAwsAccessKey());
+            }
+            if (!mConfig.getAwsSecretKey().isEmpty()) {
+                conf.set("fs.s3a.awsSecretAccessKey", mConfig.getAwsSecretKey());
+            }
         }
         return FileSystem.get(URI.create(path), conf);
     }
@@ -56,7 +63,7 @@ public class FileUtil {
         if (statuses != null) {
             for (FileStatus status : statuses) {
                 Path statusPath = status.getPath();
-                if (path.startsWith("s3://") || path.startsWith("s3n://")) {
+                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://")) {
                     paths.add(statusPath.toUri().toString());
                 } else {
                     paths.add(statusPath.toUri().getPath());
@@ -119,7 +126,7 @@ public class FileUtil {
             for (FileStatus fileStatus : statuses) {
                 Path statusPath = fileStatus.getPath();
                 String stringPath;
-                if (path.startsWith("s3://") || path.startsWith("s3n://")) {
+                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://")) {
                     stringPath = statusPath.toUri().toString();
                 } else {
                     stringPath = statusPath.toUri().getPath();

@@ -41,8 +41,7 @@ public class LogFilePrinter {
     public void printFile(String path) throws Exception {
         FileSystem fileSystem = FileUtil.getFileSystem(path);
         Path fsPath = new Path(path);
-        SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, fsPath,
-                new Configuration());
+        SequenceFile.Reader reader = new SequenceFile.Reader(new Configuration(), SequenceFile.Reader.file(fsPath));
         LongWritable key = (LongWritable) reader.getKeyClass().newInstance();
         BytesWritable value = (BytesWritable) reader.getValueClass().newInstance();
         System.out.println("reading file " + path);

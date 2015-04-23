@@ -121,7 +121,7 @@ public class PartitionFinalizer {
     }
 
     private NavigableSet<Calendar> getPartitions(String topic) throws IOException, ParseException {
-        final String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
+        final String s3Prefix = "s3a://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
         String[] partitions = {"dt="};
         LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, partitions,
             mConfig.getGeneration(), 0, 0, mFileExtension);
@@ -147,7 +147,7 @@ public class PartitionFinalizer {
             ParseException, InterruptedException {
         NavigableSet<Calendar> partitionDates =
             getPartitions(topic).headSet(calendar, true).descendingSet();
-        final String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
+        final String s3Prefix = "s3a://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
         for (Calendar partition : partitionDates) {

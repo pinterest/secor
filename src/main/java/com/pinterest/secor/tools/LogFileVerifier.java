@@ -49,7 +49,7 @@ public class LogFileVerifier {
     }
 
     private String getPrefix() {
-        return "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
+        return "s3a://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
     }
 
     private String getTopicPrefix() {

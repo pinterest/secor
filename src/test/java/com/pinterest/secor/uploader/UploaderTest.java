@@ -136,7 +136,7 @@ public class UploaderTest extends TestCase {
         FileUtil.moveToS3(
                 "/some_parent_dir/some_topic/some_partition/some_other_partition/"
                         + "10_0_00000000000000000010",
-                "s3n://some_bucket/some_s3_parent_dir/some_topic/some_partition/"
+                "s3a://some_bucket/some_s3_parent_dir/some_topic/some_partition/"
                         + "some_other_partition/10_0_00000000000000000010");
         Mockito.verify(mFileRegistry).deleteTopicPartition(mTopicPartition);
         Mockito.verify(mZookeeperConnector).setCommittedOffsetCount(
