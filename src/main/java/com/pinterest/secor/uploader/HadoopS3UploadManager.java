@@ -44,8 +44,7 @@ public class HadoopS3UploadManager extends UploadManager {
     }
 
     public Handle<?> upload(LogFilePath localPath) throws Exception {
-        String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
-        LogFilePath s3Path = localPath.withPrefix(s3Prefix);
+        LogFilePath s3Path = localPath.withPrefix(mConfig.getS3Prefix());
         final String localLogFilename = localPath.getLogFilePath();
         final String s3LogFilename = s3Path.getLogFilePath();
         LOG.info("uploading file {} to {}", localLogFilename, s3LogFilename);

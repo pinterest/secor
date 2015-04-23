@@ -18,6 +18,7 @@ package com.pinterest.secor.util;
 
 import com.pinterest.secor.common.SecorConfig;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.s3a.Constants;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -33,19 +34,25 @@ import java.util.Arrays;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class FileUtil {
-    private static SecorConfig mConfig = null;
+    private static Configuration mConf = new Configuration(true);
 
     public static void configure(SecorConfig config) {
-        mConfig = config;
+        if (config != null) {
+            if (config.getAwsAccessKey().isEmpty() != config.getAwsSecretKey().isEmpty()) {
+                throw new IllegalArgumentException(
+                    "Must specify both aws.access.key and aws.secret.key or neither.");
+            }
+            if (!config.getAwsAccessKey().isEmpty()) {
+                mConf.set(Constants.ACCESS_KEY, config.getAwsAccessKey());
+                mConf.set(Constants.SECRET_KEY, config.getAwsSecretKey());
+                mConf.set("fs.s3n.awsAccessKeyId", config.getAwsAccessKey());
+                mConf.set("fs.s3n.awsSecretAccessKey", config.getAwsSecretKey());
+            }
+        }
     }
 
     public static FileSystem getFileSystem(String path) throws IOException {
-        Configuration conf = new Configuration();
-        if (mConfig != null) {
-            conf.set("fs.s3n.awsAccessKeyId", mConfig.getAwsAccessKey());
-            conf.set("fs.s3n.awsSecretAccessKey", mConfig.getAwsSecretKey());
-        }
-        return FileSystem.get(URI.create(path), conf);
+        return FileSystem.get(URI.create(path), mConf);
     }
 
     public static String[] list(String path) throws IOException {
@@ -56,7 +63,7 @@ public class FileUtil {
         if (statuses != null) {
             for (FileStatus status : statuses) {
                 Path statusPath = status.getPath();
-                if (path.startsWith("s3://") || path.startsWith("s3n://")) {
+                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://")) {
                     paths.add(statusPath.toUri().toString());
                 } else {
                     paths.add(statusPath.toUri().getPath());
@@ -119,7 +126,7 @@ public class FileUtil {
             for (FileStatus fileStatus : statuses) {
                 Path statusPath = fileStatus.getPath();
                 String stringPath;
-                if (path.startsWith("s3://") || path.startsWith("s3n://")) {
+                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://")) {
                     stringPath = statusPath.toUri().toString();
                 } else {
                     stringPath = statusPath.toUri().getPath();

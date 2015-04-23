@@ -25,7 +25,8 @@
 #     mvn package
 #     mkdir /tmp/test
 #     cd /tmp/test
-#     tar -zxvf ~/git/optimus/secor/target/secor-0.1-SNAPSHOT-bin.tar.gz
+#     tar -zxvf ~/git/optimus/secor/target/secor-0.2-SNAPSHOT-bin.tar.gz
+#
 #     # copy Hadoop native libs to lib/, or change HADOOP_NATIVE_LIB_PATH to point to them
 #     ./scripts/run_tests.sh
 #
@@ -51,6 +52,9 @@ ADDITIONAL_OPTS=
 declare -A READER_WRITERS
 READER_WRITERS[json]=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFactory
 READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory
+
+# Hadoop supports multiple implementations of the s3 filesytem
+S3_FILESYSTEMS=${S3_FILESYSTEMS:-s3a s3n}
 
 # The minimum wait time is one minute plus delta.  Secor is configured to upload files older than
 # one minute and we need to make sure that everything ends up on s3 before starting verification.
@@ -400,26 +404,29 @@ check_for_native_libs
 stop_s3
 start_s3
 
-for key in ${!READER_WRITERS[@]}; do
-   MESSAGE_TYPE=${key}
-   ADDITIONAL_OPTS=-Dsecor.file.reader.writer.factory=${READER_WRITERS[${key}]}
-   echo "********************************************************"
-   echo "Running tests for Message Type: ${MESSAGE_TYPE} and ReaderWriter: ${READER_WRITERS[${key}]}"
-   post_and_verify_test
-   if [ ${MESSAGE_TYPE} = "binary" ]; then
-       # Testing finalizer in partition mode
-       post_and_finalizer_verify_test hr
-       post_and_finalizer_verify_test dt
-   fi
-   start_from_non_zero_offset_test
-   move_offset_back_test
-   if [ ${MESSAGE_TYPE} = "json" ]; then
-       post_and_verify_compressed_test
-   elif [ -z ${SKIP_COMPRESSED_BINARY} ]; then
-       post_and_verify_compressed_test
-   else
-       echo "Skipping compressed tests for ${MESSAGE_TYPE}"
-   fi
+for fkey in ${S3_FILESYSTEMS}; do
+    FILESYSTEM_TYPE=${fkey}
+    for key in ${!READER_WRITERS[@]}; do
+        MESSAGE_TYPE=${key}
+        ADDITIONAL_OPTS="-Dsecor.s3.filesystem=${FILESYSTEM_TYPE} -Dsecor.file.reader.writer.factory=${READER_WRITERS[${key}]}"
+        echo "********************************************************"
+        echo "Running tests for Message Type: ${MESSAGE_TYPE} and  ReaderWriter:${READER_WRITERS[${key}]} using filesystem: ${FILESYSTEM_TYPE}"
+        post_and_verify_test
+        if [ ${MESSAGE_TYPE} = "binary" ]; then
+            # Testing finalizer in partition mode
+            post_and_finalizer_verify_test hr
+            post_and_finalizer_verify_test dt
+        fi
+        start_from_non_zero_offset_test
+        move_offset_back_test
+        if [ ${MESSAGE_TYPE} = "json" ]; then
+            post_and_verify_compressed_test
+        elif [ -z ${SKIP_COMPRESSED_BINARY} ]; then
+            post_and_verify_compressed_test
+        else
+            echo "Skipping compressed tests for ${MESSAGE_TYPE}"
+        fi
+    done
 done
 
 stop_s3
