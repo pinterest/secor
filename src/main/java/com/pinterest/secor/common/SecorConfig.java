@@ -231,8 +231,12 @@ public class SecorConfig {
         return getInt("secor.finalizer.lookback.periods", 10);
     }
 
-    public String getHivePrefix() { 
-        return getString("secor.hive.prefix"); 
+    public String getMessageInputAvroSchema() {
+        return getString("message.input.avro.schema");
+    }
+
+    public String getHivePrefix() {
+        return getString("secor.hive.prefix");
     }
 
     public String getCompressionCodec() {
@@ -242,11 +246,11 @@ public class SecorConfig {
     public int getMaxMessageSizeBytes() {
         return getInt("secor.max.message.size.bytes");
     }
-    
+
     public String getFileReaderWriterFactory() {
     	return getString("secor.file.reader.writer.factory");
     }
-    
+
     public String getPerfTestTopicPrefix() {
     	return getString("secor.kafka.perf_topic_prefix");
     }
