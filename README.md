@@ -5,13 +5,13 @@
 Secor is a service persisting [Kafka] logs to [Amazon S3].
 
 ## Key features
-  - **strong consistency**: as long as [Kafka] is not dropping messages (e.g., due to aggresive cleanup policy) before Secor is able to read them, it is guaranteed that each message will be saved in exacly one [S3] file. This property is not compromised by the notorious temporal inconsisteny of [S3] caused by the [eventual consistency] model,
+  - **strong consistency**: as long as [Kafka] is not dropping messages (e.g., due to aggressive cleanup policy) before Secor is able to read them, it is guaranteed that each message will be saved in exactly one [S3] file. This property is not compromised by the notorious temporal inconsistency of [S3] caused by the [eventual consistency] model,
   - **fault tolerance**: any component of Secor is allowed to crash at any given point without compromising data integrity,
   - **load distribution**: Secor may be distributed across multiple machines,
   - **horizontal scalability**: scaling the system out to handle more load is as easy as starting extra Secor processes. Reducing the resource footprint can be achieved by killing any of the running Secor processes. Neither ramping up nor down has any impact on data consistency,
   - **output partitioning**: Secor parses incoming messages and puts them under partitioned s3 paths to enable direct import into systems like [Hive],
   - **configurable upload policies**: commit points controlling when data is persisted in S3 are configured through size-based and time-based policies (e.g., upload data when local buffer reaches size of 100MB and at least once per hour),
-  - **monitoring**: metrics tracking various performace properties are exposed through [Ostrich] and optionaly exported to [OpenTSDB] / [statsD],
+  - **monitoring**: metrics tracking various performance properties are exposed through [Ostrich] and optionally exported to [OpenTSDB] / [statsD],
   - **customizability**: external log message parser may be loaded by updating the configuration,
   - **Qubole interface**: Secor connects to [Qubole] to add finalized output partitions to Hive tables.
 
@@ -51,7 +51,7 @@ One of the convenience features of Secor is the ability to group messages and sa
 
 - **offset parser**: parser that groups messages based on offset ranges. E.g., messages with offsets in range 0 to 999 will end up under ```s3n://bucket/topic/offset=0/```, offsets 1000 to 2000 will go to ```s3n://bucket/topic/offset=1000/```. To use this parser, start Secor with properties file [secor.prod.backup.properties](src/main/config/secor.prod.backup.properties).
 
-- **thrift date parser**: parser that extracts timestamps from thrift messages and groups the output based on the date (at a day granularity). To keep things simple, this parser assumes that the timestamp is carried in the first field (id 0) of the thrift message schema. The timestamp may be expressed either in seconds or milliseconds, or nanoseconds since the epoch. The output goes to date-partitioned paths (e.g., ```s3n://bucket/topic/dt=2014-05-01```, ```s3n://bucket/topic/dt=2014-05-02```). Date pertitioning is particularly convenient if the output is to be consumed by ETL tools such as [Hive]. To use this parser, start Secor with properties file [secor.prod.partition.properties](src/main/config/secor.prod.partition.properties). You may override the field used to extract the timestamp by setting the "message.timestamp.name" property.
+- **thrift date parser**: parser that extracts timestamps from thrift messages and groups the output based on the date (at a day granularity). To keep things simple, this parser assumes that the timestamp is carried in the first field (id 0) of the thrift message schema. The timestamp may be expressed either in seconds or milliseconds, or nanoseconds since the epoch. The output goes to date-partitioned paths (e.g., ```s3n://bucket/topic/dt=2014-05-01```, ```s3n://bucket/topic/dt=2014-05-02```). Date partitioning is particularly convenient if the output is to be consumed by ETL tools such as [Hive]. To use this parser, start Secor with properties file [secor.prod.partition.properties](src/main/config/secor.prod.partition.properties). You may override the field used to extract the timestamp by setting the "message.timestamp.name" property.
 
 - **JSON date parser**: parser that extracts timestamps from JSON messages and groups the output based on the date, similar to the Thrift parser above. To use this parser, start Secor with properties file [secor.prod.partition.properties](src/main/config/secor.prod.partition.properties) and set `secor.message.parser.class=com.pinterest.secor.parser.JsonMessageParser`. You may override the field used to extract the timestamp by setting the "message.timestamp.name" property.
 
@@ -70,7 +70,7 @@ Currently secor supports the following output formats
 - **Delimited Text Files**: A new line delimited raw text file.
 
 ## Tools
-Secor comes with a number of tools impelementing interactions with the environment.
+Secor comes with a number of tools implementing interactions with the environment.
 
 ##### Log file printer
 Log file printer displays the content of a log file.
@@ -87,7 +87,7 @@ java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.
 ```
 
 ##### Partition finalizer
-Topic finalizer writes _SUCCESS files to date partitions that very likely won't be receiving any new messages and (optionaly) adds the corresponding dates to [Hive] through [Qubole] API.
+Topic finalizer writes _SUCCESS files to date partitions that very likely won't be receiving any new messages and (optionally) adds the corresponding dates to [Hive] through [Qubole] API.
 
 ```sh
 java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.propertie -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.PartitionFinalizerMain
@@ -133,4 +133,3 @@ If you have any questions or comments, you can reach us at [secor-users@googlegr
 [OpenTSDB]: http://opentsdb.net/
 [Qubole]: http://www.qubole.com/
 [statsD]: https://github.com/etsy/statsd/
-
