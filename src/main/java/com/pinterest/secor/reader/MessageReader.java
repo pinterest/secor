@@ -110,6 +110,7 @@ public class MessageReader {
         props.put("auto.offset.reset", "smallest");
         props.put("consumer.timeout.ms", Integer.toString(mConfig.getConsumerTimeoutMs()));
         props.put("consumer.id", IdUtil.getConsumerId());
+        props.put("partition.assignment.strategy", "roundrobin");
         if (mConfig.getRebalanceMaxRetries() != null &&
             !mConfig.getRebalanceMaxRetries().isEmpty()) {
             props.put("rebalance.max.retries", mConfig.getRebalanceMaxRetries());

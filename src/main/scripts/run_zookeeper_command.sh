@@ -17,11 +17,6 @@
 
 # Author: Pawel Garbacki (pawel@pinterest.com)
 
-if [ $# -lt 3 ]; then
-    echo "USAGE: $0 zookeeper_host:port cmd args"
-    exit 1
-fi
-
 CURR_DIR=`dirname $0`
 source ${CURR_DIR}/run_common.sh
 
