@@ -35,4 +35,9 @@ public class StatsUtil {
         name += "." + threadId;
         Stats.clearLabel(name);
     }
+
+    public static void incr(String name) {
+      Stats.incr(name);
+    }
+
 }

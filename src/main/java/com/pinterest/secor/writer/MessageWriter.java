@@ -16,21 +16,23 @@
  */
 package com.pinterest.secor.writer;
 
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.FileRegistry;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.OffsetTracker;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
-import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
-
-import java.io.IOException;
-
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.IdUtil;
-
+import com.pinterest.secor.util.StatsUtil;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /**
  * Message writer appends Kafka messages to local log files.
@@ -66,6 +68,7 @@ public class MessageWriter {
                                                            message.getKafkaPartition());
         long lastSeenOffset = mOffsetTracker.getLastSeenOffset(topicPartition);
         if (message.getOffset() != lastSeenOffset + 1) {
+            StatsUtil.incr("secor.consumer_rebalance_count." + topicPartition.getTopic());
             // There was a rebalancing event since we read the last message.
             LOG.debug("offset of message " + message +
                       " does not follow sequentially the last seen offset " + lastSeenOffset +
