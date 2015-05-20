@@ -150,7 +150,7 @@ public class MessageReader {
         updateAccessTime(topicPartition);
         // Skip already committed messages.
         long committedOffsetCount = mOffsetTracker.getTrueCommittedOffsetCount(topicPartition);
-        LOG.debug("read message" + message);
+        LOG.debug("read message {}", message);
         exportStats();
         if (message.getOffset() < committedOffsetCount) {
             LOG.debug("skipping message message " + message + " because its offset precedes " +
