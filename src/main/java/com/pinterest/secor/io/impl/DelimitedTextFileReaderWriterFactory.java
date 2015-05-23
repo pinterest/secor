@@ -60,7 +60,7 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
     protected class DelimitedTextFileReader implements FileReader {
         private final BufferedInputStream mReader;
         private long mOffset;
-        private Decompressor mDecompressor;
+        private Decompressor mDecompressor = null;
 
         public DelimitedTextFileReader(LogFilePath path, CompressionCodec codec) throws IOException {
             Path fsPath = new Path(path.getLogFilePath());
@@ -94,16 +94,15 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
         @Override
         public void close() throws IOException {
             this.mReader.close();
-            if (mDecompressor != null) {
-                CodecPool.returnDecompressor(mDecompressor);
-            }
+            CodecPool.returnDecompressor(mDecompressor);
+            mDecompressor = null;
         }
     }
 
     protected class DelimitedTextFileWriter implements FileWriter {
         private final CountingOutputStream mCountingStream;
         private final BufferedOutputStream mWriter;
-        private Compressor mCompressor;
+        private Compressor mCompressor = null;
 
         public DelimitedTextFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
             Path fsPath = new Path(path.getLogFilePath());
@@ -130,9 +129,8 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
         @Override
         public void close() throws IOException {
             this.mWriter.close();
-            if (mCompressor !=  null) {
-                CodecPool.returnCompressor(mCompressor);
-            }
+            CodecPool.returnCompressor(mCompressor);
+            mCompressor = null;
         }
     }
 }
