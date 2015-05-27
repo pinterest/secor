@@ -29,6 +29,9 @@ import com.pinterest.secor.io.FileWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.Compressor;
+import org.apache.hadoop.io.compress.CodecPool;
+import org.apache.hadoop.io.compress.Decompressor;
 
 import com.google.common.io.CountingOutputStream;
 import com.pinterest.secor.common.LogFilePath;
@@ -57,6 +60,7 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
     protected class DelimitedTextFileReader implements FileReader {
         private final BufferedInputStream mReader;
         private long mOffset;
+        private Decompressor mDecompressor = null;
 
         public DelimitedTextFileReader(LogFilePath path, CompressionCodec codec) throws IOException {
             Path fsPath = new Path(path.getLogFilePath());
@@ -64,7 +68,8 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
             InputStream inputStream = fs.open(fsPath);
             this.mReader = (codec == null) ? new BufferedInputStream(inputStream)
                     : new BufferedInputStream(
-                    codec.createInputStream(inputStream));
+                    codec.createInputStream(inputStream,
+                                            mDecompressor = CodecPool.getDecompressor(codec)));
             this.mOffset = path.getOffset();
         }
 
@@ -89,12 +94,15 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
         @Override
         public void close() throws IOException {
             this.mReader.close();
+            CodecPool.returnDecompressor(mDecompressor);
+            mDecompressor = null;
         }
     }
 
     protected class DelimitedTextFileWriter implements FileWriter {
         private final CountingOutputStream mCountingStream;
         private final BufferedOutputStream mWriter;
+        private Compressor mCompressor = null;
 
         public DelimitedTextFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
             Path fsPath = new Path(path.getLogFilePath());
@@ -102,7 +110,8 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
             this.mCountingStream = new CountingOutputStream(fs.create(fsPath));
             this.mWriter = (codec == null) ? new BufferedOutputStream(
                     this.mCountingStream) : new BufferedOutputStream(
-                    codec.createOutputStream(this.mCountingStream));
+                    codec.createOutputStream(this.mCountingStream,
+                                             mCompressor = CodecPool.getCompressor(codec)));
         }
 
         @Override
@@ -120,6 +129,8 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
         @Override
         public void close() throws IOException {
             this.mWriter.close();
+            CodecPool.returnCompressor(mCompressor);
+            mCompressor = null;
         }
     }
 }
