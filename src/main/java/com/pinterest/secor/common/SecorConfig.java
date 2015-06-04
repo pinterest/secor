@@ -195,6 +195,10 @@ public class SecorConfig {
         return getString("secor.kafka.topic_filter");
     }
 
+    public String getKafkaTopicBlacklist() {
+        return getString("secor.kafka.topic_blacklist");
+    }
+
     public String getKafkaGroup() {
         return getString("secor.kafka.group");
     }
