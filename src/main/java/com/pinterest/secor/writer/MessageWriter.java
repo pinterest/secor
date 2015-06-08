@@ -48,6 +48,7 @@ public class MessageWriter {
     private String mFileExtension;
     private CompressionCodec mCodec;
     private String mLocalPrefix;
+    private final int mGeneration;
 
     public MessageWriter(SecorConfig config, OffsetTracker offsetTracker,
                          FileRegistry fileRegistry) throws Exception {
@@ -61,6 +62,7 @@ public class MessageWriter {
             mFileExtension = "";
         }
         mLocalPrefix = mConfig.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
+        mGeneration = mConfig.getGeneration();
     }
 
     public void adjustOffset(Message message) throws IOException {
@@ -83,11 +85,11 @@ public class MessageWriter {
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         long offset = mOffsetTracker.getAdjustedCommittedOffsetCount(topicPartition);
-        LogFilePath path = new LogFilePath(mLocalPrefix, mConfig.getGeneration(), offset, message,
+        LogFilePath path = new LogFilePath(mLocalPrefix, mGeneration, offset, message,
         		mFileExtension);
         FileWriter writer = mFileRegistry.getOrCreateWriter(path, mCodec);
         writer.write(new KeyValue(message.getOffset(), message.getPayload()));
         LOG.debug("appended message {} to file {}.  File length {}",
-                  message, path.getLogFilePath(), writer.getLength());
+                  message, path, writer.getLength());
     }
 }
