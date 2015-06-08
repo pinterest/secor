@@ -35,7 +35,7 @@ public class RateLimitUtil {
         mRateLimiter = RateLimiter.create(config.getMessagesPerSecond());
     }
 
-    public static void acquire() {
-        mRateLimiter.acquire();
+    public static void acquire(int n) {
+        mRateLimiter.acquire(n);
     }
 }
