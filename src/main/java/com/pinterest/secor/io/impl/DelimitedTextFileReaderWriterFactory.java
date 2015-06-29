@@ -16,24 +16,25 @@
  */
 package com.pinterest.secor.io.impl;
 
-import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.CodecPool;
 import org.apache.hadoop.io.compress.Decompressor;
 
-import com.google.common.io.CountingOutputStream;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.FileUtil;
@@ -48,7 +49,7 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
 
     @Override
     public FileReader BuildFileReader(LogFilePath logFilePath, CompressionCodec codec)
-            throws IllegalAccessException, IOException, InstantiationException {
+            throws Exception {
         return new DelimitedTextFileReader(logFilePath, codec);
     }
 
@@ -58,76 +59,92 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
     }
 
     protected class DelimitedTextFileReader implements FileReader {
-        private final BufferedInputStream mReader;
-        private long mOffset;
+        private final SequenceFile.Reader mOffsetReader;
+        private final LongWritable mKey;
+        private final IntWritable mValueLength;
+        private final DataInputStream mReader;
         private Decompressor mDecompressor = null;
+        private byte[] mDelimiter;
 
-        public DelimitedTextFileReader(LogFilePath path, CompressionCodec codec) throws IOException {
+        public DelimitedTextFileReader(LogFilePath path, CompressionCodec codec) throws Exception {
+            Configuration config = new Configuration();
             Path fsPath = new Path(path.getLogFilePath());
             FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
-            InputStream inputStream = fs.open(fsPath);
-            this.mReader = (codec == null) ? new BufferedInputStream(inputStream)
-                    : new BufferedInputStream(
+            DataInputStream inputStream = fs.open(fsPath);
+            Path offsetPath = new Path(path.getLogFileOffsetPath());
+            this.mOffsetReader = new SequenceFile.Reader(fs, offsetPath, config);
+            this.mReader = (codec == null) ? inputStream
+                    : new DataInputStream(
                     codec.createInputStream(inputStream,
                                             mDecompressor = CodecPool.getDecompressor(codec)));
-            this.mOffset = path.getOffset();
+
+            this.mKey = (LongWritable) mOffsetReader.getKeyClass().newInstance();
+            this.mValueLength = (IntWritable) mOffsetReader.getValueClass().newInstance();
+            this.mDelimiter = new byte[1];
         }
 
         @Override
         public KeyValue next() throws IOException {
-            ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
-            int nextByte;
-            while ((nextByte = mReader.read()) != DELIMITER) {
-                if (nextByte == -1) { // end of stream?
-                    if (messageBuffer.size() == 0) { // if no byte read
-                        return null;
-                    } else { // if bytes followed by end of stream: framing error
-                        throw new EOFException(
-                                "Non-empty message without delimiter");
-                    }
-                }
-                messageBuffer.write(nextByte);
+            if (mOffsetReader.next(mKey, mValueLength)) {
+                byte[] buffer = new byte[mValueLength.get()];
+                mReader.readFully(buffer);
+                mReader.readFully(mDelimiter);
+                assert mDelimiter[0] == DELIMITER;
+                return new KeyValue(mKey.get(), buffer);
+            } else {
+                return null;
             }
-            return new KeyValue(this.mOffset++, messageBuffer.toByteArray());
         }
 
         @Override
         public void close() throws IOException {
             this.mReader.close();
+            this.mOffsetReader.close();
             CodecPool.returnDecompressor(mDecompressor);
             mDecompressor = null;
         }
     }
 
     protected class DelimitedTextFileWriter implements FileWriter {
-        private final CountingOutputStream mCountingStream;
+        private final SequenceFile.Writer mOffsetWriter;
+        private final LongWritable mKey;
+        private final IntWritable mValueLength;
         private final BufferedOutputStream mWriter;
         private Compressor mCompressor = null;
 
         public DelimitedTextFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
+            Configuration config = new Configuration();
             Path fsPath = new Path(path.getLogFilePath());
             FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
-            this.mCountingStream = new CountingOutputStream(fs.create(fsPath));
+            Path offsetPath = new Path(path.getLogFileOffsetPath());
+            this.mOffsetWriter = SequenceFile.createWriter(fs, config, offsetPath,
+                    LongWritable.class, IntWritable.class);
             this.mWriter = (codec == null) ? new BufferedOutputStream(
-                    this.mCountingStream) : new BufferedOutputStream(
-                    codec.createOutputStream(this.mCountingStream,
+                    fs.create(fsPath)) : new BufferedOutputStream(
+                    codec.createOutputStream(fs.create(fsPath),
                                              mCompressor = CodecPool.getCompressor(codec)));
+            this.mKey = new LongWritable();
+            this.mValueLength = new IntWritable();
         }
 
         @Override
         public long getLength() throws IOException {
-            assert this.mCountingStream != null;
-            return this.mCountingStream.getCount();
+            assert this.mOffsetWriter != null;
+            return this.mOffsetWriter.getLength();
         }
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
             this.mWriter.write(keyValue.getValue());
             this.mWriter.write(DELIMITER);
+            this.mKey.set(keyValue.getKey());
+            this.mValueLength.set(keyValue.getValue().length);
+            this.mOffsetWriter.append(this.mKey, this.mValueLength);
         }
 
         @Override
         public void close() throws IOException {
+            this.mOffsetWriter.close();
             this.mWriter.close();
             CodecPool.returnCompressor(mCompressor);
             mCompressor = null;

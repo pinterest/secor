@@ -92,6 +92,9 @@ public class Uploader {
                 List<Handle<?>> uploadHandles = new ArrayList<Handle<?>>();
                 for (LogFilePath path : paths) {
                     uploadHandles.add(mUploadManager.upload(path));
+                    if (mConfig.getUploadOffsetFile()) {
+                        uploadHandles.add(mUploadManager.upload(path.offsetPath())); 
+                    }
                 }
                 for (Handle<?> uploadHandle : uploadHandles) {
                     uploadHandle.get();

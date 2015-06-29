@@ -276,6 +276,8 @@ public class SecorConfig {
         return mProperties.getBoolean(name, defaultValue);
     }
 
+    public boolean getUploadOffsetFile() { return getBoolean("secor.upload_offset_file", false); }
+
     private void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
             throw new RuntimeException("Failed to find required configuration option '" +
