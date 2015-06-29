@@ -434,6 +434,9 @@ for fkey in ${S3_FILESYSTEMS}; do
     for key in ${!READER_WRITERS[@]}; do
         MESSAGE_TYPE=${key}
         ADDITIONAL_OPTS="-Dsecor.s3.filesystem=${FILESYSTEM_TYPE} -Dsecor.file.reader.writer.factory=${READER_WRITERS[${key}]}"
+        if [ ${key} = "json" ]; then
+            ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dsecor.upload_offset_file=true"
+        fi
         echo "********************************************************"
         echo "Running tests for Message Type: ${MESSAGE_TYPE} and  ReaderWriter:${READER_WRITERS[${key}]} using filesystem: ${FILESYSTEM_TYPE}"
         post_and_verify_test
