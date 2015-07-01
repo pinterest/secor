@@ -49,8 +49,10 @@ public class UploaderTest extends TestCase {
         private FileReader mReader;
 
         public TestUploader(SecorConfig config, OffsetTracker offsetTracker,
-                FileRegistry fileRegistry, ZookeeperConnector zookeeperConnector) {
-            super(config, offsetTracker, fileRegistry, zookeeperConnector);
+                            FileRegistry fileRegistry,
+                            UploadManager uploadManager,
+                            ZookeeperConnector zookeeperConnector) {
+            super(config, offsetTracker, fileRegistry, uploadManager, zookeeperConnector);
             mReader = Mockito.mock(FileReader.class);
         }
 
@@ -73,6 +75,7 @@ public class UploaderTest extends TestCase {
     private OffsetTracker mOffsetTracker;
     private FileRegistry mFileRegistry;
     private ZookeeperConnector mZookeeperConnector;
+    private UploadManager mUploadManager;
 
     private TestUploader mUploader;
 
@@ -99,8 +102,10 @@ public class UploaderTest extends TestCase {
         Mockito.when(mFileRegistry.getTopicPartitions()).thenReturn(
                 topicPartitions);
 
+        mUploadManager = new HadoopS3UploadManager(mConfig);
+
         mZookeeperConnector = Mockito.mock(ZookeeperConnector.class);
-        mUploader = new TestUploader(mConfig, mOffsetTracker, mFileRegistry,
+        mUploader = new TestUploader(mConfig, mOffsetTracker, mFileRegistry, mUploadManager,
                 mZookeeperConnector);
     }
 
