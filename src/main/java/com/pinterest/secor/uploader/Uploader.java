@@ -16,6 +16,7 @@
  */
 package com.pinterest.secor.uploader;
 
+import com.google.common.base.Joiner;
 import com.pinterest.secor.common.*;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
@@ -25,6 +26,7 @@ import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.ReflectionUtil;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,8 +92,16 @@ public class Uploader {
     private void uploadFiles(TopicPartition topicPartition) throws Exception {
         long committedOffsetCount = mOffsetTracker.getTrueCommittedOffsetCount(topicPartition);
         long lastSeenOffset = mOffsetTracker.getLastSeenOffset(topicPartition);
-        final String lockPath = "/secor/locks/" + topicPartition.getTopic() + "/" +
-                                topicPartition.getPartition();
+
+        String stripped = StringUtils.strip(mConfig.getZookeeperPath(), "/");
+        final String lockPath = Joiner.on("/").skipNulls().join(
+            "",
+            stripped.isEmpty() ? null : stripped,
+            "secor",
+            "locks",
+            topicPartition.getTopic(),
+            topicPartition.getPartition());
+
         // Deleting writers closes their streams flushing all pending data to the disk.
         mFileRegistry.deleteWriters(topicPartition);
         mZookeeperConnector.lock(lockPath);

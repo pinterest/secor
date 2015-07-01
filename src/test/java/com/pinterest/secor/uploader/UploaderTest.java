@@ -88,6 +88,7 @@ public class UploaderTest extends TestCase {
         mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getLocalPath()).thenReturn("/some_parent_dir");
         Mockito.when(mConfig.getMaxFileSizeBytes()).thenReturn(10L);
+        Mockito.when(mConfig.getZookeeperPath()).thenReturn("/");
 
         mOffsetTracker = Mockito.mock(OffsetTracker.class);
 
