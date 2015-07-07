@@ -231,6 +231,10 @@ public class SecorConfig {
     	return getString("secor.kafka.perf_topic_prefix");
     }
 
+    public String getZookeeperPath() {
+        return getString("secor.zookeeper.path");
+    }
+
     private void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
             throw new RuntimeException("Failed to find required configuration option '" +
