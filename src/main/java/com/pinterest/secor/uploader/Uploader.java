@@ -102,8 +102,6 @@ public class Uploader {
             topicPartition.getTopic(),
             topicPartition.getPartition());
 
-        // Deleting writers closes their streams flushing all pending data to the disk.
-        mFileRegistry.deleteWriters(topicPartition);
         mZookeeperConnector.lock(lockPath);
         try {
             // Check if the committed offset has changed.
@@ -111,6 +109,8 @@ public class Uploader {
                     topicPartition);
             if (zookeeperComittedOffsetCount == committedOffsetCount) {
                 LOG.info("uploading topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
+                // Deleting writers closes their streams flushing all pending data to the disk.
+                mFileRegistry.deleteWriters(topicPartition);
                 Collection<LogFilePath> paths = mFileRegistry.getPaths(topicPartition);
                 List<Future<?>> uploadFutures = new ArrayList<Future<?>>();
                 for (LogFilePath path : paths) {
