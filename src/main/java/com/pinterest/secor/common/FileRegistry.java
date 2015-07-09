@@ -102,7 +102,7 @@ public class FileRegistry {
             writer = ReflectionUtil.createFileWriter(mConfig.getFileReaderWriterFactory(), path, codec);
             mWriters.put(path, writer);
             mCreationTimes.put(path, System.currentTimeMillis() / 1000L);
-            LOG.debug("created writer for path " + path.getLogFilePath());
+            LOG.debug("created writer for path {}", path.getLogFilePath());
         }
         return writer;
     }
@@ -152,9 +152,9 @@ public class FileRegistry {
     public void deleteWriter(LogFilePath path) throws IOException {
         FileWriter writer = mWriters.get(path);
         if (writer == null) {
-            LOG.warn("No writer found for path " + path.getLogFilePath());
+            LOG.warn("No writer found for path {}", path.getLogFilePath());
         } else {
-            LOG.info("Deleting writer for path " + path.getLogFilePath());
+            LOG.info("Deleting writer for path {}", path.getLogFilePath());
             writer.close();
             mWriters.remove(path);
             mCreationTimes.remove(path);
@@ -168,8 +168,7 @@ public class FileRegistry {
     public void deleteWriters(TopicPartition topicPartition) throws IOException {
         HashSet<LogFilePath> paths = mFiles.get(topicPartition);
         if (paths == null) {
-            LOG.warn("No paths found for topic " + topicPartition.getTopic() + " partition " +
-                     topicPartition.getPartition());
+            LOG.warn("No paths found for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
         } else {
             for (LogFilePath path : paths) {
                 deleteWriter(path);
@@ -212,7 +211,7 @@ public class FileRegistry {
         for (LogFilePath path : paths) {
             Long creationTime = mCreationTimes.get(path);
             if (creationTime == null) {
-                LOG.warn("no creation time found for path " + path);
+                LOG.warn("no creation time found for path {}", path);
                 creationTime = now;
             }
             long age = now - creationTime;

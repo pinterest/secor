@@ -48,13 +48,11 @@ public class LogFileDeleter {
         for (String consumerDir : consumerDirs) {
             long modificationTime = FileUtil.getModificationTimeMsRecursive(consumerDir);
             String modificationTimeStr = format.format(modificationTime);
-            LOG.info("Consumer log dir " + consumerDir + " last modified at " +
-                    modificationTimeStr);
+            LOG.info("Consumer log dir {} last modified at {}", consumerDir , modificationTimeStr);
             final long localLogDeleteAgeMs =
                     mConfig.getLocalLogDeleteAgeHours() * 60L * 60L * 1000L;
             if (System.currentTimeMillis() - modificationTime > localLogDeleteAgeMs) {
-                LOG.info("Deleting directory " + consumerDir + " last modified at " +
-                        modificationTimeStr);
+                LOG.info("Deleting directory {} last modified at {}", consumerDir, modificationTimeStr);
                 FileUtil.delete(consumerDir);
             }
         }
