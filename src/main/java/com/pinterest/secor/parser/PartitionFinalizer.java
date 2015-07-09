@@ -67,8 +67,7 @@ public class PartitionFinalizer {
         Message message = mKafkaClient.getLastMessage(topicPartition);
         if (message == null) {
             // This will happen if no messages have been posted to the given topic partition.
-            LOG.error("No message found for topic " + topicPartition.getTopic() + " partition " +
-                topicPartition.getPartition());
+            LOG.error("No message found for topic {} partition {}" + topicPartition.getTopic(), topicPartition.getPartition());
             return -1;
         }
         return mMessageParser.extractTimestampMillis(message);
@@ -93,8 +92,7 @@ public class PartitionFinalizer {
     private long getCommittedTimestampMillis(TopicPartition topicPartition) throws Exception {
         Message message = mKafkaClient.getCommittedMessage(topicPartition);
         if (message == null) {
-            LOG.error("No message found for topic " + topicPartition.getTopic() + " partition " +
-                    topicPartition.getPartition());
+            LOG.error("No message found for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
             return -1;
         }
         return mMessageParser.extractTimestampMillis(message);
@@ -164,11 +162,10 @@ public class PartitionFinalizer {
             try {
                 mQuboleClient.addPartition(mConfig.getHivePrefix() + topic, "dt='" + partitionStr + "'");
             } catch (Exception e) {
-                LOG.error("failed to finalize topic " + topic + " partition dt=" + partitionStr,
-                        e);
+                LOG.error("failed to finalize topic {} partition dt={}", topic , partitionStr, e);
                 continue;
             }
-            LOG.info("touching file " + successFilePath);
+            LOG.info("touching file {}", successFilePath);
             FileUtil.touch(successFilePath);
         }
     }
@@ -199,8 +196,7 @@ public class PartitionFinalizer {
         for (int partition = 0; partition < numPartitions; ++partition) {
             TopicPartition topicPartition = new TopicPartition(topic, partition);
             long timestamp = getFinalizedTimestampMillis(topicPartition);
-            LOG.info("finalized timestamp for topic " + topic + " partition " + partition +
-                    " is " + timestamp);
+            LOG.info("finalized timestamp for topic {} partition {} is {}", topic, partition, timestamp);
             if (timestamp == -1) {
                 return -1;
             } else {
@@ -219,12 +215,11 @@ public class PartitionFinalizer {
         List<String> topics = mZookeeperConnector.getCommittedOffsetTopics();
         for (String topic : topics) {
             if (!topic.matches(mConfig.getKafkaTopicFilter())) {
-                LOG.info("skipping topic " + topic);
+                LOG.info("skipping topic {}", topic);
             } else {
-                LOG.info("finalizing topic " + topic);
+                LOG.info("finalizing topic {}", topic);
                 long finalizedTimestampMillis = getFinalizedTimestampMillis(topic);
-                LOG.info("finalized timestamp for topic " + topic + " is " +
-                        finalizedTimestampMillis);
+                LOG.info("finalized timestamp for topic {} is {}", topic , finalizedTimestampMillis);
                 if (finalizedTimestampMillis != -1) {
                     Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                     calendar.setTimeInMillis(finalizedTimestampMillis);

@@ -142,7 +142,7 @@ public class Consumer extends Thread {
                 if (mUnparsableMessages > MAX_UNPARSABLE_MESSAGES) {
                     throw new RuntimeException("Failed to parse message " + rawMessage, e);
                 }
-                LOG.warn("Failed to parse message " + rawMessage, e);
+                LOG.warn("Failed to parse message {}", rawMessage, e);
             }
 
             if (parsedMessage != null) {

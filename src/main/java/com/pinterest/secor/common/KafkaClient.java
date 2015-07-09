@@ -59,8 +59,7 @@ public class KafkaClient {
     private HostAndPort findLeader(TopicPartition topicPartition) {
         SimpleConsumer consumer = null;
         try {
-            LOG.info("looking up leader for topic " + topicPartition.getTopic() + " partition " +
-                topicPartition.getPartition());
+            LOG.info("looking up leader for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
             consumer = new SimpleConsumer(mConfig.getKafkaSeedBrokerHost(),
                     mConfig.getKafkaSeedBrokerPort(),
                     100000, 64 * 1024, "leaderLookup");
@@ -113,8 +112,8 @@ public class KafkaClient {
 
     private Message getMessage(TopicPartition topicPartition, long offset,
                                SimpleConsumer consumer) {
-        LOG.info("fetching message topic " + topicPartition.getTopic() + " partition " +
-                topicPartition.getPartition() + " offset " + offset);
+        LOG.info("fetching message topic {} partition {} offset ",
+                topicPartition.getTopic(), topicPartition.getPartition(), offset);
         final int MAX_MESSAGE_SIZE_BYTES = mConfig.getMaxMessageSizeBytes();
         final String clientName = getClientName(topicPartition);
         kafka.api.FetchRequest request = new FetchRequestBuilder().clientId(clientName)
@@ -138,8 +137,7 @@ public class KafkaClient {
 
    public SimpleConsumer createConsumer(TopicPartition topicPartition) {
         HostAndPort leader = findLeader(topicPartition);
-        LOG.info("leader for topic " + topicPartition.getTopic() + " partition " +
-                 topicPartition.getPartition() + " is " + leader.toString());
+        LOG.info("leader for topic {} partition {} is {}", topicPartition.getTopic(), topicPartition.getPartition(), leader.toString());
         final String clientName = getClientName(topicPartition);
         return new SimpleConsumer(leader.getHostText(), leader.getPort(), 100000, 64 * 1024,
                                   clientName);

@@ -76,7 +76,7 @@ public class Uploader {
                                              localPath.getExtension());
         final String localLogFilename = localPath.getLogFilePath();
         final String s3LogFilename = s3Path.getLogFilePath();
-        LOG.info("uploading file " + localLogFilename + " to " + s3LogFilename);
+        LOG.info("uploading file {} to {}", localLogFilename, s3LogFilename);
         return executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -110,8 +110,7 @@ public class Uploader {
             long zookeeperComittedOffsetCount = mZookeeperConnector.getCommittedOffsetCount(
                     topicPartition);
             if (zookeeperComittedOffsetCount == committedOffsetCount) {
-                LOG.info("uploading topic " + topicPartition.getTopic() + " partition " +
-                         topicPartition.getPartition());
+                LOG.info("uploading topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
                 Collection<LogFilePath> paths = mFileRegistry.getPaths(topicPartition);
                 List<Future<?>> uploadFutures = new ArrayList<Future<?>>();
                 for (LogFilePath path : paths) {
@@ -183,10 +182,10 @@ public class Uploader {
         }
         mFileRegistry.deletePath(srcPath);
         if (dstPath == null) {
-            LOG.info("removed file " + srcPath.getLogFilePath());
+            LOG.info("removed file {}", srcPath.getLogFilePath());
         } else {
-            LOG.info("trimmed " + copiedMessages + " messages from " + srcPath.getLogFilePath() + " to " +
-                    dstPath.getLogFilePath() + " with start offset " + startOffset);
+            LOG.info("trimmed {} messages from {} to {} with start offset {}",
+                    copiedMessages, srcPath.getLogFilePath(), dstPath.getLogFilePath(), startOffset);
         }
     }
 
@@ -209,19 +208,15 @@ public class Uploader {
             if (oldOffsetCount == newOffsetCount) {
                 uploadFiles(topicPartition);
             } else if (newOffsetCount > lastSeenOffset) {  // && oldOffset < newOffset
-                LOG.debug("last seen offset " + lastSeenOffset +
-                          " is lower than committed offset count " + newOffsetCount +
-                          ".  Deleting files in topic " + topicPartition.getTopic() +
-                          " partition " + topicPartition.getPartition());
+                LOG.debug("last seen offset {} is lower than committed offset count {}. Deleting files in topic {} partition {}",
+                        lastSeenOffset, newOffsetCount,topicPartition.getTopic(), topicPartition.getPartition());
                 // There was a rebalancing event and someone committed an offset beyond that of the
                 // current message.  We need to delete the local file.
                 mFileRegistry.deleteTopicPartition(topicPartition);
             } else {  // oldOffsetCount < newOffsetCount <= lastSeenOffset
-                LOG.debug("previous committed offset count " + oldOffsetCount +
-                          " is lower than committed offset " + newOffsetCount +
-                          " is lower than or equal to last seen offset " + lastSeenOffset +
-                          ".  Trimming files in topic " + topicPartition.getTopic() +
-                          " partition " + topicPartition.getPartition());
+                LOG.debug("previous committed offset count {} is lower than committed offset {} is lower than or equal to last seen offset {}. " +
+                                "Trimming files in topic {} partition {}",
+                        oldOffsetCount, newOffsetCount, lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
                 // There was a rebalancing event and someone committed an offset lower than that
                 // of the current message.  We need to trim local files.
                 trimFiles(topicPartition, newOffsetCount);

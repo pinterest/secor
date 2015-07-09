@@ -62,9 +62,9 @@ public class DateMessageParser extends MessageParser {
                     result[0] = "dt=" + outputFormatter.format(dateFormat);
                     return result;
                 } catch (Exception e) {
-                    LOG.warn("Impossible to convert date = " + fieldValue.toString()
-                            + " for the input pattern = " + inputPattern.toString()
-                            + ". Using date default=" + result[0]);
+
+                    LOG.warn("Impossible to convert date = {} for the input pattern = {} . Using date default = {}",
+                            fieldValue.toString(), inputPattern.toString(), result[0]);
                 }
             }
         }

@@ -153,8 +153,8 @@ public class MessageReader {
         LOG.debug("read message {}", message);
         exportStats();
         if (message.getOffset() < committedOffsetCount) {
-            LOG.debug("skipping message message " + message + " because its offset precedes " +
-                      "committed offset count " + committedOffsetCount);
+            LOG.debug("skipping message {} because its offset precedes committed offset count {}",
+                    message, committedOffsetCount);
             return null;
         }
         return message;

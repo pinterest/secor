@@ -116,7 +116,7 @@ public class ZookeeperConnector {
             byte[] data = zookeeper.getData(offsetPath, false, null);
             return Long.parseLong(new String(data));
         } catch (KeeperException.NoNodeException exception) {
-            LOG.warn("path " + offsetPath + " does not exist in zookeeper");
+            LOG.warn("path {} does not exist in zookeeper", offsetPath);
             return -1;
         }
     }
@@ -156,7 +156,7 @@ public class ZookeeperConnector {
             prefix += "/" + elements[i];
             try {
                 zookeeper.create(prefix, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-                LOG.info("created path " + prefix);
+                LOG.info("created path {}", prefix);
             } catch (KeeperException.NodeExistsException exception) {
             }
         }
@@ -166,11 +166,11 @@ public class ZookeeperConnector {
             throws Exception {
         ZooKeeper zookeeper = mZookeeperClient.get();
         String offsetPath = getCommittedOffsetPartitionPath(topicPartition);
-        LOG.info("creating missing parents for zookeeper path " + offsetPath);
+        LOG.info("creating missing parents for zookeeper path {}", offsetPath);
         createMissingParents(offsetPath);
         byte[] data = Long.toString(count).getBytes();
         try {
-            LOG.info("setting zookeeper path " + offsetPath + " value " + count);
+            LOG.info("setting zookeeper path {} value {}", offsetPath, count);
             // -1 matches any version
             zookeeper.setData(offsetPath, data, -1);
         } catch (KeeperException.NoNodeException exception) {
@@ -184,7 +184,7 @@ public class ZookeeperConnector {
         for (Integer partition : partitions) {
             TopicPartition topicPartition = new TopicPartition(topic, partition);
             String offsetPath = getCommittedOffsetPartitionPath(topicPartition);
-            LOG.info("deleting path " + offsetPath);
+            LOG.info("deleting path {}", offsetPath);
             zookeeper.delete(offsetPath, -1);
         }
     }
@@ -193,7 +193,7 @@ public class ZookeeperConnector {
             throws Exception {
         String offsetPath = getCommittedOffsetPartitionPath(topicPartition);
         ZooKeeper zookeeper = mZookeeperClient.get();
-        LOG.info("deleting path " + offsetPath);
+        LOG.info("deleting path {}", offsetPath);
         zookeeper.delete(offsetPath, -1);
     }
 
