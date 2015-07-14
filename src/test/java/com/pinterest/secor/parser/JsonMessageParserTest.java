@@ -98,4 +98,24 @@ public class JsonMessageParserTest extends TestCase {
         assertEquals(1, resultMillis.length);
         assertEquals(expectedPartition, resultMillis[0]);
     }
+
+    @Test
+    public void testExtractHourlyPartitions() throws Exception {
+        Mockito.when(mConfig.getMessageTimestampUsingHour()).thenReturn(true);
+        JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
+
+        String expectedDtPartition = "dt=2014-07-21";
+        String expectedHrPartition = "hr=19";
+
+        String resultSeconds[] = jsonMessageParser.extractPartitions(mMessageWithSecondsTimestamp);
+        assertEquals(2, resultSeconds.length);
+        assertEquals(expectedDtPartition, resultSeconds[0]);
+        assertEquals(expectedHrPartition, resultSeconds[1]);
+
+        String resultMillis[] = jsonMessageParser.extractPartitions(mMessageWithMillisTimestamp);
+        assertEquals(2, resultMillis.length);
+        assertEquals(expectedDtPartition, resultMillis[0]);
+        assertEquals(expectedHrPartition, resultMillis[1]);
+    }
+
 }

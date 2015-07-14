@@ -63,6 +63,19 @@ public class TestLogMessageProducerMain {
                 .withArgName("<type>")
                 .withType(String.class)
                 .create("type"));
+        options.addOption(OptionBuilder.withLongOpt("broker")
+                .withDescription("broker string, e.g. localhost:9092")
+                .hasArg()
+                .withArgName("<broker>")
+                .withType(String.class)
+                .create("broker"));
+        options.addOption(OptionBuilder.withLongOpt("timeshift")
+            .withDescription("message timestamp adjustment in seconds, it will be deducted" +
+                " from current time")
+            .hasArg()
+            .withArgName("<timeshift>")
+            .withType(Number.class)
+            .create("timeshift"));
 
         CommandLineParser parser = new GnuParser();
         return parser.parse(options, args);
@@ -74,9 +87,13 @@ public class TestLogMessageProducerMain {
             String topic = commandLine.getOptionValue("topic");
             int messages = ((Number) commandLine.getParsedOptionValue("messages")).intValue();
             int producers = ((Number) commandLine.getParsedOptionValue("producers")).intValue();
+            String broker = commandLine.getOptionValue("broker");
             String type = commandLine.getOptionValue("type");
+            Number timeshiftNumber = ((Number)commandLine.getParsedOptionValue("timeshift"));
+            int timeshift = timeshiftNumber == null ? 0 : timeshiftNumber.intValue();
             for (int i = 0; i < producers; ++i) {
-                TestLogMessageProducer producer = new TestLogMessageProducer(topic, messages, type);
+                TestLogMessageProducer producer = new TestLogMessageProducer(
+                     topic, messages, type, broker, timeshift);
                 producer.start();
             }
         } catch (Throwable t) {

@@ -47,6 +47,7 @@ public class PartitionFinalizer {
     private KafkaClient mKafkaClient;
     private QuboleClient mQuboleClient;
     private String mFileExtension;
+    private final boolean usingHourly;
 
     public PartitionFinalizer(SecorConfig config) throws Exception {
         mConfig = config;
@@ -61,6 +62,7 @@ public class PartitionFinalizer {
         } else {
             mFileExtension = "";
         }
+        usingHourly = config.getMessageTimestampUsingHour();
     }
 
     private long getLastTimestampMillis(TopicPartition topicPartition) throws Exception {
@@ -120,21 +122,35 @@ public class PartitionFinalizer {
 
     private NavigableSet<Calendar> getPartitions(String topic) throws IOException, ParseException {
         final String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
-        String[] partitions = {"dt="};
+        String[] partitions = usingHourly ? new String[]{"dt=", "hr="} : new String[]{"dt="};
         LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, partitions,
             mConfig.getGeneration(), 0, 0, mFileExtension);
         String parentDir = logFilePath.getLogFileParentDir();
         String[] partitionDirs = FileUtil.list(parentDir);
-        Pattern pattern = Pattern.compile(".*/dt=(\\d\\d\\d\\d-\\d\\d-\\d\\d)$");
+        if (usingHourly) {
+            List<String> dirs = new ArrayList<String>();
+            for (String partionDir : partitionDirs) {
+                dirs.addAll(Arrays.asList(FileUtil.list(partionDir)));
+            }
+            partitionDirs = dirs.toArray(new String[dirs.size()]);
+        }
+        String patternStr = ".*/dt=(\\d\\d\\d\\d-\\d\\d-\\d\\d)";
+        if (usingHourly) {
+            patternStr += "/hr=(\\d\\d)";
+        }
+        patternStr += "$";
+        LOG.info("patternStr: " + patternStr);
+        Pattern pattern = Pattern.compile(patternStr);
         TreeSet<Calendar> result = new TreeSet<Calendar>();
         for (String partitionDir : partitionDirs) {
             Matcher matcher = pattern.matcher(partitionDir);
             if (matcher.find()) {
                 String date = matcher.group(1);
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                String hour = usingHourly ? matcher.group(2) : "00";
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH");
                 format.setTimeZone(TimeZone.getTimeZone("UTC"));
                 Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                calendar.setTime(format.parse(date));
+                calendar.setTime(format.parse(date + "-" + hour));
                 result.add(calendar);
             }
         }
@@ -146,26 +162,73 @@ public class PartitionFinalizer {
         NavigableSet<Calendar> partitionDates =
             getPartitions(topic).headSet(calendar, true).descendingSet();
         final String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        SimpleDateFormat dtFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat hrFormat = new SimpleDateFormat("HH");
+        dtFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        hrFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        NavigableSet<Calendar> finishedDates = new TreeSet<Calendar>();
         for (Calendar partition : partitionDates) {
-            String partitionStr = format.format(partition.getTime());
-            String[] partitions = {"dt=" + partitionStr};
+            String dtPartitionStr = dtFormat.format(partition.getTime());
+            String hrPartitionStr = hrFormat.format(partition.getTime());
+            String[] partitions = usingHourly
+                                  ? new String[]{"dt=" + dtPartitionStr, "hr=" + hrPartitionStr}
+                                  : new String[]{"dt=" + dtPartitionStr};
             LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, partitions,
                 mConfig.getGeneration(), 0, 0, mFileExtension);
             String logFileDir = logFilePath.getLogFileDir();
             assert FileUtil.exists(logFileDir) : "FileUtil.exists(" + logFileDir + ")";
             String successFilePath = logFileDir + "/_SUCCESS";
             if (FileUtil.exists(successFilePath)) {
-                return;
+                LOG.info("File exist already, short circuit return. " + successFilePath);
+                 break;
             }
             try {
-                mQuboleClient.addPartition(mConfig.getHivePrefix() + topic, "dt='" + partitionStr + "'");
+                String parStr = "dt='" + dtPartitionStr + "'";
+                if (usingHourly) {
+                    parStr += ", hr='" + hrPartitionStr + "'";
+                }
+                String hivePrefix = null;
+                try {
+                    hivePrefix = mConfig.getHivePrefix();
+                } catch (RuntimeException ex) {
+                    LOG.warn("HivePrefix is not defined.  Skip hive registration");
+                }
+                if (hivePrefix != null) {
+                    mQuboleClient.addPartition(hivePrefix + topic, parStr);
+                }
             } catch (Exception e) {
-                LOG.error("failed to finalize topic {} partition dt={}", topic , partitionStr, e);
+                LOG.error("failed to finalize topic " + topic
+                        + " partition dt=" + dtPartitionStr + " hr=" + hrPartitionStr,
+                        e);
                 continue;
             }
             LOG.info("touching file {}", successFilePath);
+            FileUtil.touch(successFilePath);
+
+
+            // We need to mark the successFile for the dt folder as well
+            if (usingHourly) {
+                Calendar yesterday = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                yesterday.setTimeInMillis(partition.getTimeInMillis());
+                yesterday.add(Calendar.DAY_OF_MONTH, -1);
+                finishedDates.add(yesterday);
+            }
+        }
+
+        // Reverse order to enable short circuit return
+        finishedDates = finishedDates.descendingSet();
+        for (Calendar partition : finishedDates) {
+            String dtPartitionStr = dtFormat.format(partition.getTime());
+            String[] partitions = new String[]{"dt=" + dtPartitionStr};
+            LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, partitions,
+                mConfig.getGeneration(), 0, 0, mFileExtension);
+            String logFileDir = logFilePath.getLogFileDir();
+            String successFilePath = logFileDir + "/_SUCCESS";
+            if (FileUtil.exists(successFilePath)) {
+                LOG.info("File exist already, short circuit return. " + successFilePath);
+                break;
+            }
+            LOG.info("touching file " + successFilePath);
             FileUtil.touch(successFilePath);
         }
     }
@@ -223,9 +286,11 @@ public class PartitionFinalizer {
                 if (finalizedTimestampMillis != -1) {
                     Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                     calendar.setTimeInMillis(finalizedTimestampMillis);
-                    // Introduce a lag of one day and one hour.
+                    if (!usingHourly) {
+                        calendar.add(Calendar.DAY_OF_MONTH, -1);
+                    }
+                    // Introduce a lag of one hour.
                     calendar.add(Calendar.HOUR, -1);
-                    calendar.add(Calendar.DAY_OF_MONTH, -1);
                     finalizePartitionsUpTo(topic, calendar);
                 }
             }

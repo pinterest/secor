@@ -211,6 +211,10 @@ public class SecorConfig {
         return getString("message.timestamp.input.pattern");
     }
 
+    public boolean getMessageTimestampUsingHour() {
+      return getBoolean("message.timestamp.using.hour", false);
+    }
+
     public String getHivePrefix() { 
         return getString("secor.hive.prefix"); 
     }
@@ -250,6 +254,14 @@ public class SecorConfig {
     private int getInt(String name) {
         checkProperty(name);
         return mProperties.getInt(name);
+    }
+
+    private boolean getBoolean(String name, boolean required) {
+      if (required) {
+        checkProperty(name);
+        return mProperties.getBoolean(name);
+      }
+      return mProperties.getBoolean(name, false);
     }
 
     private long getLong(String name) {

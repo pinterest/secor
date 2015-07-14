@@ -25,12 +25,17 @@ import java.util.TimeZone;
 
 public abstract class TimestampedMessageParser extends MessageParser {
 
-    private SimpleDateFormat mFormatter;
+    private final SimpleDateFormat dtFormatter;
+    private final SimpleDateFormat hrFormatter;
+    private final boolean usingHourly;
 
     public TimestampedMessageParser(SecorConfig config) {
         super(config);
-        mFormatter = new SimpleDateFormat("yyyy-MM-dd");
-        mFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        dtFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        dtFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        hrFormatter = new SimpleDateFormat("HH");
+        hrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        usingHourly = config.getMessageTimestampUsingHour();
     }
 
     public abstract long extractTimestampMillis(final Message message) throws Exception;
@@ -54,7 +59,12 @@ public abstract class TimestampedMessageParser extends MessageParser {
         // Date constructor takes milliseconds since epoch.
         long timestampMillis = extractTimestampMillis(message);
         Date date = new Date(timestampMillis);
-        String result[] = {"dt=" + mFormatter.format(date)};
-        return result;
+        String dt = "dt=" + dtFormatter.format(date);
+        String hr = "hr=" + hrFormatter.format(date);
+        if (usingHourly) {
+          return new String[]{dt, hr};
+        } else {
+          return new String[]{dt};
+        }
     }
 }
