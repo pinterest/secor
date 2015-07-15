@@ -91,7 +91,7 @@ public class ZookeeperConnector {
             String stripped = StringUtils.strip(mConfig.getKafkaZookeeperPath(), "/");
             mCommittedOffsetGroupPath = Joiner.on("/").skipNulls().join(
                     "",
-                    stripped.equals("") ? null : stripped,
+                    stripped.isEmpty() ? null : stripped,
                     "consumers",
                     mConfig.getKafkaGroup(),
                     "offsets"

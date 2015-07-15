@@ -114,6 +114,10 @@ public class LogFilePath {
         mOffset = Long.parseLong(basenameElements[2]);
     }
 
+    public LogFilePath withPrefix(String prefix) {
+        return new LogFilePath(prefix, mTopic, mPartitions, mGeneration, mKafkaPartition, mOffset, mExtension);
+    }
+
     public String getLogFileParentDir() {
         ArrayList<String> elements = new ArrayList<String>();
         elements.add(mPrefix);

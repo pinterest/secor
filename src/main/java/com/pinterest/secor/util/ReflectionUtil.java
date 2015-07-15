@@ -23,6 +23,7 @@ import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.parser.MessageParser;
+import com.pinterest.secor.uploader.UploadManager;
 import org.apache.hadoop.io.compress.CompressionCodec;
 
 /**
@@ -33,6 +34,30 @@ import org.apache.hadoop.io.compress.CompressionCodec;
  * @author Silas Davis (github-code@silasdavis.net)
  */
 public class ReflectionUtil {
+    /**
+     * Create an UploadManager from it's fully qualified class name.
+     *
+     * The class passed in by name must be assignable to UploadManager
+     * and have 1-parameter constructor accepting a SecorConfig.
+     *
+     * See the secor.upload.manager.class config option.
+     *
+     * @param className The class name of a subclass of UploadManager
+     * @param config The SecorCondig to initialize the UploadManager with
+     * @return an UploadManager instance with the runtime type of the class passed by name
+     * @throws Exception
+     */
+    public static UploadManager createUploadManager(String className,
+                                                    SecorConfig config) throws Exception {
+        Class<?> clazz = Class.forName(className);
+        if (!UploadManager.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
+                    className, UploadManager.class.getName()));
+        }
+
+        // Assume that subclass of UploadManager has a constructor with the same signature as UploadManager
+        return (UploadManager) clazz.getConstructor(SecorConfig.class).newInstance(config);
+    }
 
     /**
      * Create a MessageParser from it's fully qualified class name.

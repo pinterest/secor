@@ -167,6 +167,10 @@ public class SecorConfig {
         return getString("secor.message.parser.class");
     }
 
+    public String getUploadManagerClass() {
+        return getString("secor.upload.manager.class");
+    }
+
     public int getTopicPartitionForgetSeconds() {
         return getInt("secor.topic_partition.forget.seconds");
     }
@@ -185,6 +189,14 @@ public class SecorConfig {
 
     public String getAwsSecretKey() {
         return getString("aws.secret.key");
+    }
+
+    public String getAwsEndpoint() {
+        return getString("aws.endpoint");
+    }
+
+    public String getAwsRegion() {
+        return getString("aws.region");
     }
 
     public String getQuboleApiToken() {
