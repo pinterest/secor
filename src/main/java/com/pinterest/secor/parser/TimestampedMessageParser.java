@@ -19,23 +19,36 @@ package com.pinterest.secor.parser;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-public abstract class TimestampedMessageParser extends MessageParser {
+public abstract class TimestampedMessageParser extends MessageParser implements Partitioner {
 
-    private final SimpleDateFormat dtFormatter;
-    private final SimpleDateFormat hrFormatter;
-    private final boolean usingHourly;
+    private static final Logger LOG = LoggerFactory.getLogger(TimestampedMessageParser.class);
+
+    private static final SimpleDateFormat mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat mHrFormatter = new SimpleDateFormat("HH");
+    private static final SimpleDateFormat mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
+
+    static {
+        mDtFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        mHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        mDtHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
+
+    private final boolean mUsingHourly;
+    private final long mLagInSeconds;
 
     public TimestampedMessageParser(SecorConfig config) {
         super(config);
-        dtFormatter = new SimpleDateFormat("yyyy-MM-dd");
-        dtFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        hrFormatter = new SimpleDateFormat("HH");
-        hrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        usingHourly = config.getMessageTimestampUsingHour();
+        mUsingHourly = config.getMessageTimestampUsingHour();
+        mLagInSeconds = config.getFinalizerLagSecond();
+        LOG.info("UsingHourly: {}, lagInSeconds: {} ", mUsingHourly, mLagInSeconds);
     }
 
     public abstract long extractTimestampMillis(final Message message) throws Exception;
@@ -54,17 +67,87 @@ public abstract class TimestampedMessageParser extends MessageParser {
         return timestampMillis;
     }
 
+    protected String[] generatePartitions(long timestampMillis, boolean usingHourly)
+        throws Exception {
+        Date date = new Date(timestampMillis);
+        String dt = "dt=" + mDtFormatter.format(date);
+        String hr = "hr=" + mHrFormatter.format(date);
+        if (usingHourly) {
+            return new String[]{dt, hr};
+        } else {
+            return new String[]{dt};
+        }
+    }
+
+    protected long parsePartitions(String[] partitions) throws Exception {
+        String dtValue = partitions[0].split("=")[1];
+        String hrValue = partitions.length > 1 ? partitions[1].split("=")[1] : "00";
+        String value = dtValue + "-" + hrValue;
+        Date date = mDtHrFormatter.parse(value);
+        return date.getTime();
+    }
+
     @Override
     public String[] extractPartitions(Message message) throws Exception {
         // Date constructor takes milliseconds since epoch.
         long timestampMillis = extractTimestampMillis(message);
-        Date date = new Date(timestampMillis);
-        String dt = "dt=" + dtFormatter.format(date);
-        String hr = "hr=" + hrFormatter.format(date);
-        if (usingHourly) {
-          return new String[]{dt, hr};
-        } else {
-          return new String[]{dt};
-        }
+        return generatePartitions(timestampMillis, mUsingHourly);
     }
+
+    private long getFinalizedTimestampMillis(Message lastMessage,
+                                             Message committedMessage) throws Exception {
+        long lastTimestamp = extractTimestampMillis(lastMessage);
+        long committedTimestamp = extractTimestampMillis(committedMessage);
+        long now = System.currentTimeMillis();
+        if (lastTimestamp == committedTimestamp && (now - lastTimestamp) > 3600 * 1000) {
+            LOG.info("No new message coming, use the current time: " + now);
+            return now;
+        }
+        return committedTimestamp;
+    }
+
+    @Override
+    public String[] getFinalizedUptoPartitions(List<Message> lastMessages,
+                                               List<Message> committedMessages) throws Exception {
+        if (lastMessages == null || committedMessages == null) {
+            LOG.error("Either: {} and {} is null", lastMessages,
+                committedMessages);
+            return null;
+        }
+        assert lastMessages.size() == committedMessages.size();
+
+        long minMillis = Long.MAX_VALUE;
+        for (int i = 0; i < lastMessages.size(); i++) {
+            long millis = getFinalizedTimestampMillis(lastMessages.get(i),
+                committedMessages.get(i));
+            if (millis < minMillis) {
+                minMillis = millis;
+            }
+        }
+        if (minMillis == Long.MAX_VALUE) {
+            LOG.error("No valid timestamps among messages: {} and {}", lastMessages,
+                committedMessages);
+            return null;
+        }
+
+        // add the safety lag for late-arrival messages
+        long lag = mLagInSeconds * 1000L;
+        LOG.info("Originally: {}, adjust down {}", minMillis, lag);
+        return generatePartitions(minMillis - lag, mUsingHourly);
+    }
+
+    @Override
+    public String[] getPreviousPartitions(String[] partitions) throws Exception {
+        long millis = parsePartitions(partitions);
+        long delta;
+        if (partitions.length == 1) {
+            delta = 3600L * 24 * 1000L;
+        } else if (partitions.length == 2) {
+            delta = 3600L * 1000L;
+        } else {
+            throw new RuntimeException("Unsupported partitions: " + partitions.length);
+        }
+        return generatePartitions(millis - delta, partitions.length == 2);
+    }
+
 }

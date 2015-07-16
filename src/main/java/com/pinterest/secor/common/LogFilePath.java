@@ -42,13 +42,13 @@ import java.util.Arrays;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class LogFilePath {
-    private String mPrefix;
-    private String mTopic;
-    private String[] mPartitions;
-    private int mGeneration;
-    private int mKafkaPartition;
-    private long mOffset;
-    private String mExtension;
+    private final String mPrefix;
+    private final String mTopic;
+    private final String[] mPartitions;
+    private final int mGeneration;
+    private final int mKafkaPartition;
+    private final long mOffset;
+    private final String mExtension;
 
     public LogFilePath(String prefix, int generation, long lastCommittedOffset,
                        ParsedMessage message, String extension) {

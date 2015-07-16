@@ -215,6 +215,14 @@ public class SecorConfig {
       return getBoolean("message.timestamp.using.hour", false);
     }
 
+    public int getFinalizerLagSecond() {
+        return getInt("finalizer.lag.second", 3600);
+    }
+
+    public int getFinalizerLookbackPeriods() {
+        return getInt("finalizer.lookback.periods", 10);
+    }
+
     public String getHivePrefix() { 
         return getString("secor.hive.prefix"); 
     }
@@ -256,12 +264,12 @@ public class SecorConfig {
         return mProperties.getInt(name);
     }
 
-    private boolean getBoolean(String name, boolean required) {
-      if (required) {
-        checkProperty(name);
-        return mProperties.getBoolean(name);
-      }
-      return mProperties.getBoolean(name, false);
+    private int getInt(String name, int defaultValue) {
+        return mProperties.getInt(name, defaultValue);
+    }
+
+    private boolean getBoolean(String name, boolean defaultValue) {
+        return mProperties.getBoolean(name, defaultValue);
     }
 
     private long getLong(String name) {

@@ -46,15 +46,11 @@ HADOOP_NATIVE_LIB_PATH=lib
 ADDITIONAL_OPTS=
 
 # various reader writer options to be used for testing
+# note associate array needs bash v4 support
 #
-# However older bash (ver <= 3) does not support associative array, falls back
-# to use two arrays
-# declare -A READER_WRITERS
-#
-declare -a READER_WRITER_KEYS
-READER_WRITER_KEYS=(json binary)
-declare -a READER_WRITERS
-READER_WRITERS=(com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFactory com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory)
+declare -A READER_WRITERS
+READER_WRITERS[json]=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFactory
+READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory
 
 # The minimum wait time is one minute plus delta.  Secor is configured to upload files older than
 # one minute and we need to make sure that everything ends up on s3 before starting verification.
@@ -80,9 +76,11 @@ check_for_native_libs() {
 recreate_dirs() {
     run_command "rm -r -f ${PARENT_DIR}"
     if [ -n "${SECOR_LOCAL_S3}" ]; then
-        run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls ${S3_LOGS_DIR} | awk '{ print \$4 }' | xargs -L 1 s3cmd -c ${CONF_DIR}/test.s3cfg del"
+        run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR} | awk '{ print \$4 }' | xargs -L 1 s3cmd -c ${CONF_DIR}/test.s3cfg del"
+        run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR}"
     else
         run_command "s3cmd del --recursive ${S3_LOGS_DIR}"
+        run_command "s3cmd ls -r ${S3_LOGS_DIR}"
     fi
     # create logs directory
     if [ ! -d ${LOGS_DIR} ]; then
@@ -94,7 +92,7 @@ start_s3() {
     if [ -n "${SECOR_LOCAL_S3}" ]; then
         if command -v fakes3 > /dev/null 2>&1; then
             run_command "fakes3 --root=/tmp/fakes3 --port=5000 --hostname=localhost > /tmp/fakes3.log 2>&1 &"
-            sleep 2
+            sleep 10
             run_command "s3cmd -c ${CONF_DIR}/test.s3cfg mb s3://${BUCKET}"
         else
             echo "Couldn't find FakeS3 binary, please install it using `gem install fakes3`"
@@ -104,7 +102,7 @@ start_s3() {
 
 stop_s3() {
     if [ -n "${SECOR_LOCAL_S3}" ]; then
-        run_command "pkill -9 'fakes3' > /dev/null 2>&1 || true"
+        run_command "pkill -f 'fakes3' || true"
         run_command "rm -r -f /tmp/fakes3"
     fi
 }
@@ -145,7 +143,7 @@ stop_secor() {
 
 run_finalizer() {
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.test.partition.properties ${ADDITIONAL_OPTS} -cp secor-0.1-SNAPSHOT.jar:lib/* \
+        -Dconfig=secor.test.partition.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
         com.pinterest.secor.main.PartitionFinalizerMain > ${LOGS_DIR}/finalizer.log 2>&1 "
 
     EXIT_CODE=$?
@@ -167,7 +165,7 @@ create_topic() {
 # $2 timeshift in seconds
 post_messages() {
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.test.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* \
+        -Dconfig=secor.test.backup.properties -cp ${CLASSPATH} \
         com.pinterest.secor.main.TestLogMessageProducerMain -t test -m $1 -p 1 -type ${MESSAGE_TYPE} -timeshift $2 > \
         ${LOGS_DIR}/test_log_message_producer.log 2>&1"
 }
@@ -194,15 +192,12 @@ verify() {
         echo -e "\e[1;41;97mVerification FAILED\e[0m"
         echo "See log ${LOGS_DIR}/log_verifier_${RUNMODE}.log for more details"
         tail -n 50 ${LOGS_DIR}/log_verifier_${RUNMODE}.log
-        stop_all
-        stop_s3
         exit ${VERIFICATION_EXIT_CODE}
       fi
 
       # Verify SUCCESS file
       if [ -n "${SECOR_LOCAL_S3}" ]; then
-          run_command "s3cmd ls -c ${CONF_DIR}/test.s3cfg -r ${S3_LOGS_DIR} | gr
-ep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+          run_command "s3cmd ls -c ${CONF_DIR}/test.s3cfg -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
       else
           run_command "s3cmd ls -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
       fi
@@ -275,7 +270,6 @@ post_and_verify_test() {
 
 # Post some messages and run the finalizer, count # of messages and success file
 # $1: hr or dt, decides whether it's hourly or daily folder finalization
-# $2: number of messages 
 post_and_finalizer_verify_test() {
     echo "********************************************************"
     date=$(date -u +'%Y-%m-%d %H:%M:%S')
@@ -291,41 +285,32 @@ post_and_finalizer_verify_test() {
         return
     fi
 
+    HOUR_TIMESHIFT=$((3600+3600))
+    DAY_TIMESHIFT=$((86400+3600))
+
+    OLD_ADDITIONAL_OPTS=${ADDITIONAL_OPTS}
+
     if [ $1 = "hr" ]; then
-        ADDITIONAL_OPTS="-Dsecor.file.reader.writer.factory=${READER_WRITERS[${num}]} -Dmessage.timestamp.using.hour=true"
-        # for hr folder, the finalizer lag is 1 hour
-        TIMESHIFT=$((3600+1200))
-        if [ $2 -ne 0 ]; then
-            # should be 2 success files, one for hr folder, 
-            # one for yesterday's dt folder
-            FILES=2
-        else
-            # should be 0 success files
-            FILES=0
-        fi
+        ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dmessage.timestamp.using.hour=true -Dfinalizer.lookback.periods=30"
+        # should be 2 success files for hr folder, 1 for dt folder
+        FILES=3
     else
-        ADDITIONAL_OPTS="-Dsecor.file.reader.writer.factory=${READER_WRITERS[${num}]}"
-        # for dt folder, the finalizer lag is 1 day + 1 hour
-        TIMESHIFT=$((86400+3600+1200))
-        if [ $2 -ne 0 ]; then
-            # should be 1 success files
-            FILES=1
-        else
-            # should be 0 success files
-            FILES=0
-        fi
+        # should be 1 success files for dt folder
+        FILES=1
     fi
     echo "Expected success file: $FILES"
 
-    echo "running post_and_finalizer_verify_test $1 $2"
+    echo "running post_and_finalizer_verify_test $1"
     initialize
 
     start_secor
     sleep 3
     
-    # post some older messages
-    post_messages $2 ${TIMESHIFT}
-    # post some newer messages
+    # post some messages for yesterday
+    post_messages ${MESSAGES} ${DAY_TIMESHIFT}
+    # post some messages for last hour
+    post_messages ${MESSAGES} ${HOUR_TIMESHIFT}
+    # post some current messages
     post_messages ${MESSAGES} 0
 
     echo "Waiting ${WAIT_TIME} sec for Secor to upload logs to s3"
@@ -334,9 +319,11 @@ post_and_finalizer_verify_test() {
     echo "start finalizer"
     run_finalizer
 
-    verify $((0+$2+${MESSAGES})) ${FILES}
+    verify $((${MESSAGES}*3)) ${FILES}
 
     stop_all
+    ADDITIONAL_OPTS=${OLD_ADDITIONAL_OPTS}
+
     echo -e "\e[1;42;97mpost_and_finalizer_verify_test succeeded\e[0m"
 }
 
@@ -364,18 +351,23 @@ move_offset_back_test() {
     echo "running move_offset_back_test"
     initialize
 
+    OLD_ADDITIONAL_OPTS=${ADDITIONAL_OPTS}
+    ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dsecor.max.file.age.seconds=30"
+
     start_secor
     sleep 3
     post_messages $((${MESSAGES}/10)) 0
     set_offsets_in_zookeeper 2
     post_messages $((${MESSAGES}*9/10)) 0
 
-    echo "Waiting ${WAIT_TIME} sec for Secor to upload logs to s3"
-    sleep ${WAIT_TIME}
+    echo "Waiting $((${WAIT_TIME}*3)) sec for Secor to upload logs to s3"
+    sleep $((${WAIT_TIME}*3))
     # 4 because we skipped 2 messages per topic partition and there are 2 partitions per topic.
     verify $((${MESSAGES}-4)) 0
 
     stop_all
+    ADDITIONAL_OPTS=${OLD_ADDITIONAL_OPTS}
+
     echo -e "\e[1;42;97mmove_offset_back_test succeeded\e[0m"
 }
 
@@ -384,6 +376,8 @@ post_and_verify_compressed_test() {
     echo "********************************************************"
     echo "running post_and_verify_compressed_test"
     initialize
+
+    OLD_ADDITIONAL_OPTS=${ADDITIONAL_OPTS}
 
     # add compression options
     ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dsecor.compression.codec=org.apache.hadoop.io.compress.GzipCodec \
@@ -396,31 +390,26 @@ post_and_verify_compressed_test() {
     verify ${MESSAGES} 0
 
     stop_all
+    ADDITIONAL_OPTS=${OLD_ADDITIONAL_OPTS}
+
     echo -e "\e[1;42;97mpost_and_verify_compressed_test succeeded\e[0m"
 }
 
 check_for_native_libs
+stop_s3
 start_s3
 
-# Testing finalizer in partition mode
-num=1
-MESSAGE_TYPE=${READER_WRITER_KEYS[${num}]}
-echo "********************************************************"
-echo "Running hourly finalizer tests for Message Type: ${MESSAGE_TYPE} and ReaderWriter: ${READER_WRITERS[${num}]}"
-post_and_finalizer_verify_test hr 0
-post_and_finalizer_verify_test hr 100
-
-echo "********************************************************"
-echo "Running daily finalizer tests for Message Type: ${MESSAGE_TYPE} and ReaderWriter: ${READER_WRITERS[${num}]}"
-post_and_finalizer_verify_test dt 0
-post_and_finalizer_verify_test dt 100
-
-for num in 0 ${#READER_WRITERS[@]}-1; do
-   MESSAGE_TYPE=${READER_WRITER_KEYS[${num}]}
-   ADDITIONAL_OPTS=-Dsecor.file.reader.writer.factory=${READER_WRITERS[${num}]}
+for key in ${!READER_WRITERS[@]}; do
+   MESSAGE_TYPE=${key}
+   ADDITIONAL_OPTS=-Dsecor.file.reader.writer.factory=${READER_WRITERS[${key}]}
    echo "********************************************************"
-   echo "Running tests for Message Type: ${MESSAGE_TYPE} and ReaderWriter: ${READER_WRITERS[${num}]}"
+   echo "Running tests for Message Type: ${MESSAGE_TYPE} and ReaderWriter: ${READER_WRITERS[${key}]}"
    post_and_verify_test
+   if [ ${MESSAGE_TYPE} = "binary" ]; then
+       # Testing finalizer in partition mode
+       post_and_finalizer_verify_test hr
+       post_and_finalizer_verify_test dt
+   fi
    start_from_non_zero_offset_test
    move_offset_back_test
    if [ ${MESSAGE_TYPE} = "json" ]; then
