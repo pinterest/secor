@@ -214,17 +214,14 @@ verify() {
 set_offsets_in_zookeeper() {
     for group in secor_backup secor_partition; do
         for partition in 0 1; do
-            run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 create \
-                /consumers \'\' > ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
-            run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 create \
-                /consumers/${group} \'\' > ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
-            run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 create \
-                /consumers/${group}/offsets \'\' > ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
-            run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 create \
-                /consumers/${group}/offsets/test \'\' > ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
-            run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 create \
-                /consumers/${group}/offsets/test/${partition} $1 > \
-                ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
+            cat <<EOF | run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 > ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
+create /consumers ''
+create /consumers/${group} ''
+create /consumers/${group}/offsets ''
+create /consumers/${group}/offsets/test ''
+create /consumers/${group}/offsets/test/${partition} $1
+quit
+EOF
         done
     done
 }
