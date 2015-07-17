@@ -63,7 +63,12 @@ public class TestLogMessageProducerMain {
                 .withArgName("<type>")
                 .withType(String.class)
                 .create("type"));
-
+        options.addOption(OptionBuilder.withLongOpt("broker")
+                .withDescription("broker")
+                .hasArg()
+                .withArgName("<broker>")
+                .withType(String.class)
+                .create("b"));
         CommandLineParser parser = new GnuParser();
         return parser.parse(options, args);
     }
@@ -75,8 +80,9 @@ public class TestLogMessageProducerMain {
             int messages = ((Number) commandLine.getParsedOptionValue("messages")).intValue();
             int producers = ((Number) commandLine.getParsedOptionValue("producers")).intValue();
             String type = commandLine.getOptionValue("type");
+            String broker = commandLine.getOptionValue("broker");
             for (int i = 0; i < producers; ++i) {
-                TestLogMessageProducer producer = new TestLogMessageProducer(topic, messages, type);
+                TestLogMessageProducer producer = new TestLogMessageProducer(topic, messages, type, broker);
                 producer.start();
             }
         } catch (Throwable t) {
