@@ -211,16 +211,8 @@ public class SecorConfig {
         return getString("message.timestamp.input.pattern");
     }
 
-    public boolean getMessageTimestampUsingHour() {
-      return getBoolean("message.timestamp.using.hour", false);
-    }
-
-    public int getFinalizerLagSecond() {
-        return getInt("finalizer.lag.second", 3600);
-    }
-
     public int getFinalizerLookbackPeriods() {
-        return getInt("finalizer.lookback.periods", 10);
+        return getInt("secor.finalizer.lookback.periods", 10);
     }
 
     public String getHivePrefix() { 
@@ -247,6 +239,10 @@ public class SecorConfig {
         return getString("secor.zookeeper.path");
     }
 
+    public boolean getBoolean(String name, boolean defaultValue) {
+        return mProperties.getBoolean(name, defaultValue);
+    }
+
     private void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
             throw new RuntimeException("Failed to find required configuration option '" +
@@ -266,10 +262,6 @@ public class SecorConfig {
 
     private int getInt(String name, int defaultValue) {
         return mProperties.getInt(name, defaultValue);
-    }
-
-    private boolean getBoolean(String name, boolean defaultValue) {
-        return mProperties.getBoolean(name, defaultValue);
     }
 
     private long getLong(String name) {

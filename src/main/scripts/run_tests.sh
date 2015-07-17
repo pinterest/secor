@@ -54,7 +54,7 @@ READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriterFacto
 
 # The minimum wait time is one minute plus delta.  Secor is configured to upload files older than
 # one minute and we need to make sure that everything ends up on s3 before starting verification.
-WAIT_TIME=${SECOR_WAIT_TIME:-30}
+WAIT_TIME=${SECOR_WAIT_TIME:-120}
 BASE_DIR=$(dirname $0)
 CONF_DIR=${BASE_DIR}/..
 
@@ -192,6 +192,10 @@ verify() {
         echo -e "\e[1;41;97mVerification FAILED\e[0m"
         echo "See log ${LOGS_DIR}/log_verifier_${RUNMODE}.log for more details"
         tail -n 50 ${LOGS_DIR}/log_verifier_${RUNMODE}.log
+        echo "See log ${LOGS_DIR}/secor_${RUNMODE}.log for more details"
+        tail -n 50 ${LOGS_DIR}/secor_${RUNMODE}.log
+        echo "See log ${LOGS_DIR}/test_log_message_producer.log for more details"
+        tail -n 50 ${LOGS_DIR}/test_log_message_producer.log
         exit ${VERIFICATION_EXIT_CODE}
       fi
 
@@ -288,7 +292,7 @@ post_and_finalizer_verify_test() {
     OLD_ADDITIONAL_OPTS=${ADDITIONAL_OPTS}
 
     if [ $1 = "hr" ]; then
-        ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dmessage.timestamp.using.hour=true -Dfinalizer.lookback.periods=30"
+        ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dpartitioner.granularity.hour=true -Dsecor.finalizer.lookback.periods=30"
         # should be 2 success files for hr folder, 1 for dt folder
         FILES=3
     else
@@ -357,8 +361,8 @@ move_offset_back_test() {
     set_offsets_in_zookeeper 2
     post_messages $((${MESSAGES}*9/10)) 0
 
-    echo "Waiting $((${WAIT_TIME}*3)) sec for Secor to upload logs to s3"
-    sleep $((${WAIT_TIME}*3))
+    echo "Waiting $((${WAIT_TIME}*2)) sec for Secor to upload logs to s3"
+    sleep $((${WAIT_TIME}*2))
     # 4 because we skipped 2 messages per topic partition and there are 2 partitions per topic.
     verify $((${MESSAGES}-4)) 0
 

@@ -85,98 +85,95 @@ public class PartitionFinalizer {
         return mMessageParser.getFinalizedUptoPartitions(lastMessages, committedMessages);
     }
 
-    private void finalizePartitionsUpTo(String topic, String[] partitions) throws Exception {
+    private void finalizePartitionsUpTo(String topic, String[] uptoPartitions) throws Exception {
         final String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
 
-        // Walk through each dimension of the partitions array
-        // First finalize the hourly partitions, and then move on to daily partitions
-        for (int dim = partitions.length; dim > 0; dim--) {
-            String[] uptoPartitions = Arrays.copyOf(partitions, dim);
-            LOG.info("Finalize up to (but not include) {} for dim: {}", uptoPartitions, dim);
+        LOG.info("Finalize up to (but not include) {}, dim: {}",
+            uptoPartitions, uptoPartitions.length);
 
-            String[] previous = mMessageParser.getPreviousPartitions(uptoPartitions);
-            Stack<String[]> toBeFinalized = new Stack<String[]>();
-            // Walk backwards to collect all partitions which are previous to the upTo partition
-            // Do not include the upTo partition
-            // Stop at the first partition which already have the SUCCESS file
-            for (int i = 0; i < mLookbackPeriods; i++) {
-                LOG.info("Looking for partition: " + Arrays.toString(previous));
-                LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, previous,
-                    mConfig.getGeneration(), 0, 0, mFileExtension);
-                String logFileDir = logFilePath.getLogFileDir();
-                if (FileUtil.exists(logFileDir)) {
-                    String successFilePath = logFileDir + "/_SUCCESS";
-                    if (FileUtil.exists(successFilePath)) {
-                        LOG.info(
-                            "SuccessFile exist already, short circuit return. " + successFilePath);
-                        break;
-                    }
-                    LOG.info("Folder {} exists and ready to be finalized.", logFileDir);
-                    toBeFinalized.push(previous);
-                } else {
-                    LOG.info("Folder {} doesn't exist, skip", logFileDir);
-                }
-                previous = mMessageParser.getPreviousPartitions(previous);
-            }
-
-            LOG.info("To be finalized partitions: {}", toBeFinalized);
-            if (toBeFinalized.isEmpty()) {
-                LOG.warn("There is no partitions to be finalized for dim: {}", dim);
-                continue;
-            }
-
-            // Now walk forward the collected partitions to do the finalization
-            // Note we are deliberately walking backwards and then forwards to make sure we don't
-            // end up in a situation that a later date partition is finalized and then the system
-            // crashes (which creates unfinalized partition folders in between)
-            while (!toBeFinalized.isEmpty()) {
-                String[] current = toBeFinalized.pop();
-                LOG.info("Finalizing partition: " + Arrays.toString(current));
-                // We only perform hive registration on the last dimension of the partition array
-                // i.e. only do hive registration for the hourly folder, but not for the daily
-                if (dim == partitions.length) {
-                    try {
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < current.length; i++) {
-                            String par = current[i];
-                            // We expect the partition array in the form of key=value if
-                            // they need to go through hive registration
-                            String[] parts = par.split("=");
-                            assert parts.length == 2 : "wrong partition format: " + par;
-                            if (i > 0) {
-                                sb.append(",");
-                            }
-                            sb.append(parts[0]);
-                            sb.append("='");
-                            sb.append(parts[1]);
-                            sb.append("'");
-                        }
-                        LOG.info("Hive partition string: " + sb);
-                        String hivePrefix = null;
-                        try {
-                            hivePrefix = mConfig.getHivePrefix();
-                        } catch (RuntimeException ex) {
-                            LOG.warn("HivePrefix is not defined.  Skip hive registration");
-                        }
-                        if (hivePrefix != null) {
-                            mQuboleClient.addPartition(hivePrefix + topic, sb.toString());
-                        }
-                    } catch (Exception e) {
-                        LOG.error("failed to finalize topic " + topic, e);
-                        continue;
-                    }
-                }
-
-                // Generate the SUCCESS file at the end
-                LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, current,
-                    mConfig.getGeneration(), 0, 0, mFileExtension);
-                String logFileDir = logFilePath.getLogFileDir();
+        String[] previous = mMessageParser.getPreviousPartitions(uptoPartitions);
+        Stack<String[]> toBeFinalized = new Stack<String[]>();
+        // Walk backwards to collect all partitions which are previous to the upTo partition
+        // Do not include the upTo partition
+        // Stop at the first partition which already have the SUCCESS file
+        for (int i = 0; i < mLookbackPeriods; i++) {
+            LOG.info("Looking for partition: " + Arrays.toString(previous));
+            LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, previous,
+                mConfig.getGeneration(), 0, 0, mFileExtension);
+            String logFileDir = logFilePath.getLogFileDir();
+            if (FileUtil.exists(logFileDir)) {
                 String successFilePath = logFileDir + "/_SUCCESS";
-
-                LOG.info("touching file {}", successFilePath);
-                FileUtil.touch(successFilePath);
+                if (FileUtil.exists(successFilePath)) {
+                    LOG.info(
+                        "SuccessFile exist already, short circuit return. " + successFilePath);
+                    break;
+                }
+                LOG.info("Folder {} exists and ready to be finalized.", logFileDir);
+                toBeFinalized.push(previous);
+            } else {
+                LOG.info("Folder {} doesn't exist, skip", logFileDir);
             }
+            previous = mMessageParser.getPreviousPartitions(previous);
         }
+
+        LOG.info("To be finalized partitions: {}", toBeFinalized);
+        if (toBeFinalized.isEmpty()) {
+            LOG.warn("There is no partitions to be finalized.");
+            return;
+        }
+
+        // Now walk forward the collected partitions to do the finalization
+        // Note we are deliberately walking backwards and then forwards to make sure we don't
+        // end up in a situation that a later date partition is finalized and then the system
+        // crashes (which creates unfinalized partition folders in between)
+        while (!toBeFinalized.isEmpty()) {
+            String[] current = toBeFinalized.pop();
+            LOG.info("Finalizing partition: " + Arrays.toString(current));
+            // We only perform hive registration on the last dimension of the partition array
+            // i.e. only do hive registration for the hourly folder, but not for the daily
+            if (uptoPartitions.length == current.length) {
+                try {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < current.length; i++) {
+                        String par = current[i];
+                        // We expect the partition array in the form of key=value if
+                        // they need to go through hive registration
+                        String[] parts = par.split("=");
+                        assert parts.length == 2 : "wrong partition format: " + par;
+                        if (i > 0) {
+                            sb.append(",");
+                        }
+                        sb.append(parts[0]);
+                        sb.append("='");
+                        sb.append(parts[1]);
+                        sb.append("'");
+                    }
+                    LOG.info("Hive partition string: " + sb);
+                    String hivePrefix = null;
+                    try {
+                        hivePrefix = mConfig.getHivePrefix();
+                    } catch (RuntimeException ex) {
+                        LOG.warn("HivePrefix is not defined.  Skip hive registration");
+                    }
+                    if (hivePrefix != null) {
+                        mQuboleClient.addPartition(hivePrefix + topic, sb.toString());
+                    }
+                } catch (Exception e) {
+                    LOG.error("failed to finalize topic " + topic, e);
+                    continue;
+                }
+            }
+
+            // Generate the SUCCESS file at the end
+            LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, current,
+                mConfig.getGeneration(), 0, 0, mFileExtension);
+            String logFileDir = logFilePath.getLogFileDir();
+            String successFilePath = logFileDir + "/_SUCCESS";
+
+            LOG.info("touching file {}", successFilePath);
+            FileUtil.touch(successFilePath);
+        }
+
     }
 
     public void finalizePartitions() throws Exception {

@@ -31,6 +31,9 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
 
     private static final Logger LOG = LoggerFactory.getLogger(TimestampedMessageParser.class);
 
+    private static final long HOUR_IN_MILLIS = 3600L * 1000L;
+    private static final long DAY_IN_MILLIS = 3600L * 24 * 1000L;
+
     private static final SimpleDateFormat mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
     private static final SimpleDateFormat mHrFormatter = new SimpleDateFormat("HH");
     private static final SimpleDateFormat mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
@@ -42,16 +45,18 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     }
 
     private final boolean mUsingHourly;
-    private final long mLagInSeconds;
 
     public TimestampedMessageParser(SecorConfig config) {
         super(config);
-        mUsingHourly = config.getMessageTimestampUsingHour();
-        mLagInSeconds = config.getFinalizerLagSecond();
-        LOG.info("UsingHourly: {}, lagInSeconds: {} ", mUsingHourly, mLagInSeconds);
+        mUsingHourly = usingHourly(config);
+        LOG.info("UsingHourly: {}", mUsingHourly);
     }
 
     public abstract long extractTimestampMillis(final Message message) throws Exception;
+
+    static boolean usingHourly(SecorConfig config) {
+        return config.getBoolean("partitioner.granularity.hour", false);
+    }
 
     protected static long toMillis(final long timestamp) {
         final long nanosecondDivider = (long) Math.pow(10, 9 + 9);
@@ -131,23 +136,37 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         }
 
         // add the safety lag for late-arrival messages
-        long lag = mLagInSeconds * 1000L;
-        LOG.info("Originally: {}, adjust down {}", minMillis, lag);
-        return generatePartitions(minMillis - lag, mUsingHourly);
+        minMillis -= 3600L * 1000L;
+        LOG.info("adjusted millis {}", minMillis);
+        return generatePartitions(minMillis, mUsingHourly);
     }
 
     @Override
     public String[] getPreviousPartitions(String[] partitions) throws Exception {
         long millis = parsePartitions(partitions);
-        long delta;
-        if (partitions.length == 1) {
-            delta = 3600L * 24 * 1000L;
-        } else if (partitions.length == 2) {
-            delta = 3600L * 1000L;
+        boolean usingHourly = mUsingHourly;
+        if (mUsingHourly && millis % DAY_IN_MILLIS == 0) {
+            // On the day boundary, if the currrent partition is [dt=07-07, hr=00], the previous
+            // one is dt=07-06;  If the current one is [dt=07-06], the previous one is
+            // [dt=07-06, hr-23]
+            // So we would return in the order of:
+            // dt=07-07, hr=01
+            // dt=07-07, hr=00
+            // dt=07-06
+            // dt=07-06, hr=23
+            if (partitions.length == 2 ) {
+                usingHourly = false;
+                millis -= DAY_IN_MILLIS;
+            } else {
+                usingHourly = true;
+                millis += DAY_IN_MILLIS;
+                millis -= HOUR_IN_MILLIS;
+            }
         } else {
-            throw new RuntimeException("Unsupported partitions: " + partitions.length);
+            long delta = mUsingHourly ? HOUR_IN_MILLIS : DAY_IN_MILLIS;
+            millis -= delta;
         }
-        return generatePartitions(millis - delta, partitions.length == 2);
+        return generatePartitions(millis, usingHourly);
     }
 
 }

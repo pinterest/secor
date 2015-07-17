@@ -90,6 +90,13 @@ public interface Partitioner {
      * Get the previous partition out of the incoming partition.
      * E.g. for ["dt=2015-07-07","hr=05"], it will return ["dt=2015-07-07","hr=04"]
      *
+     * Note that the implementation might return the previous sequence in daily/mixed forms, e.g.
+     * [dt=2015-07-07, hr=01]
+     * [dt=2015-07-07, hr=00]
+     * [dt=2015-07-07]        <-- dt folder in between
+     * [dt=2015-07-06, hr=23]
+     * [dt=2015-07-07, hr=22]
+     *
      * @param partition
      * @return
      */
