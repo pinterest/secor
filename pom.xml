@@ -6,7 +6,7 @@
 
     <groupId>com.pinterest.secor</groupId>
     <artifactId>secor</artifactId>
-    <version>0.1.1-STRAVA</version>
+    <version>0.1.2-STRAVA</version>
     <packaging>jar</packaging>
     <description>Kafka to s3 logs exporter</description>
 
@@ -329,6 +329,12 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.4</version>
                 <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <configuration>
+                            <finalName>secor</finalName>
+                        </configuration>
+                    </execution>
                     <execution>
                         <goals>
                             <goal>test-jar</goal>
