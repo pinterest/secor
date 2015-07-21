@@ -16,6 +16,8 @@
  */
 package com.pinterest.secor.tools;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -60,6 +62,7 @@ public class ProgressMonitor {
     private ZookeeperConnector mZookeeperConnector;
     private KafkaClient mKafkaClient;
     private MessageParser mMessageParser;
+    private String mPrefix;
 
     public ProgressMonitor(SecorConfig config)
             throws Exception
@@ -69,6 +72,11 @@ public class ProgressMonitor {
         mKafkaClient = new KafkaClient(mConfig);
         mMessageParser = (MessageParser) ReflectionUtil.createMessageParser(
                 mConfig.getMessageParserClass(), mConfig);
+
+        mPrefix = mConfig.getMonitoringPrefix();
+        if (Strings.isNullOrEmpty(mPrefix)) {
+            mPrefix = "secor";
+        }
     }
 
     private void makeRequest(String body) throws IOException {
@@ -199,8 +207,8 @@ public class ProgressMonitor {
                     );
 
                     long timestamp = System.currentTimeMillis() / 1000;
-                    stats.add(Stat.createInstance("secor.lag.offsets", tags, Long.toString(offsetLag), timestamp));
-                    stats.add(Stat.createInstance("secor.lag.seconds", tags, Long.toString(timestampMillisLag / 1000), timestamp));
+                    stats.add(Stat.createInstance(metricName("lag.offsets"), tags, Long.toString(offsetLag), timestamp));
+                    stats.add(Stat.createInstance(metricName("lag.seconds"), tags, Long.toString(timestampMillisLag / 1000), timestamp));
 
                     LOG.debug("topic {} partition {} committed offset {} last offset {} committed timestamp {} last timestamp {}",
                             topic, partition, committedOffset, lastOffset,
@@ -210,6 +218,10 @@ public class ProgressMonitor {
         }
 
         return stats;
+    }
+
+    private String metricName(String key) {
+        return Joiner.on(".").join(mPrefix, key);
     }
 
     private long getTimestamp(Message message) throws Exception {
