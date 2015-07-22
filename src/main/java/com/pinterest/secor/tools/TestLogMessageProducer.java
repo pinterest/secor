@@ -40,16 +40,25 @@ public class TestLogMessageProducer extends Thread {
     private final String mTopic;
     private final int mNumMessages;
     private final String mType;
+    private final String mMetadataBrokerList;
+    private final int mTimeshift;
 
-    public TestLogMessageProducer(String topic, int numMessages, String type) {
+    public TestLogMessageProducer(String topic, int numMessages, String type,
+                                  String metadataBrokerList, int timeshift) {
         mTopic = topic;
         mNumMessages = numMessages;
         mType = type;
+        mMetadataBrokerList = metadataBrokerList;
+        mTimeshift = timeshift;
     }
 
     public void run() {
         Properties properties = new Properties();
-        properties.put("metadata.broker.list", "localhost:9092");
+        if (mMetadataBrokerList == null || mMetadataBrokerList.isEmpty()) {
+            properties.put("metadata.broker.list", "localhost:9092");
+        } else {
+            properties.put("metadata.broker.list", mMetadataBrokerList);
+        }
         properties.put("partitioner.class", "com.pinterest.secor.tools.RandomPartitioner");
         properties.put("serializer.class", "kafka.serializer.DefaultEncoder");
         properties.put("key.serializer.class", "kafka.serializer.StringEncoder");
@@ -69,7 +78,8 @@ public class TestLogMessageProducer extends Thread {
 
         TSerializer serializer = new TSerializer(protocol);
         for (int i = 0; i < mNumMessages; ++i) {
-            TestMessage testMessage = new TestMessage(System.currentTimeMillis() * 1000000L + i,
+            long time = (System.currentTimeMillis() - mTimeshift * 1000L) * 1000000L + i;
+            TestMessage testMessage = new TestMessage(time,
                                                       "some_value_" + i);
             if (i % 2 == 0) {
                 testMessage.setEnumField(TestEnum.SOME_VALUE);
