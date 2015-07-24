@@ -63,6 +63,7 @@ public class ProgressMonitor {
     private KafkaClient mKafkaClient;
     private MessageParser mMessageParser;
     private String mPrefix;
+    private NonBlockingStatsDClient mStatsDClient;
 
     public ProgressMonitor(SecorConfig config)
             throws Exception
@@ -77,6 +78,12 @@ public class ProgressMonitor {
         if (Strings.isNullOrEmpty(mPrefix)) {
             mPrefix = "secor";
         }
+
+        if (mConfig.getStatsDHostPort() != null && !mConfig.getStatsDHostPort().isEmpty()) {
+	    HostAndPort hostPort = HostAndPort.fromString(mConfig.getStatsDHostPort());
+	    mStatsDClient = new NonBlockingStatsDClient(mConfig.getKafkaGroup(),
+							hostPort.getHostText(), hostPort.getPort());
+	}
     }
 
     private void makeRequest(String body) throws IOException {
@@ -139,7 +146,7 @@ public class ProgressMonitor {
         }
 
         // if there is a valid statsD port configured export to statsD
-        if (mConfig.getStatsDHostPort() != null && !mConfig.getStatsDHostPort().isEmpty()) {
+        if (mStatsDClient != null) {
             exportToStatsD(stats);
         }
     }
@@ -148,12 +155,7 @@ public class ProgressMonitor {
      * Helper to publish stats to statsD client
      */
     private void exportToStatsD(List<Stat> stats) {
-        HostAndPort hostPort = HostAndPort.fromString(mConfig.getStatsDHostPort());
-
-        // group stats by kafka group
-        NonBlockingStatsDClient client = new NonBlockingStatsDClient(mConfig.getKafkaGroup(),
-                hostPort.getHostText(), hostPort.getPort());
-
+	// group stats by kafka group
         for (Stat stat : stats) {
             @SuppressWarnings("unchecked")
             Map<String, String> tags = (Map<String, String>) stat.get(Stat.STAT_KEYS.TAGS.getName());
@@ -163,7 +165,8 @@ public class ProgressMonitor {
                     .append(PERIOD)
                     .append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
                     .toString();
-            client.recordGaugeValue(aspect, Long.parseLong((String)stat.get(Stat.STAT_KEYS.VALUE.getName())));
+	    long value = Long.parseLong((String)stat.get(Stat.STAT_KEYS.VALUE.getName()));
+            mStatsDClient.recordGaugeValue(aspect, value);
         }
     }
 
