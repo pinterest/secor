@@ -111,6 +111,14 @@ public class SecorConfig {
         return getString("kafka.fetch.wait.max.ms");
     }
 
+    public String getSchemaUrl() {
+        return getString("schema.url");
+    }
+
+    public int getSchemaCacheCount() {
+        return getInt("schema.cache.count", 1000);
+    }
+
     public int getGeneration() {
         return getInt("secor.generation");
     }

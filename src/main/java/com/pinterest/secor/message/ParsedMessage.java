@@ -27,6 +27,7 @@ import java.util.Arrays;
  */
 public class ParsedMessage extends Message {
     private String[] mPartitions;
+    private Object mParsedRecord;
 
     @Override
     public String toString() {
@@ -40,7 +41,16 @@ public class ParsedMessage extends Message {
         this.mPartitions = mPartitions;
     }
 
+    public ParsedMessage(String topic, int kafkaPartition, long offset, byte[] payload,
+                         String[] mPartitions, Object parsedRecord) {
+        super(topic, kafkaPartition, offset, payload);
+        this.mPartitions = mPartitions;
+        this.mParsedRecord = parsedRecord;
+    }
+
     public String[] getPartitions() {
         return mPartitions;
     }
+
+    public Object getParsedRecord() { return mParsedRecord; }
 }
