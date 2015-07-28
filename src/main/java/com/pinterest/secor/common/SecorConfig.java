@@ -238,6 +238,14 @@ public class SecorConfig {
     public String getZookeeperPath() {
         return getString("secor.zookeeper.path");
     }
+    
+    public String getS3OutputFilePattern() {
+    	return getString("secor.s3.output_file_pattern");
+    }
+    
+    public String getPartitionOutputDtFormat() {
+    	return getString("secor.partition.output_dt_format");
+    }
 
     public boolean getBoolean(String name, boolean defaultValue) {
         return mProperties.getBoolean(name, defaultValue);

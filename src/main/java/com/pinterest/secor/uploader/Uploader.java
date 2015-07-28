@@ -73,7 +73,8 @@ public class Uploader {
                                              localPath.getGeneration(),
                                              localPath.getKafkaPartition(),
                                              localPath.getOffset(),
-                                             localPath.getExtension());
+                                             localPath.getExtension(),
+                                             mConfig);
         final String localLogFilename = localPath.getLogFilePath();
         final String s3LogFilename = s3Path.getLogFilePath();
         LOG.info("uploading file {} to {}", localLogFilename, s3LogFilename);

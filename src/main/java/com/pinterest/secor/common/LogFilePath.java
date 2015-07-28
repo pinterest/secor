@@ -17,10 +17,16 @@
 package com.pinterest.secor.common;
 
 import com.pinterest.secor.message.ParsedMessage;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * LogFilePath represents path of a log file.  It contains convenience method for building and
@@ -49,6 +55,7 @@ public class LogFilePath {
     private final int mKafkaPartition;
     private final long mOffset;
     private final String mExtension;
+    private String mOutputFilePattern;
 
     public LogFilePath(String prefix, int generation, long lastCommittedOffset,
                        ParsedMessage message, String extension) {
@@ -70,6 +77,19 @@ public class LogFilePath {
         mKafkaPartition = kafkaPartition;
         mOffset = offset;
         mExtension = extension;
+    }
+    
+    public LogFilePath(String prefix, String topic, String[] partitions, int generation,
+            int kafkaPartition, long offset, String extension, SecorConfig config) {
+		
+		mPrefix = prefix;
+		mTopic = topic;
+		mPartitions = partitions;
+		mGeneration = generation;
+		mKafkaPartition = kafkaPartition;
+		mOffset = offset;
+		mExtension = extension;
+		mOutputFilePattern = config.getS3OutputFilePattern();
     }
 
     private static String[] subArray(String[] array, int startIndex, int endIndex) {
@@ -139,6 +159,11 @@ public class LogFilePath {
     }
 
     public String getLogFilePath() {
+    	
+		if (StringUtils.isNotBlank(mOutputFilePattern)) {
+			return getLogFilePath(mOutputFilePattern);
+		}
+    	
         String basename = getLogFileBasename();
 
         ArrayList<String> pathElements = new ArrayList<String>();
@@ -146,6 +171,27 @@ public class LogFilePath {
         pathElements.add(basename);
 
         return StringUtils.join(pathElements, "/") + mExtension;
+    }
+    
+    private String getLogFilePath(String pattern) {
+    	
+    	List<String> pathElements = new ArrayList<String>();
+    	pathElements.add(mPrefix);
+    	pathElements.add(StrSubstitutor.replace(pattern, getValueMap(), "{", "}"));
+    	System.out.println("Path:" + StringUtils.join(pathElements, "/") + mExtension);
+    	return StringUtils.join(pathElements, "/") + mExtension;
+    }
+    
+    private Map<String, String> getValueMap() {
+    	
+    	Map<String, String> valueMap = new HashMap<String, String>();
+		valueMap.put("randomHex", getRandomHex());
+		valueMap.put("partition", mPartitions[0]);
+		valueMap.put("topic", mTopic);
+		valueMap.put("generation", mGeneration + "");
+		valueMap.put("kafkaPartition", mKafkaPartition + "");
+		valueMap.put("fmOffset", String.format("%020d", mOffset));
+		return valueMap;
     }
 
     public String getLogFileCrcPath() {
@@ -213,5 +259,11 @@ public class LogFilePath {
     @Override
     public String toString() {
         return getLogFilePath();
+    }
+    
+    public static String getRandomHex() {
+
+    	Random random = new Random();
+        return StringUtils.substring(Integer.toHexString(random.nextInt()), 0, 4);
     }
 }
