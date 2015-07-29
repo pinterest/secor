@@ -200,9 +200,9 @@ public class Uploader {
     private void checkTopicPartition(TopicPartition topicPartition) throws Exception {
         final long size = mFileRegistry.getSize(topicPartition);
         final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
-        LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
-        if (size >= mConfig.getMaxFileSizeBytes() ||
-                modificationAgeSec >= mConfig.getMaxFileAgeSeconds()) {
+        long maxFileAgeSeconds = mConfig.getMaxFileAgeSeconds();
+        LOG.debug("size: " + size + " | maxFileSizeBytes: " + mConfig.getMaxFileSizeBytes() + " | modificationAge: " + modificationAgeSec + " | maxFileAgeSeconds: " + maxFileAgeSeconds);
+        if (size >= mConfig.getMaxFileSizeBytes() || modificationAgeSec >= maxFileAgeSeconds) {
             long newOffsetCount = mZookeeperConnector.getCommittedOffsetCount(topicPartition);
             long oldOffsetCount = mOffsetTracker.setCommittedOffsetCount(topicPartition,
                     newOffsetCount);
