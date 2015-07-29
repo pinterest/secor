@@ -49,7 +49,17 @@ public class LogFileVerifier {
     }
 
     private String getPrefix() {
-        return "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
+    	if (mConfig.getCloudService().equals("Swift")){
+        	String container = null;
+        	if (mConfig.getSeperateContainersForTopics()) {
+        		container = mTopic;
+        	} else {
+        		container = mConfig.getSwiftContainer();
+        	}
+        	return "swift://" + container + ".GENERICPROJECT/" + mConfig.getSwiftPath();
+        } else {
+        	return "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
+        }
     }
 
     private String getTopicPrefix() {
@@ -59,6 +69,7 @@ public class LogFileVerifier {
     private void populateTopicPartitionToOffsetToFiles() throws IOException {
         String prefix = getPrefix();
         String topicPrefix = getTopicPrefix();
+        
         String[] paths = FileUtil.listRecursively(topicPrefix);
         for (String path : paths) {
             if (!path.endsWith("/_SUCCESS")) {

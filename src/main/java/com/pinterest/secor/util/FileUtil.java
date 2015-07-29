@@ -42,11 +42,26 @@ public class FileUtil {
     public static FileSystem getFileSystem(String path) throws IOException {
         Configuration conf = new Configuration();
         if (mConfig != null) {
-            conf.set("fs.s3n.awsAccessKeyId", mConfig.getAwsAccessKey());
-            conf.set("fs.s3n.awsSecretAccessKey", mConfig.getAwsSecretKey());
+        	if (mConfig.getCloudService().equals("Swift")){
+                conf.set("fs.swift.service.GENERICPROJECT.auth.url", mConfig.getSwiftAuthUrl());
+                conf.set("fs.swift.service.GENERICPROJECT.username", mConfig.getSwiftUsername());
+                conf.set("fs.swift.service.GENERICPROJECT.tenant", mConfig.getSwiftTenant());  
+                conf.set("fs.swift.service.GENERICPROJECT.http.port", mConfig.getSwiftPort());
+                conf.set("fs.swift.service.GENERICPROJECT.use.get.auth", mConfig.getSwiftGetAuth());
+                conf.set("fs.swift.service.GENERICPROJECT.public", mConfig.getSwiftPublic());
+                if (mConfig.getSwiftGetAuth().equals("true")) {
+                	conf.set("fs.swift.service.GENERICPROJECT.apikey", mConfig.getSwiftApiKey());
+                } else {
+                	conf.set("fs.swift.service.GENERICPROJECT.password", mConfig.getSwiftPassword());
+                }
+        	} else {
+	            conf.set("fs.s3n.awsAccessKeyId", mConfig.getAwsAccessKey());
+	            conf.set("fs.s3n.awsSecretAccessKey", mConfig.getAwsSecretKey());
+        	}
         }
         return FileSystem.get(URI.create(path), conf);
     }
+    
 
     public static String[] list(String path) throws IOException {
         FileSystem fs = getFileSystem(path);
@@ -56,7 +71,7 @@ public class FileUtil {
         if (statuses != null) {
             for (FileStatus status : statuses) {
                 Path statusPath = status.getPath();
-                if (path.startsWith("s3://") || path.startsWith("s3n://")) {
+                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("swift://")) {
                     paths.add(statusPath.toUri().toString());
                 } else {
                     paths.add(statusPath.toUri().getPath());
@@ -97,11 +112,12 @@ public class FileUtil {
         }
     }
 
-    public static void moveToS3(String srcLocalPath, String dstS3Path) throws IOException {
+    public static void moveToCloud(String srcLocalPath, String dstCloudPath) throws IOException {
         Path srcPath = new Path(srcLocalPath);
-        Path dstPath = new Path(dstS3Path);
-        getFileSystem(dstS3Path).moveFromLocalFile(srcPath, dstPath);
+        Path dstPath = new Path(dstCloudPath);
+        getFileSystem(dstCloudPath).moveFromLocalFile(srcPath, dstPath);
     }
+
 
     public static void touch(String path) throws IOException {
         FileSystem fs = getFileSystem(path);
@@ -109,6 +125,16 @@ public class FileUtil {
         fs.create(fsPath).close();
     }
 
+    public static void CreateContainer(String topic) throws IOException {
+    	String containerUrl = "swift://" + topic + ".GENERICPROJECT"; 		
+		Path containerPath = new Path(containerUrl);
+		try {
+			getFileSystem(containerUrl).create(containerPath).close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     public static long getModificationTimeMsRecursive(String path) throws IOException {
         FileSystem fs = getFileSystem(path);
         Path fsPath = new Path(path);
@@ -119,7 +145,7 @@ public class FileUtil {
             for (FileStatus fileStatus : statuses) {
                 Path statusPath = fileStatus.getPath();
                 String stringPath;
-                if (path.startsWith("s3://") || path.startsWith("s3n://")) {
+                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("swift://")) {
                     stringPath = statusPath.toUri().toString();
                 } else {
                     stringPath = statusPath.toUri().getPath();

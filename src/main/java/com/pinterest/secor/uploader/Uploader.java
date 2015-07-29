@@ -39,7 +39,7 @@ import java.util.concurrent.Future;
 
 /**
  * Uploader applies a set of policies to determine if any of the locally stored files should be
- * uploaded to s3.
+ * uploaded to the cloud.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
@@ -67,21 +67,40 @@ public class Uploader {
     }
 
     private Future<?> upload(LogFilePath localPath) throws Exception {
-        String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
-        LogFilePath s3Path = new LogFilePath(s3Prefix, localPath.getTopic(),
+    	String prefix = "";
+        if (mConfig.getCloudService() != null && mConfig.getCloudService().equals("Swift")){ // the first condition 
+        																					 // is for compile tests
+        	String container = null;
+        	if (mConfig.getSeperateContainersForTopics()) {
+        		if (!FileUtil.exists("swift://" + localPath.getTopic() + ".GENERICPROJECT")){
+        			try {
+                    	FileUtil.CreateContainer(localPath.getTopic());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+        		}
+        		container = localPath.getTopic();
+        	} else {
+        		container = mConfig.getSwiftContainer();
+        	}
+        	prefix = "swift://" + container + ".GENERICPROJECT/" + mConfig.getSwiftPath();
+    	} else {
+	        prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
+    	}
+        LogFilePath path = new LogFilePath(prefix, localPath.getTopic(),
                                              localPath.getPartitions(),
                                              localPath.getGeneration(),
                                              localPath.getKafkaPartition(),
                                              localPath.getOffset(),
                                              localPath.getExtension());
         final String localLogFilename = localPath.getLogFilePath();
-        final String s3LogFilename = s3Path.getLogFilePath();
-        LOG.info("uploading file {} to {}", localLogFilename, s3LogFilename);
+        final String logFilename = path.getLogFilePath();
+        LOG.info("uploading file {} to {}", localLogFilename, logFilename);
         return executor.submit(new Runnable() {
             @Override
             public void run() {
                 try {
-                    FileUtil.moveToS3(localLogFilename, s3LogFilename);
+               	    FileUtil.moveToCloud(localLogFilename, logFilename);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
