@@ -126,6 +126,10 @@ public class SecorConfig {
     public long getMaxFileAgeSeconds() {
         return getLong("secor.max.file.age.seconds");
     }
+    
+    public String getMaxFileAgePolicy() {
+        return getString("secor.max.file.age.policy");
+    }
 
     public long getOffsetsPerPartition() {
         return getLong("secor.offsets.per.partition");

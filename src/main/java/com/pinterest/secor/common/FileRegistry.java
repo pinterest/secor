@@ -21,6 +21,7 @@ import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.util.StatsUtil;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -207,6 +208,7 @@ public class FileRegistry {
     public long getModificationAgeSec(TopicPartition topicPartition) throws IOException {
         long now = System.currentTimeMillis() / 1000L;
         long result = Long.MAX_VALUE;
+        boolean useOldestFile = StringUtils.equals("oldest", mConfig.getMaxFileAgePolicy());
         Collection<LogFilePath> paths = getPaths(topicPartition);
         for (LogFilePath path : paths) {
             Long creationTime = mCreationTimes.get(path);
@@ -215,7 +217,11 @@ public class FileRegistry {
                 creationTime = now;
             }
             long age = now - creationTime;
-            if (age < result) {
+            if(result == Long.MAX_VALUE) {
+            	result = age;
+            } else if (!useOldestFile && age < result) {
+                result = age;
+            } else if (useOldestFile && age > result) {
                 result = age;
             }
         }
@@ -226,4 +232,5 @@ public class FileRegistry {
             topicPartition.getPartition(), Long.toString(result));
         return result;
     }
+    
 }
