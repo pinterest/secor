@@ -6,7 +6,7 @@
 
     <groupId>com.pinterest.secor</groupId>
     <artifactId>secor</artifactId>
-    <version>0.1.3-STRAVA-SNAPSHOT</version>
+    <version>0.1.4-STRAVA-SNAPSHOT</version>
     <packaging>jar</packaging>
     <description>Kafka to s3 logs exporter</description>
 

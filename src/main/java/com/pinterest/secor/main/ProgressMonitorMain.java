@@ -44,19 +44,19 @@ public class ProgressMonitorMain {
         try {
             final SecorConfig config = SecorConfig.load();
             final ProgressMonitor progressMonitor = new ProgressMonitor(config);
-	    Runnable runner = new Runnable() {
-		    public void run() {
-			try {
-			    progressMonitor.exportStats();
-			} catch (Throwable t) {
-			    LOG.error("Progress monitor failed", t);
-			}
-		    }
-		};
+            Runnable runner = new Runnable() {
+                    public void run() {
+                        try {
+                            progressMonitor.exportStats();
+                        } catch (Throwable t) {
+                            LOG.error("Progress monitor failed", t);
+                        }
+                    }
+                };
 
-	    long interval = config.getMonitoringIntervalSeconds();
-	    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-	    scheduler.scheduleAtFixedRate(runner, 0, interval, TimeUnit.SECONDS);
+            long interval = config.getMonitoringIntervalSeconds();
+            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+            scheduler.scheduleAtFixedRate(runner, 0, interval, TimeUnit.SECONDS);
         } catch (Throwable t) {
             LOG.error("Progress monitor failed", t);
             System.exit(1);
