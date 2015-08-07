@@ -23,6 +23,7 @@ import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.uploader.Uploader;
+import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.reader.MessageReader;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.writer.MessageWriter;
@@ -66,9 +67,11 @@ public class Consumer extends Thread {
         mOffsetTracker = new OffsetTracker();
         mMessageReader = new MessageReader(mConfig, mOffsetTracker);
         FileRegistry fileRegistry = new FileRegistry(mConfig);
+        UploadManager uploadManager = ReflectionUtil.createUploadManager(mConfig.getUploadManagerClass(), mConfig);
+
+        mUploader = new Uploader(mConfig, mOffsetTracker, fileRegistry, uploadManager);
         mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry);
         mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
-        mUploader = new Uploader(mConfig, mOffsetTracker, fileRegistry);
         mUnparsableMessages = 0.;
     }
 
