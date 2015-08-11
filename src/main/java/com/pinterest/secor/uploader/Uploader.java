@@ -33,9 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * Uploader applies a set of policies to determine if any of the locally stored files should be
@@ -46,47 +43,27 @@ import java.util.concurrent.Future;
 public class Uploader {
     private static final Logger LOG = LoggerFactory.getLogger(Uploader.class);
 
-    private static final ExecutorService executor = Executors.newFixedThreadPool(256);
-
     private SecorConfig mConfig;
     private OffsetTracker mOffsetTracker;
     private FileRegistry mFileRegistry;
     private ZookeeperConnector mZookeeperConnector;
+    private UploadManager mUploadManager;
 
-    public Uploader(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry) {
-        this(config, offsetTracker, fileRegistry, new ZookeeperConnector(config));
+    public Uploader(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
+                    UploadManager uploadManager) {
+        this(config, offsetTracker, fileRegistry, uploadManager,
+             new ZookeeperConnector(config));
     }
 
     // For testing use only.
     public Uploader(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
+                    UploadManager uploadManager,
                     ZookeeperConnector zookeeperConnector) {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
+        mUploadManager = uploadManager;
         mZookeeperConnector = zookeeperConnector;
-    }
-
-    private Future<?> upload(LogFilePath localPath) throws Exception {
-        String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
-        LogFilePath s3Path = new LogFilePath(s3Prefix, localPath.getTopic(),
-                                             localPath.getPartitions(),
-                                             localPath.getGeneration(),
-                                             localPath.getKafkaPartition(),
-                                             localPath.getOffset(),
-                                             localPath.getExtension());
-        final String localLogFilename = localPath.getLogFilePath();
-        final String s3LogFilename = s3Path.getLogFilePath();
-        LOG.info("uploading file {} to {}", localLogFilename, s3LogFilename);
-        return executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    FileUtil.moveToS3(localLogFilename, s3LogFilename);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
     }
 
     private void uploadFiles(TopicPartition topicPartition) throws Exception {
@@ -112,12 +89,12 @@ public class Uploader {
                 // Deleting writers closes their streams flushing all pending data to the disk.
                 mFileRegistry.deleteWriters(topicPartition);
                 Collection<LogFilePath> paths = mFileRegistry.getPaths(topicPartition);
-                List<Future<?>> uploadFutures = new ArrayList<Future<?>>();
+                List<Handle<?>> uploadHandles = new ArrayList<Handle<?>>();
                 for (LogFilePath path : paths) {
-                    uploadFutures.add(upload(path));
+                    uploadHandles.add(mUploadManager.upload(path));
                 }
-                for (Future<?> uploadFuture : uploadFutures) {
-                    uploadFuture.get();
+                for (Handle<?> uploadHandle : uploadHandles) {
+                    uploadHandle.get();
                 }
                 mFileRegistry.deleteTopicPartition(topicPartition);
                 mZookeeperConnector.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
@@ -199,6 +176,7 @@ public class Uploader {
     private void checkTopicPartition(TopicPartition topicPartition) throws Exception {
         final long size = mFileRegistry.getSize(topicPartition);
         final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
+        LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
         if (size >= mConfig.getMaxFileSizeBytes() ||
                 modificationAgeSec >= mConfig.getMaxFileAgeSeconds()) {
             long newOffsetCount = mZookeeperConnector.getCommittedOffsetCount(topicPartition);
@@ -206,6 +184,7 @@ public class Uploader {
                     newOffsetCount);
             long lastSeenOffset = mOffsetTracker.getLastSeenOffset(topicPartition);
             if (oldOffsetCount == newOffsetCount) {
+                LOG.debug("Uploading for: " + topicPartition);
                 uploadFiles(topicPartition);
             } else if (newOffsetCount > lastSeenOffset) {  // && oldOffset < newOffset
                 LOG.debug("last seen offset {} is lower than committed offset count {}. Deleting files in topic {} partition {}",

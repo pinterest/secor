@@ -167,6 +167,10 @@ public class SecorConfig {
         return getString("secor.message.parser.class");
     }
 
+    public String getUploadManagerClass() {
+        return getString("secor.upload.manager.class");
+    }
+
     public int getTopicPartitionForgetSeconds() {
         return getInt("secor.topic_partition.forget.seconds");
     }
@@ -187,6 +191,14 @@ public class SecorConfig {
         return getString("aws.secret.key");
     }
 
+    public String getAwsEndpoint() {
+        return getString("aws.endpoint");
+    }
+
+    public String getAwsRegion() {
+        return getString("aws.region");
+    }
+
     public String getQuboleApiToken() {
         return getString("qubole.api.token");
     }
@@ -203,12 +215,20 @@ public class SecorConfig {
         return getString("monitoring.blacklist.topics");
     }
 
+    public String getMonitoringPrefix() {
+        return getString("monitoring.prefix");
+    }
+
     public String getMessageTimestampName() {
         return getString("message.timestamp.name");
     }
 
     public String getMessageTimestampInputPattern() {
         return getString("message.timestamp.input.pattern");
+    }
+
+    public int getFinalizerLookbackPeriods() {
+        return getInt("secor.finalizer.lookback.periods", 10);
     }
 
     public String getHivePrefix() { 
@@ -235,6 +255,10 @@ public class SecorConfig {
         return getString("secor.zookeeper.path");
     }
 
+    public boolean getBoolean(String name, boolean defaultValue) {
+        return mProperties.getBoolean(name, defaultValue);
+    }
+
     private void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
             throw new RuntimeException("Failed to find required configuration option '" +
@@ -250,6 +274,10 @@ public class SecorConfig {
     private int getInt(String name) {
         checkProperty(name);
         return mProperties.getInt(name);
+    }
+
+    private int getInt(String name, int defaultValue) {
+        return mProperties.getInt(name, defaultValue);
     }
 
     private long getLong(String name) {

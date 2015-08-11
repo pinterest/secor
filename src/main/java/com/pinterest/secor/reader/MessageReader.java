@@ -54,6 +54,9 @@ public class MessageReader {
     private ConsumerConnector mConsumerConnector;
     private ConsumerIterator mIterator;
     private HashMap<TopicPartition, Long> mLastAccessTime;
+    private final int mTopicPartitionForgetSeconds;
+    private final int mCheckMessagesPerSecond;
+    private int mNMessages;
 
     public MessageReader(SecorConfig config, OffsetTracker offsetTracker) throws
             UnknownHostException {
@@ -69,6 +72,8 @@ public class MessageReader {
         mIterator = stream.iterator();
         mLastAccessTime = new HashMap<TopicPartition, Long>();
         StatsUtil.setLabel("secor.kafka.consumer.id", IdUtil.getConsumerId());
+        mTopicPartitionForgetSeconds = mConfig.getTopicPartitionForgetSeconds();
+        mCheckMessagesPerSecond = mConfig.getMessagesPerSecond() / mConfig.getConsumerThreads();
     }
 
     private void updateAccessTime(TopicPartition topicPartition) {
@@ -78,7 +83,7 @@ public class MessageReader {
         while (iterator.hasNext()) {
             Map.Entry pair = (Map.Entry) iterator.next();
             long lastAccessTime = (Long) pair.getValue();
-            if (now - lastAccessTime > mConfig.getTopicPartitionForgetSeconds()) {
+            if (now - lastAccessTime > mTopicPartitionForgetSeconds) {
                 iterator.remove();
             }
         }
@@ -142,7 +147,10 @@ public class MessageReader {
 
     public Message read() {
         assert hasNext();
-        RateLimitUtil.acquire();
+        mNMessages = (mNMessages + 1) % mCheckMessagesPerSecond;
+        if (mNMessages % mCheckMessagesPerSecond == 0) {
+            RateLimitUtil.acquire(mCheckMessagesPerSecond);
+        }
         MessageAndMetadata<byte[], byte[]> kafkaMessage = mIterator.next();
         Message message = new Message(kafkaMessage.topic(), kafkaMessage.partition(),
                                       kafkaMessage.offset(), kafkaMessage.message());
@@ -152,7 +160,9 @@ public class MessageReader {
         // Skip already committed messages.
         long committedOffsetCount = mOffsetTracker.getTrueCommittedOffsetCount(topicPartition);
         LOG.debug("read message {}", message);
-        exportStats();
+        if (mNMessages % mCheckMessagesPerSecond == 0) {
+            exportStats();
+        }
         if (message.getOffset() < committedOffsetCount) {
             LOG.debug("skipping message {} because its offset precedes committed offset count {}",
                     message, committedOffsetCount);
