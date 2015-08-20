@@ -47,8 +47,8 @@
     </scm>
 
     <properties>
-        <maven.compiler.source>1.6</maven.compiler.source>
-        <maven.compiler.target>1.6</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -220,6 +220,11 @@
             <artifactId>java-statsd-client</artifactId>
             <version>3.0.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+        <version>1.7.7</version>
+    </dependency>
     </dependencies>
 
     <build>
