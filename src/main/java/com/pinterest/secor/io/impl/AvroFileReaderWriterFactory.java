@@ -52,7 +52,7 @@ public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
         GenericRecord record = null;
 
         public AvroReader(Schema schema, Path path) throws IOException {
-            DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>();
+            DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(schema);
             dataFileReader = new DataFileReader<GenericRecord>(path.toFile(), datumReader);
         }
 
