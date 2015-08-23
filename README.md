@@ -123,10 +123,10 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
 ## Companies who use Secor
 
   * [Airbnb](https://www.airbnb.com)
-  * Pinterest(https://www.pinterest.com)
-  * Strava(https://www.strava.com)
-  * TiVo(https://www.tivo.com)
-  * Yelp(http://www.yelp.com)
+  * [Pinterest](https://www.pinterest.com)
+  * [Strava](https://www.strava.com)
+  * [TiVo](https://www.tivo.com)
+  * [Yelp](http://www.yelp.com)
 
 ## Help
 
