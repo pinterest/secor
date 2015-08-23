@@ -120,6 +120,14 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Zack Dever](https://github.com/zackdever)
   * [Leo Woessner](https://github.com/estezz)
 
+## Companies who use Secor
+
+  * [Airbnb](https://www.airbnb.com)
+  * Pinterest(https://www.pinterest.com)
+  * Strava(https://www.strava.com)
+  * TiVo(https://www.tivo.com)
+  * Yelp(http://www.yelp.com)
+
 ## Help
 
 If you have any questions or comments, you can reach us at [secor-users@googlegroups.com](https://groups.google.com/forum/#!forum/secor-users)
