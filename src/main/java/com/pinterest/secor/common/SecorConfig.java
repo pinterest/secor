@@ -112,11 +112,11 @@ public class SecorConfig {
     }
 
     public String getSchemaUrl() {
-        return getString("schema.url");
+        return getString("schema.registry.url");
     }
 
     public int getSchemaCacheCount() {
-        return getInt("schema.cache.count", 1000);
+        return getInt("schema.registry.cache.count", 1000);
     }
 
     public int getGeneration() {
