@@ -77,7 +77,7 @@ public class S3UploadManager extends UploadManager {
         String s3Key = localPath.withPrefix(mConfig.getS3Path()).getLogFilePath();
         File localFile = new File(localPath.getLogFilePath());
 
-        LOG.info("uploading file " + localFile + " to s3://" + s3Bucket + "/" + s3Key);
+        LOG.info("uploading file {} to s3://{}/{}", localFile, s3Bucket, s3Key);
 
         Upload upload = mManager.upload(s3Bucket, s3Key, localFile);
         return new S3UploadHandle(upload);

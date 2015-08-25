@@ -35,7 +35,7 @@ import org.apache.hadoop.io.compress.CompressionCodec;
  */
 public class ReflectionUtil {
     /**
-     * Create an UploadManager from it's fully qualified class name.
+     * Create an UploadManager from its fully qualified class name.
      *
      * The class passed in by name must be assignable to UploadManager
      * and have 1-parameter constructor accepting a SecorConfig.

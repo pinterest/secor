@@ -24,7 +24,6 @@ import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.uploader.Uploader;
 import com.pinterest.secor.uploader.UploadManager;
-import com.pinterest.secor.uploader.S3UploadManager;
 import com.pinterest.secor.reader.MessageReader;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.writer.MessageWriter;

@@ -48,7 +48,7 @@ public class HadoopS3UploadManager extends UploadManager {
         LogFilePath s3Path = localPath.withPrefix(s3Prefix);
         final String localLogFilename = localPath.getLogFilePath();
         final String s3LogFilename = s3Path.getLogFilePath();
-        LOG.info("uploading file " + localLogFilename + " to " + s3LogFilename);
+        LOG.info("uploading file {} to {}", localLogFilename, s3LogFilename);
 
         final Future<?> f = executor.submit(new Runnable() {
             @Override

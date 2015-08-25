@@ -231,6 +231,10 @@ public class SecorConfig {
         return getString("message.timestamp.input.pattern");
     }
 
+    public int getFinalizerLookbackPeriods() {
+        return getInt("secor.finalizer.lookback.periods", 10);
+    }
+
     public String getHivePrefix() { 
         return getString("secor.hive.prefix"); 
     }
@@ -255,6 +259,10 @@ public class SecorConfig {
         return getString("secor.zookeeper.path");
     }
 
+    public boolean getBoolean(String name, boolean defaultValue) {
+        return mProperties.getBoolean(name, defaultValue);
+    }
+
     private void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
             throw new RuntimeException("Failed to find required configuration option '" +
@@ -270,6 +278,10 @@ public class SecorConfig {
     private int getInt(String name) {
         checkProperty(name);
         return mProperties.getInt(name);
+    }
+
+    private int getInt(String name, int defaultValue) {
+        return mProperties.getInt(name, defaultValue);
     }
 
     private long getLong(String name) {
