@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
     <name>secor</name>
     <description>Kafka to s3 logs exporter</description>
-    <url>https://github.com/pinterest/secor</url>
+    <url>https://github.com/pinterest/secor</url> 
 
     <licenses>
         <license>
