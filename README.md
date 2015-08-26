@@ -110,6 +110,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
 
 ## Maintainers
   * [Pawel Garbacki](https://github.com/pgarbacki)
+  * [Henry Cai](https://github.com/HenryCaiHaiying)
 
 ## Contributors
   * [Andy Kramolisch](https://github.com/andykram)
