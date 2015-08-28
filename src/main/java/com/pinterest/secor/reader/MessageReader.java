@@ -23,6 +23,7 @@ import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.RateLimitUtil;
 import com.pinterest.secor.util.StatsUtil;
+
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
@@ -31,6 +32,7 @@ import kafka.consumer.TopicFilter;
 import kafka.consumer.Whitelist;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +49,8 @@ import java.util.Properties;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class MessageReader {
-    private static final Logger LOG = LoggerFactory.getLogger(MessageReader.class);
+    private static final Logger LOG = LoggerFactory
+            .getLogger(MessageReader.class);
 
     private SecorConfig mConfig;
     private OffsetTracker mOffsetTracker;
@@ -58,22 +61,24 @@ public class MessageReader {
     private final int mCheckMessagesPerSecond;
     private int mNMessages;
 
-    public MessageReader(SecorConfig config, OffsetTracker offsetTracker) throws
-            UnknownHostException {
+    public MessageReader(SecorConfig config, OffsetTracker offsetTracker)
+            throws UnknownHostException {
         mConfig = config;
         mOffsetTracker = offsetTracker;
 
-        mConsumerConnector = Consumer.createJavaConsumerConnector(createConsumerConfig());
+        mConsumerConnector = Consumer
+                .createJavaConsumerConnector(createConsumerConfig());
 
         TopicFilter topicFilter = new Whitelist(mConfig.getKafkaTopicFilter());
-        List<KafkaStream<byte[], byte[]>> streams =
-            mConsumerConnector.createMessageStreamsByFilter(topicFilter);
+        List<KafkaStream<byte[], byte[]>> streams = mConsumerConnector
+                .createMessageStreamsByFilter(topicFilter);
         KafkaStream<byte[], byte[]> stream = streams.get(0);
         mIterator = stream.iterator();
         mLastAccessTime = new HashMap<TopicPartition, Long>();
         StatsUtil.setLabel("secor.kafka.consumer.id", IdUtil.getConsumerId());
         mTopicPartitionForgetSeconds = mConfig.getTopicPartitionForgetSeconds();
-        mCheckMessagesPerSecond = mConfig.getMessagesPerSecond() / mConfig.getConsumerThreads();
+        mCheckMessagesPerSecond = mConfig.getMessagesPerSecond()
+                / mConfig.getConsumerThreads();
     }
 
     private void updateAccessTime(TopicPartition topicPartition) {
@@ -95,46 +100,56 @@ public class MessageReader {
             if (topicPartitions.length() > 0) {
                 topicPartitions.append(' ');
             }
-            topicPartitions.append(topicPartition.getTopic() + '/' +
-                                   topicPartition.getPartition());
+            topicPartitions.append(topicPartition.getTopic() + '/'
+                    + topicPartition.getPartition());
         }
-        StatsUtil.setLabel("secor.topic_partitions", topicPartitions.toString());
+        StatsUtil
+                .setLabel("secor.topic_partitions", topicPartitions.toString());
     }
 
     private ConsumerConfig createConsumerConfig() throws UnknownHostException {
         Properties props = new Properties();
-        props.put("zookeeper.connect", mConfig.getZookeeperQuorum() + mConfig.getKafkaZookeeperPath());
+        props.put("zookeeper.connect",
+                mConfig.getZookeeperQuorum() + mConfig.getKafkaZookeeperPath());
         props.put("group.id", mConfig.getKafkaGroup());
 
         props.put("zookeeper.session.timeout.ms",
-                  Integer.toString(mConfig.getZookeeperSessionTimeoutMs()));
-        props.put("zookeeper.sync.time.ms", Integer.toString(mConfig.getZookeeperSyncTimeMs()));
+                Integer.toString(mConfig.getZookeeperSessionTimeoutMs()));
+        props.put("zookeeper.sync.time.ms",
+                Integer.toString(mConfig.getZookeeperSyncTimeMs()));
         props.put("auto.commit.enable", "false");
-        // This option is required to make sure that messages are not lost for new topics and
+        // This option is required to make sure that messages are not lost for
+        // new topics and
         // topics whose number of partitions has changed.
         props.put("auto.offset.reset", "smallest");
-        props.put("consumer.timeout.ms", Integer.toString(mConfig.getConsumerTimeoutMs()));
+        props.put("consumer.timeout.ms",
+                Integer.toString(mConfig.getConsumerTimeoutMs()));
         props.put("consumer.id", IdUtil.getConsumerId());
         props.put("partition.assignment.strategy", "roundrobin");
-        if (mConfig.getRebalanceMaxRetries() != null &&
-            !mConfig.getRebalanceMaxRetries().isEmpty()) {
+        if (mConfig.getRebalanceMaxRetries() != null
+                && !mConfig.getRebalanceMaxRetries().isEmpty()) {
             props.put("rebalance.max.retries", mConfig.getRebalanceMaxRetries());
         }
-        if (mConfig.getRebalanceBackoffMs() != null &&
-            !mConfig.getRebalanceBackoffMs().isEmpty()) {
+        if (mConfig.getRebalanceBackoffMs() != null
+                && !mConfig.getRebalanceBackoffMs().isEmpty()) {
             props.put("rebalance.backoff.ms", mConfig.getRebalanceBackoffMs());
         }
-        if (mConfig.getSocketReceieveBufferBytes() != null &&
-            !mConfig.getSocketReceieveBufferBytes().isEmpty()) {
-            props.put("socket.receive.buffer.bytes", mConfig.getSocketReceieveBufferBytes());
+        if (mConfig.getSocketReceieveBufferBytes() != null
+                && !mConfig.getSocketReceieveBufferBytes().isEmpty()) {
+            props.put("socket.receive.buffer.bytes",
+                    mConfig.getSocketReceieveBufferBytes());
         }
-        if (mConfig.getFetchMessageMaxBytes() != null && !mConfig.getFetchMessageMaxBytes().isEmpty()) {
-            props.put("fetch.message.max.bytes", mConfig.getFetchMessageMaxBytes());
+        if (mConfig.getFetchMessageMaxBytes() != null
+                && !mConfig.getFetchMessageMaxBytes().isEmpty()) {
+            props.put("fetch.message.max.bytes",
+                    mConfig.getFetchMessageMaxBytes());
         }
-        if (mConfig.getFetchMinBytes() != null && !mConfig.getFetchMinBytes().isEmpty()) {
+        if (mConfig.getFetchMinBytes() != null
+                && !mConfig.getFetchMinBytes().isEmpty()) {
             props.put("fetch.min.bytes", mConfig.getFetchMinBytes());
         }
-        if (mConfig.getFetchWaitMaxMs() != null && !mConfig.getFetchWaitMaxMs().isEmpty()) {
+        if (mConfig.getFetchWaitMaxMs() != null
+                && !mConfig.getFetchWaitMaxMs().isEmpty()) {
             props.put("fetch.wait.max.ms", mConfig.getFetchWaitMaxMs());
         }
 
@@ -152,19 +167,22 @@ public class MessageReader {
             RateLimitUtil.acquire(mCheckMessagesPerSecond);
         }
         MessageAndMetadata<byte[], byte[]> kafkaMessage = mIterator.next();
-        Message message = new Message(kafkaMessage.topic(), kafkaMessage.partition(),
-                                      kafkaMessage.offset(), kafkaMessage.message());
+        Message message = new Message(kafkaMessage.topic(),
+                kafkaMessage.partition(), kafkaMessage.offset(),
+                kafkaMessage.message());
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
-                                                           message.getKafkaPartition());
+                message.getKafkaPartition());
         updateAccessTime(topicPartition);
         // Skip already committed messages.
-        long committedOffsetCount = mOffsetTracker.getTrueCommittedOffsetCount(topicPartition);
+        long committedOffsetCount = mOffsetTracker
+                .getTrueCommittedOffsetCount(topicPartition);
         LOG.debug("read message {}", message);
         if (mNMessages % mCheckMessagesPerSecond == 0) {
             exportStats();
         }
         if (message.getOffset() < committedOffsetCount) {
-            LOG.debug("skipping message {} because its offset precedes committed offset count {}",
+            LOG.debug(
+                    "skipping message {} because its offset precedes committed offset count {}",
                     message, committedOffsetCount);
             return null;
         }

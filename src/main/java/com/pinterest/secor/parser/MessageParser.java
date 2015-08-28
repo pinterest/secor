@@ -19,6 +19,8 @@ package com.pinterest.secor.parser;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
+import com.pinterest.secor.transformer.MessageTransformers;
+import com.pinterest.secor.util.ReflectionUtil;
 
 // TODO(pawel): should we offer a multi-message parser capable of parsing multiple types of
 // messages?  E.g., it could be implemented as a composite trying out different parsers and using
@@ -30,17 +32,22 @@ import com.pinterest.secor.message.ParsedMessage;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public abstract class MessageParser {
-    protected SecorConfig mConfig;
+	protected SecorConfig mConfig;
 
-    public MessageParser(SecorConfig config) {
-        mConfig = config;
-    }
+	public MessageParser(SecorConfig config) {
+		mConfig = config;
+	}
 
-    public ParsedMessage parse(Message message) throws Exception {
-        String[] partitions = extractPartitions(message);
-        return new ParsedMessage(message.getTopic(), message.getKafkaPartition(),
-                                 message.getOffset(), message.getPayload(), partitions);
-    }
+	public ParsedMessage parse(Message message) throws Exception {
+		String[] partitions = extractPartitions(message);
+		MessageTransformers msgTransformer = ReflectionUtil
+				.createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);
+		byte[] transformedMsg = msgTransformer.transform(message.getPayload());
+		return new ParsedMessage(message.getTopic(),
+				message.getKafkaPartition(), message.getOffset(),
+				transformedMsg, partitions);
+	}
 
-    public abstract String[] extractPartitions(Message payload) throws Exception;
+	public abstract String[] extractPartitions(Message payload)
+			throws Exception;
 }

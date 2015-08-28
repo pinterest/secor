@@ -23,6 +23,7 @@ import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.parser.MessageParser;
+import com.pinterest.secor.transformer.MessageTransformers;
 import com.pinterest.secor.uploader.UploadManager;
 import org.apache.hadoop.io.compress.CompressionCodec;
 
@@ -82,6 +83,15 @@ public class ReflectionUtil {
         // Assume that subclass of MessageParser has a constructor with the same signature as MessageParser
         return (MessageParser) clazz.getConstructor(SecorConfig.class).newInstance(config);
     }
+
+	public static MessageTransformers createMessageTransformer(String className, SecorConfig config) throws Exception {
+		Class<?> clazz = Class.forName(className);
+		if(!MessageTransformers.class.isAssignableFrom(clazz)) {
+			throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
+                    className, MessageTransformers.class.getName()));
+		}
+		return (MessageTransformers) clazz.getConstructor(SecorConfig.class).newInstance(config);
+	}
 
     /**
      * Create a FileReaderWriterFactory that is able to read and write a specific type of output log file.
