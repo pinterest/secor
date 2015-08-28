@@ -255,6 +255,18 @@ public class SecorConfig {
         return getString("secor.zookeeper.path");
     }
 
+    public String getGsCredentialsPath() {
+        return getString("secor.gs.credentials.path");
+    }
+
+    public String getGsBucket() {
+        return getString("secor.gs.bucket");
+    }
+
+    public String getGsPath() {
+        return getString("secor.gs.path");
+    }
+
     public boolean getBoolean(String name, boolean defaultValue) {
         return mProperties.getBoolean(name, defaultValue);
     }
