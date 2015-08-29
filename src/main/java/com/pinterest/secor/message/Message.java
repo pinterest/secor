@@ -33,53 +33,43 @@ public class Message {
     private byte[] mPayload;
 
     protected String fieldsToString() {
-
 	return "topic='" + mTopic + '\'' + ", kafkaPartition="
 		+ mKafkaPartition + ", offset=" + mOffset + ", payload="
 		+ new String(mPayload);
-
     }
 
     @Override
     public String toString() {
-
 	return "Message{" + fieldsToString() + '}';
     }
 
     public Message(String topic, int kafkaPartition, long offset, byte[] payload) {
-
 	mTopic = topic;
 	mKafkaPartition = kafkaPartition;
 	mOffset = offset;
 	mPayload = payload;
-
 	if (mPayload == null) {
 	    mPayload = new byte[0];
 	}
     }
 
     public String getTopic() {
-
 	return mTopic;
     }
 
     public int getKafkaPartition() {
-
 	return mKafkaPartition;
     }
 
     public long getOffset() {
-
 	return mOffset;
     }
 
     public byte[] getPayload() {
-
 	return mPayload;
     }
 
     public void write(OutputStream output) throws IOException {
-
 	output.write(mPayload);
     }
 }
