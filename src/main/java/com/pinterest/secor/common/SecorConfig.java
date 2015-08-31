@@ -135,6 +135,8 @@ public class SecorConfig {
         return getInt("secor.messages.per.second");
     }
 
+    public String getS3FileSystem() { return getString("secor.s3.filesystem"); }
+
     public String getS3Bucket() {
         return getString("secor.s3.bucket");
     }
@@ -143,6 +145,9 @@ public class SecorConfig {
         return getString("secor.s3.path");
     }
 
+    public String getS3Prefix() {
+        return getS3FileSystem() + "://" + getS3Bucket() + "/" + getS3Path();
+    }
     public String getLocalPath() {
         return getString("secor.local.path");
     }

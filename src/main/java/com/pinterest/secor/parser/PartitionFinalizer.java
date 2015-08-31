@@ -86,8 +86,6 @@ public class PartitionFinalizer {
     }
 
     private void finalizePartitionsUpTo(String topic, String[] uptoPartitions) throws Exception {
-        final String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
-
         LOG.info("Finalize up to (but not include) {}, dim: {}",
             uptoPartitions, uptoPartitions.length);
 
@@ -98,7 +96,7 @@ public class PartitionFinalizer {
         // Stop at the first partition which already have the SUCCESS file
         for (int i = 0; i < mLookbackPeriods; i++) {
             LOG.info("Looking for partition: " + Arrays.toString(previous));
-            LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, previous,
+            LogFilePath logFilePath = new LogFilePath(mConfig.getS3Prefix(), topic, previous,
                 mConfig.getGeneration(), 0, 0, mFileExtension);
             String logFileDir = logFilePath.getLogFileDir();
             if (FileUtil.exists(logFileDir)) {
@@ -165,7 +163,7 @@ public class PartitionFinalizer {
             }
 
             // Generate the SUCCESS file at the end
-            LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, current,
+            LogFilePath logFilePath = new LogFilePath(mConfig.getS3Prefix(), topic, current,
                 mConfig.getGeneration(), 0, 0, mFileExtension);
             String logFileDir = logFilePath.getLogFileDir();
             String successFilePath = logFileDir + "/_SUCCESS";

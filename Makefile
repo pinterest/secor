@@ -15,6 +15,7 @@ integration: build
 	@mkdir -p $(TEST_HOME)
 	@tar -xzf $(JAR_FILE) -C $(TEST_HOME)
 	@cp $(TEST_CONFIG)/* $(TEST_HOME)
+	@[ ! -e $(CONFIG)/core-site.xml ] && jar uf $(TEST_HOME)/secor-*.jar -C $(TEST_CONFIG) core-site.xml
 	@[ ! -e $(CONFIG)/jets3t.properties ] && jar uf $(TEST_HOME)/secor-*.jar -C $(TEST_CONFIG) jets3t.properties
 	cd $(TEST_HOME) && ./scripts/run_tests.sh
 

@@ -1,0 +1,7 @@
+<configuration>
+  <property>
+    <name>fs.s3a.endpoint</name>
+    <description>For testing override the endpoint to fakes3</description>
+    <value>http://localhost:5000</value>
+  </property>
+</configuration>
