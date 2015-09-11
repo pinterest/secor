@@ -9,7 +9,7 @@
     <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>secor</name>
-    <description>Kafka to s3 logs exporter</description>
+    <description>Kafka to s3/gs logs exporter</description>
     <url>https://github.com/pinterest/secor</url>
 
     <licenses>
@@ -236,6 +236,17 @@
             <groupId>com.timgroup</groupId>
             <artifactId>java-statsd-client</artifactId>
             <version>3.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-storage</artifactId>
+            <version>v1-rev40-1.20.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava-jdk5</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
