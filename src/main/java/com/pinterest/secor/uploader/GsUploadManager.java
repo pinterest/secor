@@ -2,6 +2,8 @@ package com.pinterest.secor.uploader;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.googleapis.media.MediaHttpUploader;
+import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener;
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -25,7 +27,7 @@ import java.util.concurrent.Future;
 
 /**
  * Manages uploads to Google Cloud Storage using the Storage class from the Google API SDK.
- *
+ * <p>
  * It will use Service Account credential (json file) that can be generated from the Google Developers Console.
  * By default it will look up configured credential path in secor.gs.credentials.path or fallback to the default
  * credential in the environment variable GOOGLE_APPLICATION_CREDENTIALS.
@@ -60,7 +62,7 @@ public class GsUploadManager extends UploadManager {
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         final String gsBucket = mConfig.getGsBucket();
         final String gsKey = localPath.withPrefix(mConfig.getGsPath()).getLogFilePath();
-        File localFile = new File(localPath.getLogFilePath());
+        final File localFile = new File(localPath.getLogFilePath());
 
         LOG.info("uploading file {} to gs://{}/{}", localFile, gsBucket, gsKey);
 
@@ -71,7 +73,17 @@ public class GsUploadManager extends UploadManager {
             @Override
             public void run() {
                 try {
-                    mClient.objects().insert(gsBucket, storageObject, storageContent).execute();
+                    Storage.Objects.Insert request = mClient.objects().insert(gsBucket, storageObject, storageContent);
+                    // Use direct upload as we are not handling resuming and it seems to be more stable.
+                    request.getMediaHttpUploader().setDirectUploadEnabled(true);
+                    request.getMediaHttpUploader().setProgressListener(new MediaHttpUploaderProgressListener() {
+                        @Override
+                        public void progressChanged(MediaHttpUploader uploader) throws IOException {
+                            LOG.debug("[{} %] upload file {} to gs://{}/{}",
+                                    (int) uploader.getProgress() * 100, localFile, gsBucket, gsKey);
+                        }
+                    });
+                    request.execute();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -89,7 +101,8 @@ public class GsUploadManager extends UploadManager {
             try {
                 // Lookup if configured path from the properties; otherwise fallback to Google Application default
                 if (credentialsPath != null) {
-                    credential = GoogleCredential.fromStream(new FileInputStream(credentialsPath), httpTransport, JSON_FACTORY)
+                    credential = GoogleCredential
+                            .fromStream(new FileInputStream(credentialsPath), httpTransport, JSON_FACTORY)
                             .createScoped(Collections.singleton(StorageScopes.CLOUD_PLATFORM));
                 } else {
                     credential = GoogleCredential.getApplicationDefault(httpTransport, JSON_FACTORY);
