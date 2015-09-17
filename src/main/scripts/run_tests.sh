@@ -56,9 +56,9 @@ READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriterFacto
 # Hadoop supports multiple implementations of the s3 filesytem
 S3_FILESYSTEMS=${S3_FILESYSTEMS:-s3n}
 
-# The minimum wait time is one minute plus delta.  Secor is configured to upload files older than
-# one minute and we need to make sure that everything ends up on s3 before starting verification.
-WAIT_TIME=${SECOR_WAIT_TIME:-120}
+# The minimum wait time is 10 seconds plus delta.  Secor is configured to upload files older than
+# 10 seconds and we need to make sure that everything ends up on s3 before starting verification.
+WAIT_TIME=${SECOR_WAIT_TIME:-40}
 BASE_DIR=$(dirname $0)
 CONF_DIR=${BASE_DIR}/..
 
@@ -365,8 +365,9 @@ move_offset_back_test() {
     set_offsets_in_zookeeper 2
     post_messages $((${MESSAGES}*9/10)) 0
 
-    echo "Waiting $((${WAIT_TIME}*2)) sec for Secor to upload logs to s3"
-    sleep $((${WAIT_TIME}*2))
+    # file.age increased to 30 from 10, so multiply wait time by 3.
+    echo "Waiting $((${WAIT_TIME}*3)) sec for Secor to upload logs to s3"
+    sleep $((${WAIT_TIME}*3))
     # 4 because we skipped 2 messages per topic partition and there are 2 partitions per topic.
     verify $((${MESSAGES}-4)) 0
 
