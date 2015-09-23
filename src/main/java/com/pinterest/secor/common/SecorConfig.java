@@ -272,6 +272,14 @@ public class SecorConfig {
         return getString("secor.gs.path");
     }
 
+    public int getGsConnectTimeoutInMs() {
+        return getInt("secor.gs.connect.timeout.ms", 3 * 60000);
+    }
+
+    public int getGsReadTimeoutInMs() {
+        return getInt("secor.gs.read.timeout.ms", 3 * 60000);
+    }
+
     public boolean getBoolean(String name, boolean defaultValue) {
         return mProperties.getBoolean(name, defaultValue);
     }
