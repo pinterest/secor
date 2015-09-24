@@ -129,6 +129,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Strava](https://www.strava.com)
   * [TiVo](https://www.tivo.com)
   * [Yelp](http://www.yelp.com)
+  * [VarageSale](http://www.varagesale.com)
 
 ## Help
 
