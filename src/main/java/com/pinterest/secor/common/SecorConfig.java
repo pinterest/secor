@@ -184,6 +184,10 @@ public class SecorConfig {
         return getInt("secor.local.log.delete.age.hours");
     }
 
+    public String getFileExtension() {
+        return getString("secor.file.extension");
+    }
+
     public int getOstrichPort() {
         return getInt("ostrich.port");
     }
