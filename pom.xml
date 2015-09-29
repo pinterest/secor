@@ -9,7 +9,7 @@
     <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>secor</name>
-    <description>Kafka to s3/gs logs exporter</description>
+    <description>Kafka to s3/gs/swift logs exporter</description>
     <url>https://github.com/pinterest/secor</url>
 
     <licenses>
@@ -151,6 +151,7 @@
             <artifactId>commons-configuration</artifactId>
             <version>1.9</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
@@ -179,6 +180,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-openstack</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.thrift</groupId>
             <artifactId>libthrift</artifactId>

@@ -36,7 +36,7 @@ import java.util.*;
 
 /**
  * Uploader applies a set of policies to determine if any of the locally stored files should be
- * uploaded to s3.
+ * uploaded to the cloud.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */

@@ -137,6 +137,18 @@ public class SecorConfig {
 
     public String getS3FileSystem() { return getString("secor.s3.filesystem"); }
 
+    public boolean getSeperateContainersForTopics() {
+    	return getString("secor.swift.containers.for.each.topic").toLowerCase().equals("true");
+    }
+    
+    public String getSwiftContainer() {
+        return getString("secor.swift.container");
+    }
+
+    public String getSwiftPath() {
+        return getString("secor.swift.path");
+    }
+    
     public String getS3Bucket() {
         return getString("secor.s3.bucket");
     }
@@ -192,6 +204,10 @@ public class SecorConfig {
         return getInt("ostrich.port");
     }
 
+    public String getCloudService() {
+        return getString("cloud.service");
+    }
+    
     public String getAwsAccessKey() {
         return getString("aws.access.key");
     }
@@ -208,6 +224,38 @@ public class SecorConfig {
         return getString("aws.region");
     }
 
+    public String getSwiftTenant() {
+        return getString("swift.tenant");
+    }
+    
+    public String getSwiftUsername() {
+        return getString("swift.username");
+    }
+    
+    public String getSwiftPassword() {
+        return getString("swift.password");
+    }    
+    
+    public String getSwiftAuthUrl() {
+        return getString("swift.auth.url");
+    }
+    
+    public String getSwiftPublic() {
+    	return getString("swift.public");
+    }
+    
+    public String getSwiftPort() {
+    	return getString("swift.port");
+    }
+    
+    public String getSwiftGetAuth() {
+    	return getString("swift.use.get.auth");
+    }
+    
+    public String getSwiftApiKey() {
+    	return getString("swift.api.key");
+    }
+    
     public String getQuboleApiToken() {
         return getString("qubole.api.token");
     }
