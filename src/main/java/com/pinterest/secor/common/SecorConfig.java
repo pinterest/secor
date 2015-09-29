@@ -184,6 +184,10 @@ public class SecorConfig {
         return getInt("secor.local.log.delete.age.hours");
     }
 
+    public String getFileExtension() {
+        return getString("secor.file.extension");
+    }
+
     public int getOstrichPort() {
         return getInt("ostrich.port");
     }
@@ -270,6 +274,14 @@ public class SecorConfig {
 
     public String getGsPath() {
         return getString("secor.gs.path");
+    }
+
+    public int getGsConnectTimeoutInMs() {
+        return getInt("secor.gs.connect.timeout.ms", 3 * 60000);
+    }
+
+    public int getGsReadTimeoutInMs() {
+        return getInt("secor.gs.read.timeout.ms", 3 * 60000);
     }
 
     public boolean getBoolean(String name, boolean defaultValue) {
