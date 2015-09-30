@@ -87,6 +87,10 @@ public class SecorConfig {
         return getInt("kafka.consumer.timeout.ms");
     }
 
+    public String getPartitionAssignmentStrategy() {
+        return getString("kafka.partition.assignment.strategy");
+    }
+
     public String getRebalanceMaxRetries() {
         return getString("kafka.rebalance.max.retries");
     }
