@@ -87,6 +87,10 @@ public class SecorConfig {
         return getInt("kafka.consumer.timeout.ms");
     }
 
+    public String getConsumerAutoOffsetReset() {
+        return getString("kafka.consumer.auto.offset.reset");
+    }
+
     public String getRebalanceMaxRetries() {
         return getString("kafka.rebalance.max.retries");
     }

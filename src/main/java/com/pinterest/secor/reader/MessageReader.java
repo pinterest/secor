@@ -110,9 +110,7 @@ public class MessageReader {
                   Integer.toString(mConfig.getZookeeperSessionTimeoutMs()));
         props.put("zookeeper.sync.time.ms", Integer.toString(mConfig.getZookeeperSyncTimeMs()));
         props.put("auto.commit.enable", "false");
-        // This option is required to make sure that messages are not lost for new topics and
-        // topics whose number of partitions has changed.
-        props.put("auto.offset.reset", "smallest");
+        props.put("auto.offset.reset", mConfig.getConsumerAutoOffsetReset());
         props.put("consumer.timeout.ms", Integer.toString(mConfig.getConsumerTimeoutMs()));
         props.put("consumer.id", IdUtil.getConsumerId());
         props.put("partition.assignment.strategy", "roundrobin");
