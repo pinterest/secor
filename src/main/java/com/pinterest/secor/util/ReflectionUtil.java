@@ -38,77 +38,114 @@ public class ReflectionUtil {
     /**
      * Create an UploadManager from its fully qualified class name.
      *
-     * The class passed in by name must be assignable to UploadManager
-     * and have 1-parameter constructor accepting a SecorConfig.
+     * The class passed in by name must be assignable to UploadManager and have
+     * 1-parameter constructor accepting a SecorConfig.
      *
      * See the secor.upload.manager.class config option.
      *
-     * @param className The class name of a subclass of UploadManager
-     * @param config The SecorCondig to initialize the UploadManager with
-     * @return an UploadManager instance with the runtime type of the class passed by name
+     * @param className
+     *            The class name of a subclass of UploadManager
+     * @param config
+     *            The SecorCondig to initialize the UploadManager with
+     * @return an UploadManager instance with the runtime type of the class
+     *         passed by name
      * @throws Exception
      */
     public static UploadManager createUploadManager(String className,
-                                                    SecorConfig config) throws Exception {
+            SecorConfig config) throws Exception {
         Class<?> clazz = Class.forName(className);
         if (!UploadManager.class.isAssignableFrom(clazz)) {
-            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
-                    className, UploadManager.class.getName()));
+            throw new IllegalArgumentException(String.format(
+                    "The class '%s' is not assignable to '%s'.", className,
+                    UploadManager.class.getName()));
         }
 
-        // Assume that subclass of UploadManager has a constructor with the same signature as UploadManager
-        return (UploadManager) clazz.getConstructor(SecorConfig.class).newInstance(config);
+        // Assume that subclass of UploadManager has a constructor with the same
+        // signature as UploadManager
+        return (UploadManager) clazz.getConstructor(SecorConfig.class)
+                .newInstance(config);
     }
 
     /**
-     * Create a MessageParser from it's fully qualified class name.
-     * The class passed in by name must be assignable to MessageParser and have 1-parameter constructor accepting a SecorConfig.
-     * Allows the MessageParser to be pluggable by providing the class name of a desired MessageParser in config.
+     * Create a MessageParser from it's fully qualified class name. The class
+     * passed in by name must be assignable to MessageParser and have
+     * 1-parameter constructor accepting a SecorConfig. Allows the MessageParser
+     * to be pluggable by providing the class name of a desired MessageParser in
+     * config.
      *
      * See the secor.message.parser.class config option.
      *
-     * @param className The class name of a subclass of MessageParser
-     * @param config The SecorCondig to initialize the MessageParser with
-     * @return a MessageParser instance with the runtime type of the class passed by name
+     * @param className
+     *            The class name of a subclass of MessageParser
+     * @param config
+     *            The SecorCondig to initialize the MessageParser with
+     * @return a MessageParser instance with the runtime type of the class
+     *         passed by name
      * @throws Exception
      */
     public static MessageParser createMessageParser(String className,
-                                                    SecorConfig config) throws Exception {
+            SecorConfig config) throws Exception {
         Class<?> clazz = Class.forName(className);
         if (!MessageParser.class.isAssignableFrom(clazz)) {
-            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
-                    className, MessageParser.class.getName()));
+            throw new IllegalArgumentException(String.format(
+                    "The class '%s' is not assignable to '%s'.", className,
+                    MessageParser.class.getName()));
         }
 
-        // Assume that subclass of MessageParser has a constructor with the same signature as MessageParser
-        return (MessageParser) clazz.getConstructor(SecorConfig.class).newInstance(config);
+        // Assume that subclass of MessageParser has a constructor with the same
+        // signature as MessageParser
+        return (MessageParser) clazz.getConstructor(SecorConfig.class)
+                .newInstance(config);
     }
 
-	public static MessageTransformers createMessageTransformer(String className, SecorConfig config) throws Exception {
-		Class<?> clazz = Class.forName(className);
-		if(!MessageTransformers.class.isAssignableFrom(clazz)) {
-			throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
-                    className, MessageTransformers.class.getName()));
-		}
-		return (MessageTransformers) clazz.getConstructor(SecorConfig.class).newInstance(config);
-	}
+    /**
+     * Create a MessageTrnasformer from it's fully qualified class name. The
+     * class passed in by name must be assignable to MessageTrnasformers and have
+     * 1-parameter constructor accepting a SecorConfig. Allows the MessageTrnasformers
+     * to be pluggable by providing the class name of a desired MessageTrnasformers in
+     * config.
+     *
+     * See the secor.message.transformer.class config option.
+     * 
+     * @param className
+     * @param config
+     * @return
+     * @throws Exception
+     */
+    public static MessageTransformers createMessageTransformer(
+            String className, SecorConfig config) throws Exception {
+        Class<?> clazz = Class.forName(className);
+        if (!MessageTransformers.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(String.format(
+                    "The class '%s' is not assignable to '%s'.", className,
+                    MessageTransformers.class.getName()));
+        }
+        return (MessageTransformers) clazz.getConstructor(SecorConfig.class)
+                .newInstance(config);
+    }
 
     /**
-     * Create a FileReaderWriterFactory that is able to read and write a specific type of output log file.
-     * The class passed in by name must be assignable to FileReaderWriterFactory.
-     * Allows for pluggable FileReader and FileWriter instances to be constructed for a particular type of log file.
+     * Create a FileReaderWriterFactory that is able to read and write a
+     * specific type of output log file. The class passed in by name must be
+     * assignable to FileReaderWriterFactory. Allows for pluggable FileReader
+     * and FileWriter instances to be constructed for a particular type of log
+     * file.
      *
      * See the secor.file.reader.writer.factory config option.
      *
-     * @param className the class name of a subclass of FileReaderWriterFactory
-     * @return a FileReaderWriterFactory with the runtime type of the class passed by name
+     * @param className
+     *            the class name of a subclass of FileReaderWriterFactory
+     * @return a FileReaderWriterFactory with the runtime type of the class
+     *         passed by name
      * @throws Exception
      */
-    private static FileReaderWriterFactory createFileReaderWriterFactory(String className) throws Exception {
+    private static FileReaderWriterFactory createFileReaderWriterFactory(
+            String className) throws Exception {
         Class<?> clazz = Class.forName(className);
         if (!FileReaderWriterFactory.class.isAssignableFrom(clazz)) {
-            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
-                    className, FileReaderWriterFactory.class.getName()));
+            throw new IllegalArgumentException(String.format(
+                    "The class '%s' is not assignable to '%s'.", className,
+                    FileReaderWriterFactory.class.getName()));
         }
 
         // We assume a parameterless constructor
@@ -116,32 +153,46 @@ public class ReflectionUtil {
     }
 
     /**
-     * Use the FileReaderWriterFactory specified by className to build a FileWriter
+     * Use the FileReaderWriterFactory specified by className to build a
+     * FileWriter
      *
-     * @param className the class name of a subclass of FileReaderWriterFactory to create a FileWriter from
-     * @param logFilePath the LogFilePath that the returned FileWriter should write to
-     * @param codec an instance CompressionCodec to compress the file written with, or null for no compression
-     * @return a FileWriter specialised to write the type of files supported by the FileReaderWriterFactory
+     * @param className
+     *            the class name of a subclass of FileReaderWriterFactory to
+     *            create a FileWriter from
+     * @param logFilePath
+     *            the LogFilePath that the returned FileWriter should write to
+     * @param codec
+     *            an instance CompressionCodec to compress the file written
+     *            with, or null for no compression
+     * @return a FileWriter specialised to write the type of files supported by
+     *         the FileReaderWriterFactory
      * @throws Exception
      */
-    public static FileWriter createFileWriter(String className, LogFilePath logFilePath,
-                                              CompressionCodec codec)
-            throws Exception {
-        return createFileReaderWriterFactory(className).BuildFileWriter(logFilePath, codec);
+    public static FileWriter createFileWriter(String className,
+            LogFilePath logFilePath, CompressionCodec codec) throws Exception {
+        return createFileReaderWriterFactory(className).BuildFileWriter(
+                logFilePath, codec);
     }
 
     /**
-     * Use the FileReaderWriterFactory specified by className to build a FileReader
+     * Use the FileReaderWriterFactory specified by className to build a
+     * FileReader
      *
-     * @param className the class name of a subclass of FileReaderWriterFactory to create a FileReader from
-     * @param logFilePath the LogFilePath that the returned FileReader should read from
-     * @param codec an instance CompressionCodec to decompress the file being read, or null for no compression
-     * @return a FileReader specialised to read the type of files supported by the FileReaderWriterFactory
+     * @param className
+     *            the class name of a subclass of FileReaderWriterFactory to
+     *            create a FileReader from
+     * @param logFilePath
+     *            the LogFilePath that the returned FileReader should read from
+     * @param codec
+     *            an instance CompressionCodec to decompress the file being
+     *            read, or null for no compression
+     * @return a FileReader specialised to read the type of files supported by
+     *         the FileReaderWriterFactory
      * @throws Exception
      */
-    public static FileReader createFileReader(String className, LogFilePath logFilePath,
-                                              CompressionCodec codec)
-            throws Exception {
-        return createFileReaderWriterFactory(className).BuildFileReader(logFilePath, codec);
+    public static FileReader createFileReader(String className,
+            LogFilePath logFilePath, CompressionCodec codec) throws Exception {
+        return createFileReaderWriterFactory(className).BuildFileReader(
+                logFilePath, codec);
     }
 }
