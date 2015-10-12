@@ -379,7 +379,7 @@ move_offset_back_test() {
     initialize
 
     OLD_ADDITIONAL_OPTS=${ADDITIONAL_OPTS}
-    ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dsecor.max.file.age.seconds=30"
+    ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dsecor.uploadpolicy.properties=MAX_FILE_SIZE_BYTES=10000,MAX_FILE_AGE_SECONDS=30"
 
     start_secor
     sleep 3

@@ -35,7 +35,9 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * UploaderTest tests the log file uploader logic.
@@ -50,9 +52,10 @@ public class UploaderTest extends TestCase {
 
         public TestUploader(SecorConfig config, OffsetTracker offsetTracker,
                             FileRegistry fileRegistry,
+                            UploadPolicy uploadPolicy,
                             UploadManager uploadManager,
                             ZookeeperConnector zookeeperConnector) {
-            super(config, offsetTracker, fileRegistry, uploadManager, zookeeperConnector);
+            super(config, offsetTracker, fileRegistry, uploadPolicy, uploadManager, zookeeperConnector);
             mReader = Mockito.mock(FileReader.class);
         }
 
@@ -75,6 +78,7 @@ public class UploaderTest extends TestCase {
     private OffsetTracker mOffsetTracker;
     private FileRegistry mFileRegistry;
     private ZookeeperConnector mZookeeperConnector;
+    private UploadPolicy mUploadPolicy;
     private UploadManager mUploadManager;
 
     private TestUploader mUploader;
@@ -88,9 +92,13 @@ public class UploaderTest extends TestCase {
                 "/some_parent_dir/some_topic/some_partition/some_other_partition/"
                         + "10_0_00000000000000000010");
 
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("MAX_FILE_SIZE_BYTES", "10");
+        props.put("MAX_FILE_AGE_SECONDS", "10");
+        
         mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getLocalPath()).thenReturn("/some_parent_dir");
-        Mockito.when(mConfig.getMaxFileSizeBytes()).thenReturn(10L);
+        Mockito.when(mConfig.getUploadPolicyProperties()).thenReturn(props);
         Mockito.when(mConfig.getZookeeperPath()).thenReturn("/");
 
         mOffsetTracker = Mockito.mock(OffsetTracker.class);
@@ -102,10 +110,11 @@ public class UploaderTest extends TestCase {
         Mockito.when(mFileRegistry.getTopicPartitions()).thenReturn(
                 topicPartitions);
 
+        mUploadPolicy = new DefaultUploadPolicy(mConfig, mFileRegistry);
         mUploadManager = new HadoopS3UploadManager(mConfig);
 
         mZookeeperConnector = Mockito.mock(ZookeeperConnector.class);
-        mUploader = new TestUploader(mConfig, mOffsetTracker, mFileRegistry, mUploadManager,
+        mUploader = new TestUploader(mConfig, mOffsetTracker, mFileRegistry, mUploadPolicy, mUploadManager,
                 mZookeeperConnector);
     }
 

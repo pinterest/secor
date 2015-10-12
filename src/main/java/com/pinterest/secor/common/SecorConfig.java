@@ -16,12 +16,13 @@
  */
 package com.pinterest.secor.common;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
-
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -122,13 +123,17 @@ public class SecorConfig {
     public int getConsumerThreads() {
         return getInt("secor.consumer.threads");
     }
-
-    public long getMaxFileSizeBytes() {
-        return getLong("secor.max.file.size.bytes");
+    
+    public String getUploadPolicyStrategyClass() {
+    	return getString("secor.uploadpolicy.strategy.class");
     }
-
-    public long getMaxFileAgeSeconds() {
-        return getLong("secor.max.file.age.seconds");
+    
+    public long getUploadPolicyCheckSeconds() {
+    	return getLong("secor.uploadpolicy.check.seconds");
+    }
+    
+    public Map<String, String> getUploadPolicyProperties() {
+    	return getStringMap("secor.uploadpolicy.properties");
     }
 
     public long getOffsetsPerPartition() {
@@ -351,6 +356,10 @@ public class SecorConfig {
         checkProperty(name);
         return mProperties.getString(name);
     }
+    
+    private String getString(String name, String defaultValue) {
+        return mProperties.getString(name, defaultValue);
+    }
 
     private int getInt(String name) {
         checkProperty(name);
@@ -367,5 +376,13 @@ public class SecorConfig {
 
     private String[] getStringArray(String name) {
         return mProperties.getStringArray(name);
+    }
+    
+    private Map<String, String> getStringMap(String name) {
+    	Map<String, String> result = new HashMap<String, String>();
+    	for (Map.Entry<Object, Object> entry : mProperties.getProperties(name).entrySet()) {
+    		result.put(entry.getKey().toString(), entry.getValue().toString());
+    	}
+    	return result;
     }
 }

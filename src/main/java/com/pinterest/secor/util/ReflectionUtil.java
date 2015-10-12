@@ -18,6 +18,7 @@ package com.pinterest.secor.util;
 
 import org.apache.hadoop.io.compress.CompressionCodec;
 
+import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
@@ -25,6 +26,7 @@ import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.uploader.UploadManager;
+import com.pinterest.secor.uploader.UploadPolicy;
 
 /**
  * ReflectionUtil implements utility methods to construct objects of classes
@@ -32,9 +34,16 @@ import com.pinterest.secor.uploader.UploadManager;
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  * @author Silas Davis (github-code@silasdavis.net)
+ * @author Flavio Barata (flavio.barata@gmail.com)
  */
 public class ReflectionUtil {
 	
+	public static UploadPolicy createUploadPolicy(String className,
+			SecorConfig config,
+			FileRegistry fileRegistry) throws Exception {
+		return createClass(className, UploadPolicy.class, config, fileRegistry);
+	}
+
     /**
      * Create an UploadManager from its fully qualified class name.
      *
