@@ -16,18 +16,26 @@
  */
 package com.pinterest.secor.util;
 
+import junit.framework.TestCase;
+
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.modules.junit4.PowerMockRunner;
+
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.parser.MessageParser;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.junit.Test;
 
-public class ReflectionUtilTest {
+@RunWith(PowerMockRunner.class)
+public class ReflectionUtilTest extends TestCase {
 
     private SecorConfig mSecorConfig;
     private LogFilePath mLogFilePath;
 
+    @Override
     public void setUp() throws Exception {
+    	super.setUp();
         PropertiesConfiguration properties = new PropertiesConfiguration();
         mSecorConfig = new SecorConfig(properties);
         mLogFilePath = new LogFilePath("/foo", "/foo/bar/baz/1_1_1");
