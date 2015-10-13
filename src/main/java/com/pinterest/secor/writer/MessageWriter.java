@@ -72,9 +72,9 @@ public class MessageWriter {
         if (message.getOffset() != lastSeenOffset + 1) {
             StatsUtil.incr("secor.consumer_rebalance_count." + topicPartition.getTopic());
             // There was a rebalancing event since we read the last message.
-            LOG.debug("offset of message {} does not follow sequentially the last seen offset {}. " +
+            LOG.warn("offset of message does not follow sequentially the last seen offset {}. " +
                             "Deleting files in topic {} partition {}",
-                    message, lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
+                    lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
 
             mFileRegistry.deleteTopicPartition(topicPartition);
         }
