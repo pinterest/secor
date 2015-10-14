@@ -51,7 +51,6 @@ public class Consumer extends Thread {
 
     private SecorConfig mConfig;
 
-    private FileRegistry mFileRegistry;
     private MessageReader mMessageReader;
     private MessageWriter mMessageWriter;
     private MessageParser mMessageParser;
@@ -67,11 +66,11 @@ public class Consumer extends Thread {
     private void init() throws Exception {
         mOffsetTracker = new OffsetTracker();
         mMessageReader = new MessageReader(mConfig, mOffsetTracker);
-        mFileRegistry = new FileRegistry(mConfig);
+        FileRegistry fileRegistry = new FileRegistry(mConfig);
         UploadManager uploadManager = ReflectionUtil.createUploadManager(mConfig.getUploadManagerClass(), mConfig);
 
-        mUploader = new Uploader(mConfig, mOffsetTracker, mFileRegistry, uploadManager);
-        mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, mFileRegistry);
+        mUploader = new Uploader(mConfig, mOffsetTracker, fileRegistry, uploadManager);
+        mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry);
         mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
         mUnparsableMessages = 0.;
     }
@@ -160,14 +159,12 @@ public class Consumer extends Thread {
         return true;
     }
 
-    public FileRegistry getFileRegistry() {
-        return mFileRegistry;
-    }
-
     /**
      * Helper to get the offset tracker (used in tests)
      * 
-     * @return the OffsetTracker
+     * @param topic
+     * @param partition
+     * @return
      */
     public OffsetTracker getOffsetTracker() {
         return this.mOffsetTracker;

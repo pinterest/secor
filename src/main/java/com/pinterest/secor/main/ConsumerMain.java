@@ -16,10 +16,8 @@
  */
 package com.pinterest.secor.main;
 
-import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.OstrichAdminService;
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.consumer.Consumer;
 import com.pinterest.secor.tools.LogFileDeleter;
 import com.pinterest.secor.util.FileUtil;
@@ -62,36 +60,14 @@ public class ConsumerMain {
             logFileDeleter.deleteOldLogs();
 
             RateLimitUtil.configure(config);
-            final LinkedList<Consumer> consumers = new LinkedList<Consumer>();
-
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run () {
-                    LOG.info("Shutdown hook invoked");
-                    for (Consumer consumer : consumers) {
-                        FileRegistry fileRegistry = consumer.getFileRegistry();
-                        if (fileRegistry != null) {
-                            for (TopicPartition tp : fileRegistry.getTopicPartitions()) {
-                                try {
-                                    LOG.info("Removing files in: {}", tp);
-                                    fileRegistry.deleteTopicPartition(tp);
-                                } catch (Throwable ex) {
-                                    LOG.error("Unexpected exception: {}", ex);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
             Thread.UncaughtExceptionHandler handler = new Thread.UncaughtExceptionHandler() {
                 public void uncaughtException(Thread thread, Throwable exception) {
                     LOG.error("Thread {} failed", thread, exception);
                     System.exit(1);
                 }
             };
-
             LOG.info("starting {} consumer threads", config.getConsumerThreads());
+            LinkedList<Consumer> consumers = new LinkedList<Consumer>();
             for (int i = 0; i < config.getConsumerThreads(); ++i) {
                 Consumer consumer = new Consumer(config);
                 consumer.setUncaughtExceptionHandler(handler);
