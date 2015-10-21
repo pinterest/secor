@@ -18,6 +18,7 @@ package com.pinterest.secor.util;
 
 import com.pinterest.secor.common.SecorConfig;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.s3a.Constants;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -33,20 +34,63 @@ import java.util.Arrays;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class FileUtil {
-    private static SecorConfig mConfig = null;
+    private static Configuration mConf = new Configuration(true);
 
     public static void configure(SecorConfig config) {
-        mConfig = config;
+        if (config != null) {
+            if (config.getCloudService().equals("Swift")){
+                mConf.set("fs.swift.impl","org.apache.hadoop.fs.swift.snative.SwiftNativeFileSystem");
+                mConf.set("fs.swift.service.GENERICPROJECT.auth.url", config.getSwiftAuthUrl());
+                mConf.set("fs.swift.service.GENERICPROJECT.username", config.getSwiftUsername());
+                mConf.set("fs.swift.service.GENERICPROJECT.tenant", config.getSwiftTenant());
+                mConf.set("fs.swift.service.GENERICPROJECT.http.port", config.getSwiftPort());
+                mConf.set("fs.swift.service.GENERICPROJECT.use.get.auth", config.getSwiftGetAuth());
+                mConf.set("fs.swift.service.GENERICPROJECT.public", config.getSwiftPublic());
+                if (config.getSwiftGetAuth().equals("true")) {
+                    mConf.set("fs.swift.service.GENERICPROJECT.apikey", config.getSwiftApiKey());
+                } else {
+                    mConf.set("fs.swift.service.GENERICPROJECT.password", config.getSwiftPassword());
+                }
+            } else {
+                if (config.getAwsAccessKey().isEmpty() != config.getAwsSecretKey().isEmpty()) {
+                    throw new IllegalArgumentException(
+                        "Must specify both aws.access.key and aws.secret.key or neither.");
+                }
+                if (!config.getAwsAccessKey().isEmpty()) {
+                    mConf.set(Constants.ACCESS_KEY, config.getAwsAccessKey());
+                    mConf.set(Constants.SECRET_KEY, config.getAwsSecretKey());
+                    mConf.set("fs.s3n.awsAccessKeyId", config.getAwsAccessKey());
+                    mConf.set("fs.s3n.awsSecretAccessKey", config.getAwsSecretKey());
+                }
+            }
+        }
     }
 
     public static FileSystem getFileSystem(String path) throws IOException {
-        Configuration conf = new Configuration();
-        if (mConfig != null) {
-            conf.set("fs.s3n.awsAccessKeyId", mConfig.getAwsAccessKey());
-            conf.set("fs.s3n.awsSecretAccessKey", mConfig.getAwsSecretKey());
-        }
-        return FileSystem.get(URI.create(path), conf);
+        return FileSystem.get(URI.create(path), mConf);
     }
+
+    public static String getPrefix(String topic, SecorConfig config)  throws IOException {
+        String prefix = null;
+        if (config.getCloudService().equals("Swift")) {
+            String container = null;
+            if (config.getSeperateContainersForTopics()) {
+                if (!exists("swift://" + topic + ".GENERICPROJECT")){
+                    String containerUrl = "swift://" + topic + ".GENERICPROJECT";
+                    Path containerPath = new Path(containerUrl);
+                    getFileSystem(containerUrl).create(containerPath).close();
+                }
+                container = topic;
+            } else {
+                container = config.getSwiftContainer();
+            }
+            prefix = "swift://" + container + ".GENERICPROJECT/" + config.getSwiftPath();
+        } else {
+            prefix = "s3n://" + config.getS3Bucket() + "/" + config.getS3Path();
+        }
+        return prefix;
+    }
+
 
     public static String[] list(String path) throws IOException {
         FileSystem fs = getFileSystem(path);
@@ -56,7 +100,7 @@ public class FileUtil {
         if (statuses != null) {
             for (FileStatus status : statuses) {
                 Path statusPath = status.getPath();
-                if (path.startsWith("s3://") || path.startsWith("s3n://")) {
+                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://") || path.startsWith("swift://")) {
                     paths.add(statusPath.toUri().toString());
                 } else {
                     paths.add(statusPath.toUri().getPath());
@@ -97,10 +141,10 @@ public class FileUtil {
         }
     }
 
-    public static void moveToS3(String srcLocalPath, String dstS3Path) throws IOException {
+    public static void moveToCloud(String srcLocalPath, String dstCloudPath) throws IOException {
         Path srcPath = new Path(srcLocalPath);
-        Path dstPath = new Path(dstS3Path);
-        getFileSystem(dstS3Path).moveFromLocalFile(srcPath, dstPath);
+        Path dstPath = new Path(dstCloudPath);
+        getFileSystem(dstCloudPath).moveFromLocalFile(srcPath, dstPath);
     }
 
     public static void touch(String path) throws IOException {
@@ -119,7 +163,7 @@ public class FileUtil {
             for (FileStatus fileStatus : statuses) {
                 Path statusPath = fileStatus.getPath();
                 String stringPath;
-                if (path.startsWith("s3://") || path.startsWith("s3n://")) {
+                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://") || path.startsWith("swift://")) {
                     stringPath = statusPath.toUri().toString();
                 } else {
                     stringPath = statusPath.toUri().getPath();

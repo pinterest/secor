@@ -87,6 +87,10 @@ public class SecorConfig {
         return getInt("kafka.consumer.timeout.ms");
     }
 
+    public String getPartitionAssignmentStrategy() {
+        return getString("kafka.partition.assignment.strategy");
+    }
+
     public String getRebalanceMaxRetries() {
         return getString("kafka.rebalance.max.retries");
     }
@@ -135,6 +139,20 @@ public class SecorConfig {
         return getInt("secor.messages.per.second");
     }
 
+    public String getS3FileSystem() { return getString("secor.s3.filesystem"); }
+
+    public boolean getSeperateContainersForTopics() {
+    	return getString("secor.swift.containers.for.each.topic").toLowerCase().equals("true");
+    }
+    
+    public String getSwiftContainer() {
+        return getString("secor.swift.container");
+    }
+
+    public String getSwiftPath() {
+        return getString("secor.swift.path");
+    }
+    
     public String getS3Bucket() {
         return getString("secor.s3.bucket");
     }
@@ -143,6 +161,9 @@ public class SecorConfig {
         return getString("secor.s3.path");
     }
 
+    public String getS3Prefix() {
+        return getS3FileSystem() + "://" + getS3Bucket() + "/" + getS3Path();
+    }
     public String getLocalPath() {
         return getString("secor.local.path");
     }
@@ -179,10 +200,18 @@ public class SecorConfig {
         return getInt("secor.local.log.delete.age.hours");
     }
 
+    public String getFileExtension() {
+        return getString("secor.file.extension");
+    }
+
     public int getOstrichPort() {
         return getInt("ostrich.port");
     }
 
+    public String getCloudService() {
+        return getString("cloud.service");
+    }
+    
     public String getAwsAccessKey() {
         return getString("aws.access.key");
     }
@@ -199,6 +228,38 @@ public class SecorConfig {
         return getString("aws.region");
     }
 
+    public String getSwiftTenant() {
+        return getString("swift.tenant");
+    }
+    
+    public String getSwiftUsername() {
+        return getString("swift.username");
+    }
+    
+    public String getSwiftPassword() {
+        return getString("swift.password");
+    }    
+    
+    public String getSwiftAuthUrl() {
+        return getString("swift.auth.url");
+    }
+    
+    public String getSwiftPublic() {
+    	return getString("swift.public");
+    }
+    
+    public String getSwiftPort() {
+    	return getString("swift.port");
+    }
+    
+    public String getSwiftGetAuth() {
+    	return getString("swift.use.get.auth");
+    }
+    
+    public String getSwiftApiKey() {
+    	return getString("swift.api.key");
+    }
+    
     public String getQuboleApiToken() {
         return getString("qubole.api.token");
     }
@@ -253,6 +314,26 @@ public class SecorConfig {
 
     public String getZookeeperPath() {
         return getString("secor.zookeeper.path");
+    }
+
+    public String getGsCredentialsPath() {
+        return getString("secor.gs.credentials.path");
+    }
+
+    public String getGsBucket() {
+        return getString("secor.gs.bucket");
+    }
+
+    public String getGsPath() {
+        return getString("secor.gs.path");
+    }
+
+    public int getGsConnectTimeoutInMs() {
+        return getInt("secor.gs.connect.timeout.ms", 3 * 60000);
+    }
+
+    public int getGsReadTimeoutInMs() {
+        return getInt("secor.gs.read.timeout.ms", 3 * 60000);
     }
 
     public boolean getBoolean(String name, boolean defaultValue) {

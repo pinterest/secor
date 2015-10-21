@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/pinterest/secor)
 
-Secor is a service persisting [Kafka] logs to [Amazon S3].
+Secor is a service persisting [Kafka] logs to [Amazon S3] and [Openstack Swift].
 
 ## Key features
   - **strong consistency**: as long as [Kafka] is not dropping messages (e.g., due to aggressive cleanup policy) before Secor is able to read them, it is guaranteed that each message will be saved in exactly one [S3] file. This property is not compromised by the notorious temporal inconsistency of [S3] caused by the [eventual consistency] model,
@@ -110,6 +110,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
 
 ## Maintainers
   * [Pawel Garbacki](https://github.com/pgarbacki)
+  * [Henry Cai](https://github.com/HenryCaiHaiying)
 
 ## Contributors
   * [Andy Kramolisch](https://github.com/andykram)
@@ -119,6 +120,16 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Praveen Murugesan](https://github.com/lefthandmagic)
   * [Zack Dever](https://github.com/zackdever)
   * [Leo Woessner](https://github.com/estezz)
+  * [Jerome Gagnon](https://github.com/jgagnon1)
+
+## Companies who use Secor
+
+  * [Airbnb](https://www.airbnb.com)
+  * [Pinterest](https://www.pinterest.com)
+  * [Strava](https://www.strava.com)
+  * [TiVo](https://www.tivo.com)
+  * [Yelp](http://www.yelp.com)
+  * [VarageSale](http://www.varagesale.com)
 
 ## Help
 
@@ -133,3 +144,4 @@ If you have any questions or comments, you can reach us at [secor-users@googlegr
 [OpenTSDB]: http://opentsdb.net/
 [Qubole]: http://www.qubole.com/
 [statsD]: https://github.com/etsy/statsd/
+[Openstack Swift]: http://swift.openstack.org
