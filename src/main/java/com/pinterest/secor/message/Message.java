@@ -26,6 +26,7 @@ import java.lang.String;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class Message {
+
     private String mTopic;
     private int mKafkaPartition;
     private long mOffset;
@@ -36,7 +37,6 @@ public class Message {
                ", kafkaPartition=" + mKafkaPartition +
                ", offset=" + mOffset +
                ", payload=" + new String(mPayload);
-
     }
 
     @Override
@@ -49,10 +49,12 @@ public class Message {
         mKafkaPartition = kafkaPartition;
         mOffset = offset;
         mPayload = payload;
+        if (mPayload == null) {
+            mPayload = new byte[0];
+        }
     }
 
     public String getTopic() {
-
         return mTopic;
     }
 
