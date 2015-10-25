@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -139,6 +140,11 @@ public class FileUtil {
                 throw new IOException("Failed to delete " + path);
             }
         }
+    }
+
+    public static void deleteOnExit(String path) {
+        File file = new File(path);
+        file.deleteOnExit();
     }
 
     public static void moveToCloud(String srcLocalPath, String dstCloudPath) throws IOException {
