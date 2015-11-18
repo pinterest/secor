@@ -39,8 +39,8 @@ public class FileUtil {
 
     public static void configure(SecorConfig config) {
         if (config != null) {
-            if (config.getCloudService().equals("Swift")){
-                mConf.set("fs.swift.impl","org.apache.hadoop.fs.swift.snative.SwiftNativeFileSystem");
+            if (config.getCloudService().equals("Swift")) {
+                mConf.set("fs.swift.impl", "org.apache.hadoop.fs.swift.snative.SwiftNativeFileSystem");
                 mConf.set("fs.swift.service.GENERICPROJECT.auth.url", config.getSwiftAuthUrl());
                 mConf.set("fs.swift.service.GENERICPROJECT.username", config.getSwiftUsername());
                 mConf.set("fs.swift.service.GENERICPROJECT.tenant", config.getSwiftTenant());
@@ -52,7 +52,7 @@ public class FileUtil {
                 } else {
                     mConf.set("fs.swift.service.GENERICPROJECT.password", config.getSwiftPassword());
                 }
-            } else {
+            } else if (config.getCloudService().equals("S3")) {
                 if (config.getAwsAccessKey().isEmpty() != config.getAwsSecretKey().isEmpty()) {
                     throw new IllegalArgumentException(
                         "Must specify both aws.access.key and aws.secret.key or neither.");
@@ -86,8 +86,10 @@ public class FileUtil {
                 container = config.getSwiftContainer();
             }
             prefix = "swift://" + container + ".GENERICPROJECT/" + config.getSwiftPath();
-        } else {
+        } else if (config.getCloudService().equals("S3")) {
             prefix = "s3n://" + config.getS3Bucket() + "/" + config.getS3Path();
+        } else if (config.getCloudService().equals("GS")) {
+            prefix = "gs://" + config.getGsBucket() + "/" + config.getGsPath();
         }
         return prefix;
     }
@@ -101,7 +103,8 @@ public class FileUtil {
         if (statuses != null) {
             for (FileStatus status : statuses) {
                 Path statusPath = status.getPath();
-                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://") || path.startsWith("swift://")) {
+                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://") ||
+                        path.startsWith("swift://") || path.startsWith("gs://")) {
                     paths.add(statusPath.toUri().toString());
                 } else {
                     paths.add(statusPath.toUri().getPath());
@@ -169,7 +172,8 @@ public class FileUtil {
             for (FileStatus fileStatus : statuses) {
                 Path statusPath = fileStatus.getPath();
                 String stringPath;
-                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://") || path.startsWith("swift://")) {
+                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://") ||
+                        path.startsWith("swift://") || path.startsWith("gs://")) {
                     stringPath = statusPath.toUri().toString();
                 } else {
                     stringPath = statusPath.toUri().getPath();
