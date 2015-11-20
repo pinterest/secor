@@ -27,6 +27,7 @@ public class FileUtilTest {
 
     private SecorConfig mSwiftConfig;
     private SecorConfig mS3Config;
+    private SecorConfig mGSconfig;
 
     @Before
     public void setUp() throws Exception {
@@ -39,7 +40,12 @@ public class FileUtilTest {
         mS3Config = Mockito.mock(SecorConfig.class);
         Mockito.when(mS3Config.getCloudService()).thenReturn("S3");
         Mockito.when(mS3Config.getS3Bucket()).thenReturn("some_bucket");
-        Mockito.when(mS3Config.getS3Path()).thenReturn("some_s3_parent_dir"); 
+        Mockito.when(mS3Config.getS3Path()).thenReturn("some_s3_parent_dir");
+
+        mGSconfig = Mockito.mock(SecorConfig.class);
+        Mockito.when(mGSconfig.getCloudService()).thenReturn("GS");
+        Mockito.when(mGSconfig.getGsBucket()).thenReturn("some_gs_bucket");
+        Mockito.when(mGSconfig.getGsPath()).thenReturn("some_gs_parent_dir");
     }
 
     @Test
@@ -51,6 +57,10 @@ public class FileUtilTest {
         //FileUtil.configure(mS3Config);
         Assert.assertEquals(FileUtil.getPrefix("some_topic", mS3Config),
                 "s3n://some_bucket/some_s3_parent_dir");
+
+        //FileUtil.configure(mGSConfig);
+        Assert.assertEquals(FileUtil.getPrefix("some_topic", mGSconfig),
+                "gs://some_gs_bucket/some_gs_parent_dir");
 
         // return to the previous state
         FileUtil.configure(null);
