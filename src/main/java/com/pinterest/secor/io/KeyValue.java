@@ -27,13 +27,21 @@ public class KeyValue {
 	
 	private final long mKey;
 	private final byte[] mValue;
-	
+	private final Object mParsedRecord;
+
 	//constructor
 	public KeyValue(long key, byte[] value) {
 		this.mKey = key;
 		this.mValue = value;
+		this.mParsedRecord = null;
 	}
-	
+
+	public KeyValue(long key, byte[] value, Object parsedRecord) {
+		this.mKey = key;
+		this.mValue = value;
+		this.mParsedRecord = parsedRecord;
+	}
+
 	public long getKey() {
 		return this.mKey;
 	}
@@ -42,4 +50,7 @@ public class KeyValue {
 		return this.mValue;
 	}
 
+	public Object parsedRecord() {
+		return this.mParsedRecord;
+	}
 }
