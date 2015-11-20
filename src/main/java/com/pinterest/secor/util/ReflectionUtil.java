@@ -16,15 +16,17 @@
  */
 package com.pinterest.secor.util;
 
+import org.apache.hadoop.io.compress.CompressionCodec;
+
+import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
-
 import com.pinterest.secor.io.FileReader;
-import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.FileReaderWriterFactory;
+import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.uploader.UploadManager;
-import org.apache.hadoop.io.compress.CompressionCodec;
+import com.pinterest.secor.uploader.UploadPolicy;
 
 /**
  * ReflectionUtil implements utility methods to construct objects of classes
@@ -32,8 +34,16 @@ import org.apache.hadoop.io.compress.CompressionCodec;
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  * @author Silas Davis (github-code@silasdavis.net)
+ * @author Flavio Barata (flavio.barata@gmail.com)
  */
 public class ReflectionUtil {
+	
+	public static UploadPolicy createUploadPolicy(String className,
+			SecorConfig config,
+			FileRegistry fileRegistry) throws Exception {
+		return createClass(className, UploadPolicy.class, config, fileRegistry);
+	}
+
     /**
      * Create an UploadManager from its fully qualified class name.
      *
@@ -49,14 +59,7 @@ public class ReflectionUtil {
      */
     public static UploadManager createUploadManager(String className,
                                                     SecorConfig config) throws Exception {
-        Class<?> clazz = Class.forName(className);
-        if (!UploadManager.class.isAssignableFrom(clazz)) {
-            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
-                    className, UploadManager.class.getName()));
-        }
-
-        // Assume that subclass of UploadManager has a constructor with the same signature as UploadManager
-        return (UploadManager) clazz.getConstructor(SecorConfig.class).newInstance(config);
+        return createClass(className, UploadManager.class, config);
     }
 
     /**
@@ -73,36 +76,7 @@ public class ReflectionUtil {
      */
     public static MessageParser createMessageParser(String className,
                                                     SecorConfig config) throws Exception {
-        Class<?> clazz = Class.forName(className);
-        if (!MessageParser.class.isAssignableFrom(clazz)) {
-            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
-                    className, MessageParser.class.getName()));
-        }
-
-        // Assume that subclass of MessageParser has a constructor with the same signature as MessageParser
-        return (MessageParser) clazz.getConstructor(SecorConfig.class).newInstance(config);
-    }
-
-    /**
-     * Create a FileReaderWriterFactory that is able to read and write a specific type of output log file.
-     * The class passed in by name must be assignable to FileReaderWriterFactory.
-     * Allows for pluggable FileReader and FileWriter instances to be constructed for a particular type of log file.
-     *
-     * See the secor.file.reader.writer.factory config option.
-     *
-     * @param className the class name of a subclass of FileReaderWriterFactory
-     * @return a FileReaderWriterFactory with the runtime type of the class passed by name
-     * @throws Exception
-     */
-    private static FileReaderWriterFactory createFileReaderWriterFactory(String className) throws Exception {
-        Class<?> clazz = Class.forName(className);
-        if (!FileReaderWriterFactory.class.isAssignableFrom(clazz)) {
-            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
-                    className, FileReaderWriterFactory.class.getName()));
-        }
-
-        // We assume a parameterless constructor
-        return (FileReaderWriterFactory) clazz.newInstance();
+        return createClass(className, MessageParser.class, config);
     }
 
     /**
@@ -115,9 +89,8 @@ public class ReflectionUtil {
      * @throws Exception
      */
     public static FileWriter createFileWriter(String className, LogFilePath logFilePath,
-                                              CompressionCodec codec)
-            throws Exception {
-        return createFileReaderWriterFactory(className).BuildFileWriter(logFilePath, codec);
+                                              CompressionCodec codec) throws Exception {
+        return createClass(className, FileReaderWriterFactory.class).BuildFileWriter(logFilePath, codec);
     }
 
     /**
@@ -130,8 +103,30 @@ public class ReflectionUtil {
      * @throws Exception
      */
     public static FileReader createFileReader(String className, LogFilePath logFilePath,
-                                              CompressionCodec codec)
-            throws Exception {
-        return createFileReaderWriterFactory(className).BuildFileReader(logFilePath, codec);
+                                              CompressionCodec codec) throws Exception {
+        return createClass(className, FileReaderWriterFactory.class).BuildFileReader(logFilePath, codec);
     }
+
+    /**
+     * Instantiate a class specified by className using its constructor that matches parameters.
+     * The className must be a subclass of classType.
+     * 
+     * @param className the class name of a subclass of classType to be instantiated
+     * @param classType the class type corresponding to the className
+     * @param parameters optional parameters to be used in the constructor of className
+     * @return the instantiated class
+     * @throws Exception
+     */
+	private static <T> T createClass(String className, Class<T> classType, Object... parameters) throws Exception {
+		Class<?> clazz = Class.forName(className);
+		if (!classType.isAssignableFrom(clazz)) {
+			throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
+					className, classType.getName()));
+		}
+		Class<?>[] classes = new Class<?>[parameters.length];
+		for (int i = 0; i < classes.length; i++) {
+			classes[i] = parameters[i].getClass();
+		}
+		return (T) clazz.getConstructor(classes).newInstance(parameters);
+	}
 }

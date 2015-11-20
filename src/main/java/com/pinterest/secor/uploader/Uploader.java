@@ -16,23 +16,28 @@
  */
 package com.pinterest.secor.uploader;
 
-import com.google.common.base.Joiner;
-import com.pinterest.secor.common.*;
-import com.pinterest.secor.io.FileReader;
-import com.pinterest.secor.io.FileWriter;
-import com.pinterest.secor.io.KeyValue;
-import com.pinterest.secor.util.CompressionUtil;
-import com.pinterest.secor.util.FileUtil;
-import com.pinterest.secor.util.IdUtil;
-import com.pinterest.secor.util.ReflectionUtil;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.*;
+import com.google.common.base.Joiner;
+import com.pinterest.secor.common.FileRegistry;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.OffsetTracker;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.ZookeeperConnector;
+import com.pinterest.secor.io.FileReader;
+import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.CompressionUtil;
+import com.pinterest.secor.util.IdUtil;
+import com.pinterest.secor.util.ReflectionUtil;
 
 /**
  * Uploader applies a set of policies to determine if any of the locally stored files should be
@@ -47,21 +52,23 @@ public class Uploader {
     private OffsetTracker mOffsetTracker;
     private FileRegistry mFileRegistry;
     private ZookeeperConnector mZookeeperConnector;
+    private UploadPolicy mUploadPolicy;
     private UploadManager mUploadManager;
 
     public Uploader(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
-                    UploadManager uploadManager) {
-        this(config, offsetTracker, fileRegistry, uploadManager,
+                    UploadPolicy uploadPolicy, UploadManager uploadManager) {
+        this(config, offsetTracker, fileRegistry, uploadPolicy, uploadManager,
              new ZookeeperConnector(config));
     }
 
     // For testing use only.
     public Uploader(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
-                    UploadManager uploadManager,
+                    UploadPolicy uploadPolicy, UploadManager uploadManager,
                     ZookeeperConnector zookeeperConnector) {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
+        mUploadPolicy = uploadPolicy;
         mUploadManager = uploadManager;
         mZookeeperConnector = zookeeperConnector;
     }
@@ -177,8 +184,8 @@ public class Uploader {
         final long size = mFileRegistry.getSize(topicPartition);
         final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
         LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
-        if (size >= mConfig.getMaxFileSizeBytes() ||
-                modificationAgeSec >= mConfig.getMaxFileAgeSeconds()) {
+        
+        if (mUploadPolicy.shouldUpload(topicPartition)) {
             long newOffsetCount = mZookeeperConnector.getCommittedOffsetCount(topicPartition);
             long oldOffsetCount = mOffsetTracker.setCommittedOffsetCount(topicPartition,
                     newOffsetCount);

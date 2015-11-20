@@ -22,6 +22,7 @@ import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.parser.MessageParser;
+import com.pinterest.secor.uploader.UploadPolicy;
 import com.pinterest.secor.uploader.Uploader;
 import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.reader.MessageReader;
@@ -67,9 +68,10 @@ public class Consumer extends Thread {
         mOffsetTracker = new OffsetTracker();
         mMessageReader = new MessageReader(mConfig, mOffsetTracker);
         FileRegistry fileRegistry = new FileRegistry(mConfig);
+        UploadPolicy uploadPolicy = ReflectionUtil.createUploadPolicy(mConfig.getUploadPolicyStrategyClass(), mConfig, fileRegistry);
         UploadManager uploadManager = ReflectionUtil.createUploadManager(mConfig.getUploadManagerClass(), mConfig);
 
-        mUploader = new Uploader(mConfig, mOffsetTracker, fileRegistry, uploadManager);
+        mUploader = new Uploader(mConfig, mOffsetTracker, fileRegistry, uploadPolicy, uploadManager);
         mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry);
         mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
         mUnparsableMessages = 0.;
@@ -85,7 +87,7 @@ public class Consumer extends Thread {
             throw new RuntimeException("Failed to initialize the consumer", e);
         }
         // check upload policy every N seconds or 10,000 messages/consumer timeouts
-        long checkEveryNSeconds = Math.min(10 * 60, mConfig.getMaxFileAgeSeconds() / 2);
+        long checkEveryNSeconds = Math.min(3600, mConfig.getUploadPolicyCheckSeconds());
         long checkMessagesPerSecond = mConfig.getMessagesPerSecond();
         long nMessages = 0;
         long lastChecked = System.currentTimeMillis();

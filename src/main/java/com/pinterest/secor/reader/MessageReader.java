@@ -16,13 +16,13 @@
  */
 package com.pinterest.secor.reader;
 
-import com.pinterest.secor.common.OffsetTracker;
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.TopicPartition;
-import com.pinterest.secor.message.Message;
-import com.pinterest.secor.util.IdUtil;
-import com.pinterest.secor.util.RateLimitUtil;
-import com.pinterest.secor.util.StatsUtil;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
@@ -31,15 +31,17 @@ import kafka.consumer.TopicFilter;
 import kafka.consumer.Whitelist;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import com.pinterest.secor.common.OffsetTracker;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.message.Message;
+import com.pinterest.secor.util.IdUtil;
+import com.pinterest.secor.util.RateLimitUtil;
+import com.pinterest.secor.util.StatsUtil;
 
 /**
  * Message reader consumer raw Kafka messages.
@@ -52,7 +54,7 @@ public class MessageReader {
     private SecorConfig mConfig;
     private OffsetTracker mOffsetTracker;
     private ConsumerConnector mConsumerConnector;
-    private ConsumerIterator mIterator;
+    private ConsumerIterator<byte[], byte[]> mIterator;
     private HashMap<TopicPartition, Long> mLastAccessTime;
     private final int mTopicPartitionForgetSeconds;
     private final int mCheckMessagesPerSecond;
@@ -79,10 +81,10 @@ public class MessageReader {
     private void updateAccessTime(TopicPartition topicPartition) {
         long now = System.currentTimeMillis() / 1000L;
         mLastAccessTime.put(topicPartition, now);
-        Iterator iterator = mLastAccessTime.entrySet().iterator();
+        Iterator<Map.Entry<TopicPartition, Long>> iterator = mLastAccessTime.entrySet().iterator();
         while (iterator.hasNext()) {
-            Map.Entry pair = (Map.Entry) iterator.next();
-            long lastAccessTime = (Long) pair.getValue();
+            Map.Entry<TopicPartition, Long> pair = iterator.next();
+            long lastAccessTime = pair.getValue();
             if (now - lastAccessTime > mTopicPartitionForgetSeconds) {
                 iterator.remove();
             }
