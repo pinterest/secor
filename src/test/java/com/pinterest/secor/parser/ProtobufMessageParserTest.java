@@ -33,7 +33,7 @@ public class ProtobufMessageParserTest extends TestCase {
         byte data[] = new byte[16];
         CodedOutputStream output = CodedOutputStream.newInstance(data);
         output.writeUInt64(1, timestamp);
-        return new Message("test", 0, 0, data);
+        return new Message("test", 0, 0, null, data);
     }
 
     @Override
