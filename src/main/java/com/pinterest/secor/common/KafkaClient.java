@@ -129,11 +129,20 @@ public class KafkaClient {
         }
         MessageAndOffset messageAndOffset = response.messageSet(
                 topicPartition.getTopic(), topicPartition.getPartition()).iterator().next();
-        ByteBuffer payload = messageAndOffset.message().payload();
-        byte[] payloadBytes = new byte[payload.limit()];
-        payload.get(payloadBytes);
+        byte[] keyBytes = null;
+        if (messageAndOffset.message().hasKey()) {
+            ByteBuffer key = messageAndOffset.message().key();
+            keyBytes = new byte[key.limit()];
+            key.get(keyBytes);
+        }
+        byte[] payloadBytes = null;
+        if (!messageAndOffset.message().isNull()) {
+            ByteBuffer payload = messageAndOffset.message().payload();
+            payloadBytes = new byte[payload.limit()];
+            payload.get(payloadBytes);
+        }
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
-                messageAndOffset.offset(), payloadBytes);
+                messageAndOffset.offset(), keyBytes, payloadBytes);
     }
 
     private SimpleConsumer createConsumer(String host, int port, String clientName) {

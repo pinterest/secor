@@ -27,15 +27,19 @@ import java.lang.String;
  */
 public class Message {
 
+    private static final byte[] EMPTY_BYTES = new byte[0];
+
     private String mTopic;
     private int mKafkaPartition;
     private long mOffset;
+    private byte[] mKafkaKey;
     private byte[] mPayload;
 
     protected String fieldsToString() {
         return "topic='" + mTopic + '\'' +
                ", kafkaPartition=" + mKafkaPartition +
                ", offset=" + mOffset +
+               ", kafkaKey=" + new String(mKafkaKey) +
                ", payload=" + new String(mPayload);
     }
 
@@ -44,13 +48,17 @@ public class Message {
         return "Message{" + fieldsToString() + '}';
     }
 
-    public Message(String topic, int kafkaPartition, long offset, byte[] payload) {
+    public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload) {
         mTopic = topic;
         mKafkaPartition = kafkaPartition;
         mOffset = offset;
+        mKafkaKey = kafkaKey;
+        if (mKafkaKey == null) {
+            mKafkaKey = EMPTY_BYTES;
+        }
         mPayload = payload;
         if (mPayload == null) {
-            mPayload = new byte[0];
+            mPayload = EMPTY_BYTES;
         }
     }
 
@@ -64,6 +72,10 @@ public class Message {
 
     public long getOffset() {
         return mOffset;
+    }
+
+    public byte[] getKafkaKey() {
+        return mKafkaKey;
     }
 
     public byte[] getPayload() {

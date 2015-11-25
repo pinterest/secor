@@ -155,8 +155,8 @@ public class LogFileVerifier {
         FileReader reader = createFileReader(logFilePath);
         KeyValue record;
         while ((record = reader.next()) != null) {
-            if (!offsets.add(record.getKey())) {
-                throw new RuntimeException("duplicate key " + record.getKey() + " found in file " +
+            if (!offsets.add(record.getOffset())) {
+                throw new RuntimeException("duplicate key " + record.getOffset() + " found in file " +
                     logFilePath.getLogFilePath());
             }
         }

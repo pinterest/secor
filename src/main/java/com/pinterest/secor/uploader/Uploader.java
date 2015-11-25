@@ -22,7 +22,6 @@ import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.CompressionUtil;
-import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.ReflectionUtil;
 
@@ -31,7 +30,6 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -137,7 +135,7 @@ public class Uploader {
             reader = createReader(srcPath, codec);
             KeyValue keyVal;
             while ((keyVal = reader.next()) != null) {
-                if (keyVal.getKey() >= startOffset) {
+                if (keyVal.getOffset() >= startOffset) {
                     if (writer == null) {
                         String localPrefix = mConfig.getLocalPath() + '/' +
                             IdUtil.getLocalMessageDir();
