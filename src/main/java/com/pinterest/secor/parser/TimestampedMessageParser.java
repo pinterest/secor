@@ -34,15 +34,14 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     private static final long HOUR_IN_MILLIS = 3600L * 1000L;
     private static final long DAY_IN_MILLIS = 3600L * 24 * 1000L;
 
-    private static final SimpleDateFormat mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
-    private static final SimpleDateFormat mHrFormatter = new SimpleDateFormat("HH");
-    private static final SimpleDateFormat mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
-
-    static {
-        mDtFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        mHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        mDtHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+    /*
+     * IMPORTANT
+     * SimpleDateFormat are NOT thread-safe.
+     * Each parser needs to have their own local SimpleDateFormat or it'll cause race condition.
+     */
+    private final SimpleDateFormat mDtFormatter;
+    private final SimpleDateFormat mHrFormatter;
+    private final SimpleDateFormat mDtHrFormatter;
 
     private final boolean mUsingHourly;
 
@@ -50,6 +49,13 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         super(config);
         mUsingHourly = usingHourly(config);
         LOG.info("UsingHourly: {}", mUsingHourly);
+
+        mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        mDtFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        mHrFormatter = new SimpleDateFormat("HH");
+        mHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
+        mDtHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     public abstract long extractTimestampMillis(final Message message) throws Exception;
