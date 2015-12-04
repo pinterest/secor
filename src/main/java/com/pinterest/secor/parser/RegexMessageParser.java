@@ -39,7 +39,7 @@ public class RegexMessageParser extends TimestampedMessageParser {
         super(config);
         String patStr = config.getMessageTimestampInputPattern();
         LOG.info("timestamp pattern: {}", patStr);
-        mTsPattern = Pattern.compile(patStr);
+        mTsPattern = Pattern.compile(patStr, Pattern.UNIX_LINES);
     }
 
     @Override
