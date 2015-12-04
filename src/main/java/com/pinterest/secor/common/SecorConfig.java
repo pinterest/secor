@@ -336,6 +336,10 @@ public class SecorConfig {
         return getInt("secor.gs.read.timeout.ms", 3 * 60000);
     }
 
+    public int getFinalizerDelaySeconds() {
+        return getInt("partitioner.finalizer.delay.seconds");
+    }
+
     public boolean getBoolean(String name, boolean defaultValue) {
         return mProperties.getBoolean(name, defaultValue);
     }

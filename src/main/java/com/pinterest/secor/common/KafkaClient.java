@@ -59,7 +59,7 @@ public class KafkaClient {
     private HostAndPort findLeader(TopicPartition topicPartition) {
         SimpleConsumer consumer = null;
         try {
-            LOG.info("looking up leader for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
+            LOG.debug("looking up leader for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
             consumer = createConsumer(
                 mConfig.getKafkaSeedBrokerHost(),
                 mConfig.getKafkaSeedBrokerPort(),
@@ -113,7 +113,7 @@ public class KafkaClient {
 
     private Message getMessage(TopicPartition topicPartition, long offset,
                                SimpleConsumer consumer) {
-        LOG.info("fetching message topic {} partition {} offset ",
+        LOG.debug("fetching message topic {} partition {} offset ",
                 topicPartition.getTopic(), topicPartition.getPartition(), offset);
         final int MAX_MESSAGE_SIZE_BYTES = mConfig.getMaxMessageSizeBytes();
         final String clientName = getClientName(topicPartition);
@@ -151,7 +151,7 @@ public class KafkaClient {
 
     public SimpleConsumer createConsumer(TopicPartition topicPartition) {
         HostAndPort leader = findLeader(topicPartition);
-        LOG.info("leader for topic {} partition {} is {}", topicPartition.getTopic(), topicPartition.getPartition(), leader.toString());
+        LOG.debug("leader for topic {} partition {} is {}", topicPartition.getTopic(), topicPartition.getPartition(), leader.toString());
         final String clientName = getClientName(topicPartition);
         return createConsumer(leader.getHostText(), leader.getPort(), clientName);
     }
