@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
+    "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+
+<module name="Checker">
+
+	<module name="FileLength">
+    <property name="max" value="1000"/>
+	</module>
+
+  <module name="NewlineAtEndOfFile">
+    <property name="lineSeparator" value="lf"/>
+  </module>
+
+  <module name="FileTabCharacter"/>
+
+  <module name="TreeWalker">
+    <module name="AvoidStarImport"/>
+    <module name="IllegalImport"/>
+    <module name="RedundantImport"/>
+    <module name="UnusedImports"/>
+    <module name="NeedBraces"/>
+    <module name="MissingSwitchDefault"/>
+    <module name="OneStatementPerLine"/>
+    <module name="OuterTypeFilename"/>
+    <module name="MemberName"/>
+	<module name="LeftCurly"/>
+	<module name="MultipleVariableDeclarations"/>
+	<module name="PackageName"> 
+        <property name="format" value="^com\.thomsonreuters(\.[a-z][a-z0-9]*)*$"/> 
+    </module> 
+	<module name="EmptyCatchBlock"> 
+        <property name="exceptionVariableName" value="expected|ignore"/> 
+    </module> 
+	
+    <module name="LineLength">
+        <property name="max" value="120"/>
+    </module>
+  </module>
+</module>

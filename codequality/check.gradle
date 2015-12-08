@@ -1,0 +1,8 @@
+subprojects {
+	apply plugin: 'checkstyle'
+	checkstyle {
+		ignoreFailures = true 
+		configFile = rootProject.file('codequality/checkstyle.xml')
+		toolVersion = '6.7'
+	}
+}
