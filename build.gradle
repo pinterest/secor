@@ -1,0 +1,64 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+group = 'com.pinterest'
+version = '0.7-SNAPSHOT'
+
+description = """1p-secor-service"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+
+repositories {
+        
+     maven { url "http://maven.twttr.com" }
+     maven { url "http://repo.typesafe.com/typesafe/releases" }
+     maven { url "http://repo.maven.apache.org/maven2" }
+}
+dependencies {
+    compile group: 'com.google.protobuf', name: 'protobuf-java', version:'2.6.1'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version:'1.10.2'
+    compile group: 'net.java.dev.jets3t', name: 'jets3t', version:'0.9.4'
+    compile(group: 'org.apache.kafka', name: 'kafka_2.10', version:'0.8.2.1') {
+exclude(module: 'slf4j-simple')
+    }
+    compile(group: 'log4j', name: 'log4j', version:'1.2.15') {
+exclude(module: 'jmxri')
+exclude(module: 'jmxtools')
+exclude(module: 'jms')
+    }
+    compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.2'
+    compile group: 'org.slf4j', name: 'jcl-over-slf4j', version:'1.7.2'
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version:'1.7.2'
+    compile group: 'commons-configuration', name: 'commons-configuration', version:'1.9'
+    compile group: 'org.apache.hadoop', name: 'hadoop-common', version:'2.7.0'
+    compile(group: 'org.apache.hadoop', name: 'hadoop-aws', version:'2.7.0') {
+exclude(module: 'jets3t')
+exclude(module: 'jackson-annotations')
+exclude(module: 'jackson-core')
+exclude(module: 'jackson-databind')
+    }
+    compile group: 'org.apache.hadoop', name: 'hadoop-openstack', version:'2.7.0'
+    compile group: 'org.apache.thrift', name: 'libthrift', version:'0.9.3'
+    compile group: 'com.twitter', name: 'ostrich_2.10', version:'9.2.1'
+    compile group: 'com.twitter.common.zookeeper', name: 'lock', version:'0.0.7'
+    compile group: 'com.google.guava', name: 'guava', version:'18.0'
+    compile group: 'net.minidev', name: 'json-smart', version:'2.0-RC3'
+    compile group: 'org.mockito', name: 'mockito-all', version:'1.9.5'
+    compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version:'0.7.0-p2'
+    compile group: 'com.timgroup', name: 'java-statsd-client', version:'3.0.2'
+    compile(group: 'com.google.apis', name: 'google-api-services-storage', version:'v1-rev40-1.20.0') {
+exclude(module: 'guava-jdk5')
+    }
+    testCompile group: 'junit', name: 'junit', version:'4.11'
+    testCompile group: 'org.powermock', name: 'powermock-module-junit4', version:'1.5.2'
+    testCompile group: 'org.powermock', name: 'powermock-api-mockito', version:'1.5.2'
+}
+//packaging tests
+task packageTests(type: Jar) {
+  from sourceSets.test.output
+  classifier = 'tests'
+}
+artifacts.archives packageTests
