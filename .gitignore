@@ -40,6 +40,7 @@ Thumbs.db
 .idea
 target
 bin/
+.gradle/
 .settings/
 .project
 .classpath
