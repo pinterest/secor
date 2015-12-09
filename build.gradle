@@ -1,33 +1,190 @@
+ext.githubProjectName = "1p-secor-service"
+
 apply plugin: 'java'
 apply plugin: 'maven'
 
-group = 'com.pinterest'
-version = '0.7-SNAPSHOT'
+// 1p-service stuff - BEGIN
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'distribution'
+apply plugin: 'java-library-distribution'
+apply plugin: 'os-package'
+apply plugin: 'net.researchgate.release'
+apply plugin: 'sonar-runner'
+// END
+
+// group = 'com.pinterest'
+// version = '0.7-SNAPSHOT'
 
 description = """1p-secor-service"""
 
 sourceCompatibility = 1.8
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8' // 1p-service stuff
 targetCompatibility = 1.8
 
+// 1p-service stuff - BEGIN
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.2'
+}
 
+apply from: file('codequality/check.gradle')
 
-repositories {
+def permanentPackageName = project.name
+def group = 'thomsonreuters-1p'
+def rpmRelease = 1
+def snapshot = true
+if (snapshot) { rpmRelease = 'SNAPSHOT' }
+
+configurations.all {
+        resolutionStrategy.cacheDynamicVersionsFor 1, 'hours'
+        resolutionStrategy.cacheChangingModulesFor 1, 'hours'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+        resources {
+            srcDir 'src/main/resources'
+        }
+    }
+    test {
+        java {
+            srcDir 'src/test/java'
+        }
+        resources {
+            srcDir 'src/test/resources'
+        }
+    }
+}
+
+test {
+  //enable to see logging during gradle build
+  //testLogging.showStandardStreams = true
+  testLogging {
+        events "passed", "skipped", "failed"
+  }
+}
+
+eclipse {
+    classpath {
+        downloadSources = true
+    }
+}
+
+idea {
+    module {
+        jdkName = '1.8'
+        downloadSources = true
+    }
+}
+
+// END
+
+buildscript {
+  repositories {
+
+     // 1p-service stuff - BEGIN
+     mavenCentral()
+     jcenter()
+     maven {
+       url = "https://clojars.org/repo/"
+     }
+     maven {
+       url 'https://oss.sonatype.org/content/groups/public'
+     }
+     maven {
+       url 'http://kundera.googlecode.com/svn/maven2/maven-missing-resources'
+     }
+
+     maven {
+       url "http://repo.1p.thomsonreuters.com/nexus/content/repositories/thirdparty/"
+     }
+     maven {
+       url "http://repo.1p.thomsonreuters.com/nexus/content/repositories/snapshots/"
+     }
+     maven {
+       url "http://repo.1p.thomsonreuters.com/nexus/content/repositories/releases/"
+     }
+     // END
+     
         
      maven { url "http://maven.twttr.com" }
      maven { url "http://repo.typesafe.com/typesafe/releases" }
      maven { url "http://repo.maven.apache.org/maven2" }
+  }
+
+  dependencies {
+
+    // 1p-service stuff - BEGIN
+    classpath group: 'com.netflix.nebula',  name: 'gradle-ospackage-plugin', version: '2.2.0'
+    classpath group: 'org.jsonschema2pojo', name: 'jsonschema2pojo-gradle-plugin', version: '0.4.+'
+    classpath group: 'com.thomsonreuters',  name: '1p-service-api', version: "${servicelib_version}"
+    classpath group: 'net.researchgate',    name: 'gradle-release', version: '2.1.1'
+    classpath group: 'com.bmuschko',        name: 'gradle-nexus-plugin', version: '2.3'
+    classpath group: 'eu.appsatori',        name: 'gradle-fatjar-plugin', version: '0.3'
+    classpath group: 'com.thomsonreuters',  name: 'storm-deploy', version: '2.4.+'
+    
+  }
 }
+
+repositories {
+
+     // 1p-service stuff - BEGIN
+     mavenCentral()
+     jcenter()
+     maven {
+       url = "https://clojars.org/repo/"
+     }
+     maven {
+       url 'https://oss.sonatype.org/content/groups/public'
+     }
+     maven {
+       url 'http://kundera.googlecode.com/svn/maven2/maven-missing-resources'
+     }
+
+     maven {
+       url "http://repo.1p.thomsonreuters.com/nexus/content/repositories/thirdparty/"
+     }
+     maven {
+       url "http://repo.1p.thomsonreuters.com/nexus/content/repositories/snapshots/"
+     }
+     maven {
+       url "http://repo.1p.thomsonreuters.com/nexus/content/repositories/releases/"
+     }
+     // END
+     
+        
+     maven { url "http://maven.twttr.com" }
+     maven { url "http://repo.typesafe.com/typesafe/releases" }
+     maven { url "http://repo.maven.apache.org/maven2" }
+  }
+
 dependencies {
+    compile group: 'com.thomsonreuters', name: '1p-service-lib', version: "${servicelib_version}"
+    compile group: 'com.thomsonreuters', name: '1p-service-swagger', version: "${servicelib_version}"
+    
+    compile group: 'com.thomsonreuters', name: '1p-service-api', version: "${servicelib_version}"
+    compile group: 'com.fasterxml.jackson.core',   name: 'jackson-databind',     version: '2.5.+'
+    compile group: 'com.fasterxml.jackson.core',   name: 'jackson-annotations',  version: '2.5.+'
+
+    testCompile group:  'junit', name: 'junit-dep', version: '4.11'
+    // Jersey test framework
+    testCompile 'com.sun.jersey.jersey-test-framework:jersey-test-framework-core:1.11'
+    testCompile 'com.sun.jersey.jersey-test-framework:jersey-test-framework-external:1.11'
+    // END
+    
     compile group: 'com.google.protobuf', name: 'protobuf-java', version:'2.6.1'
     compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version:'1.10.2'
     compile group: 'net.java.dev.jets3t', name: 'jets3t', version:'0.9.4'
     compile(group: 'org.apache.kafka', name: 'kafka_2.10', version:'0.8.2.1') {
-exclude(module: 'slf4j-simple')
+        exclude(module: 'slf4j-simple')
     }
     compile(group: 'log4j', name: 'log4j', version:'1.2.15') {
-exclude(module: 'jmxri')
-exclude(module: 'jmxtools')
-exclude(module: 'jms')
+        exclude(module: 'jmxri')
+        exclude(module: 'jmxtools')
+        exclude(module: 'jms')
     }
     compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.2'
     compile group: 'org.slf4j', name: 'jcl-over-slf4j', version:'1.7.2'
@@ -35,10 +192,10 @@ exclude(module: 'jms')
     compile group: 'commons-configuration', name: 'commons-configuration', version:'1.9'
     compile group: 'org.apache.hadoop', name: 'hadoop-common', version:'2.7.0'
     compile(group: 'org.apache.hadoop', name: 'hadoop-aws', version:'2.7.0') {
-exclude(module: 'jets3t')
-exclude(module: 'jackson-annotations')
-exclude(module: 'jackson-core')
-exclude(module: 'jackson-databind')
+        exclude(module: 'jets3t')
+        exclude(module: 'jackson-annotations')
+        exclude(module: 'jackson-core')
+        exclude(module: 'jackson-databind')
     }
     compile group: 'org.apache.hadoop', name: 'hadoop-openstack', version:'2.7.0'
     compile group: 'org.apache.thrift', name: 'libthrift', version:'0.9.3'
@@ -50,15 +207,54 @@ exclude(module: 'jackson-databind')
     compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version:'0.7.0-p2'
     compile group: 'com.timgroup', name: 'java-statsd-client', version:'3.0.2'
     compile(group: 'com.google.apis', name: 'google-api-services-storage', version:'v1-rev40-1.20.0') {
-exclude(module: 'guava-jdk5')
+       exclude(module: 'guava-jdk5')
     }
     testCompile group: 'junit', name: 'junit', version:'4.11'
     testCompile group: 'org.powermock', name: 'powermock-module-junit4', version:'1.5.2'
     testCompile group: 'org.powermock', name: 'powermock-api-mockito', version:'1.5.2'
 }
+
 //packaging tests
 task packageTests(type: Jar) {
   from sourceSets.test.output
   classifier = 'tests'
 }
 artifacts.archives packageTests
+
+// 1p-service stuff - BEGIN
+//eiddo repo is the same as project name by default but you can change it
+def eiddoRepo = rootProject.name
+
+ospackage {
+  packageName = permanentPackageName
+  release = rpmRelease
+  arch = NOARCH
+  os = LINUX
+  from(file('root/etc/reuters/karyon')) {
+    into('/etc/reuters')
+    user 'root'
+    permissionGroup 'root'
+  }
+
+
+  from("build/install/"+ permanentPackageName) {
+    into('/opt/reuters/apps/karyon')
+    user 'karyon'
+    permissionGroup 'karyon'
+
+  }
+}
+
+buildRpm.dependsOn installDist
+
+sonarRunner {
+  sonarProperties {
+    property "sonar.host.url", "http://sonar.oneplatform.build"
+    property "sonar.jdbc.url", "jdbc:mysql://sonar.c35w2xq4gxyh.us-west-2.rds.amazonaws.com:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true"
+    property "sonar.jdbc.driverClassName", "com.mysql.jdbc.Driver"
+    property "sonar.jdbc.username", "$System.env.sonarUsername"
+    property "sonar.jdbc.password", "$System.env.sonarPassword"
+  }
+}
+//END
+

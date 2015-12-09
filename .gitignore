@@ -45,3 +45,4 @@ bin/
 .project
 .classpath
 /build/
+/conf/
