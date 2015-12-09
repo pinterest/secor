@@ -82,6 +82,9 @@ idea {
 
 // END
 
+// Since we need to pull third party jars, we need to wrap around the "classpath" method with "buildscript".
+// I suspect we do not have to do it this way but this file is merged from build.gradle from three different
+// places,1p-service, 1p-project-templates, and 1p-secor-service
 buildscript {
   repositories {
 
