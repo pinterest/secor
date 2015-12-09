@@ -16,9 +16,12 @@
  */
 package com.pinterest.secor.uploader;
 
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
+import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.pinterest.secor.common.*;
 
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -41,10 +44,15 @@ import java.io.File;
  * default credential provider chain (supports environment variables,
  * system properties, credientials file, and IAM credentials).
  *
+ * If set, it will
+ *
  * @author Liam Stewart (liam.stewart@gmail.com)
  */
 public class S3UploadManager extends UploadManager {
     private static final Logger LOG = LoggerFactory.getLogger(S3UploadManager.class);
+    private static final String KMS = "KMS";
+    private static final String S3 = "S3";
+    private static final String CUSTOMER = "customer";
 
     private TransferManager mManager;
 
@@ -77,9 +85,47 @@ public class S3UploadManager extends UploadManager {
         String s3Key = localPath.withPrefix(mConfig.getS3Path()).getLogFilePath();
         File localFile = new File(localPath.getLogFilePath());
 
-        LOG.info("uploading file {} to s3://{}/{}", localFile, s3Bucket, s3Key);
+        // make upload request, taking into account configured options for encryption
+        PutObjectRequest uploadRequest = new PutObjectRequest(s3Bucket, s3Key, localFile);;
+        if (mConfig.getAwsSseType() != null) {
+            if (S3.equals(mConfig.getAwsSseType())) {
+                LOG.info("uploading file {} to s3://{}/{} with S3-managed encryption", localFile, s3Bucket, s3Key);
+                enableS3Encryption(uploadRequest);
+            } else if (KMS.equals(mConfig.getAwsSseType())) {
+                LOG.info("uploading file {} to s3://{}/{} using KMS based encryption", localFile, s3Bucket, s3Key);
+                enableKmsEncryption(uploadRequest);
+            } else if (CUSTOMER.equals(mConfig.getAwsSseType())) {
+                LOG.info("uploading file {} to s3://{}/{} using customer key encryption", localFile, s3Bucket, s3Key);
+                enableCustomerEncryption(uploadRequest);
+            } else {
+                // bad option
+                throw new IllegalArgumentException(mConfig.getAwsSseType() + "is not a suitable type for AWS SSE encryption");
+            }
+        } else {
+            LOG.info("uploading file {} to s3://{}/{} with no encryption", localFile, s3Bucket, s3Key);
+        }
 
-        Upload upload = mManager.upload(s3Bucket, s3Key, localFile);
+        Upload upload = mManager.upload(uploadRequest);
         return new S3UploadHandle(upload);
+    }
+
+    private void enableCustomerEncryption(PutObjectRequest uploadRequest) {
+        SSECustomerKey sseKey = new SSECustomerKey(mConfig.getAwsSseCustomerKey());
+        uploadRequest.withSSECustomerKey(sseKey);
+    }
+
+    private void enableKmsEncryption(PutObjectRequest uploadRequest) {
+        String keyId = mConfig.getAwsSseKmsKey();
+        if (!keyId.isEmpty()) {
+            uploadRequest.withSSEAwsKeyManagementParams(new SSEAwsKeyManagementParams(keyId));
+        } else {
+            uploadRequest.withSSEAwsKeyManagementParams(new SSEAwsKeyManagementParams());
+        }
+    }
+
+    private void enableS3Encryption(PutObjectRequest uploadRequest) {
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+        uploadRequest.setMetadata(objectMetadata);
     }
 }
