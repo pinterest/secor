@@ -296,6 +296,11 @@ public class SecorConfig {
         return getString("secor.hive.prefix"); 
     }
 
+    public String getHiveTableName(String topic) {
+        String key = "secor.hive.table.name." + topic;
+        return mProperties.getString(key, null);
+    }
+
     public String getCompressionCodec() {
         return getString("secor.compression.codec");
     }
