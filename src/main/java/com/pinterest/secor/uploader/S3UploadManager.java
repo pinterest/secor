@@ -38,13 +38,19 @@ import java.io.File;
 /**
  * Manages uploads to S3 using the TransferManager class from the AWS
  * SDK.
- *
- * It will use the aws.access.key and aws.secret.key configuration
- * settings if they are non-empty; otherwise, it will use the SDK's
- * default credential provider chain (supports environment variables,
- * system properties, credientials file, and IAM credentials).
- *
- * If set, it will
+ * <p>
+ * Set the <code>aws.sse.type</code> property to specify the type of
+ * encryption to use. Supported options are:
+ * <code>S3</code>, <code>KMS</code> and <code>customer</code>. See AWS
+ * documentation for Server-Side Encryption (SSE) for details on these
+ * options.<br/>
+ * Leave blank to use unencrypted uploads.<br/>
+ * If set to <code>KMS</code>, the <code>aws.sse.kms.key</code> property
+ * specifies the id of the key to use. Leave unset to use the default AWS
+ * key.<br/>
+ * If set to <code>customer</code>, the <code>aws.sse.customer.key</code>
+ * property must be set to the base64 encoded customer key to use.
+ * </p>
  *
  * @author Liam Stewart (liam.stewart@gmail.com)
  */
