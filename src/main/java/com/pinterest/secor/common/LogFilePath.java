@@ -21,8 +21,11 @@ import com.pinterest.secor.message.ParsedMessage;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +59,7 @@ public class LogFilePath {
     private final long mOffset;
     private final String mExtension;
     private String mOutputFilePattern;
+    private SimpleDateFormat timeFormat = new SimpleDateFormat("HH-mm");
 
     public LogFilePath(String prefix, int generation, long lastCommittedOffset,
                        ParsedMessage message, String extension) {
@@ -184,6 +188,7 @@ public class LogFilePath {
     
     private Map<String, String> getValueMap() {
     	
+    	
     	Map<String, String> valueMap = new HashMap<String, String>();
 		valueMap.put("randomHex", getRandomHex());
 		valueMap.put("partition", mPartitions[0]);
@@ -191,6 +196,8 @@ public class LogFilePath {
 		valueMap.put("generation", mGeneration + "");
 		valueMap.put("kafkaPartition", mKafkaPartition + "");
 		valueMap.put("fmOffset", String.format("%020d", mOffset));
+		valueMap.put("currentTimestamp", System.currentTimeMillis() + "");
+		valueMap.put("currentTime", timeFormat.format(new Date()));
 		return valueMap;
     }
 
