@@ -157,11 +157,11 @@ public class PartitionFinalizer {
                         String hivePrefix = null;
                         try {
                             hivePrefix = mConfig.getHivePrefix();
+                            hiveTableName = hivePrefix + topic;
+                            LOG.info("Hive table name from prefix: {}", hiveTableName);
                         } catch (RuntimeException ex) {
                             LOG.warn("HivePrefix is not defined.  Skip hive registration");
                         }
-                        hiveTableName = hivePrefix + topic;
-                        LOG.info("Hive table name from prefix: {}", hiveTableName);
                     }
                     if (hiveTableName != null) {
                         mQuboleClient.addPartition(hiveTableName, sb.toString());
