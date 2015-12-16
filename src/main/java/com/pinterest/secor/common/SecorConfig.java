@@ -296,6 +296,14 @@ public class SecorConfig {
         return getString("message.timestamp.name");
     }
 
+    public int getMessageTimestampId() {
+        return getInt("message.timestamp.id");
+    }
+
+    public String getMessageTimestampType() {
+        return getString("message.timestamp.type");
+    }
+
     public String getMessageTimestampInputPattern() {
         return getString("message.timestamp.input.pattern");
     }
