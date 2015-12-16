@@ -150,14 +150,21 @@ public class PartitionFinalizer {
                         sb.append("'");
                     }
                     LOG.info("Hive partition string: " + sb);
-                    String hivePrefix = null;
-                    try {
-                        hivePrefix = mConfig.getHivePrefix();
-                    } catch (RuntimeException ex) {
-                        LOG.warn("HivePrefix is not defined.  Skip hive registration");
+
+                    String hiveTableName = mConfig.getHiveTableName(topic);
+                    LOG.info("Hive table name from config: {}", hiveTableName);
+                    if (hiveTableName == null) {
+                        String hivePrefix = null;
+                        try {
+                            hivePrefix = mConfig.getHivePrefix();
+                        } catch (RuntimeException ex) {
+                            LOG.warn("HivePrefix is not defined.  Skip hive registration");
+                        }
+                        hiveTableName = hivePrefix + topic;
+                        LOG.info("Hive table name from prefix: {}", hiveTableName);
                     }
-                    if (hivePrefix != null) {
-                        mQuboleClient.addPartition(hivePrefix + topic, sb.toString());
+                    if (hiveTableName != null) {
+                        mQuboleClient.addPartition(hiveTableName, sb.toString());
                     }
                 } catch (Exception e) {
                     LOG.error("failed to finalize topic " + topic, e);
