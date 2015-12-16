@@ -23,6 +23,8 @@ import org.apache.commons.lang.StringUtils;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.naming.OperationNotSupportedException;
+
 /**
  * One-stop shop for Secor configuration options.
  *
@@ -56,6 +58,10 @@ public class SecorConfig {
 
     public static SecorConfig load() throws ConfigurationException {
         return mSecorConfig.get();
+    }
+    
+    public SecorConfig loadFromService() throws OperationNotSupportedException, ConfigurationException {
+        throw new OperationNotSupportedException("It is not used by Service");
     }
 
     /**

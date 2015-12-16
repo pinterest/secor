@@ -16,7 +16,7 @@ import com.thomsonreuters.karyon.ShutdownModule;
 import com.thomsonreuters.swagger.JerseySwaggerAwareRoutingModule;
 
 @ArchaiusBootstrap(loader = EiddoPropertiesLoader.class)
-@KaryonBootstrap(name = "1p-service", healthcheck = HealthCheck.class)
+@KaryonBootstrap(name = "1p-secor-service", healthcheck = HealthCheck.class)
 @Singleton
 @Modules(include = { ShutdownModule.class, KaryonServoModule.class, KaryonWebAdminModule.class,
     KaryonEurekaModule.class, EventsModule.class, MainModule.class, SwaggerHystrixModule.class,
