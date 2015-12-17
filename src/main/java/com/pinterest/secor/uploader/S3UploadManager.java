@@ -93,7 +93,7 @@ public class S3UploadManager extends UploadManager {
 
         // make upload request, taking into account configured options for encryption
         PutObjectRequest uploadRequest = new PutObjectRequest(s3Bucket, s3Key, localFile);;
-        if (mConfig.getAwsSseType() != null) {
+        if (!mConfig.getAwsSseType().isEmpty()) {
             if (S3.equals(mConfig.getAwsSseType())) {
                 LOG.info("uploading file {} to s3://{}/{} with S3-managed encryption", localFile, s3Bucket, s3Key);
                 enableS3Encryption(uploadRequest);
