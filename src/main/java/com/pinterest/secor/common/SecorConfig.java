@@ -228,6 +228,18 @@ public class SecorConfig {
         return getString("aws.region");
     }
 
+    public String getAwsSseType() {
+        return getString("aws.sse.type");
+    }
+
+    public String getAwsSseKmsKey() {
+        return getString("aws.sse.kms.key");
+    }
+
+    public String getAwsSseCustomerKey() {
+        return getString("aws.sse.customer.key");
+    }
+
     public String getSwiftTenant() {
         return getString("swift.tenant");
     }
