@@ -41,7 +41,8 @@ import com.pinterest.secor.message.Message;
  * 
  */
 public class PatternDateMessageParser extends MessageParser {
-    private static final Logger LOG = LoggerFactory.getLogger(PatternDateMessageParser.class);
+    
+	private static final Logger LOG = LoggerFactory.getLogger(PatternDateMessageParser.class);
     protected static final String defaultDate = "1970-01-01";
     protected static final String defaultFormatter = "yyyy-MM-dd";
 
@@ -59,9 +60,15 @@ public class PatternDateMessageParser extends MessageParser {
             Object inputPattern = mConfig.getMessageTimestampInputPattern();
             if (fieldValue != null && inputPattern != null) {
                 try {
-                    SimpleDateFormat inputFormatter = new SimpleDateFormat(inputPattern.toString());
-                    SimpleDateFormat outputFormatter = new SimpleDateFormat(StringUtils.defaultIfBlank(mConfig.getPartitionOutputDtFormat(), defaultFormatter));
-                    Date dateFormat = inputFormatter.parse(fieldValue.toString());
+                	SimpleDateFormat outputFormatter = new SimpleDateFormat(StringUtils.defaultIfBlank(mConfig.getPartitionOutputDtFormat(), defaultFormatter));
+                	Date dateFormat = null;
+                	if(fieldValue instanceof Long) {
+                		dateFormat = new Date((Long)fieldValue);
+                	} else {
+                		SimpleDateFormat inputFormatter = new SimpleDateFormat(inputPattern.toString());
+                		dateFormat = inputFormatter.parse(fieldValue.toString());
+                	}
+                    
                     result[0] = outputFormatter.format(dateFormat);
                     return result;
                 } catch (Exception e) {
@@ -74,5 +81,5 @@ public class PatternDateMessageParser extends MessageParser {
 
         return result;
     }
-
+    
 }
