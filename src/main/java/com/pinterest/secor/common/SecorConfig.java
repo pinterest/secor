@@ -234,6 +234,18 @@ public class SecorConfig {
         return getString("aws.region");
     }
 
+    public String getAwsSseType() {
+        return getString("aws.sse.type");
+    }
+
+    public String getAwsSseKmsKey() {
+        return getString("aws.sse.kms.key");
+    }
+
+    public String getAwsSseCustomerKey() {
+        return getString("aws.sse.customer.key");
+    }
+
     public String getSwiftTenant() {
         return getString("swift.tenant");
     }
@@ -302,6 +314,11 @@ public class SecorConfig {
         return getString("secor.hive.prefix"); 
     }
 
+    public String getHiveTableName(String topic) {
+        String key = "secor.hive.table.name." + topic;
+        return mProperties.getString(key, null);
+    }
+
     public String getCompressionCodec() {
         return getString("secor.compression.codec");
     }
@@ -340,6 +357,10 @@ public class SecorConfig {
 
     public int getGsReadTimeoutInMs() {
         return getInt("secor.gs.read.timeout.ms", 3 * 60000);
+    }
+
+    public int getFinalizerDelaySeconds() {
+        return getInt("partitioner.finalizer.delay.seconds");
     }
 
     public boolean getBoolean(String name, boolean defaultValue) {

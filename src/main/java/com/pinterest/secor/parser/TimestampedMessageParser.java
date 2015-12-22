@@ -42,6 +42,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     private final SimpleDateFormat mDtFormatter;
     private final SimpleDateFormat mHrFormatter;
     private final SimpleDateFormat mDtHrFormatter;
+    private final int mFinalizerDelaySeconds;
 
     private final boolean mUsingHourly;
 
@@ -49,6 +50,8 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         super(config);
         mUsingHourly = usingHourly(config);
         LOG.info("UsingHourly: {}", mUsingHourly);
+        mFinalizerDelaySeconds = config.getFinalizerDelaySeconds();
+        LOG.info("FinalizerDelaySeconds: {}", mFinalizerDelaySeconds);
 
         mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
         mDtFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -110,7 +113,8 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         long lastTimestamp = extractTimestampMillis(lastMessage);
         long committedTimestamp = extractTimestampMillis(committedMessage);
         long now = System.currentTimeMillis();
-        if (lastTimestamp == committedTimestamp && (now - lastTimestamp) > 3600 * 1000) {
+        if (lastTimestamp == committedTimestamp &&
+            (now - lastTimestamp) > mFinalizerDelaySeconds * 1000) {
             LOG.info("No new message coming, use the current time: " + now);
             return now;
         }
@@ -132,6 +136,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
             long millis = getFinalizedTimestampMillis(lastMessages.get(i),
                 committedMessages.get(i));
             if (millis < minMillis) {
+                LOG.info("partition {}, time {}", i, millis);
                 minMillis = millis;
             }
         }
@@ -142,7 +147,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         }
 
         // add the safety lag for late-arrival messages
-        minMillis -= 3600L * 1000L;
+        minMillis -= mFinalizerDelaySeconds * 1000L;
         LOG.info("adjusted millis {}", minMillis);
         return generatePartitions(minMillis, mUsingHourly);
     }
