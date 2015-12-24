@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.thomsonreuters.eiddo.EiddoClient;
-import com.thomsonreuters.eiddo.EiddoListener;
+import com.thomsonreuters.eiddo.client.EiddoClient;
+import com.thomsonreuters.eiddo.client.EiddoListener;
 
 @Singleton
 public class HealthCheck implements HealthCheckHandler {
