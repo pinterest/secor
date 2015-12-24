@@ -263,8 +263,7 @@ sonarRunner {
 //END
 
 // Generate the "build.properties" file used by the OstrichService in Secor
-task createOstrichProps {
-
+task createOstrichProps << {
     new ByteArrayOutputStream().withStream { os ->
         def result = exec {
             executable = 'git'
@@ -272,7 +271,8 @@ task createOstrichProps {
             standardOutput = os
        }
        def outputAsString = 'build_revision='+os.toString()
-       def buildProps = new File('./build/classes/main/com/pinterest/secor/common/build.properties')
+       def buildProps = new File('build/classes/main/com/pinterest/secor/common/build.properties')
        buildProps.write(outputAsString+'\n')
     }
 }
+createOstrichProps.mustRunAfter compileJava
