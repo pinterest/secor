@@ -170,6 +170,7 @@ dependencies {
     compile group: 'com.thomsonreuters', name: '1p-service-swagger', version: "${servicelib_version}"
     
     compile group: 'com.thomsonreuters', name: '1p-service-api', version: "${servicelib_version}"
+    compile group: 'com.thomsonreuters', name: 'eiddo-client', version: '0.4.+'
     compile group: 'com.fasterxml.jackson.core',   name: 'jackson-databind',     version: '2.5.+'
     compile group: 'com.fasterxml.jackson.core',   name: 'jackson-annotations',  version: '2.5.+'
 
