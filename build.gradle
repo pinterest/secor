@@ -276,4 +276,4 @@ task createOstrichProps << {
        buildProps.write(outputAsString+'\n')
     }
 }
-createOstrichProps.mustRunAfter compileJava
+build.dependsOn createOstrichProps
