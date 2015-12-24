@@ -276,4 +276,4 @@ task createOstrichProps << {
        buildProps.write(outputAsString+'\n')
     }
 }
-build.dependsOn createOstrichProps
+processResources.dependsOn createOstrichProps
