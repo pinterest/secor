@@ -8,7 +8,7 @@ import netflix.karyon.servo.KaryonServoModule;
 
 import com.google.inject.Singleton;
 import com.netflix.governator.annotations.Modules;
-import com.thomsonreuters.eiddo.EiddoPropertiesLoader;
+import com.thomsonreuters.eiddo.client.EiddoPropertiesLoader;
 import com.thomsonreuters.events.karyon.EventsModule;
 import com.thomsonreuters.handler.HealthCheck;
 import com.thomsonreuters.injection.module.MainModule;

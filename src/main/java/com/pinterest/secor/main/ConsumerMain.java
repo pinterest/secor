@@ -25,8 +25,6 @@ import com.pinterest.secor.util.RateLimitUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.LinkedList;
 
 /**
@@ -76,12 +74,6 @@ public class ConsumerMain {
                 consumers.add(consumer);
                 consumer.start();
             }
-            
-            /*
-            for (Consumer consumer : consumers) {
-                consumer.join();
-            }
-            */
             
         } catch (Throwable t) {
             LOG.error("Consumer failed", t);
