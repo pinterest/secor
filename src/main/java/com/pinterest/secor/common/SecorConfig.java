@@ -20,6 +20,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 
+import com.netflix.config.ConfigurationManager;
+
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -44,6 +47,9 @@ public class SecorConfig {
             PropertiesConfiguration properties;
             try {
                 properties = new PropertiesConfiguration(configProperty);
+                // Load the properties from 1p-<this app>.properties file, note that this will override the same
+                // properties in those secor.*.properties files. It should always loaded LAST.
+                load1pProps(properties);
             } catch (ConfigurationException e) {
                 throw new RuntimeException("Error loading configuration from " + configProperty);
             }
@@ -60,8 +66,12 @@ public class SecorConfig {
         return mSecorConfig.get();
     }
     
-    public SecorConfig loadFromService() throws OperationNotSupportedException, ConfigurationException {
-        throw new OperationNotSupportedException("It is not used by Service");
+    private static void load1pProps(PropertiesConfiguration properties) {
+    	    properties.setProperty("aws.access.key", ConfigurationManager.getConfigInstance().getString("aws.access.key"));
+    	    properties.setProperty("aws.secret.key", ConfigurationManager.getConfigInstance().getString("aws.secret.key"));
+    	    properties.setProperty("secor.s3.bucket", ConfigurationManager.getConfigInstance().getString("secor.s3.bucket"));
+    	    properties.setProperty("kafka.seed.broker.host", ConfigurationManager.getConfigInstance().getString("kafka.seed.broker.host"));
+    	    properties.setProperty("zookeeper.quorum", ConfigurationManager.getConfigInstance().getString("zookeeper.quorum"));
     }
 
     /**
