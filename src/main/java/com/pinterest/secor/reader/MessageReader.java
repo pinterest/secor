@@ -115,6 +115,10 @@ public class MessageReader {
         props.put("auto.offset.reset", "smallest");
         props.put("consumer.timeout.ms", Integer.toString(mConfig.getConsumerTimeoutMs()));
         props.put("consumer.id", IdUtil.getConsumerId());
+        // Properties required to upgrade from kafka 0.8.x to 0.9.x
+        props.put("dual.commit.enabled", mConfig.getDualCommitEnabled());
+        props.put("offsets.storage", mConfig.getOffsetsStorage());
+
         props.put("partition.assignment.strategy", mConfig.getPartitionAssignmentStrategy());
         if (mConfig.getRebalanceMaxRetries() != null &&
             !mConfig.getRebalanceMaxRetries().isEmpty()) {
