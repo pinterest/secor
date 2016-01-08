@@ -54,11 +54,12 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         LOG.info("FinalizerDelaySeconds: {}", mFinalizerDelaySeconds);
 
         mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
-        mDtFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        TimeZone timeZone = config.getTimeZone() != null ? TimeZone.getTimeZone(config.getTimeZone()) : TimeZone.getTimeZone("UTC");
+        mDtFormatter.setTimeZone(timeZone);
         mHrFormatter = new SimpleDateFormat("HH");
-        mHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        mHrFormatter.setTimeZone(timeZone);
         mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
-        mDtHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        mDtHrFormatter.setTimeZone(timeZone);
     }
 
     public abstract long extractTimestampMillis(final Message message) throws Exception;

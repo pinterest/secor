@@ -44,7 +44,8 @@ public class LogFileDeleter {
         }
         String[] consumerDirs = FileUtil.list(mConfig.getLocalPath());
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        TimeZone timeZone = mConfig.getTimeZone() != null ? TimeZone.getTimeZone(mConfig.getTimeZone()) : TimeZone.getTimeZone("UTC");
+        format.setTimeZone(timeZone);
         for (String consumerDir : consumerDirs) {
             long modificationTime = FileUtil.getModificationTimeMsRecursive(consumerDir);
             String modificationTimeStr = format.format(modificationTime);

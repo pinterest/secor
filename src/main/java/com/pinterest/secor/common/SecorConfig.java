@@ -365,6 +365,10 @@ public class SecorConfig {
         return getInt("partitioner.finalizer.delay.seconds");
     }
 
+    public String getTimeZone(){
+        return getString("secor.parser.timezone");
+    }
+
     public boolean getBoolean(String name, boolean defaultValue) {
         return mProperties.getBoolean(name, defaultValue);
     }

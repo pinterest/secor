@@ -16,11 +16,8 @@
  */
 package com.pinterest.secor.parser;
 
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
-
-import java.util.Arrays;
-import java.util.List;
 import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,6 +25,8 @@ import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @RunWith(PowerMockRunner.class)
 public class JsonMessageParserTest extends TestCase {
@@ -106,12 +105,49 @@ public class JsonMessageParserTest extends TestCase {
     }
 
     @Test
+    public void testExtractPartitionsForUTCDefaultTimezone() throws Exception {
+        Mockito.when(mConfig.getTimeZone()).thenReturn("UTC");
+        JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
+
+        String expectedPartition = "dt=2014-07-21";
+
+        String resultSeconds[] = jsonMessageParser.extractPartitions(mMessageWithSecondsTimestamp);
+        assertEquals(1, resultSeconds.length);
+        assertEquals(expectedPartition, resultSeconds[0]);
+
+        String resultMillis[] = jsonMessageParser.extractPartitions(mMessageWithMillisTimestamp);
+        assertEquals(1, resultMillis.length);
+        assertEquals(expectedPartition, resultMillis[0]);
+    }
+
+
+    @Test
     public void testExtractHourlyPartitions() throws Exception {
         Mockito.when(TimestampedMessageParser.usingHourly(mConfig)).thenReturn(true);
         JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
 
         String expectedDtPartition = "dt=2014-07-21";
         String expectedHrPartition = "hr=02";
+
+        String resultSeconds[] = jsonMessageParser.extractPartitions(mMessageWithSecondsTimestamp);
+        assertEquals(2, resultSeconds.length);
+        assertEquals(expectedDtPartition, resultSeconds[0]);
+        assertEquals(expectedHrPartition, resultSeconds[1]);
+
+        String resultMillis[] = jsonMessageParser.extractPartitions(mMessageWithMillisTimestamp);
+        assertEquals(2, resultMillis.length);
+        assertEquals(expectedDtPartition, resultMillis[0]);
+        assertEquals(expectedHrPartition, resultMillis[1]);
+    }
+
+    @Test
+    public void testExtractHourlyPartitionsForNonUTCTimezone() throws Exception {
+        Mockito.when(mConfig.getTimeZone()).thenReturn("IST");
+        Mockito.when(TimestampedMessageParser.usingHourly(mConfig)).thenReturn(true);
+        JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
+
+        String expectedDtPartition = "dt=2014-07-21";
+        String expectedHrPartition = "hr=08";
 
         String resultSeconds[] = jsonMessageParser.extractPartitions(mMessageWithSecondsTimestamp);
         assertEquals(2, resultSeconds.length);
