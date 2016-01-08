@@ -16,12 +16,14 @@
  */
 package com.pinterest.secor.common;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -363,6 +365,10 @@ public class SecorConfig {
 
     public int getFinalizerDelaySeconds() {
         return getInt("partitioner.finalizer.delay.seconds");
+    }
+
+    public TimeZone getTimeZone(){
+        return Strings.isNullOrEmpty(getString("secor.parser.timezone")) ?  TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(getString("secor.parser.timezone"));
     }
 
     public boolean getBoolean(String name, boolean defaultValue) {

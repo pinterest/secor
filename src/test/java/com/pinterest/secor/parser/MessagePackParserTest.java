@@ -28,6 +28,7 @@ import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.HashMap;
+import java.util.TimeZone;
 
 @RunWith(PowerMockRunner.class)
 public class MessagePackParserTest extends TestCase {
@@ -43,6 +44,7 @@ public class MessagePackParserTest extends TestCase {
     public void setUp() throws Exception {
         SecorConfig mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("ts");
+        Mockito.when(mConfig.getTimeZone()).thenReturn(TimeZone.getTimeZone("UTC"));
         mMessagePackParser = new MessagePackParser(mConfig);
         mObjectMapper = new ObjectMapper(new MessagePackFactory());
 
