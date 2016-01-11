@@ -367,8 +367,9 @@ public class SecorConfig {
         return getInt("partitioner.finalizer.delay.seconds");
     }
 
-    public TimeZone getTimeZone(){
-        return Strings.isNullOrEmpty(getString("secor.parser.timezone")) ?  TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(getString("secor.parser.timezone"));
+    public TimeZone getTimeZone() {
+        String timezone = getString("secor.parser.timezone");
+        return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);
     }
 
     public boolean getBoolean(String name, boolean defaultValue) {
