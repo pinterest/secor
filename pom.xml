@@ -277,6 +277,11 @@
                 <directory>src/main/config</directory>
             </resource>
         </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/config</directory>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
