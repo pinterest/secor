@@ -16,6 +16,7 @@
  */
 package com.pinterest.secor.common;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
@@ -25,6 +26,7 @@ import com.netflix.config.ConfigurationManager;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import javax.naming.OperationNotSupportedException;
 
@@ -312,6 +314,14 @@ public class SecorConfig {
         return getString("message.timestamp.name");
     }
 
+    public int getMessageTimestampId() {
+        return getInt("message.timestamp.id");
+    }
+
+    public String getMessageTimestampType() {
+        return getString("message.timestamp.type");
+    }
+
     public String getMessageTimestampInputPattern() {
         return getString("message.timestamp.input.pattern");
     }
@@ -371,6 +381,11 @@ public class SecorConfig {
 
     public int getFinalizerDelaySeconds() {
         return getInt("partitioner.finalizer.delay.seconds");
+    }
+
+    public TimeZone getTimeZone() {
+        String timezone = getString("secor.parser.timezone");
+        return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);
     }
 
     public boolean getBoolean(String name, boolean defaultValue) {

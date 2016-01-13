@@ -18,14 +18,12 @@ package com.pinterest.secor.parser;
 
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
+import java.util.List;
 
 public abstract class TimestampedMessageParser extends MessageParser implements Partitioner {
 
@@ -54,11 +52,11 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         LOG.info("FinalizerDelaySeconds: {}", mFinalizerDelaySeconds);
 
         mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
-        mDtFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        mDtFormatter.setTimeZone(config.getTimeZone());
         mHrFormatter = new SimpleDateFormat("HH");
-        mHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        mHrFormatter.setTimeZone(config.getTimeZone());
         mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
-        mDtHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        mDtHrFormatter.setTimeZone(config.getTimeZone());
     }
 
     public abstract long extractTimestampMillis(final Message message) throws Exception;
