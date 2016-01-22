@@ -132,6 +132,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [VarageSale](http://www.varagesale.com)
   * [Skyscanner](http://www.skyscanner.net)
   * [Nextperf](http://www.nextperf.com)
+  * [Zalando](http://www.zalando.com)
 
 ## Help
 

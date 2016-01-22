@@ -35,13 +35,14 @@ public class DateMessageParserTest extends TestCase {
     private Message mFormat2;
     private Message mFormat3;
     private Message mInvalidDate;
+    private Message mISOFormat;
+    private Message mNestedISOFormat;
     private OngoingStubbing<String> getTimestamp;
 
     @Override
     public void setUp() throws Exception {
         mConfig = Mockito.mock(SecorConfig.class);
-        Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
-
+        
         byte format1[] = "{\"timestamp\":\"2014-07-30 10:53:20\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
                 .getBytes("UTF-8");
         mFormat1 = new Message("test", 0, 0, null, format1);
@@ -58,31 +59,50 @@ public class DateMessageParserTest extends TestCase {
                 .getBytes("UTF-8");
         mInvalidDate = new Message("test", 0, 0, null, invalidDate);
         
-        getTimestamp = Mockito.when(mConfig.getMessageTimestampInputPattern());
+        byte isoFormat[] = "{\"timestamp\":\"2016-01-11T11:50:28.647Z\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
+                .getBytes("UTF-8");
+        mISOFormat = new Message("test", 0, 0, null, isoFormat);
+        
+        byte nestedISOFormat[] = "{\"meta_data\":{\"created\":\"2016-01-11T11:50:28.647Z\"},\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
+                .getBytes("UTF-8");
+        mNestedISOFormat = new Message("test", 0, 0, null, nestedISOFormat);
+        
     }
 
     @Test
     public void testExtractDateUsingInputPattern() throws Exception {
-        getTimestamp.thenReturn("yyyy-MM-dd HH:mm:ss");
+        Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
+        
+        Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
         assertEquals("dt=2014-07-30", new DateMessageParser(mConfig).extractPartitions(mFormat1)[0]);
 
-        getTimestamp.thenReturn("yyyy/MM/d");
+        Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy/MM/d");
         assertEquals("dt=2014-10-25", new DateMessageParser(mConfig).extractPartitions(mFormat2)[0]);
 
-        getTimestamp.thenReturn("yyyyy.MMMMM.dd GGG hh:mm aaa");
+        Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyyy.MMMMM.dd GGG hh:mm aaa");
         assertEquals("dt=2001-07-04", new DateMessageParser(mConfig).extractPartitions(mFormat3)[0]);
     }
 
     @Test
     public void testExtractDateWithWrongEntries() throws Exception {
+        Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
         // invalid date
-        getTimestamp.thenReturn("yyyy-MM-dd HH:mm:ss"); // any pattern
+        Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss"); // any pattern
         assertEquals(DateMessageParser.defaultDate, new DateMessageParser(
                 mConfig).extractPartitions(mInvalidDate)[0]);
 
         // invalid pattern
-        getTimestamp.thenReturn("yyy-MM-dd :s");
+        Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyy-MM-dd :s");
         assertEquals(DateMessageParser.defaultDate, new DateMessageParser(
                 mConfig).extractPartitions(mFormat1)[0]);
     }
+    
+    @Test
+    public void testNestedField() throws Exception {
+        Mockito.when(mConfig.getMessageTimestampNameSeparator()).thenReturn(".");
+        Mockito.when(mConfig.getMessageTimestampName()).thenReturn("meta_data.created");
+        Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
+
+        assertEquals("dt=2016-01-11", new DateMessageParser(mConfig).extractPartitions(mNestedISOFormat)[0]);
+    } 
 }

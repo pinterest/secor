@@ -34,7 +34,7 @@ public class JsonMessageParser extends TimestampedMessageParser {
     public long extractTimestampMillis(final Message message) {
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
         if (jsonObject != null) {
-            Object fieldValue = jsonObject.get(mConfig.getMessageTimestampName());
+            Object fieldValue = getJsonFieldValue(jsonObject);
             if (fieldValue != null) {
                 return toMillis(Double.valueOf(fieldValue.toString()).longValue());
             }

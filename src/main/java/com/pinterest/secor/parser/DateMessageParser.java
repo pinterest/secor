@@ -52,7 +52,7 @@ public class DateMessageParser extends MessageParser {
         String result[] = { defaultDate };
 
         if (jsonObject != null) {
-            Object fieldValue = jsonObject.get(mConfig.getMessageTimestampName());
+            Object fieldValue = getJsonFieldValue(jsonObject);
             Object inputPattern = mConfig.getMessageTimestampInputPattern();
             if (fieldValue != null && inputPattern != null) {
                 try {
