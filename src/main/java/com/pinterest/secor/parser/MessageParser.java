@@ -41,7 +41,10 @@ public abstract class MessageParser {
 
     public MessageParser(SecorConfig config) {
         mConfig = config;
-        if (mConfig.getMessageTimestampName() != null && mConfig.getMessageTimestampNameSeparator() != null) {
+        if (mConfig.getMessageTimestampName() != null &&
+            !mConfig.getMessageTimestampName().isEmpty() &&
+            mConfig.getMessageTimestampNameSeparator() != null &&
+            !mConfig.getMessageTimestampNameSeparator().isEmpty()) {
             String separatorPattern = Pattern.quote(mConfig.getMessageTimestampNameSeparator());
             mNestedFields = mConfig.getMessageTimestampName().split(separatorPattern);
         }
