@@ -26,8 +26,11 @@ import net.minidev.json.JSONValue;
  * from JSON data and partitions data by date.
  */
 public class JsonMessageParser extends TimestampedMessageParser {
+    private final boolean m_timestampRequired;
+
     public JsonMessageParser(SecorConfig config) {
         super(config);
+        m_timestampRequired = config.isMessageTimestampRequired();
     }
 
     @Override
@@ -38,6 +41,8 @@ public class JsonMessageParser extends TimestampedMessageParser {
             if (fieldValue != null) {
                 return toMillis(Double.valueOf(fieldValue.toString()).longValue());
             }
+        } else if (m_timestampRequired) {
+            throw new RuntimeException("Missing timestamp field for message: " + message);
         }
         return 0;
     }

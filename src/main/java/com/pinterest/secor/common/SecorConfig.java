@@ -322,6 +322,10 @@ public class SecorConfig {
         return getString("message.timestamp.input.pattern");
     }
 
+    public boolean isMessageTimestampRequired() {
+        return mProperties.getBoolean("message.timestamp.required");
+    }
+
     public int getFinalizerLookbackPeriods() {
         return getInt("secor.finalizer.lookback.periods", 10);
     }
