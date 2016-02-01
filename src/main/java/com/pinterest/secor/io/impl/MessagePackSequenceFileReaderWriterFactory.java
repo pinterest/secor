@@ -16,58 +16,82 @@
  */
 package com.pinterest.secor.io.impl;
 
-import java.io.IOException;
-import java.util.Arrays;
-
+import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.FileUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.msgpack.core.MessagePack;
+import org.msgpack.core.MessagePacker;
+import org.msgpack.core.MessageUnpacker;
 
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.io.KeyValue;
-import com.pinterest.secor.util.FileUtil;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Sequence file reader writer implementation
  *
  * @author Praveen Murugesan (praveen@uber.com)
  */
-public class SequenceFileReaderWriterFactory implements FileReaderWriterFactory {
+public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWriterFactory {
+    private static final int KAFKA_MESSAGE_OFFSET = 1;
+    private static final int KAFKA_HASH_KEY = 2;
+    private static final byte[] EMPTY_BYTES = new byte[0];
+
     @Override
     public FileReader BuildFileReader(LogFilePath logFilePath, CompressionCodec codec) throws Exception {
-        return new SequenceFileReader(logFilePath);
+        return new MessagePackSequenceFileReader(logFilePath);
     }
 
     @Override
     public FileWriter BuildFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
-        return new SequenceFileWriter(logFilePath, codec);
+        return new MessagePackSequenceFileWriter(logFilePath, codec);
     }
 
-    protected class SequenceFileReader implements FileReader {
+    protected class MessagePackSequenceFileReader implements FileReader {
         private final SequenceFile.Reader mReader;
-        private final LongWritable mKey;
+        private final BytesWritable mKey;
         private final BytesWritable mValue;
 
-        public SequenceFileReader(LogFilePath path) throws Exception {
+        public MessagePackSequenceFileReader(LogFilePath path) throws Exception {
             Configuration config = new Configuration();
             Path fsPath = new Path(path.getLogFilePath());
             FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
             this.mReader = new SequenceFile.Reader(fs, fsPath, config);
-            this.mKey = (LongWritable) mReader.getKeyClass().newInstance();
+            this.mKey = (BytesWritable) mReader.getKeyClass().newInstance();
             this.mValue = (BytesWritable) mReader.getValueClass().newInstance();
         }
 
         @Override
         public KeyValue next() throws IOException {
             if (mReader.next(mKey, mValue)) {
-                return new KeyValue(mKey.get(), Arrays.copyOfRange(mValue.getBytes(), 0, mValue.getLength()));
+                MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(mKey.getBytes());
+                int mapSize = unpacker.unpackMapHeader();
+                long offset = 0;
+                byte[] keyBytes = EMPTY_BYTES;
+                for (int i = 0; i < mapSize; i++) {
+                    int key = unpacker.unpackInt();
+                    switch (key) {
+                        case KAFKA_MESSAGE_OFFSET:
+                            offset = unpacker.unpackLong();
+                            break;
+                        case KAFKA_HASH_KEY:
+                            int keySize = unpacker.unpackBinaryHeader();
+                            keyBytes = new byte[keySize];
+                            unpacker.readPayload(keyBytes);
+                            break;
+                    }
+                }
+                unpacker.close();
+                return new KeyValue(offset, keyBytes, Arrays.copyOfRange(mValue.getBytes(), 0, mValue.getLength()));
             } else {
                 return null;
             }
@@ -79,24 +103,24 @@ public class SequenceFileReaderWriterFactory implements FileReaderWriterFactory 
         }
     }
 
-    protected class SequenceFileWriter implements FileWriter {
+    protected class MessagePackSequenceFileWriter implements FileWriter {
         private final SequenceFile.Writer mWriter;
-        private final LongWritable mKey;
+        private final BytesWritable mKey;
         private final BytesWritable mValue;
 
-        public SequenceFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
+        public MessagePackSequenceFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
             Configuration config = new Configuration();
             Path fsPath = new Path(path.getLogFilePath());
             FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
             if (codec != null) {
                 this.mWriter = SequenceFile.createWriter(fs, config, fsPath,
-                        LongWritable.class, BytesWritable.class,
+                        BytesWritable.class, BytesWritable.class,
                         SequenceFile.CompressionType.BLOCK, codec);
             } else {
                 this.mWriter = SequenceFile.createWriter(fs, config, fsPath,
-                        LongWritable.class, BytesWritable.class);
+                        BytesWritable.class, BytesWritable.class);
             }
-            this.mKey = new LongWritable();
+            this.mKey = new BytesWritable();
             this.mValue = new BytesWritable();
         }
 
@@ -107,7 +131,28 @@ public class SequenceFileReaderWriterFactory implements FileReaderWriterFactory 
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            this.mKey.set(keyValue.getOffset());
+            byte[] kafkaKey = keyValue.getKafkaKey();
+            // output size estimate
+            // 1 - map header
+            // 1 - message pack key
+            // 9 - max kafka offset
+            // 1 - message pack key
+            // 5 - max (sane) kafka key size
+            // N - size of kafka key
+            // = 17 + N
+            ByteArrayOutputStream out = new ByteArrayOutputStream(17 + kafkaKey.length);
+            MessagePacker packer = MessagePack.newDefaultPacker(out)
+                    .packMapHeader((kafkaKey.length == 0) ? 1 : 2)
+                    .packInt(KAFKA_MESSAGE_OFFSET)
+                    .packLong(keyValue.getOffset());
+            if (kafkaKey.length != 0) {
+                packer.packInt(KAFKA_HASH_KEY)
+                        .packBinaryHeader(kafkaKey.length)
+                        .writePayload(kafkaKey);
+            }
+            packer.close();
+            byte[] outBytes = out.toByteArray();
+            this.mKey.set(outBytes, 0, outBytes.length);
             this.mValue.set(keyValue.getValue(), 0, keyValue.getValue().length);
             this.mWriter.append(this.mKey, this.mValue);
         }

@@ -21,14 +21,18 @@ import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.parser.MessageParser;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.Test;
+import org.junit.Before;
 
 public class ReflectionUtilTest {
 
     private SecorConfig mSecorConfig;
     private LogFilePath mLogFilePath;
 
+    @Before
     public void setUp() throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.addProperty("message.timestamp.name","");
+        properties.addProperty("message.timestamp.name.separator","");
         mSecorConfig = new SecorConfig(properties);
         mLogFilePath = new LogFilePath("/foo", "/foo/bar/baz/1_1_1");
     }

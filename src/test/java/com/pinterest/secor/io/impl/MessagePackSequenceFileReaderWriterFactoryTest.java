@@ -26,16 +26,12 @@ import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-public class SequenceFileReaderWriterFactoryTest {
-    private SequenceFileReaderWriterFactory mFactory;
-
-    public void setUp() throws Exception {
-        mFactory = new SequenceFileReaderWriterFactory();
-    }
+public class MessagePackSequenceFileReaderWriterFactoryTest {
 
     @Test
-    public void testSequenceReadWriteRoundTrip() throws Exception {
-        SequenceFileReaderWriterFactory factory = new SequenceFileReaderWriterFactory();
+    public void testMessagePackSequenceReadWriteRoundTrip() throws Exception {
+        MessagePackSequenceFileReaderWriterFactory factory =
+                new MessagePackSequenceFileReaderWriterFactory();
         LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(),
                 "test-topic",
                 new String[]{"part-1"},
@@ -45,7 +41,7 @@ public class SequenceFileReaderWriterFactoryTest {
                 ".log"
         );
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, null);
-        KeyValue kv1 = (new KeyValue(23232, new byte[]{23, 45, 40 ,10, 122}));
+        KeyValue kv1 = (new KeyValue(23232, new byte[]{44, 55, 66, 77, 88}, new byte[]{23, 45, 40 ,10, 122}));
         KeyValue kv2 = (new KeyValue(23233, new byte[]{2, 3, 4, 5}));
         fileWriter.write(kv1);
         fileWriter.write(kv2);
@@ -54,9 +50,11 @@ public class SequenceFileReaderWriterFactoryTest {
 
         KeyValue kvout = fileReader.next();
         assertEquals(kv1.getOffset(), kvout.getOffset());
+        assertArrayEquals(kv1.getKafkaKey(), kvout.getKafkaKey());
         assertArrayEquals(kv1.getValue(), kvout.getValue());
         kvout = fileReader.next();
         assertEquals(kv2.getOffset(), kvout.getOffset());
+        assertArrayEquals(kv2.getKafkaKey(), kvout.getKafkaKey());
         assertArrayEquals(kv2.getValue(), kvout.getValue());
     }
 

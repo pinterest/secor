@@ -139,7 +139,7 @@ public class Consumer extends Thread {
                 parsedMessage = mMessageParser.parse(rawMessage);
                 final double DECAY = 0.999;
                 mUnparsableMessages *= DECAY;
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 mUnparsableMessages++;
                 final double MAX_UNPARSABLE_MESSAGES = 1000.;
                 if (mUnparsableMessages > MAX_UNPARSABLE_MESSAGES) {
