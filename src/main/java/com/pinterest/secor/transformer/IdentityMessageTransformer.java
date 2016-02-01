@@ -8,7 +8,7 @@ import com.pinterest.secor.common.SecorConfig;
  * @author Ashish (ashu.impetus@gmail.com)
  *
  */
-public class DefaultMessageTransformers implements MessageTransformers {
+public class IdentityMessageTransformer implements MessageTransformer {
 
     protected SecorConfig mConfig;
 
@@ -17,7 +17,7 @@ public class DefaultMessageTransformers implements MessageTransformers {
      * 
      * @param config
      */
-    public DefaultMessageTransformers(SecorConfig config) {
+    public IdentityMessageTransformer(SecorConfig config) {
         mConfig = config;
     }
 

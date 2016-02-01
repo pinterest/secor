@@ -6,7 +6,7 @@ package com.pinterest.secor.transformer;
  * @author Ashish (ashu.impetus@gmail.com)
  *
  */
-public interface MessageTransformers {
+public interface MessageTransformer {
 
     /**
      * Implement this method to add transformation logic at message level before
