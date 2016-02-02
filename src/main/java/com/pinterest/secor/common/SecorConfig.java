@@ -202,6 +202,10 @@ public class SecorConfig {
         return getString("secor.upload.manager.class");
     }
 
+    public String getMessageTransformerClass(){
+    	return getString("secor.message.transformer.class");
+    }
+ 
     public int getTopicPartitionForgetSeconds() {
         return getInt("secor.topic_partition.forget.seconds");
     }
@@ -420,4 +424,5 @@ public class SecorConfig {
     private String[] getStringArray(String name) {
         return mProperties.getStringArray(name);
     }
+    
 }

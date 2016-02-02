@@ -22,7 +22,6 @@ import com.pinterest.secor.message.ParsedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minidev.json.JSONObject;
-import net.minidev.json.JSONValue;
 import java.util.regex.Pattern;
 
 // TODO(pawel): should we offer a multi-message parser capable of parsing multiple types of
