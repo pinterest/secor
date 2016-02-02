@@ -66,7 +66,12 @@ public class QuboleClient {
             // Get Response.
             InputStream inputStream = connection.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            Map response = (Map) JSONValue.parse(reader);
+            Object responseObj = JSONValue.parse(reader);
+            if (!(responseObj instanceof Map)) {
+                throw new RuntimeException("command " + url + " body " + body + " unexpected " +
+                    responseObj);
+            }
+            Map response = (Map)responseObj;
             if (response.get("status").equals("error")) {
                 throw new RuntimeException("command " + url + " with body " + body + " failed " +
                     JSONObject.toJSONString(response));
@@ -81,7 +86,7 @@ public class QuboleClient {
     }
 
     private int query(String query) throws IOException {
-        URL url = new URL("http://api.qubole.com/api/v1.2/commands");
+        URL url = new URL("https://api.qubole.com/api/v1.2/commands");
         JSONObject queryJson = new JSONObject();
         queryJson.put("query", query);
         String body = queryJson.toString();
@@ -90,7 +95,7 @@ public class QuboleClient {
     }
 
     private void waitForCompletion(int commandId) throws IOException, InterruptedException {
-        URL url = new URL("http://api.qubole.com/api/v1.2/commands/" + commandId);
+        URL url = new URL("https://api.qubole.com/api/v1.2/commands/" + commandId);
         while (true) {
             Map response = makeRequest(url, null);
             if (response.get("status").equals("done")) {

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,33 +28,46 @@ import org.apache.thrift.TFieldIdEnum;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class ThriftMessageParser extends TimestampedMessageParser {
-    private TDeserializer mDeserializer;
+    private final TDeserializer mDeserializer;
+    private final ThriftPath mThriftPath;
+    private final String mTimestampType;
+
+    class ThriftPath implements TFieldIdEnum {
+        private final String mFieldName;
+        private final short mFieldId;
+
+        public ThriftPath(final String fieldName, final short fieldId) {
+            this.mFieldName = fieldName;
+            this.mFieldId = fieldId;
+        }
+
+        @Override
+        public short getThriftFieldId() {
+            return mFieldId;
+        }
+
+        @Override
+        public String getFieldName() {
+            return mFieldName;
+        }
+    }
 
     public ThriftMessageParser(SecorConfig config) {
         super(config);
         mDeserializer = new TDeserializer();
+        mThriftPath = new ThriftPath(mConfig.getMessageTimestampName(), (short) mConfig.getMessageTimestampId());
+        mTimestampType = mConfig.getMessageTimestampType();
     }
 
     @Override
     public long extractTimestampMillis(final Message message) throws TException {
-        class ThriftTemplate implements TFieldIdEnum {
-            private final String mFieldName;
-            public ThriftTemplate(final String fieldName) {
-                this.mFieldName = fieldName;
-            }
-
-            @Override
-            public short getThriftFieldId() {
-                return 1;
-            }
-
-            @Override
-            public String getFieldName() {
-                return mFieldName;
-            }
+        long timestamp;
+        if ("i32".equals(mTimestampType)) {
+            timestamp = (long) mDeserializer.partialDeserializeI32(message.getPayload(), mThriftPath);
+        } else {
+            timestamp = mDeserializer.partialDeserializeI64(message.getPayload(), mThriftPath);
         }
-        long timestamp = mDeserializer.partialDeserializeI64(message.getPayload(),
-                new ThriftTemplate(mConfig.getMessageTimestampName()));
+
         return toMillis(timestamp);
     }
 }

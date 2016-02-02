@@ -103,6 +103,11 @@ public class FileRegistry {
             mWriters.put(path, writer);
             mCreationTimes.put(path, System.currentTimeMillis() / 1000L);
             LOG.debug("created writer for path {}", path.getLogFilePath());
+            LOG.debug("Register deleteOnExit for path {}", path.getLogFilePath());
+            FileUtil.deleteOnExit(path.getLogFileParentDir());
+            FileUtil.deleteOnExit(path.getLogFileDir());
+            FileUtil.deleteOnExit(path.getLogFilePath());
+            FileUtil.deleteOnExit(path.getLogFileCrcPath());
         }
         return writer;
     }

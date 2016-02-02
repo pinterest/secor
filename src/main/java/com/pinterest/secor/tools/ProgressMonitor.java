@@ -129,7 +129,7 @@ public class ProgressMonitor {
 
     public void exportStats() throws Exception {
         List<Stat> stats = getStats();
-        System.out.println(JSONArray.toJSONString(stats));
+        LOG.info("Stats: {}", JSONArray.toJSONString(stats));
 
         // if there is a valid openTSDB port configured export to openTSDB
         if (mConfig.getTsdbHostport() != null && !mConfig.getTsdbHostport().isEmpty()) {
@@ -203,7 +203,8 @@ public class ProgressMonitor {
                     long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
                     Map<String, String> tags = ImmutableMap.of(
                             Stat.STAT_KEYS.TOPIC.getName(), topic,
-                            Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition)
+                            Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition),
+                            Stat.STAT_KEYS.GROUP.getName(), mConfig.getKafkaGroup()
                     );
 
                     long timestamp = System.currentTimeMillis() / 1000;
@@ -246,7 +247,8 @@ public class ProgressMonitor {
             VALUE("value"),
             TIMESTAMP("timestamp"),
             TOPIC("topic"),
-            PARTITION("partition");
+            PARTITION("partition"),
+            GROUP("group");
 
             STAT_KEYS(String name) {
                 this.mName = name;

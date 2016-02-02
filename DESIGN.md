@@ -164,6 +164,43 @@ Putting this all together, a message with timestamp `<some_date:some_time>` writ
 
 The nice property of the proposed file format is that given a list of output files and a Kafka message, we can tell which file contains the output for that message. In other words, we can track correspondence between the output files of different consumer groups. For instance, assume that a bug in the code resulted in logs for a given date being incorrectly processed. We now need to remove all output files produced by the partition group and regenerate them from the files written by the backup group. The composition of file paths guarantees that we can tell which backup files contain the relevant raw records from the names of the removed partition group output files.
 
+## Output file formats
+
+Secor supports two different output file formats with different capabilities.
+
+### Text File
+
+The Delimited Text File output format writes individual messages as raw bytes, separated by newline characters.  Thus,
+it is generally only appropriate for non binary messages that do not contain embedded newlines.  No other metadata
+about the message is recorded.
+
+### Hadoop SequenceFile
+
+The [SequenceFile](https://wiki.apache.org/hadoop/SequenceFile) format writes out the message body in the **value** 
+field of the SequenceFile record.  It supports two different modes for storing additional metadata in the **key**
+field of the SequenceFile. 
+
+#### Legacy
+
+In the default, legacy mode, the kafka partition offset is stored in the key field as an 8 byte long value in big 
+endian format.
+
+#### MessagePack
+
+In the optional, [MessagePack](http://msgpack.org/index.html) mode, the key is a binary structure encoded using the
+MessagePack specification.  MessagePack is a hierarchical map datastructure like JSON, but has a more compact, binary
+representation, and support for more types.  
+
+The MessagePack map stored in the SequenceFile key has its Secor keys stored using integer values, for compactness. 
+The currently defined Secor keys, their meanings, and their associated MessagePack value types are explained below.
+
+|     Key      |       Meaning          | MessagePack Value Type |
+| ------------ | ---------------------- | ---------------------- |
+|      1       | kafka partition offset | 64 bit Integer         |
+|      2       | kafka message key      | Raw Binary byte array  |
+
+Note that if the kafka message has no key, then the field will be omitted from the the MessagePack.
+
 ## New consumer code rollouts
 
 The upgrade procedure is as simple as killing consumers running the old version of the code and letting them pick up new binaries upon restart. Generation numbers provide output isolation across incompatible releases.

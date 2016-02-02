@@ -18,14 +18,12 @@ package com.pinterest.secor.parser;
 
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
+import java.util.List;
 
 public abstract class TimestampedMessageParser extends MessageParser implements Partitioner {
 
@@ -34,15 +32,15 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     private static final long HOUR_IN_MILLIS = 3600L * 1000L;
     private static final long DAY_IN_MILLIS = 3600L * 24 * 1000L;
 
-    private static final SimpleDateFormat mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
-    private static final SimpleDateFormat mHrFormatter = new SimpleDateFormat("HH");
-    private static final SimpleDateFormat mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
-
-    static {
-        mDtFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        mHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        mDtHrFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+    /*
+     * IMPORTANT
+     * SimpleDateFormat are NOT thread-safe.
+     * Each parser needs to have their own local SimpleDateFormat or it'll cause race condition.
+     */
+    private final SimpleDateFormat mDtFormatter;
+    private final SimpleDateFormat mHrFormatter;
+    private final SimpleDateFormat mDtHrFormatter;
+    private final int mFinalizerDelaySeconds;
 
     private final boolean mUsingHourly;
 
@@ -50,6 +48,15 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         super(config);
         mUsingHourly = usingHourly(config);
         LOG.info("UsingHourly: {}", mUsingHourly);
+        mFinalizerDelaySeconds = config.getFinalizerDelaySeconds();
+        LOG.info("FinalizerDelaySeconds: {}", mFinalizerDelaySeconds);
+
+        mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        mDtFormatter.setTimeZone(config.getTimeZone());
+        mHrFormatter = new SimpleDateFormat("HH");
+        mHrFormatter.setTimeZone(config.getTimeZone());
+        mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
+        mDtHrFormatter.setTimeZone(config.getTimeZone());
     }
 
     public abstract long extractTimestampMillis(final Message message) throws Exception;
@@ -104,7 +111,8 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         long lastTimestamp = extractTimestampMillis(lastMessage);
         long committedTimestamp = extractTimestampMillis(committedMessage);
         long now = System.currentTimeMillis();
-        if (lastTimestamp == committedTimestamp && (now - lastTimestamp) > 3600 * 1000) {
+        if (lastTimestamp == committedTimestamp &&
+            (now - lastTimestamp) > mFinalizerDelaySeconds * 1000) {
             LOG.info("No new message coming, use the current time: " + now);
             return now;
         }
@@ -126,6 +134,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
             long millis = getFinalizedTimestampMillis(lastMessages.get(i),
                 committedMessages.get(i));
             if (millis < minMillis) {
+                LOG.info("partition {}, time {}", i, millis);
                 minMillis = millis;
             }
         }
@@ -136,7 +145,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         }
 
         // add the safety lag for late-arrival messages
-        minMillis -= 3600L * 1000L;
+        minMillis -= mFinalizerDelaySeconds * 1000L;
         LOG.info("adjusted millis {}", minMillis);
         return generatePartitions(minMillis, mUsingHourly);
     }

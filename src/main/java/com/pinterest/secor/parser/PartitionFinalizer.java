@@ -54,7 +54,9 @@ public class PartitionFinalizer {
         mMessageParser = (TimestampedMessageParser) ReflectionUtil.createMessageParser(
           mConfig.getMessageParserClass(), mConfig);
         mQuboleClient = new QuboleClient(mConfig);
-        if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
+        if (mConfig.getFileExtension() != null) {
+            mFileExtension = mConfig.getFileExtension();
+        } else if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
             CompressionCodec codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
             mFileExtension = codec.getDefaultExtension();
         } else {
@@ -86,8 +88,7 @@ public class PartitionFinalizer {
     }
 
     private void finalizePartitionsUpTo(String topic, String[] uptoPartitions) throws Exception {
-        final String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
-
+        String prefix = FileUtil.getPrefix(topic, mConfig);
         LOG.info("Finalize up to (but not include) {}, dim: {}",
             uptoPartitions, uptoPartitions.length);
 
@@ -98,7 +99,7 @@ public class PartitionFinalizer {
         // Stop at the first partition which already have the SUCCESS file
         for (int i = 0; i < mLookbackPeriods; i++) {
             LOG.info("Looking for partition: " + Arrays.toString(previous));
-            LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, previous,
+            LogFilePath logFilePath = new LogFilePath(prefix, topic, previous,
                 mConfig.getGeneration(), 0, 0, mFileExtension);
             String logFileDir = logFilePath.getLogFileDir();
             if (FileUtil.exists(logFileDir)) {
@@ -149,14 +150,21 @@ public class PartitionFinalizer {
                         sb.append("'");
                     }
                     LOG.info("Hive partition string: " + sb);
-                    String hivePrefix = null;
-                    try {
-                        hivePrefix = mConfig.getHivePrefix();
-                    } catch (RuntimeException ex) {
-                        LOG.warn("HivePrefix is not defined.  Skip hive registration");
+
+                    String hiveTableName = mConfig.getHiveTableName(topic);
+                    LOG.info("Hive table name from config: {}", hiveTableName);
+                    if (hiveTableName == null) {
+                        String hivePrefix = null;
+                        try {
+                            hivePrefix = mConfig.getHivePrefix();
+                            hiveTableName = hivePrefix + topic;
+                            LOG.info("Hive table name from prefix: {}", hiveTableName);
+                        } catch (RuntimeException ex) {
+                            LOG.warn("HivePrefix is not defined.  Skip hive registration");
+                        }
                     }
-                    if (hivePrefix != null) {
-                        mQuboleClient.addPartition(hivePrefix + topic, sb.toString());
+                    if (hiveTableName != null) {
+                        mQuboleClient.addPartition(hiveTableName, sb.toString());
                     }
                 } catch (Exception e) {
                     LOG.error("failed to finalize topic " + topic, e);
@@ -165,7 +173,7 @@ public class PartitionFinalizer {
             }
 
             // Generate the SUCCESS file at the end
-            LogFilePath logFilePath = new LogFilePath(s3Prefix, topic, current,
+            LogFilePath logFilePath = new LogFilePath(prefix, topic, current,
                 mConfig.getGeneration(), 0, 0, mFileExtension);
             String logFileDir = logFilePath.getLogFileDir();
             String successFilePath = logFileDir + "/_SUCCESS";

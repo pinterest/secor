@@ -44,17 +44,17 @@ public class HadoopS3UploadManager extends UploadManager {
     }
 
     public Handle<?> upload(LogFilePath localPath) throws Exception {
-        String s3Prefix = "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
-        LogFilePath s3Path = localPath.withPrefix(s3Prefix);
+        String prefix = FileUtil.getPrefix(localPath.getTopic(), mConfig);
+        LogFilePath path = localPath.withPrefix(prefix);
         final String localLogFilename = localPath.getLogFilePath();
-        final String s3LogFilename = s3Path.getLogFilePath();
-        LOG.info("uploading file {} to {}", localLogFilename, s3LogFilename);
+        final String logFilename = path.getLogFilePath();
+        LOG.info("uploading file {} to {}", localLogFilename, logFilename);
 
         final Future<?> f = executor.submit(new Runnable() {
             @Override
             public void run() {
                 try {
-                    FileUtil.moveToS3(localLogFilename, s3LogFilename);
+                    FileUtil.moveToCloud(localLogFilename, logFilename);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

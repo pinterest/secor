@@ -115,7 +115,11 @@ public class MessageReader {
         props.put("auto.offset.reset", "smallest");
         props.put("consumer.timeout.ms", Integer.toString(mConfig.getConsumerTimeoutMs()));
         props.put("consumer.id", IdUtil.getConsumerId());
-        props.put("partition.assignment.strategy", "roundrobin");
+        // Properties required to upgrade from kafka 0.8.x to 0.9.x
+        props.put("dual.commit.enabled", mConfig.getDualCommitEnabled());
+        props.put("offsets.storage", mConfig.getOffsetsStorage());
+
+        props.put("partition.assignment.strategy", mConfig.getPartitionAssignmentStrategy());
         if (mConfig.getRebalanceMaxRetries() != null &&
             !mConfig.getRebalanceMaxRetries().isEmpty()) {
             props.put("rebalance.max.retries", mConfig.getRebalanceMaxRetries());
@@ -153,7 +157,8 @@ public class MessageReader {
         }
         MessageAndMetadata<byte[], byte[]> kafkaMessage = mIterator.next();
         Message message = new Message(kafkaMessage.topic(), kafkaMessage.partition(),
-                                      kafkaMessage.offset(), kafkaMessage.message());
+                                      kafkaMessage.offset(), kafkaMessage.key(),
+                                      kafkaMessage.message());
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         updateAccessTime(topicPartition);

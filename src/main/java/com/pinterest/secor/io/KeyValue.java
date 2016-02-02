@@ -25,17 +25,30 @@ package com.pinterest.secor.io;
  */
 public class KeyValue {
 	
-	private final long mKey;
+	private final long mOffset;
+	private final byte[] mKafkaKey;
 	private final byte[] mValue;
-	
-	//constructor
-	public KeyValue(long key, byte[] value) {
-		this.mKey = key;
+
+	// constructor
+	public KeyValue(long offset, byte[] value) {
+		this.mOffset = offset;
+		this.mKafkaKey = new byte[0];
 		this.mValue = value;
 	}
-	
-	public long getKey() {
-		return this.mKey;
+
+	// constructor
+	public KeyValue(long offset, byte[] kafkaKey, byte[] value) {
+		this.mOffset = offset;
+		this.mKafkaKey = kafkaKey;
+		this.mValue = value;
+	}
+
+	public long getOffset() {
+		return this.mOffset;
+	}
+
+	public byte[] getKafkaKey() {
+		return this.mKafkaKey;
 	}
 	
 	public byte[] getValue() {
