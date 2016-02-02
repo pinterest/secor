@@ -19,10 +19,6 @@ package com.pinterest.secor.parser;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
-import com.pinterest.secor.transformer.IdentityMessageTransformer;
-import com.pinterest.secor.transformer.MessageTransformer;
-import com.pinterest.secor.util.ReflectionUtil;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minidev.json.JSONObject;
@@ -40,7 +36,6 @@ import java.util.regex.Pattern;
 public abstract class MessageParser {
     protected SecorConfig mConfig;
     protected String[] mNestedFields;
-    protected MessageTransformer messageTransformer;
     private static final Logger LOG = LoggerFactory.getLogger(MessageParser.class);
 
     public MessageParser(SecorConfig config) {
@@ -52,22 +47,13 @@ public abstract class MessageParser {
             String separatorPattern = Pattern.quote(mConfig.getMessageTimestampNameSeparator());
             mNestedFields = mConfig.getMessageTimestampName().split(separatorPattern);
         }
-        try {
-            messageTransformer = ReflectionUtil
-                .createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);
-        } catch (Exception e) {
-            LOG.warn("Unable to initialize custom message transformer class... Using default", e);
-            messageTransformer =  new IdentityMessageTransformer(mConfig);
-        }
     }
 
     public ParsedMessage parse(Message message) throws Exception {
         String[] partitions = extractPartitions(message);
-        // Transforming the message based on given implementation
-        byte[] transformedMsg = messageTransformer.transform(message.getPayload());
         return new ParsedMessage(message.getTopic(), message.getKafkaPartition(),
                                  message.getOffset(), message.getKafkaKey(),
-                                 transformedMsg, partitions);
+                                 message.getPayload(), partitions);
     }
 
     public abstract String[] extractPartitions(Message payload) throws Exception;

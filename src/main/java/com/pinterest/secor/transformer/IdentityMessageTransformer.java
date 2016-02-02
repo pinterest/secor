@@ -1,6 +1,7 @@
 package com.pinterest.secor.transformer;
 
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.message.Message;
 
 /**
  * Default message transformer class which does no transformation
@@ -9,9 +10,7 @@ import com.pinterest.secor.common.SecorConfig;
  *
  */
 public class IdentityMessageTransformer implements MessageTransformer {
-
     protected SecorConfig mConfig;
-
     /**
      * Constructor
      * 
@@ -20,10 +19,8 @@ public class IdentityMessageTransformer implements MessageTransformer {
     public IdentityMessageTransformer(SecorConfig config) {
         mConfig = config;
     }
-
     @Override
-    public byte[] transform(byte[] message) {
+    public Message transform(Message message) {
         return message;
     }
-
 }
