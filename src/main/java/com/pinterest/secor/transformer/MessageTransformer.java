@@ -9,11 +9,9 @@ import com.pinterest.secor.message.Message;
  *
  */
 public interface MessageTransformer {
-
     /**
      * Implement this method to add transformation logic at message level before
      * dumping it into Amazon S3
      */
     public Message transform(Message message);
-
 }
