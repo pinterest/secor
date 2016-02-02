@@ -18,12 +18,13 @@ package com.pinterest.secor.util;
 
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
-
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.parser.MessageParser;
+import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.UploadManager;
+
 import org.apache.hadoop.io.compress.CompressionCodec;
 
 /**
@@ -133,5 +134,31 @@ public class ReflectionUtil {
                                               CompressionCodec codec)
             throws Exception {
         return createFileReaderWriterFactory(className).BuildFileReader(logFilePath, codec);
+    }
+    
+    /**
+     * Create a MessageTrnasformer from it's fully qualified class name. The
+     * class passed in by name must be assignable to MessageTrnasformers and have
+     * 1-parameter constructor accepting a SecorConfig. Allows the MessageTrnasformers
+     * to be pluggable by providing the class name of a desired MessageTrnasformers in
+     * config.
+     *
+     * See the secor.message.transformer.class config option.
+     * 
+     * @param className
+     * @param config
+     * @return
+     * @throws Exception
+     */
+    public static MessageTransformer createMessageTransformer(
+            String className, SecorConfig config) throws Exception {
+        Class<?> clazz = Class.forName(className);
+        if (!MessageTransformer.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(String.format(
+                    "The class '%s' is not assignable to '%s'.", className,
+                    MessageTransformer.class.getName()));
+        }
+        return (MessageTransformer) clazz.getConstructor(SecorConfig.class)
+                .newInstance(config);
     }
 }
