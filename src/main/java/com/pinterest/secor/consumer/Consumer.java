@@ -22,6 +22,7 @@ import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.parser.MessageParser;
+import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.Uploader;
 import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.reader.MessageReader;
@@ -55,6 +56,7 @@ public class Consumer extends Thread {
     private MessageWriter mMessageWriter;
     private MessageParser mMessageParser;
     private OffsetTracker mOffsetTracker;
+    private MessageTransformer mMessageTransformer;
     private Uploader mUploader;
     // TODO(pawel): we should keep a count per topic partition.
     private double mUnparsableMessages;
@@ -72,6 +74,7 @@ public class Consumer extends Thread {
         mUploader = new Uploader(mConfig, mOffsetTracker, fileRegistry, uploadManager);
         mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry);
         mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
+        mMessageTransformer =  ReflectionUtil.createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);
         mUnparsableMessages = 0.;
     }
 
@@ -136,7 +139,8 @@ public class Consumer extends Thread {
             }
             ParsedMessage parsedMessage = null;
             try {
-                parsedMessage = mMessageParser.parse(rawMessage);
+                Message transformedMessage = mMessageTransformer.transform(rawMessage);
+                parsedMessage = mMessageParser.parse(transformedMessage);
                 final double DECAY = 0.999;
                 mUnparsableMessages *= DECAY;
             } catch (Throwable e) {
@@ -169,5 +173,4 @@ public class Consumer extends Thread {
     public OffsetTracker getOffsetTracker() {
         return this.mOffsetTracker;
     }
-		
 }
