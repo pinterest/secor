@@ -237,6 +237,18 @@ public class SecorConfig {
     public String getAwsEndpoint() {
         return getString("aws.endpoint");
     }
+    
+    public boolean getAwsProxyEnabled(){
+    	return getBoolean("aws.proxy.isEnabled");
+    }
+    
+    public String getAwsProxyHttpHost() {
+        return getString("aws.proxy.http.host");
+    }
+    
+    public int getAwsProxyHttpPort() {
+        return getInt("aws.proxy.http.port");
+    }
 
     public String getAwsRegion() {
         return getString("aws.region");
@@ -394,6 +406,10 @@ public class SecorConfig {
 
     public boolean getBoolean(String name, boolean defaultValue) {
         return mProperties.getBoolean(name, defaultValue);
+    }
+    
+    public boolean getBoolean(String name) {
+        return mProperties.getBoolean(name);
     }
 
     private void checkProperty(String name) {

@@ -21,7 +21,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.pinterest.secor.common.*;
-
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -71,10 +71,22 @@ public class S3UploadManager extends UploadManager {
         String region = mConfig.getAwsRegion();
         AmazonS3 client;
 
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        boolean isHttpProxyEnabled = mConfig.getAwsProxyEnabled();
+        
+        //proxy settings
+        if(isHttpProxyEnabled){
+        	LOG.info("Http Proxy Enabled for S3UploadManager");
+        	String httpProxyHost = mConfig.getAwsProxyHttpHost();
+        	int httpProxyPort = mConfig.getAwsProxyHttpPort();
+        	clientConfiguration.setProxyHost(httpProxyHost);
+        	clientConfiguration.setProxyPort(httpProxyPort);        	
+        }
+
         if (accessKey.isEmpty() || secretKey.isEmpty()) {
-            client = new AmazonS3Client();
+        	client = new AmazonS3Client(clientConfiguration);
         } else {
-            client = new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey));
+        	client = new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey),clientConfiguration);
         }
 
         if (!endpoint.isEmpty()) {
