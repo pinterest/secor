@@ -54,7 +54,7 @@ public class PartitionFinalizer {
         mMessageParser = (TimestampedMessageParser) ReflectionUtil.createMessageParser(
           mConfig.getMessageParserClass(), mConfig);
         mQuboleClient = new QuboleClient(mConfig);
-        if (mConfig.getFileExtension() != null) {
+        if (mConfig.getFileExtension() != null && !mConfig.getFileExtension().isEmpty()) {
             mFileExtension = mConfig.getFileExtension();
         } else if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
             CompressionCodec codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
