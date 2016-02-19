@@ -395,6 +395,10 @@ public class SecorConfig {
         return getInt("secor.gs.read.timeout.ms", 3 * 60000);
     }
 
+    public boolean getGsDirectUpload() {
+        return getBoolean("secor.gs.upload.direct");
+    }
+
     public int getFinalizerDelaySeconds() {
         return getInt("partitioner.finalizer.delay.seconds");
     }
