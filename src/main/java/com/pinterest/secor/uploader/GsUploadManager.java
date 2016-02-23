@@ -69,6 +69,7 @@ public class GsUploadManager extends UploadManager {
         final String gsBucket = mConfig.getGsBucket();
         final String gsKey = localPath.withPrefix(mConfig.getGsPath()).getLogFilePath();
         final File localFile = new File(localPath.getLogFilePath());
+        final boolean directUpload = mConfig.getGsDirectUpload();
 
         LOG.info("uploading file {} to gs://{}/{}", localFile, gsBucket, gsKey);
 
@@ -80,6 +81,10 @@ public class GsUploadManager extends UploadManager {
             public void run() {
                 try {
                     Storage.Objects.Insert request = mClient.objects().insert(gsBucket, storageObject, storageContent);
+
+                    if (directUpload) {
+                        request.getMediaHttpUploader().setDirectUploadEnabled(true);
+                    }
 
                     request.getMediaHttpUploader().setProgressListener(new MediaHttpUploaderProgressListener() {
                         @Override
