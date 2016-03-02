@@ -21,8 +21,9 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.pinterest.secor.common.*;
-
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
@@ -72,7 +73,8 @@ public class S3UploadManager extends UploadManager {
         AmazonS3 client;
 
         if (accessKey.isEmpty() || secretKey.isEmpty()) {
-            client = new AmazonS3Client();
+        	    AWSCredentialsProvider provider = new InstanceProfileCredentialsProvider();
+            client = new AmazonS3Client(provider);
         } else {
             client = new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey));
         }
