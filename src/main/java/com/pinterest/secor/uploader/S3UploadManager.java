@@ -16,6 +16,7 @@
  */
 package com.pinterest.secor.uploader;
 
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
@@ -94,7 +95,8 @@ public class S3UploadManager extends UploadManager {
         File localFile = new File(localPath.getLogFilePath());
 
         // make upload request, taking into account configured options for encryption
-        PutObjectRequest uploadRequest = new PutObjectRequest(s3Bucket, s3Key, localFile);;
+        PutObjectRequest uploadRequest = new PutObjectRequest(s3Bucket, s3Key, localFile);
+        uploadRequest.setCannedAcl(CannedAccessControlList.BucketOwnerFullControl);
         if (!mConfig.getAwsSseType().isEmpty()) {
             if (S3.equals(mConfig.getAwsSseType())) {
                 LOG.info("uploading file {} to s3://{}/{} with S3-managed encryption", localFile, s3Bucket, s3Key);

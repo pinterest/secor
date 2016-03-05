@@ -11,6 +11,7 @@ apply plugin: 'java-library-distribution'
 apply plugin: 'os-package'
 apply plugin: 'net.researchgate.release'
 apply plugin: 'sonar-runner'
+apply plugin: 'jacoco'
 // END
 
 // group = 'com.pinterest'
@@ -265,6 +266,19 @@ sonarRunner {
     property "sonar.jdbc.username", "$System.env.sonarUsername"
     property "sonar.jdbc.password", "$System.env.sonarPassword"
   }
+}
+
+jacoco {
+    toolVersion = "0.7.4.+"
+    reportsDir = file("$buildDir/reports/coverage")
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        csv.enabled false
+        html.destination "${buildDir}/reports/coverage/html"
+    }
 }
 //END
 
