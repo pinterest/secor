@@ -39,22 +39,24 @@ public class Iso8601MessageParser extends MessageParser {
     private static final Logger LOG = LoggerFactory.getLogger(DateMessageParser.class);
     protected static final String defaultDate = "dt=1970-01-01";
     protected static final String defaultFormatter = "yyyy-MM-dd";
+    protected static final SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter);
 
     public Iso8601MessageParser(SecorConfig config) {
         super(config);
     }
 
     @Override
-    public String[] extractPartitions(Message message) {
+    public String[] extractPartitions(Message message) throws Exception {
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
         String result[] = { defaultDate };
 
         if (jsonObject != null) {
             Object fieldValue = getJsonFieldValue(jsonObject);
-            if (fieldValue != null) {
+            if (fieldValue == null) {
+                LOG.warn("Missing field value. Using default partition = {}", defaultDate);
+            } else {
                 try {
                     Date dateFormat = DatatypeConverter.parseDateTime(fieldValue.toString()).getTime();
-                    SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter);
                     result[0] = "dt=" + outputFormatter.format(dateFormat);
                 } catch (Exception e) {
                     LOG.warn("Impossible to convert date = {} as ISO-8601. Using date default = {}",
