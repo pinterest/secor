@@ -72,8 +72,11 @@ public class SecorConfig {
     	    properties.setProperty("aws.access.key", ConfigurationManager.getConfigInstance().getString("aws.access.key"));
     	    properties.setProperty("aws.secret.key", ConfigurationManager.getConfigInstance().getString("aws.secret.key"));
     	    properties.setProperty("secor.s3.bucket", ConfigurationManager.getConfigInstance().getString("secor.s3.bucket"));
-    	    properties.setProperty("kafka.seed.broker.host", ConfigurationManager.getConfigInstance().getString("kafka.seed.broker.host"));
-    	    properties.setProperty("zookeeper.quorum", ConfigurationManager.getConfigInstance().getString("zookeeper.quorum"));
+    	    properties.setProperty("kafka.seed.broker.host", 
+    	    		StringUtils.join(ConfigurationManager.getConfigInstance().getStringArray("kafka.seed.broker.host"), ','));
+    	    properties.setProperty("zookeeper.quorum", 
+    	    		StringUtils.join(ConfigurationManager.getConfigInstance().getStringArray("zookeeper.quorum"), ','));
+    	    
     }
 
     /**
