@@ -46,3 +46,4 @@ bin/
 .classpath
 /build/
 /conf/
+src/test/java/com/thomsonreuters
