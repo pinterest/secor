@@ -60,6 +60,7 @@ public class LogFilePath {
     private final String mExtension;
     private String mOutputFilePattern;
     private SimpleDateFormat timeFormat = new SimpleDateFormat("HH-mm");
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("YYYYMMDD");
 
     public LogFilePath(String prefix, int generation, long lastCommittedOffset,
                        ParsedMessage message, String extension) {
@@ -198,6 +199,7 @@ public class LogFilePath {
 		valueMap.put("fmOffset", String.format("%020d", mOffset));
 		valueMap.put("currentTimestamp", System.currentTimeMillis() + "");
 		valueMap.put("currentTime", timeFormat.format(new Date()));
+		valueMap.put("currentDate", dateFormat.format(new Date()));
 		return valueMap;
     }
 
