@@ -53,10 +53,12 @@ public class PatternDateMessageParser extends MessageParser {
     @Override
     public String[] extractPartitions(Message message) {
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
-        String result[] = { defaultDate };
-
+        boolean useEvent = mConfig.isMessagePartitionByEvent();
+        String result[] = { useEvent ? mConfig.getMessageEventMapping("DEFAULT") + defaultDate : defaultDate };
+        
         if (jsonObject != null) {
             Object fieldValue = jsonObject.get(mConfig.getMessageTimestampName());
+            Object eventValue = jsonObject.get(mConfig.getMessageEventName());
             Object inputPattern = mConfig.getMessageTimestampInputPattern();
             if (fieldValue != null && inputPattern != null) {
                 try {
@@ -69,7 +71,7 @@ public class PatternDateMessageParser extends MessageParser {
                 		dateFormat = inputFormatter.parse(fieldValue.toString());
                 	}
                     
-                    result[0] = outputFormatter.format(dateFormat);
+                    result[0] = useEvent ? mConfig.getMessageEventMapping(eventValue.toString()) + outputFormatter.format(dateFormat) : outputFormatter.format(dateFormat);
                     return result;
                 } catch (Exception e) {
                     LOG.warn("Impossible to convert date = " + fieldValue.toString()

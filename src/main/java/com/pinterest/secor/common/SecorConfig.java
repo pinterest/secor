@@ -214,6 +214,18 @@ public class SecorConfig {
     public String getMessageTimestampInputPattern() {
         return getString("message.timestamp.input.pattern");
     }
+    
+    public String getMessageEventName() {
+        return getString("message.event.name");
+    }
+    
+    public String getMessageEventMapping(String event) {
+        return getString("message.event.mapping." + event, getString("message.event.mapping.DEFAULT", ""));
+    }
+    
+    public boolean isMessagePartitionByEvent() {
+        return getBoolean("message.partition.byevent", false);
+    }
 
     public int getFinalizerLookbackPeriods() {
         return getInt("secor.finalizer.lookback.periods", 10);
@@ -265,6 +277,10 @@ public class SecorConfig {
     private String getString(String name) {
         checkProperty(name);
         return mProperties.getString(name);
+    }
+    
+    private String getString(String name, String defaultValue) {
+        return mProperties.getString(name, defaultValue);
     }
 
     private int getInt(String name) {
