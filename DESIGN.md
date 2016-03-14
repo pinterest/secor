@@ -24,7 +24,7 @@ This document assumes familiarity with [Apache Kafka].
 
 * **zero downtime upgrades:** it should be possible to upgrade the system to a new version in a way transparent to the downstream data clients,
 
-* **dependence on public APIs:** the system should reply on public [Kafka] APIs only. Furthermore, it should be compatible with the most recent [Kafka] version (0.8) which offers significant improvements over 0.7, and it comes with Go language bindings (required by other pieces of the Ads infra).
+* **dependence on public APIs:** the system should rely on public [Kafka] APIs only. Furthermore, it should be compatible with the most recent [Kafka] version (0.8) which offers significant improvements over 0.7, and it comes with Go language bindings (required by other pieces of the Ads infra).
 
 No-goals:
 
