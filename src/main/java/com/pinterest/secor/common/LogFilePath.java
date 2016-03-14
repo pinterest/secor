@@ -60,7 +60,7 @@ public class LogFilePath {
     private final String mExtension;
     private String mOutputFilePattern;
     private SimpleDateFormat timeFormat = new SimpleDateFormat("HH-mm");
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("YYYYMMDD");
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("YYYYMMdd");
 
     public LogFilePath(String prefix, int generation, long lastCommittedOffset,
                        ParsedMessage message, String extension) {
