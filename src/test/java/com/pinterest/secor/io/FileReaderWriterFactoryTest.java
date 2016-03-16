@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.compress.CompressionInputStream;
@@ -60,6 +61,7 @@ public class FileReaderWriterFactoryTest extends TestCase {
     private static final String BASENAME = "10_0_00000000000000000100";
     private static final String PATH = DIR + "/" + BASENAME;
     private static final String PATH_GZ = DIR + "/" + BASENAME + ".gz";
+    private static final String PATH_OFFSET = DIR + "/" + BASENAME + ".offset";
 
     private LogFilePath mLogFilePath;
     private LogFilePath mLogFilePathGz;
@@ -116,6 +118,28 @@ public class FileReaderWriterFactoryTest extends TestCase {
 
         Mockito.when(codec.createOutputStream(Mockito.any(OutputStream.class)))
                 .thenReturn(outputStream);
+        Path offsetPath = new Path(PATH_OFFSET);
+        PowerMockito.mockStatic(SequenceFile.class);
+        SequenceFile.Writer writer = Mockito
+                .mock(SequenceFile.Writer.class);
+        Mockito.when(
+                SequenceFile.createWriter(Mockito.eq(fs),
+                        Mockito.any(Configuration.class),
+                        Mockito.eq(offsetPath), Mockito.eq(LongWritable.class),
+                        Mockito.eq(IntWritable.class)))
+                .thenReturn(writer);
+        SequenceFile.Reader reader = PowerMockito
+                .mock(SequenceFile.Reader.class);
+        PowerMockito
+                .whenNew(SequenceFile.Reader.class)
+                .withParameterTypes(FileSystem.class, Path.class,
+                        Configuration.class)
+                .withArguments(Mockito.eq(fs), Mockito.eq(offsetPath),
+                        Mockito.any(Configuration.class)).thenReturn(reader);
+        Mockito.<Class<?>>when(reader.getKeyClass()).thenReturn(
+                (Class<?>) LongWritable.class);
+        Mockito.<Class<?>>when(reader.getValueClass()).thenReturn(
+                (Class<?>) IntWritable.class);
     }
 
     private void mockSequenceFileWriter(boolean isCompressed)
