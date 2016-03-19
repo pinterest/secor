@@ -255,5 +255,165 @@ public class JsonMessageParserTest extends TestCase {
             assertEquals(expectedPartition, retrievedPartition);
         }
     }
+@Test
+	public void testMinutelyGetFinalizedUptoPartitions() throws Exception {
+		Mockito.when(TimestampedMessageParser.usingMinutely(mConfig)).thenReturn(true);
+		JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
 
+		List<Message> lastMessages = new ArrayList<Message>();
+		lastMessages.add(mMessageWithSecondsTimestamp);
+		List<Message> committedMessages = new ArrayList<Message>();
+		committedMessages.add(mMessageWithMillisTimestamp);
+		String uptoPartitions[] = jsonMessageParser.getFinalizedUptoPartitions(lastMessages, committedMessages);
+		assertEquals(3, uptoPartitions.length);
+		assertEquals("dt=2014-07-21", uptoPartitions[0]);
+		assertEquals("hr=01", uptoPartitions[1]);
+		assertEquals("min=51", uptoPartitions[2]);
+
+		uptoPartitions[1] = "hr=01";
+		uptoPartitions[2] = "min=00";
+		uptoPartitions[0] = "dt=2014-07-20";
+
+		String[][] expectedPartitions = new String[][] {
+			new String[] { "dt=2014-07-20", "hr=00"},
+			new String[] { "dt=2014-07-20", "hr=00", "min=59" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=58" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=57" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=56" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=55" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=54" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=53" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=52" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=51" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=50" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=49" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=48" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=47" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=46" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=45" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=44" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=43" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=42" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=41" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=40" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=39" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=38" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=37" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=36" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=35" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=34" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=33" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=32" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=31" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=30" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=29" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=28" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=27" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=26" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=25" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=24" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=23" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=22" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=21" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=20" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=19" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=18" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=17" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=16" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=15" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=14" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=13" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=12" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=11" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=10" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=09" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=08" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=07" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=06" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=05" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=04" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=03" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=02" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=01" },
+			new String[] { "dt=2014-07-20", "hr=00", "min=00" },
+			new String[] { "dt=2014-07-19" },
+			new String[] { "dt=2014-07-19", "hr=23"},
+			new String[] { "dt=2014-07-19", "hr=23", "min=59" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=58" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=57" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=56" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=55" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=54" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=53" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=52" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=51" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=50" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=49" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=48" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=47" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=46" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=45" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=44" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=43" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=42" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=41" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=40" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=39" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=38" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=37" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=36" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=35" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=34" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=33" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=32" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=31" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=30" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=29" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=28" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=27" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=26" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=25" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=24" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=23" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=22" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=21" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=20" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=19" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=18" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=17" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=16" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=15" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=14" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=13" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=12" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=11" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=10" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=09" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=08" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=07" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=06" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=05" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=04" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=03" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=02" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=01" },
+			new String[] { "dt=2014-07-19", "hr=23", "min=00" },
+			new String[] { "dt=2014-07-19", "hr=22" },
+			new String[] { "dt=2014-07-19", "hr=22", "min=59" }, };
+
+			String[] partitions = uptoPartitions;
+			List<String[]> partitionsList = new ArrayList<String[]>();
+			for (int i = 0; i < 125; i++) {
+				String[] previous = jsonMessageParser.getPreviousPartitions(partitions);
+				partitionsList.add(previous);
+				partitions = previous;
+			}
+
+			assertEquals(partitionsList.size(), expectedPartitions.length);
+			for (int i = 0; i < partitionsList.size(); i++) {
+				List<String> expectedPartition = Arrays.asList(expectedPartitions[i]);
+				List<String> retrievedPartition = Arrays.asList(partitionsList.get(i));
+				assertEquals(expectedPartition, retrievedPartition);
+			}
+	}
 }
