@@ -60,10 +60,13 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
 
         mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
         mDtFormatter.setTimeZone(config.getTimeZone());
+
         mHrFormatter = new SimpleDateFormat("HH");
         mHrFormatter.setTimeZone(config.getTimeZone());
+
         mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
         mDtHrFormatter.setTimeZone(config.getTimeZone());
+
         mDtHrMinFormatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
         mDtHrMinFormatter.setTimeZone(config.getTimeZone());
         mMinFormatter = new SimpleDateFormat("mm");
