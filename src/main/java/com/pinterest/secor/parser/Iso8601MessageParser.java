@@ -43,6 +43,7 @@ public class Iso8601MessageParser extends MessageParser {
 
     public Iso8601MessageParser(SecorConfig config) {
         super(config);
+        outputFormatter.setTimeZone(config.getTimeZone());
     }
 
     @Override

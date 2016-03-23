@@ -18,15 +18,16 @@ package com.pinterest.secor.parser;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import net.minidev.json.JSONObject;
-import net.minidev.json.JSONValue;
+import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
+
+import net.minidev.json.JSONObject;
+import net.minidev.json.JSONValue;
 
 /**
  * DateMessageParser extracts timestamp field (specified by 'message.timestamp.name') 
@@ -41,9 +42,17 @@ public class DateMessageParser extends MessageParser {
     private static final Logger LOG = LoggerFactory.getLogger(DateMessageParser.class);
     protected static final String defaultDate = "dt=1970-01-01";
     protected static final String defaultFormatter = "yyyy-MM-dd";
-
+    protected SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter);
+    protected Object inputPattern;
+    protected SimpleDateFormat inputFormatter;
+    
     public DateMessageParser(SecorConfig config) {
         super(config);
+        TimeZone timeZone = config.getTimeZone();
+        inputPattern = mConfig.getMessageTimestampInputPattern();
+        inputFormatter = new SimpleDateFormat(inputPattern.toString());
+        inputFormatter.setTimeZone(timeZone);
+        outputFormatter.setTimeZone(timeZone);
     }
 
     @Override
@@ -53,11 +62,8 @@ public class DateMessageParser extends MessageParser {
 
         if (jsonObject != null) {
             Object fieldValue = getJsonFieldValue(jsonObject);
-            Object inputPattern = mConfig.getMessageTimestampInputPattern();
             if (fieldValue != null && inputPattern != null) {
                 try {
-                    SimpleDateFormat inputFormatter = new SimpleDateFormat(inputPattern.toString());
-                    SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter);
                     Date dateFormat = inputFormatter.parse(fieldValue.toString());
                     result[0] = "dt=" + outputFormatter.format(dateFormat);
                     return result;

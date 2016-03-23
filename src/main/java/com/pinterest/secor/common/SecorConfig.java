@@ -416,32 +416,32 @@ public class SecorConfig {
         return mProperties.getBoolean(name);
     }
 
-    private void checkProperty(String name) {
+    public void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
             throw new RuntimeException("Failed to find required configuration option '" +
                                        name + "'.");
         }
     }
 
-    private String getString(String name) {
+    public String getString(String name) {
         checkProperty(name);
         return mProperties.getString(name);
     }
 
-    private int getInt(String name) {
+    public int getInt(String name) {
         checkProperty(name);
         return mProperties.getInt(name);
     }
 
-    private int getInt(String name, int defaultValue) {
+    public int getInt(String name, int defaultValue) {
         return mProperties.getInt(name, defaultValue);
     }
 
-    private long getLong(String name) {
+    public long getLong(String name) {
         return mProperties.getLong(name);
     }
 
-    private String[] getStringArray(String name) {
+    public String[] getStringArray(String name) {
         return mProperties.getStringArray(name);
     }
 }
