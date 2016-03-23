@@ -42,9 +42,9 @@ public class DateMessageParser extends MessageParser {
     private static final Logger LOG = LoggerFactory.getLogger(DateMessageParser.class);
     protected static final String defaultDate = "dt=1970-01-01";
     protected static final String defaultFormatter = "yyyy-MM-dd";
-    SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter);
-    Object inputPattern;
-    SimpleDateFormat inputFormatter;
+    protected SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter);
+    protected Object inputPattern;
+    protected SimpleDateFormat inputFormatter;
     
     public DateMessageParser(SecorConfig config) {
         super(config);
