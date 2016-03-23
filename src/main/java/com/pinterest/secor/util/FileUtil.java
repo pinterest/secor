@@ -90,6 +90,8 @@ public class FileUtil {
             prefix = config.getS3Prefix();
         } else if (config.getCloudService().equals("GS")) {
             prefix = "gs://" + config.getGsBucket() + "/" + config.getGsPath();
+        } else if (config.getCloudService().equals("Azure")) {
+            prefix = "azure://" + config.getAzureContainer() + "/" + config.getAzurePath();
         }
         return prefix;
     }

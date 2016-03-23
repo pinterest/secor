@@ -403,6 +403,16 @@ public class SecorConfig {
         return getInt("partitioner.finalizer.delay.seconds");
     }
 
+    public String getAzureEndpointsProtocol() { return getString("secor.azure.endpoints.protocol"); }
+
+    public String getAzureAccountName() { return getString("secor.azure.account.name"); }
+
+    public String getAzureAccountKey() { return getString("secor.azure.account.key"); }
+
+    public String getAzureContainer() { return getString("secor.azure.container.name"); }
+
+    public String getAzurePath() { return getString("secor.azure.path"); }
+
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
         return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);

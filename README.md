@@ -121,6 +121,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Zack Dever](https://github.com/zackdever)
   * [Leo Woessner](https://github.com/estezz)
   * [Jerome Gagnon](https://github.com/jgagnon1)
+  * [Taichi Nakashima](https://github.com/tcnksm)
 
 ## Companies who use Secor
 
@@ -133,6 +134,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Skyscanner](http://www.skyscanner.net)
   * [Nextperf](http://www.nextperf.com)
   * [Zalando](http://www.zalando.com)
+  * [Rakuten](http://techblog.rakuten.co.jp/)
 
 ## Help
 
