@@ -29,6 +29,10 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,11 +69,13 @@ public class S3UploadManager extends UploadManager {
     public S3UploadManager(SecorConfig config) {
         super(config);
 
-        String accessKey = mConfig.getAwsAccessKey();
-        String secretKey = mConfig.getAwsSecretKey();
-        String endpoint = mConfig.getAwsEndpoint();
-        String region = mConfig.getAwsRegion();
+        final String accessKey = mConfig.getAwsAccessKey();
+        final String secretKey = mConfig.getAwsSecretKey();
+        final String endpoint = mConfig.getAwsEndpoint();
+        final String region = mConfig.getAwsRegion();
+        final String awsRole = mConfig.getAwsRole();
         AmazonS3 client;
+        AWSCredentialsProvider provider;
 
         ClientConfiguration clientConfiguration = new ClientConfiguration();
         boolean isHttpProxyEnabled = mConfig.getAwsProxyEnabled();
@@ -84,10 +90,21 @@ public class S3UploadManager extends UploadManager {
         }
 
         if (accessKey.isEmpty() || secretKey.isEmpty()) {
-        	client = new AmazonS3Client(clientConfiguration);
+            provider = new DefaultAWSCredentialsProviderChain();
         } else {
-        	client = new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey),clientConfiguration);
+            provider = new AWSCredentialsProvider() {
+                public AWSCredentials getCredentials() {
+                    return new BasicAWSCredentials(accessKey, secretKey);
+                }
+                public void refresh() {}
+            };
         }
+
+        if (!awsRole.isEmpty()) {
+            provider = new STSAssumeRoleSessionCredentialsProvider(provider, awsRole, "secor");
+        }
+
+        client = new AmazonS3Client(provider, clientConfiguration);
 
         if (!endpoint.isEmpty()) {
             client.setEndpoint(endpoint);

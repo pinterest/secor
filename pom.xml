@@ -94,7 +94,12 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.10.39</version>
+            <version>1.10.68</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sts</artifactId>
+            <version>1.10.68</version>
         </dependency>
         <dependency>
             <groupId>net.java.dev.jets3t</groupId>

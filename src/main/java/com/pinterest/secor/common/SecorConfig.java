@@ -237,6 +237,10 @@ public class SecorConfig {
     public String getAwsEndpoint() {
         return getString("aws.endpoint");
     }
+
+    public String getAwsRole() {
+        return getString("aws.role");
+    }
     
     public boolean getAwsProxyEnabled(){
     	return getBoolean("aws.proxy.isEnabled");
