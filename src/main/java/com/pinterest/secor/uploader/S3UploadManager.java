@@ -21,6 +21,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.pinterest.secor.common.*;
+import com.pinterest.secor.util.FileUtil;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
@@ -117,7 +118,9 @@ public class S3UploadManager extends UploadManager {
 
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         String s3Bucket = mConfig.getS3Bucket();
-        String s3Key = localPath.withPrefix(mConfig.getS3Path()).getLogFilePath();
+        // add MD5 hash to the prefix to have proper partitioning of the secor logs on s3
+        String md5Hash = FileUtil.getMd5Hash(localPath.getTopic(), localPath.getPartitions());
+        String s3Key = localPath.withPrefix(md5Hash + "/" + mConfig.getS3Path()).getLogFilePath();
         File localFile = new File(localPath.getLogFilePath());
 
         // make upload request, taking into account configured options for encryption
