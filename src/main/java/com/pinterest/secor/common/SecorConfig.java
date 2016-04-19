@@ -407,6 +407,10 @@ public class SecorConfig {
         return getInt("partitioner.finalizer.delay.seconds");
     }
 
+    public boolean getS3MD5HashPrefix() {
+      return getBoolean("secor.s3.prefix.md5hash");
+    }
+
     public String getAzureEndpointsProtocol() { return getString("secor.azure.endpoints.protocol"); }
 
     public String getAzureAccountName() { return getString("secor.azure.account.name"); }
