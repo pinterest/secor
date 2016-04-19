@@ -16,13 +16,16 @@
  */
 package com.pinterest.secor.common;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang.StringUtils;
+
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import javax.naming.ConfigurationException;
 
-import com.sun.xml.internal.ws.util.StringUtils;
 
 /**
  * One-stop shop for Secor configuration options.
