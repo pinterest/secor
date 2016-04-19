@@ -171,6 +171,14 @@ public class SecorConfig {
         return getString("secor.s3.path");
     }
 
+    public String getS3MigrationPath() {
+        return getString("secor.s3.migration.path");
+    }
+
+    public String getS3MigrationDate() {
+        return getString("secor.s3.migration.date");
+    }
+
     public String getS3Prefix() {
         return getS3FileSystem() + "://" + getS3Bucket() + "/" + getS3Path();
     }

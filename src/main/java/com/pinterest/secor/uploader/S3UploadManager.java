@@ -38,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Manages uploads to S3 using the TransferManager class from the AWS
@@ -117,11 +119,23 @@ public class S3UploadManager extends UploadManager {
 
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         String s3Bucket = mConfig.getS3Bucket();
-        String s3Key = localPath.withPrefix(mConfig.getS3Path()).getLogFilePath();
+        Date s3MigrationDate = null;
+        String s3Path;
+        try {
+            s3MigrationDate = new SimpleDateFormat("yyyy-MM-dd").parse(mConfig.getS3MigrationDate());
+        } catch (RuntimeException e) {
+            // optional migration date, so do nothing if it's not defined
+        }
+        if (s3MigrationDate != null && !s3MigrationDate.after(new Date())) {
+            s3Path = mConfig.getS3MigrationPath();
+        }
+        else {
+            s3Path = mConfig.getS3Path();
+        }
+        String s3Key = localPath.withPrefix(s3Path).getLogFilePath();
         File localFile = new File(localPath.getLogFilePath());
-
         // make upload request, taking into account configured options for encryption
-        PutObjectRequest uploadRequest = new PutObjectRequest(s3Bucket, s3Key, localFile);;
+        PutObjectRequest uploadRequest = new PutObjectRequest(s3Bucket, s3Key, localFile);
         if (!mConfig.getAwsSseType().isEmpty()) {
             if (S3.equals(mConfig.getAwsSseType())) {
                 LOG.info("uploading file {} to s3://{}/{} with S3-managed encryption", localFile, s3Bucket, s3Key);
