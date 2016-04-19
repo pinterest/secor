@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import javax.naming.ConfigurationException;
+
+import com.sun.xml.internal.ws.util.StringUtils;
 
 
 /**
