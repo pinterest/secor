@@ -16,14 +16,13 @@
  */
 package com.pinterest.secor.common;
 
-import com.google.api.client.repackaged.com.google.common.base.Strings;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.lang.StringUtils;
-
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
+
+import javax.naming.ConfigurationException;
+
+import com.sun.xml.internal.ws.util.StringUtils;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -405,6 +404,10 @@ public class SecorConfig {
 
     public int getFinalizerDelaySeconds() {
         return getInt("partitioner.finalizer.delay.seconds");
+    }
+
+    public boolean getS3MD5HashPrefix() {
+      return getBoolean("secor.s3.prefix.md5hash");
     }
 
     public String getAzureEndpointsProtocol() { return getString("secor.azure.endpoints.protocol"); }
