@@ -39,6 +39,17 @@ import org.slf4j.LoggerFactory;
 
 import com.pinterest.secor.common.SecorConfig;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.s3a.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.pinterest.secor.common.SecorConfig;
+
 /**
  * File util implements utilities for interactions with the file system.
  *
