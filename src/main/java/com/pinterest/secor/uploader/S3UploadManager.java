@@ -46,10 +46,6 @@ import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.util.FileUtil;
 
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.util.FileUtil;
-
 /**
  * Manages uploads to S3 using the TransferManager class from the AWS
  * SDK.
