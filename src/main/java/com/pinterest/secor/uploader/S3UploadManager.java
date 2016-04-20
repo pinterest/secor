@@ -21,6 +21,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.pinterest.secor.common.*;
+import com.pinterest.secor.util.FileUtil;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
@@ -40,6 +41,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.util.FileUtil;
 
 /**
  * Manages uploads to S3 using the TransferManager class from the AWS
@@ -66,7 +71,11 @@ public class S3UploadManager extends UploadManager {
     private static final String S3 = "S3";
     private static final String CUSTOMER = "customer";
 
+    private final String s3Path;
+    private final String s3AlternativePath;
+
     private TransferManager mManager;
+    private Date s3AlterPathDate = null;
 
     public S3UploadManager(SecorConfig config) {
         super(config);
@@ -76,6 +85,19 @@ public class S3UploadManager extends UploadManager {
         final String endpoint = mConfig.getAwsEndpoint();
         final String region = mConfig.getAwsRegion();
         final String awsRole = mConfig.getAwsRole();
+
+        s3Path = mConfig.getS3Path();
+        s3AlternativePath = mConfig.getS3AlternativePath();
+
+        final String s3AlterPathDateString = mConfig.getS3AlterPathDate();
+        try {
+            if (s3AlterPathDateString != null && !s3AlterPathDateString.isEmpty()) {
+                s3AlterPathDate = new SimpleDateFormat("yyyy-MM-dd").parse(s3AlterPathDateString);
+            }
+        } catch (Exception e) {
+            LOG.error(e.getMessage() + " Date format needs to be yyyy-MM-dd.");
+        }
+
         AmazonS3 client;
         AWSCredentialsProvider provider;
 
@@ -119,20 +141,23 @@ public class S3UploadManager extends UploadManager {
 
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         String s3Bucket = mConfig.getS3Bucket();
-        Date s3MigrationDate = null;
-        String s3Path;
-        try {
-            s3MigrationDate = new SimpleDateFormat("yyyy-MM-dd").parse(mConfig.getS3MigrationDate());
-        } catch (RuntimeException e) {
-            // optional migration date, so do nothing if it's not defined
-        }
-        if (s3MigrationDate != null && !s3MigrationDate.after(new Date())) {
-            s3Path = mConfig.getS3MigrationPath();
+        String curS3Path = null;
+        if (s3AlterPathDate != null && !s3AlterPathDate.after(new Date())) {
+            curS3Path = s3AlternativePath;
+            LOG.info("Will upload file to alternative s3 path s3://{}/{}", s3Bucket, curS3Path);
         }
         else {
-            s3Path = mConfig.getS3Path();
+            curS3Path = s3Path;
         }
-        String s3Key = localPath.withPrefix(s3Path).getLogFilePath();
+        String s3Key = null;
+        if (mConfig.getS3MD5HashPrefix()) {
+       // add MD5 hash to the prefix to have proper partitioning of the secor logs on s3
+          String md5Hash = FileUtil.getMd5Hash(localPath.getTopic(), localPath.getPartitions());
+          s3Key = localPath.withPrefix(md5Hash + "/" + curS3Path).getLogFilePath();
+        }
+        else {
+          s3Key = localPath.withPrefix(curS3Path).getLogFilePath();
+        }
         File localFile = new File(localPath.getLogFilePath());
         // make upload request, taking into account configured options for encryption
         PutObjectRequest uploadRequest = new PutObjectRequest(s3Bucket, s3Key, localFile);

@@ -16,18 +16,28 @@
  */
 package com.pinterest.secor.util;
 
-import com.pinterest.secor.common.SecorConfig;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+
+import java.text.SimpleDateFormat;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.s3a.Constants;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.s3a.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
+import com.pinterest.secor.common.SecorConfig;
 
 /**
  * File util implements utilities for interactions with the file system.
@@ -35,7 +45,10 @@ import java.util.Arrays;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class FileUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(FileUtil.class);
     private static Configuration mConf = new Configuration(true);
+    private static final char[] m_digits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a',
+        'b', 'c', 'd', 'e', 'f'};
 
     public static void configure(SecorConfig config) {
         if (config != null) {
@@ -87,7 +100,21 @@ public class FileUtil {
             }
             prefix = "swift://" + container + ".GENERICPROJECT/" + config.getSwiftPath();
         } else if (config.getCloudService().equals("S3")) {
-            prefix = config.getS3Prefix();
+            String s3AlterPathDate = config.getS3AlterPathDate();
+            if (s3AlterPathDate != null && !s3AlterPathDate.isEmpty()) {
+                try {
+                    Date alterPathDate = new SimpleDateFormat("yyyy-MM-dd").parse(s3AlterPathDate);
+                    if (alterPathDate != null && !alterPathDate.after(new Date())) {
+                        prefix = config.getS3AlternativePrefix();
+                        LOG.info("Will upload file to alternative s3 prefix path {}", prefix);
+                    }
+                } catch (Exception e) {
+                    LOG.error(e.getMessage() + " Date format needs to be yyyy-MM-dd.");
+                }
+            }
+            else {
+                prefix = config.getS3Prefix();
+            }
         } else if (config.getCloudService().equals("GS")) {
             prefix = "gs://" + config.getGsBucket() + "/" + config.getGsPath();
         } else if (config.getCloudService().equals("Azure")) {
@@ -95,7 +122,6 @@ public class FileUtil {
         }
         return prefix;
     }
-
 
     public static String[] list(String path) throws IOException {
         FileSystem fs = getFileSystem(path);
@@ -187,5 +213,40 @@ public class FileUtil {
             }
         }
         return modificationTime;
+    }
+    
+    /** Generat MD5 hash of topic and paritions. And extract first 4 characters of the MD5 hash.
+     * @param topic
+     * @param partitions
+     * @return
+     */
+    public static String getMd5Hash(String topic, String[] partitions) {
+      ArrayList<String> elements = new ArrayList<String>();
+      elements.add(topic);
+      for (String partition : partitions) {
+        elements.add(partition);
+      }
+      String pathPrefix = StringUtils.join(elements, "/");
+      try {
+        final MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+        byte[] md5Bytes = messageDigest.digest(pathPrefix.getBytes("UTF-8"));
+        return getHexEncode(md5Bytes).substring(0, 4);
+      } catch (NoSuchAlgorithmException e) {
+        LOG.error(e.getMessage());
+      } catch (UnsupportedEncodingException e) {
+        LOG.error(e.getMessage());
+      }
+      return "";
+    }
+
+    private static String getHexEncode(byte[] bytes) {
+      final char[] chars = new char[bytes.length * 2];
+      for (int i = 0; i < bytes.length; ++i) {
+        final int cx = i * 2;
+        final byte b = bytes[i];
+        chars[cx] = m_digits[(b & 0xf0) >> 4];
+        chars[cx + 1] = m_digits[(b & 0x0f)];
+      }
+      return new String(chars);
     }
 }
