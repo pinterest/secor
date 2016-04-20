@@ -171,9 +171,22 @@ public class SecorConfig {
         return getString("secor.s3.path");
     }
 
+    public String getS3AlternativePath() {
+        return getString("secor.s3.alternative.path");
+    }
+
+    public String getS3AlterPathDate() {
+        return getString("secor.s3.alter.path.date");
+    }
+
     public String getS3Prefix() {
         return getS3FileSystem() + "://" + getS3Bucket() + "/" + getS3Path();
     }
+
+    public String getS3AlternativePrefix() {
+        return getS3FileSystem() + "://" + getS3Bucket() + "/" + getS3AlternativePath();
+    }
+
     public String getLocalPath() {
         return getString("secor.local.path");
     }

@@ -24,6 +24,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+
+import java.text.SimpleDateFormat;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -97,7 +100,21 @@ public class FileUtil {
             }
             prefix = "swift://" + container + ".GENERICPROJECT/" + config.getSwiftPath();
         } else if (config.getCloudService().equals("S3")) {
-            prefix = config.getS3Prefix();
+            String s3AlterPathDate = config.getS3AlterPathDate();
+            if (s3AlterPathDate != null && !s3AlterPathDate.isEmpty()) {
+                try {
+                    Date alterPathDate = new SimpleDateFormat("yyyy-MM-dd").parse(s3AlterPathDate);
+                    if (alterPathDate != null && !alterPathDate.after(new Date())) {
+                        prefix = config.getS3AlternativePrefix();
+                        LOG.info("Will upload file to alternative s3 prefix path {}", prefix);
+                    }
+                } catch (Exception e) {
+                    LOG.error(e.getMessage() + " Date format needs to be yyyy-MM-dd.");
+                }
+            }
+            else {
+                prefix = config.getS3Prefix();
+            }
         } else if (config.getCloudService().equals("GS")) {
             prefix = "gs://" + config.getGsBucket() + "/" + config.getGsPath();
         } else if (config.getCloudService().equals("Azure")) {
