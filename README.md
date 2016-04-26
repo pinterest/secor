@@ -30,7 +30,7 @@ Edit `src/main/config/*.properties` files to specify parameters describing the e
 ```sh
 mvn package
 mkdir ${SECOR_INSTALL_DIR} # directory to place Secor binaries in.
-tar -zxvf target/secor-0.1-SNAPSHOT-bin.tar.gz -C ${SECOR_INSTALL_DIR}
+tar -zxvf target/secor-0.2-SNAPSHOT-bin.tar.gz -C ${SECOR_INSTALL_DIR}
 ```
 
 ##### Run tests (optional)
@@ -42,7 +42,7 @@ cd ${SECOR_INSTALL_DIR}
 ##### Run Secor
 ```sh
 cd ${SECOR_INSTALL_DIR}
-java -ea -Dsecor_group=secor_backup -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* com.pinterest.secor.main.ConsumerMain
+java -ea -Dsecor_group=secor_backup -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp secor-0.2-SNAPSHOT.jar:lib/* com.pinterest.secor.main.ConsumerMain
 ```
 
 ## Output grouping
@@ -76,28 +76,28 @@ Secor comes with a number of tools implementing interactions with the environmen
 Log file printer displays the content of a log file.
 
 ```sh
-java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.LogFilePrinterMain -f s3n://bucket/path
+java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.2-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.LogFilePrinterMain -f s3n://bucket/path
 ```
 
 ##### Log file verifier
 Log file verifier checks the consistency of log files.
 
 ```sh
-java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.LogFileVerifierMain -t topic -q
+java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.2-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.LogFileVerifierMain -t topic -q
 ```
 
 ##### Partition finalizer
 Topic finalizer writes _SUCCESS files to date partitions that very likely won't be receiving any new messages and (optionally) adds the corresponding dates to [Hive] through [Qubole] API.
 
 ```sh
-java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.propertie -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.PartitionFinalizerMain
+java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.propertie -cp "secor-0.2-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.PartitionFinalizerMain
 ```
 
 ##### Progress monitor
 Progress monitor exports offset consumption lags per topic partition to [OpenTSDB] / [statsD]. Lags track how far Secor is behind the producers.
 
 ```sh
-java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.ProgressMonitorMain
+java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.2-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.ProgressMonitorMain
 ```
 
 ## Detailed design
