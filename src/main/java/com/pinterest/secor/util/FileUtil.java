@@ -84,6 +84,36 @@ public class FileUtil {
         return FileSystem.get(URI.create(path), mConf);
     }
 
+    public static boolean s3PathPrefixIsAltered(String logFileName, SecorConfig config)
+                                                        throws Exception {
+        Date logDate = null;
+        if (config.getS3AlterPathDate() != null && !config.getS3AlterPathDate().isEmpty()) {
+            Date s3AlterPathDate = new SimpleDateFormat("yyyy-MM-dd").parse(config.getS3AlterPathDate());
+
+            // s3Key contains the log path, e.g. raw_logs/secor_topic/dt=2016-04-20/3_0_0000000000000292564
+            String[] logPathParts = logFileName.split("/");
+            for (String part : logPathParts) {
+                if (part.startsWith("dt=")) {
+                    logDate = new SimpleDateFormat("yyyy-MM-dd").parse(part.replaceFirst("dt=", ""));
+                    break;
+                }
+            }
+
+            if (logDate == null) {
+                LOG.error("Did not find a date in the format yyyy-MM-dd in " + logFileName);
+            }
+            if (!s3AlterPathDate.after(logDate)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static String getS3AlternativePathPrefix(SecorConfig config) {
+        return config.getS3AlternativePath();
+    }
+
     public static String getPrefix(String topic, SecorConfig config)  throws IOException {
         String prefix = null;
         if (config.getCloudService().equals("Swift")) {
@@ -100,21 +130,7 @@ public class FileUtil {
             }
             prefix = "swift://" + container + ".GENERICPROJECT/" + config.getSwiftPath();
         } else if (config.getCloudService().equals("S3")) {
-            String s3AlterPathDate = config.getS3AlterPathDate();
-            if (s3AlterPathDate != null && !s3AlterPathDate.isEmpty()) {
-                try {
-                    Date alterPathDate = new SimpleDateFormat("yyyy-MM-dd").parse(s3AlterPathDate);
-                    if (alterPathDate != null && !alterPathDate.after(new Date())) {
-                        prefix = config.getS3AlternativePrefix();
-                        LOG.info("Will upload file to alternative s3 prefix path {}", prefix);
-                    }
-                } catch (Exception e) {
-                    LOG.error(e.getMessage() + " Date format needs to be yyyy-MM-dd.");
-                }
-            }
-            else {
                 prefix = config.getS3Prefix();
-            }
         } else if (config.getCloudService().equals("GS")) {
             prefix = "gs://" + config.getGsBucket() + "/" + config.getGsPath();
         } else if (config.getCloudService().equals("Azure")) {
