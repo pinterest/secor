@@ -72,10 +72,8 @@ public class S3UploadManager extends UploadManager {
     private static final String CUSTOMER = "customer";
 
     private final String s3Path;
-    private final String s3AlternativePath;
 
     private TransferManager mManager;
-    private Date s3AlterPathDate = null;
 
     public S3UploadManager(SecorConfig config) {
         super(config);
@@ -87,16 +85,6 @@ public class S3UploadManager extends UploadManager {
         final String awsRole = mConfig.getAwsRole();
 
         s3Path = mConfig.getS3Path();
-        s3AlternativePath = mConfig.getS3AlternativePath();
-
-        final String s3AlterPathDateString = mConfig.getS3AlterPathDate();
-        try {
-            if (s3AlterPathDateString != null && !s3AlterPathDateString.isEmpty()) {
-                s3AlterPathDate = new SimpleDateFormat("yyyy-MM-dd").parse(s3AlterPathDateString);
-            }
-        } catch (Exception e) {
-            LOG.error(e.getMessage() + " Date format needs to be yyyy-MM-dd.");
-        }
 
         AmazonS3 client;
         AWSCredentialsProvider provider;
@@ -141,24 +129,25 @@ public class S3UploadManager extends UploadManager {
 
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         String s3Bucket = mConfig.getS3Bucket();
-        String curS3Path = null;
-        if (s3AlterPathDate != null && !s3AlterPathDate.after(new Date())) {
-            curS3Path = s3AlternativePath;
-            LOG.info("Will upload file to alternative s3 path s3://{}/{}", s3Bucket, curS3Path);
-        }
-        else {
-            curS3Path = s3Path;
-        }
-        String s3Key = null;
-        if (mConfig.getS3MD5HashPrefix()) {
-       // add MD5 hash to the prefix to have proper partitioning of the secor logs on s3
-          String md5Hash = FileUtil.getMd5Hash(localPath.getTopic(), localPath.getPartitions());
-          s3Key = localPath.withPrefix(md5Hash + "/" + curS3Path).getLogFilePath();
-        }
-        else {
-          s3Key = localPath.withPrefix(curS3Path).getLogFilePath();
-        }
+        String curS3Path = s3Path;
+        String s3Key;
+
         File localFile = new File(localPath.getLogFilePath());
+
+        if (FileUtil.s3PathPrefixIsAltered(localPath.withPrefix(curS3Path).getLogFilePath(), mConfig)) {
+            curS3Path = FileUtil.getS3AlternativePathPrefix(mConfig);
+            LOG.info("Will upload file {} to alternative s3 path s3://{}/{}", localFile, s3Bucket, curS3Path);
+        }
+
+        if (mConfig.getS3MD5HashPrefix()) {
+            // add MD5 hash to the prefix to have proper partitioning of the secor logs on s3
+            String md5Hash = FileUtil.getMd5Hash(localPath.getTopic(), localPath.getPartitions());
+            s3Key = localPath.withPrefix(md5Hash + "/" + curS3Path).getLogFilePath();
+        }
+        else {
+            s3Key = localPath.withPrefix(curS3Path).getLogFilePath();
+        }
+
         // make upload request, taking into account configured options for encryption
         PutObjectRequest uploadRequest = new PutObjectRequest(s3Bucket, s3Key, localFile);
         if (!mConfig.getAwsSseType().isEmpty()) {
