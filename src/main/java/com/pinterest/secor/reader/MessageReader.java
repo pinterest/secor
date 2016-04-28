@@ -134,9 +134,9 @@ public class MessageReader {
             !mConfig.getRebalanceBackoffMs().isEmpty()) {
             props.put("rebalance.backoff.ms", mConfig.getRebalanceBackoffMs());
         }
-        if (mConfig.getSocketReceieveBufferBytes() != null &&
-            !mConfig.getSocketReceieveBufferBytes().isEmpty()) {
-            props.put("socket.receive.buffer.bytes", mConfig.getSocketReceieveBufferBytes());
+        if (mConfig.getSocketReceiveBufferBytes() != null &&
+            !mConfig.getSocketReceiveBufferBytes().isEmpty()) {
+            props.put("socket.receive.buffer.bytes", mConfig.getSocketReceiveBufferBytes());
         }
         if (mConfig.getFetchMessageMaxBytes() != null && !mConfig.getFetchMessageMaxBytes().isEmpty()) {
             props.put("fetch.message.max.bytes", mConfig.getFetchMessageMaxBytes());
