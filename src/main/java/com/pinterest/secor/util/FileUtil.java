@@ -27,6 +27,8 @@ import java.util.Arrays;
 import java.util.Date;
 
 import java.text.SimpleDateFormat;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -49,6 +51,7 @@ public class FileUtil {
     private static Configuration mConf = new Configuration(true);
     private static final char[] m_digits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a',
         'b', 'c', 'd', 'e', 'f'};
+    private static final Pattern datePattern = Pattern.compile(".*dt=(\\d\\d\\d\\d-\\d\\d-\\d\\d).*");
 
     public static void configure(SecorConfig config) {
         if (config != null) {
@@ -88,20 +91,19 @@ public class FileUtil {
                                                         throws Exception {
         Date logDate = null;
         if (config.getS3AlterPathDate() != null && !config.getS3AlterPathDate().isEmpty()) {
+
             Date s3AlterPathDate = new SimpleDateFormat("yyyy-MM-dd").parse(config.getS3AlterPathDate());
 
-            // s3Key contains the log path, e.g. raw_logs/secor_topic/dt=2016-04-20/3_0_0000000000000292564
-            String[] logPathParts = logFileName.split("/");
-            for (String part : logPathParts) {
-                if (part.startsWith("dt=")) {
-                    logDate = new SimpleDateFormat("yyyy-MM-dd").parse(part.replaceFirst("dt=", ""));
-                    break;
-                }
+            // logFileName contains the log path, e.g. raw_logs/secor_topic/dt=2016-04-20/3_0_0000000000000292564
+            Matcher dateMatcher = datePattern.matcher(logFileName);
+            if (dateMatcher.find()) {
+                logDate = new SimpleDateFormat("yyyy-MM-dd").parse(dateMatcher.group(1));
             }
 
             if (logDate == null) {
-                LOG.error("Did not find a date in the format yyyy-MM-dd in " + logFileName);
+                throw new Exception("Did not find a date in the format yyyy-MM-dd in " + logFileName);
             }
+
             if (!s3AlterPathDate.after(logDate)) {
                 return true;
             }
@@ -111,7 +113,7 @@ public class FileUtil {
     }
 
     public static String getS3AlternativePathPrefix(SecorConfig config) {
-        return config.getS3AlternativePath();
+        return config.getS3AlternativePrefix();
     }
 
     public static String getPrefix(String topic, SecorConfig config)  throws IOException {
