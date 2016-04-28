@@ -105,7 +105,7 @@ public class SecorConfig {
         return getString("kafka.fetch.message.max.bytes");
     }
 
-    public String getSocketReceieveBufferBytes() {
+    public String getSocketReceiveBufferBytes() {
         return getString("kafka.socket.receive.buffer.bytes");
     }
 
@@ -151,7 +151,7 @@ public class SecorConfig {
 
     public String getS3FileSystem() { return getString("secor.s3.filesystem"); }
 
-    public boolean getSeperateContainersForTopics() {
+    public boolean getSeparateContainersForTopics() {
     	return getString("secor.swift.containers.for.each.topic").toLowerCase().equals("true");
     }
     

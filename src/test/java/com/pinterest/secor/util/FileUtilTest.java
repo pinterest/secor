@@ -34,7 +34,7 @@ public class FileUtilTest {
     public void setUp() throws Exception {
         mSwiftConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mSwiftConfig.getCloudService()).thenReturn("Swift");
-        Mockito.when(mSwiftConfig.getSeperateContainersForTopics()).thenReturn(false);
+        Mockito.when(mSwiftConfig.getSeparateContainersForTopics()).thenReturn(false);
         Mockito.when(mSwiftConfig.getSwiftContainer()).thenReturn("some_container");
         Mockito.when(mSwiftConfig.getSwiftPath()).thenReturn("some_swift_parent_dir");
 

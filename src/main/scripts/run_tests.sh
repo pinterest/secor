@@ -56,7 +56,7 @@ declare -A READER_WRITERS
 READER_WRITERS[json]=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFactory
 READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory
 
-# Hadoop supports multiple implementations of the s3 filesytem
+# Hadoop supports multiple implementations of the s3 filesystem
 S3_FILESYSTEMS=${S3_FILESYSTEMS:-s3n}
 
 # The minimum wait time is 10 seconds plus delta.  Secor is configured to upload files older than

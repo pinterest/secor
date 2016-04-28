@@ -196,7 +196,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
                 usingHourly = true;
             }
         } else if (mUsingHourly && millis % DAY_IN_MILLIS == 0) {
-            // On the day boundary, if the currrent partition is [dt=07-07, hr=00], the previous
+            // On the day boundary, if the current partition is [dt=07-07, hr=00], the previous
             // one is dt=07-06;  If the current one is [dt=07-06], the previous one is
             // [dt=07-06, hr-23]
             // So we would return in the order of:
