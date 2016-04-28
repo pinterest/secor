@@ -27,7 +27,7 @@ import java.util.Arrays;
  * decomposing paths.
  *
  * Log file path has the following form:
- *     prefix/topic/partition1/.../partitionN/generation_kafkaParition_firstMessageOffset
+ *     prefix/topic/partition1/.../partitionN/generation_kafkaPartition_firstMessageOffset
  * where:
  *     prefix is top-level directory for log files.  It can be a local path or an s3 dir,
  *     topic is a kafka topic,

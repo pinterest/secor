@@ -120,7 +120,7 @@ public class FileUtil {
         String prefix = null;
         if (config.getCloudService().equals("Swift")) {
             String container = null;
-            if (config.getSeperateContainersForTopics()) {
+            if (config.getSeparateContainersForTopics()) {
                 if (!exists("swift://" + topic + ".GENERICPROJECT")){
                     String containerUrl = "swift://" + topic + ".GENERICPROJECT";
                     Path containerPath = new Path(containerUrl);
@@ -233,7 +233,7 @@ public class FileUtil {
         return modificationTime;
     }
     
-    /** Generat MD5 hash of topic and paritions. And extract first 4 characters of the MD5 hash.
+    /** Generate MD5 hash of topic and partitions. And extract first 4 characters of the MD5 hash.
      * @param topic
      * @param partitions
      * @return

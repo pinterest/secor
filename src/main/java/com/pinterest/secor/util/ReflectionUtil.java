@@ -137,10 +137,10 @@ public class ReflectionUtil {
     }
     
     /**
-     * Create a MessageTrnasformer from it's fully qualified class name. The
-     * class passed in by name must be assignable to MessageTrnasformers and have
-     * 1-parameter constructor accepting a SecorConfig. Allows the MessageTrnasformers
-     * to be pluggable by providing the class name of a desired MessageTrnasformers in
+     * Create a MessageTransformer from it's fully qualified class name. The
+     * class passed in by name must be assignable to MessageTransformers and have
+     * 1-parameter constructor accepting a SecorConfig. Allows the MessageTransformers
+     * to be pluggable by providing the class name of a desired MessageTransformers in
      * config.
      *
      * See the secor.message.transformer.class config option.

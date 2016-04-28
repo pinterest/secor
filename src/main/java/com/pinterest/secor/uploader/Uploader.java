@@ -80,9 +80,9 @@ public class Uploader {
         mZookeeperConnector.lock(lockPath);
         try {
             // Check if the committed offset has changed.
-            long zookeeperComittedOffsetCount = mZookeeperConnector.getCommittedOffsetCount(
+            long zookeeperCommittedOffsetCount = mZookeeperConnector.getCommittedOffsetCount(
                     topicPartition);
-            if (zookeeperComittedOffsetCount == committedOffsetCount) {
+            if (zookeeperCommittedOffsetCount == committedOffsetCount) {
                 LOG.info("uploading topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
                 // Deleting writers closes their streams flushing all pending data to the disk.
                 mFileRegistry.deleteWriters(topicPartition);

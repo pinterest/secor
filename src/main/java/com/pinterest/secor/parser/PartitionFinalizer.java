@@ -76,7 +76,7 @@ public class PartitionFinalizer {
             Message committedMessage = mKafkaClient.getCommittedMessage(topicPartition);
             if (lastMessage == null || committedMessage == null) {
                 // This will happen if no messages have been posted to the given topic partition.
-                LOG.error("For topic {} partition {}, lastMessage: {}, commmitted: {}",
+                LOG.error("For topic {} partition {}, lastMessage: {}, committed: {}",
                     topicPartition.getTopic(), topicPartition.getPartition(),
                     lastMessage, committedMessage);
                 continue;
