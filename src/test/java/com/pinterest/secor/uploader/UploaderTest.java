@@ -52,7 +52,7 @@ public class UploaderTest extends TestCase {
                             FileRegistry fileRegistry,
                             UploadManager uploadManager,
                             ZookeeperConnector zookeeperConnector) {
-            super(config, offsetTracker, fileRegistry, uploadManager, zookeeperConnector);
+            init(config, offsetTracker, fileRegistry, uploadManager, zookeeperConnector);
             mReader = Mockito.mock(FileReader.class);
         }
 
