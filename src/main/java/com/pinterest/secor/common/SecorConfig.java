@@ -255,6 +255,8 @@ public class SecorConfig {
         return getString("aws.endpoint");
     }
 
+    public Boolean getAWSAccelerateEnabled() { return getBoolean("aws.accelerate.enabled"); }
+
     public String getAwsRole() {
         return getString("aws.role");
     }

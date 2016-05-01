@@ -16,6 +16,7 @@
  */
 package com.pinterest.secor.uploader;
 
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
@@ -82,6 +83,8 @@ public class S3UploadManager extends UploadManager {
         final String secretKey = mConfig.getAwsSecretKey();
         final String endpoint = mConfig.getAwsEndpoint();
         final String region = mConfig.getAwsRegion();
+        final Boolean accelerateEnabled = mConfig.getAWSAccelerateEnabled();
+
         final String awsRole = mConfig.getAwsRole();
 
         s3Path = mConfig.getS3Path();
@@ -120,8 +123,11 @@ public class S3UploadManager extends UploadManager {
 
         if (!endpoint.isEmpty()) {
             client.setEndpoint(endpoint);
-        } else if (!region.isEmpty()) {
+        } else if (!region.isEmpty() ) {
             client.setRegion(Region.getRegion(Regions.fromName(region)));
+            if(accelerateEnabled) {
+                client.setS3ClientOptions(S3ClientOptions.builder().setAccelerateModeEnabled(true).build());
+            }
         }
 
         mManager = new TransferManager(client);
