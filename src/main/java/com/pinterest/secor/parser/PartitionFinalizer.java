@@ -101,6 +101,11 @@ public class PartitionFinalizer {
             LOG.info("Looking for partition: " + Arrays.toString(previous));
             LogFilePath logFilePath = new LogFilePath(prefix, topic, previous,
                 mConfig.getGeneration(), 0, 0, mFileExtension);
+
+            if (FileUtil.s3PathPrefixIsAltered(logFilePath.getLogFilePath(), mConfig)) {
+                logFilePath = logFilePath.withPrefix(FileUtil.getS3AlternativePathPrefix(mConfig));
+            }
+
             String logFileDir = logFilePath.getLogFileDir();
             if (FileUtil.exists(logFileDir)) {
                 String successFilePath = logFileDir + "/_SUCCESS";
@@ -175,6 +180,12 @@ public class PartitionFinalizer {
             // Generate the SUCCESS file at the end
             LogFilePath logFilePath = new LogFilePath(prefix, topic, current,
                 mConfig.getGeneration(), 0, 0, mFileExtension);
+
+            if (FileUtil.s3PathPrefixIsAltered(logFilePath.getLogFilePath(), mConfig)) {
+                logFilePath = logFilePath.withPrefix(FileUtil.getS3AlternativePathPrefix(mConfig));
+                LOG.info("Will finalize alternative s3 logFilePath {}", logFilePath);
+            }
+
             String logFileDir = logFilePath.getLogFileDir();
             String successFilePath = logFileDir + "/_SUCCESS";
 
