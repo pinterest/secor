@@ -104,6 +104,7 @@ public class PartitionFinalizer {
 
             if (FileUtil.s3PathPrefixIsAltered(logFilePath.getLogFilePath(), mConfig)) {
                 logFilePath = logFilePath.withPrefix(FileUtil.getS3AlternativePathPrefix(mConfig));
+                LOG.info("Will finalize alternative s3 logFilePath {}", logFilePath);
             }
 
             String logFileDir = logFilePath.getLogFileDir();
@@ -176,7 +177,6 @@ public class PartitionFinalizer {
                     continue;
                 }
             }
-
             // Generate the SUCCESS file at the end
             LogFilePath logFilePath = new LogFilePath(prefix, topic, current,
                 mConfig.getGeneration(), 0, 0, mFileExtension);
