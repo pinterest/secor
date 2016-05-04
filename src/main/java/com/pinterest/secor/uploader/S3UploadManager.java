@@ -17,10 +17,13 @@
 package com.pinterest.secor.uploader;
 
 import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.model.BucketAccelerateConfiguration;
+import com.amazonaws.services.s3.model.BucketAccelerateStatus;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.SSECustomerKey;
+import com.amazonaws.services.s3.model.SetBucketAccelerateConfigurationRequest;
 import com.pinterest.secor.common.*;
 import com.pinterest.secor.util.FileUtil;
 import com.amazonaws.ClientConfiguration;
@@ -84,7 +87,7 @@ public class S3UploadManager extends UploadManager {
         final String endpoint = mConfig.getAwsEndpoint();
         final String region = mConfig.getAwsRegion();
         final Boolean accelerateEnabled = mConfig.getAWSAccelerateEnabled();
-
+        final String s3Bucket = mConfig.getS3Bucket();
         final String awsRole = mConfig.getAwsRole();
 
         s3Path = mConfig.getS3Path();
@@ -126,6 +129,8 @@ public class S3UploadManager extends UploadManager {
         } else if (!region.isEmpty() ) {
             client.setRegion(Region.getRegion(Regions.fromName(region)));
             if(accelerateEnabled) {
+                client.setBucketAccelerateConfiguration(new SetBucketAccelerateConfigurationRequest(s3Bucket,
+                    new BucketAccelerateConfiguration(BucketAccelerateStatus.Enabled)));
                 client.setS3ClientOptions(S3ClientOptions.builder().setAccelerateModeEnabled(true).build());
             }
         }
