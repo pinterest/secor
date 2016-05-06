@@ -47,25 +47,16 @@ public class Uploader {
     private ZookeeperConnector mZookeeperConnector;
     private UploadManager mUploadManager;
 
-
-    /**
-     * Init the Uploader with its dependent objects.
-     *
-     * @param config Secor configuration
-     * @param offsetTracker Tracker of the current offset of topics partitions
-     * @param fileRegistry Registry of log files on a per-topic and per-partition basis
-     * @param uploadManager Manager of the physical upload of log files to the remote repository
-     */
-    public void init(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
-                     UploadManager uploadManager) {
-        init(config, offsetTracker, fileRegistry, uploadManager,
-                new ZookeeperConnector(config));
+    public Uploader(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
+                    UploadManager uploadManager) {
+        this(config, offsetTracker, fileRegistry, uploadManager,
+             new ZookeeperConnector(config));
     }
 
     // For testing use only.
-    public void init(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
-                     UploadManager uploadManager,
-                     ZookeeperConnector zookeeperConnector) {
+    public Uploader(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
+                    UploadManager uploadManager,
+                    ZookeeperConnector zookeeperConnector) {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
@@ -173,7 +164,7 @@ public class Uploader {
         }
     }
 
-    protected void trimFiles(TopicPartition topicPartition, long startOffset) throws Exception {
+    private void trimFiles(TopicPartition topicPartition, long startOffset) throws Exception {
         Collection<LogFilePath> paths = mFileRegistry.getPaths(topicPartition);
         for (LogFilePath path : paths) {
             trim(path, startOffset);
@@ -210,17 +201,6 @@ public class Uploader {
         }
     }
 
-    /**
-     * Apply the Uploader policy for pushing partition files to the underlying storage.
-     *
-     * For each of the partitions of the file registry, apply the policy for flushing
-     * them to the underlying storage.
-     *
-     * This method could be subclassed to provide an alternate policy. The custom uploader
-     * class name would need to be specified in the secor.upload.class.
-     *
-     * @throws Exception if any error occurs while appying the policy
-     */
     public void applyPolicy() throws Exception {
         Collection<TopicPartition> topicPartitions = mFileRegistry.getTopicPartitions();
         for (TopicPartition topicPartition : topicPartitions) {
