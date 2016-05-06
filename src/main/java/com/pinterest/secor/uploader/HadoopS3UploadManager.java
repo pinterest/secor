@@ -50,7 +50,7 @@ public class HadoopS3UploadManager extends UploadManager {
         final String logFileName;
 
         if (FileUtil.s3PathPrefixIsAltered(path.getLogFilePath(), mConfig)) {
-           logFileName = localPath.withPrefix(FileUtil.getS3AlternativePathPrefix(mConfig)).getLogFilePath();
+           logFileName = localPath.withPrefix(FileUtil.getS3AlternativePath(mConfig)).getLogFilePath();
            LOG.info("Will upload file to alternative s3 prefix path {}", logFileName);
         }
         else {

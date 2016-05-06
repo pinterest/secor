@@ -183,10 +183,6 @@ public class SecorConfig {
         return getS3FileSystem() + "://" + getS3Bucket() + "/" + getS3Path();
     }
 
-    public String getS3AlternativePrefix() {
-        return getS3FileSystem() + "://" + getS3Bucket() + "/" + getS3AlternativePath();
-    }
-
     public String getLocalPath() {
         return getString("secor.local.path");
     }
