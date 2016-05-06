@@ -113,7 +113,7 @@ public class FileUtil {
     }
 
     public static String getS3AlternativePathPrefix(SecorConfig config) {
-        return config.getS3AlternativePrefix();
+        return config.getS3AlternativePath();
     }
 
     public static String getPrefix(String topic, SecorConfig config)  throws IOException {
