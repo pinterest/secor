@@ -211,6 +211,10 @@ public class SecorConfig {
         return getString("secor.message.parser.class");
     }
 
+    public String getUploaderClass() {
+        return getString("secor.upload.class", "com.pinterest.secor.uploader.Uploader");
+    }
+
     public String getUploadManagerClass() {
         return getString("secor.upload.manager.class");
     }
@@ -457,6 +461,10 @@ public class SecorConfig {
     public String getString(String name) {
         checkProperty(name);
         return mProperties.getString(name);
+    }
+
+    public String getString(String name, String defaultValue) {
+        return mProperties.getString(name, defaultValue);
     }
 
     public int getInt(String name) {
