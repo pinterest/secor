@@ -135,7 +135,7 @@ public class S3UploadManager extends UploadManager {
         File localFile = new File(localPath.getLogFilePath());
 
         if (FileUtil.s3PathPrefixIsAltered(localPath.withPrefix(curS3Path).getLogFilePath(), mConfig)) {
-            curS3Path = FileUtil.getS3AlternativePathPrefix(mConfig);
+            curS3Path = FileUtil.getS3AlternativePath(mConfig);
             LOG.info("Will upload file {} to alternative s3 path s3://{}/{}", localFile, s3Bucket, curS3Path);
         }
 

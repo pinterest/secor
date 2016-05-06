@@ -71,8 +71,7 @@ public class Consumer extends Thread {
         FileRegistry fileRegistry = new FileRegistry(mConfig);
         UploadManager uploadManager = ReflectionUtil.createUploadManager(mConfig.getUploadManagerClass(), mConfig);
 
-        mUploader = ReflectionUtil.createUploader(mConfig.getUploaderClass());
-        mUploader.init(mConfig, mOffsetTracker, fileRegistry, uploadManager);
+        mUploader = new Uploader(mConfig, mOffsetTracker, fileRegistry, uploadManager);
         mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry);
         mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
         mMessageTransformer =  ReflectionUtil.createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);

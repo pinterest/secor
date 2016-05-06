@@ -183,10 +183,6 @@ public class SecorConfig {
         return getS3FileSystem() + "://" + getS3Bucket() + "/" + getS3Path();
     }
 
-    public String getS3AlternativePrefix() {
-        return getS3FileSystem() + "://" + getS3Bucket() + "/" + getS3AlternativePath();
-    }
-
     public String getLocalPath() {
         return getString("secor.local.path");
     }
@@ -213,10 +209,6 @@ public class SecorConfig {
 
     public String getMessageParserClass() {
         return getString("secor.message.parser.class");
-    }
-
-    public String getUploaderClass() {
-        return getString("secor.upload.class", "com.pinterest.secor.uploader.Uploader");
     }
 
     public String getUploadManagerClass() {
@@ -465,10 +457,6 @@ public class SecorConfig {
     public String getString(String name) {
         checkProperty(name);
         return mProperties.getString(name);
-    }
-
-    public String getString(String name, String defaultValue) {
-        return mProperties.getString(name, defaultValue);
     }
 
     public int getInt(String name) {

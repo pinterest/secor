@@ -16,9 +16,7 @@
  */
 package com.pinterest.secor.util;
 
-import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
@@ -27,7 +25,6 @@ import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.UploadManager;
 
-import com.pinterest.secor.uploader.Uploader;
 import org.apache.hadoop.io.compress.CompressionCodec;
 
 /**
@@ -61,26 +58,6 @@ public class ReflectionUtil {
 
         // Assume that subclass of UploadManager has a constructor with the same signature as UploadManager
         return (UploadManager) clazz.getConstructor(SecorConfig.class).newInstance(config);
-    }
-
-    /**
-     * Create an Uploader from its fully qualified class name.
-     *
-     * The class passed in by name must be assignable to Uploader.
-     * See the secor.upload.class config option.
-     *
-     * @param className     The class name of a subclass of Uploader
-     * @return an UploadManager instance with the runtime type of the class passed by name
-     * @throws Exception
-     */
-    public static Uploader createUploader(String className) throws Exception {
-        Class<?> clazz = Class.forName(className);
-        if (!Uploader.class.isAssignableFrom(clazz)) {
-            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
-                    className, Uploader.class.getName()));
-        }
-
-        return (Uploader) clazz.newInstance();
     }
 
     /**
