@@ -116,6 +116,10 @@ public class FileUtil {
         return config.getS3AlternativePath();
     }
 
+    public static String getS3AlternativePrefix(SecorConfig config) {
+        return config.getS3FileSystem() + "://" + config.getS3Bucket() + "/" + config.getS3AlternativePath();
+    }
+
     public static String getPrefix(String topic, SecorConfig config)  throws IOException {
         String prefix = null;
         if (config.getCloudService().equals("Swift")) {
