@@ -40,7 +40,7 @@ import java.util.List;
  * partitions to be finalized.
  *
  * The caller might repeat this loop multiple times when the filesystem partition
- * is multi-dimentional (e.g. [dt=2015-07-07,hr=05]).  it will loop once for the
+ * is multi-dimensional (e.g. [dt=2015-07-07,hr=05]).  it will loop once for the
  * hourly folder finalization and another time for the daily folder.
  *
  * Note that although we use daily/hourly partition illustrate the use of

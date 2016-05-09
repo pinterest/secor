@@ -55,14 +55,16 @@ public class MessageWriter {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
-        if (mConfig.getFileExtension() != null && !mConfig.getFileExtension().isEmpty()) {
-            mFileExtension = mConfig.getFileExtension();
-        } else if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
+        if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
             mCodec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
             mFileExtension = mCodec.getDefaultExtension();
-        } else {
+        }
+        if (mConfig.getFileExtension() != null && !mConfig.getFileExtension().isEmpty()) {
+            mFileExtension = mConfig.getFileExtension();
+        } else if (mFileExtension == null){
             mFileExtension = "";
         }
+        
         mLocalPrefix = mConfig.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
         mGeneration = mConfig.getGeneration();
     }

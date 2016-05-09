@@ -29,6 +29,7 @@ import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import kafka.consumer.TopicFilter;
 import kafka.consumer.Whitelist;
+import kafka.consumer.Blacklist;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import org.slf4j.Logger;
@@ -65,7 +66,12 @@ public class MessageReader {
 
         mConsumerConnector = Consumer.createJavaConsumerConnector(createConsumerConfig());
 
-        TopicFilter topicFilter = new Whitelist(mConfig.getKafkaTopicFilter());
+        if (!mConfig.getKafkaTopicBlacklist().isEmpty() && !mConfig.getKafkaTopicFilter().isEmpty()) {
+            throw new RuntimeException("Topic filter and blacklist cannot be both specified.");
+        }
+        TopicFilter topicFilter = !mConfig.getKafkaTopicBlacklist().isEmpty()? new Blacklist(mConfig.getKafkaTopicBlacklist()):
+                new Whitelist(mConfig.getKafkaTopicFilter());
+        LOG.debug("Use TopicFilter {}({})", topicFilter.getClass(), topicFilter);
         List<KafkaStream<byte[], byte[]>> streams =
             mConsumerConnector.createMessageStreamsByFilter(topicFilter);
         KafkaStream<byte[], byte[]> stream = streams.get(0);
@@ -128,9 +134,9 @@ public class MessageReader {
             !mConfig.getRebalanceBackoffMs().isEmpty()) {
             props.put("rebalance.backoff.ms", mConfig.getRebalanceBackoffMs());
         }
-        if (mConfig.getSocketReceieveBufferBytes() != null &&
-            !mConfig.getSocketReceieveBufferBytes().isEmpty()) {
-            props.put("socket.receive.buffer.bytes", mConfig.getSocketReceieveBufferBytes());
+        if (mConfig.getSocketReceiveBufferBytes() != null &&
+            !mConfig.getSocketReceiveBufferBytes().isEmpty()) {
+            props.put("socket.receive.buffer.bytes", mConfig.getSocketReceiveBufferBytes());
         }
         if (mConfig.getFetchMessageMaxBytes() != null && !mConfig.getFetchMessageMaxBytes().isEmpty()) {
             props.put("fetch.message.max.bytes", mConfig.getFetchMessageMaxBytes());

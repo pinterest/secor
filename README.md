@@ -4,7 +4,7 @@
 
 Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage] and [Openstack Swift].
 
-## Key features
+## Key features ##
   - **strong consistency**: as long as [Kafka] is not dropping messages (e.g., due to aggressive cleanup policy) before Secor is able to read them, it is guaranteed that each message will be saved in exactly one [S3] file. This property is not compromised by the notorious temporal inconsistency of [S3] caused by the [eventual consistency] model,
   - **fault tolerance**: any component of Secor is allowed to crash at any given point without compromising data integrity,
   - **load distribution**: Secor may be distributed across multiple machines,
@@ -90,7 +90,7 @@ java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.
 Topic finalizer writes _SUCCESS files to date partitions that very likely won't be receiving any new messages and (optionally) adds the corresponding dates to [Hive] through [Qubole] API.
 
 ```sh
-java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.propertie -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.PartitionFinalizerMain
+java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.PartitionFinalizerMain
 ```
 
 ##### Progress monitor

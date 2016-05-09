@@ -105,7 +105,7 @@ public class SecorConfig {
         return getString("kafka.fetch.message.max.bytes");
     }
 
-    public String getSocketReceieveBufferBytes() {
+    public String getSocketReceiveBufferBytes() {
         return getString("kafka.socket.receive.buffer.bytes");
     }
 
@@ -151,7 +151,7 @@ public class SecorConfig {
 
     public String getS3FileSystem() { return getString("secor.s3.filesystem"); }
 
-    public boolean getSeperateContainersForTopics() {
+    public boolean getSeparateContainersForTopics() {
     	return getString("secor.swift.containers.for.each.topic").toLowerCase().equals("true");
     }
     
@@ -171,15 +171,28 @@ public class SecorConfig {
         return getString("secor.s3.path");
     }
 
+    public String getS3AlternativePath() {
+        return getString("secor.s3.alternative.path");
+    }
+
+    public String getS3AlterPathDate() {
+        return getString("secor.s3.alter.path.date");
+    }
+
     public String getS3Prefix() {
         return getS3FileSystem() + "://" + getS3Bucket() + "/" + getS3Path();
     }
+
     public String getLocalPath() {
         return getString("secor.local.path");
     }
 
     public String getKafkaTopicFilter() {
         return getString("secor.kafka.topic_filter");
+    }
+
+    public String getKafkaTopicBlacklist() {
+        return getString("secor.kafka.topic_blacklist");
     }
 
     public String getKafkaGroup() {
@@ -196,6 +209,10 @@ public class SecorConfig {
 
     public String getMessageParserClass() {
         return getString("secor.message.parser.class");
+    }
+
+    public String getUploaderClass() {
+        return getString("secor.upload.class", "com.pinterest.secor.uploader.Uploader");
     }
 
     public String getUploadManagerClass() {
@@ -236,6 +253,10 @@ public class SecorConfig {
 
     public String getAwsEndpoint() {
         return getString("aws.endpoint");
+    }
+
+    public String getAwsRole() {
+        return getString("aws.role");
     }
     
     public boolean getAwsProxyEnabled(){
@@ -403,6 +424,10 @@ public class SecorConfig {
         return getInt("partitioner.finalizer.delay.seconds");
     }
 
+    public boolean getS3MD5HashPrefix() {
+      return getBoolean("secor.s3.prefix.md5hash");
+    }
+
     public String getAzureEndpointsProtocol() { return getString("secor.azure.endpoints.protocol"); }
 
     public String getAzureAccountName() { return getString("secor.azure.account.name"); }
@@ -440,6 +465,10 @@ public class SecorConfig {
     public String getString(String name) {
         checkProperty(name);
         return mProperties.getString(name);
+    }
+
+    public String getString(String name, String defaultValue) {
+        return mProperties.getString(name, defaultValue);
     }
 
     public int getInt(String name) {
