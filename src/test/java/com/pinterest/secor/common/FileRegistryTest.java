@@ -64,7 +64,7 @@ public class FileRegistryTest extends TestCase {
         mLogFilePathGz = new LogFilePath("/some_parent_dir", PATH_GZ);
     }
 
-    private void createWriter() throws Exception {
+    private FileWriter createWriter() throws Exception {
         PowerMockito.mockStatic(FileUtil.class);
 
         PowerMockito.mockStatic(ReflectionUtil.class);
@@ -82,6 +82,8 @@ public class FileRegistryTest extends TestCase {
         FileWriter createdWriter = mRegistry.getOrCreateWriter(
                 mLogFilePath, null);
         assertTrue(createdWriter == writer);
+
+        return writer;
     }
 
     public void testGetOrCreateWriter() throws Exception {
@@ -112,6 +114,18 @@ public class FileRegistryTest extends TestCase {
                 .getPaths(topicPartition);
         assertEquals(1, logFilePaths.size());
         assertTrue(logFilePaths.contains(mLogFilePath));
+    }
+
+    public void testGetWriterShowBeNullForNewFilePaths() throws Exception {
+        assertNull(mRegistry.getWriter(mLogFilePath));
+    }
+
+    public void testGetWriterShowBeNotNull() throws Exception {
+        FileWriter createdWriter = createWriter();
+
+        FileWriter writer = mRegistry.getWriter(mLogFilePath);
+        assertNotNull(writer);
+        assertEquals(createdWriter, writer);
     }
 
     private void createCompressedWriter() throws Exception {
