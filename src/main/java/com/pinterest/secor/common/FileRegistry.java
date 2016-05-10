@@ -76,6 +76,16 @@ public class FileRegistry {
     }
 
     /**
+     * Retrieve an existing writer for a given path.
+     * @param path The path to retrieve writer for.
+     * @return Writer for a given path or null if no writer has been created yet.
+     */
+    public FileWriter getWriter(LogFilePath path)
+            throws Exception {
+        return mWriters.get(path);
+    }
+
+    /**
      * Retrieve a writer for a given path or create a new one if it does not exist.
      * @param path The path to retrieve writer for.
      * @param codec Optional compression codec.
