@@ -22,6 +22,7 @@ import io.confluent.kafka.serializers.KafkaAvroDecoder;
 import kafka.utils.VerifiableProperties;
 import org.apache.avro.generic.GenericRecord;
 
+import javax.xml.bind.DatatypeConverter;
 import java.util.Properties;
 
 /**
@@ -45,7 +46,15 @@ public class AvroMessageParser extends TimestampedMessageParser {
         if (record != null) {
             Object fieldValue = record.get(mConfig.getMessageTimestampName());
             if (fieldValue != null) {
-                return toMillis(Double.valueOf(fieldValue.toString()).longValue());
+                try {
+                    return toMillis(Double.valueOf(fieldValue.toString()).longValue());
+                } catch (NumberFormatException nfe) {
+                    try {
+                        return toMillis(DatatypeConverter.parseDateTime(fieldValue.toString()).getTimeInMillis());
+                    } catch (IllegalArgumentException exc) {
+                        return 0;
+                    }
+                }
             }
         }
         return 0;
