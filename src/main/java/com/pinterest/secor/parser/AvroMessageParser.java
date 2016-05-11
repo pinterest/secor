@@ -21,6 +21,7 @@ import com.pinterest.secor.message.Message;
 import io.confluent.kafka.serializers.KafkaAvroDecoder;
 import kafka.utils.VerifiableProperties;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.kafka.common.errors.SerializationException;
 
 import javax.xml.bind.DatatypeConverter;
 import java.util.Properties;
@@ -42,20 +43,24 @@ public class AvroMessageParser extends TimestampedMessageParser {
 
     @Override
     public long extractTimestampMillis(final Message message) {
-        GenericRecord record = (GenericRecord) avroDecoder.fromBytes(message.getPayload());
-        if (record != null) {
-            Object fieldValue = record.get(mConfig.getMessageTimestampName());
-            if (fieldValue != null) {
-                try {
-                    return toMillis(Double.valueOf(fieldValue.toString()).longValue());
-                } catch (NumberFormatException nfe) {
+        try {
+            GenericRecord record = (GenericRecord) avroDecoder.fromBytes(message.getPayload());
+            if (record != null) {
+                Object fieldValue = record.get(mConfig.getMessageTimestampName());
+                if (fieldValue != null) {
                     try {
-                        return toMillis(DatatypeConverter.parseDateTime(fieldValue.toString()).getTimeInMillis());
-                    } catch (IllegalArgumentException exc) {
-                        return 0;
+                        return toMillis(Double.valueOf(fieldValue.toString()).longValue());
+                    } catch (NumberFormatException nfe) {
+                        try {
+                            return toMillis(DatatypeConverter.parseDateTime(fieldValue.toString()).getTimeInMillis());
+                        } catch (IllegalArgumentException exc) {
+                            return 0;
+                        }
                     }
                 }
             }
+        } catch (SerializationException exc) {
+            return 0;
         }
         return 0;
     }
