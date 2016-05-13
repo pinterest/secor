@@ -9,10 +9,11 @@ Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage
   - **fault tolerance**: any component of Secor is allowed to crash at any given point without compromising data integrity,
   - **load distribution**: Secor may be distributed across multiple machines,
   - **horizontal scalability**: scaling the system out to handle more load is as easy as starting extra Secor processes. Reducing the resource footprint can be achieved by killing any of the running Secor processes. Neither ramping up nor down has any impact on data consistency,
-  - **output partitioning**: Secor parses incoming messages and puts them under partitioned s3 paths to enable direct import into systems like [Hive],
+  - **output partitioning**: Secor parses incoming messages and puts them under partitioned s3 paths to enable direct import into systems like [Hive](e.g. day, hour, minute level partitions are supported by secor  )
   - **configurable upload policies**: commit points controlling when data is persisted in S3 are configured through size-based and time-based policies (e.g., upload data when local buffer reaches size of 100MB and at least once per hour),
   - **monitoring**: metrics tracking various performance properties are exposed through [Ostrich] and optionally exported to [OpenTSDB] / [statsD],
   - **customizability**: external log message parser may be loaded by updating the configuration,
+  - **event transformation**: external message level tranformation can be done by using customized class.
   - **Qubole interface**: Secor connects to [Qubole] to add finalized output partitions to Hive tables.
 
 ## Setup Guide
@@ -122,6 +123,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Leo Woessner](https://github.com/estezz)
   * [Jerome Gagnon](https://github.com/jgagnon1)
   * [Taichi Nakashima](https://github.com/tcnksm)
+  * [Lovenish Goyal] (https://github.com/lovenishgoyal)
 
 ## Companies who use Secor
 
