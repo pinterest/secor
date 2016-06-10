@@ -293,28 +293,6 @@
             </testResource>
         </testResources>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.1</version>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>git</executable>
-                            <arguments>
-                                <argument>log</argument>
-                                <argument>--pretty=format:build_revision=%H</argument>
-                                <argument>-n1</argument>
-                            </arguments>
-                            <outputFile>target/build.properties</outputFile>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <!-- This forces the dependencies to be copied to target/lib -->
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
