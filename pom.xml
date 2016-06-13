@@ -331,28 +331,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.1</version>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>git</executable>
-                            <arguments>
-                                <argument>log</argument>
-                                <argument>--pretty=format:build_revision=%H</argument>
-                                <argument>-n1</argument>
-                            </arguments>
-                            <outputFile>target/classes/com/pinterest/secor/common/build.properties</outputFile>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
@@ -453,6 +431,77 @@
     </build>
 
     <profiles>
+        <profile>
+            <!-- Generate properties file when SOURCE_VERSION env var is set instead of using GIT
+                 This is useful if you do not have git available during your build, or are using a
+                 platform such as Heroku to host secor
+                 (https://devcenter.heroku.com/changelog-items/630) -->
+            <id>generate-properties-env</id>
+            <activation>
+                <property>
+                    <name>env.SOURCE_VERSION</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.1</version>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>echo</executable>
+                                    <arguments>
+                                        <argument>build_revision=${env.SOURCE_VERSION}</argument>
+                                    </arguments>
+                                    <outputFile>target/classes/com/pinterest/secor/common/build.properties</outputFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- Fallback property file generation when env.SOURCE_VERSION is not available -->
+            <id>generate-properties-git</id>
+            <activation>
+                <property>
+                    <name>!env.SOURCE_VERSION</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.1</version>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>git</executable>
+                                    <arguments>
+                                        <argument>log</argument>
+                                        <argument>--pretty=format:build_revision=%H</argument>
+                                        <argument>-n1</argument>
+                                    </arguments>
+                                    <outputFile>target/classes/com/pinterest/secor/common/build.properties</outputFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>release</id>
             <build>
