@@ -211,13 +211,13 @@ public class Uploader {
                 LOG.debug("Uploading for: " + topicPartition);
                 uploadFiles(topicPartition);
             } else if (newOffsetCount > lastSeenOffset) {  // && oldOffset < newOffset
-                LOG.debug("last seen offset {} is lower than committed offset count {}. Deleting files in topic {} partition {}",
+                LOG.warn("last seen offset {} is lower than committed offset count {}. Deleting files in topic {} partition {}",
                         lastSeenOffset, newOffsetCount,topicPartition.getTopic(), topicPartition.getPartition());
                 // There was a rebalancing event and someone committed an offset beyond that of the
                 // current message.  We need to delete the local file.
                 mFileRegistry.deleteTopicPartition(topicPartition);
             } else {  // oldOffsetCount < newOffsetCount <= lastSeenOffset
-                LOG.debug("previous committed offset count {} is lower than committed offset {} is lower than or equal to last seen offset {}. " +
+                LOG.warn("previous committed offset count {} is lower than committed offset {} is lower than or equal to last seen offset {}. " +
                                 "Trimming files in topic {} partition {}",
                         oldOffsetCount, newOffsetCount, lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
                 // There was a rebalancing event and someone committed an offset lower than that
