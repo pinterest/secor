@@ -437,6 +437,8 @@ public class SecorConfig {
     public String getAzureContainer() { return getString("secor.azure.container.name"); }
 
     public String getAzurePath() { return getString("secor.azure.path"); }
+    
+    public String getProtobufMessageClass() { return getString("secor.protobuf.message.class"); }
 
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
