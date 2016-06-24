@@ -31,8 +31,10 @@ import com.pinterest.secor.message.Message;
 /**
  * Protocol buffer message timestamp extractor
  * 
- * If <code>secor.protobuf.message.class</code> is not set assumes that the very first <code>uint64</code> field in a message is the timestamp.
- * Otherwise, uses <code>message.timestamp.name</code> as a path to get to the timestamp field within protobuf message.
+ * If <code>secor.protobuf.message.class</code> is not set assumes that the very
+ * first <code>uint64</code> field in a message is the timestamp. Otherwise,
+ * uses <code>message.timestamp.name</code> as a path to get to the timestamp
+ * field within protobuf message.
  *
  * @author Liam Stewart (liam.stewart@gmail.com)
  */
@@ -45,7 +47,7 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
 
 	public ProtobufMessageParser(SecorConfig config) {
 		super(config);
-		
+
 		String messageClassName = mConfig.getProtobufMessageClass();
 		if (messageClassName != null) {
 			try {
@@ -57,6 +59,8 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
 				if (timestampFieldSeparator == null || timestampFieldSeparator.isEmpty()) {
 					timestampFieldSeparator = ".";
 				}
+				LOG.info("Using protobuf timestamp field path: {} with separator: {}", timestampFieldName,
+				        timestampFieldSeparator);
 				timestampFieldPath = timestampFieldName.split(Pattern.quote(timestampFieldSeparator));
 			} catch (ClassNotFoundException e) {
 				LOG.error("Unable to load protobuf message class", e);
@@ -76,9 +80,11 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
 				decodedMessage = (com.google.protobuf.Message) messageParseMethod.invoke(null, message.getPayload());
 				int i = 0;
 				for (; i < timestampFieldPath.length - 1; ++i) {
-					decodedMessage = (com.google.protobuf.Message) decodedMessage.getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i]));
+					decodedMessage = (com.google.protobuf.Message) decodedMessage
+					        .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i]));
 				}
-				return toMillis((Long) decodedMessage.getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i])));
+				return toMillis((Long) decodedMessage
+				        .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i])));
 			} catch (IllegalArgumentException e) {
 				throw new IOException("Unable to extract timestamp from protobuf message", e);
 			} catch (IllegalAccessException e) {
@@ -89,7 +95,7 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
 		} else {
 			// Assume that the timestamp field is the first field, is required,
 			// and is a uint64.
-			
+
 			CodedInputStream input = CodedInputStream.newInstance(message.getPayload());
 			// Don't really care about the tag, but need to read it to get, to
 			// the payload.

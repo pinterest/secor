@@ -61,11 +61,11 @@ public class ProtobufMessageParserTest extends TestCase {
 
 		UnitTestMessage1 message = UnitTestMessage1.newBuilder().setTimestamp(1405970352L).build();
 		assertEquals(1405970352000l,
-				parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+		        parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
 
 		message = UnitTestMessage1.newBuilder().setTimestamp(1405970352123l).build();
 		assertEquals(1405970352123l,
-				parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+		        parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
 	}
 
 	@Test
@@ -76,13 +76,13 @@ public class ProtobufMessageParserTest extends TestCase {
 		ProtobufMessageParser parser = new ProtobufMessageParser(mConfig);
 
 		UnitTestMessage2 message = UnitTestMessage2.newBuilder()
-				.setInternal(UnitTestMessage2.Internal.newBuilder().setTimestamp(1405970352L).build()).build();
+		        .setInternal(UnitTestMessage2.Internal.newBuilder().setTimestamp(1405970352L).build()).build();
 		assertEquals(1405970352000l,
-				parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+		        parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
 
 		message = UnitTestMessage2.newBuilder()
-				.setInternal(UnitTestMessage2.Internal.newBuilder().setTimestamp(1405970352123l).build()).build();
+		        .setInternal(UnitTestMessage2.Internal.newBuilder().setTimestamp(1405970352123l).build()).build();
 		assertEquals(1405970352123l,
-				parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+		        parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
 	}
 }

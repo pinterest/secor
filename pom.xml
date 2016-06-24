@@ -369,8 +369,8 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <!-- Protobuf source generator plug-in -->
+		    </plugin>
+			<!-- Protobuf source generator plug-in -->
 			<plugin>
 				<groupId>com.github.os72</groupId>
 				<artifactId>protoc-jar-maven-plugin</artifactId>
@@ -379,9 +379,9 @@
 					<execution>
 						<id>protobuf-test-sources</id>
 						<phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
+						<goals>
+							<goal>run</goal>
+						</goals>
 						<configuration>
 							<protocVersion>2.6.1</protocVersion>
 							<includeDirectories>
@@ -391,12 +391,12 @@
 								<include>src/test/protobuf</include>
 							</inputDirectories>
 							<outputTargets>
-			                    <outputTarget>
-			                        <type>java</type>
-			                        <addSources>none</addSources>
-			                        <outputDirectory>target/generated-test-sources/protobuf/gen-java</outputDirectory>
-			                    </outputTarget>
-		                    </outputTargets>
+								<outputTarget>
+									<type>java</type>
+									<addSources>none</addSources>
+									<outputDirectory>target/generated-test-sources/protobuf/gen-java</outputDirectory>
+								</outputTarget>
+							</outputTargets>
 						</configuration>
 					</execution>
 				</executions>
