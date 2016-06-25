@@ -369,7 +369,57 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+		    </plugin>
+			<!-- Protobuf source generator plug-in -->
+			<plugin>
+				<groupId>com.github.os72</groupId>
+				<artifactId>protoc-jar-maven-plugin</artifactId>
+				<version>3.0.0-b3</version>
+				<executions>
+					<execution>
+						<id>protobuf-test-sources</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<protocVersion>2.6.1</protocVersion>
+							<includeDirectories>
+								<include>src/test/protobuf</include>
+							</includeDirectories>
+							<inputDirectories>
+								<include>src/test/protobuf</include>
+							</inputDirectories>
+							<outputTargets>
+								<outputTarget>
+									<type>java</type>
+									<addSources>none</addSources>
+									<outputDirectory>target/generated-test-sources/protobuf/gen-java</outputDirectory>
+								</outputTarget>
+							</outputTargets>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.10</version>
+				<executions>
+					<execution>
+						<id>add-test-sources</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>add-test-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>target/generated-test-sources/protobuf/gen-java</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
             <!-- Thrift source generate plugin. -->
             <plugin>
                 <groupId>com.twitter</groupId>
