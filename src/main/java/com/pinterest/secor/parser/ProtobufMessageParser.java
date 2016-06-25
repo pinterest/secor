@@ -40,67 +40,67 @@ import com.pinterest.secor.message.Message;
  */
 public class ProtobufMessageParser extends TimestampedMessageParser {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ProtobufMessageParser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProtobufMessageParser.class);
 
-	private Method messageParseMethod;
-	private String[] timestampFieldPath;
+    private Method messageParseMethod;
+    private String[] timestampFieldPath;
 
-	public ProtobufMessageParser(SecorConfig config) {
-		super(config);
+    public ProtobufMessageParser(SecorConfig config) {
+        super(config);
 
-		String messageClassName = mConfig.getProtobufMessageClass();
-		if (messageClassName != null) {
-			try {
-				Class<?> messageClass = (Class<?>) Class.forName(messageClassName);
-				messageParseMethod = messageClass.getDeclaredMethod("parseFrom", new Class<?>[] { byte[].class });
+        String messageClassName = mConfig.getProtobufMessageClass();
+        if (messageClassName != null) {
+            try {
+                Class<?> messageClass = (Class<?>) Class.forName(messageClassName);
+                messageParseMethod = messageClass.getDeclaredMethod("parseFrom", new Class<?>[] { byte[].class });
 
-				String timestampFieldName = mConfig.getMessageTimestampName();
-				String timestampFieldSeparator = mConfig.getMessageTimestampNameSeparator();
-				if (timestampFieldSeparator == null || timestampFieldSeparator.isEmpty()) {
-					timestampFieldSeparator = ".";
-				}
-				LOG.info("Using protobuf timestamp field path: {} with separator: {}", timestampFieldName,
-				        timestampFieldSeparator);
-				timestampFieldPath = timestampFieldName.split(Pattern.quote(timestampFieldSeparator));
-			} catch (ClassNotFoundException e) {
-				LOG.error("Unable to load protobuf message class", e);
-			} catch (NoSuchMethodException e) {
-				LOG.error("Unable to find parseFrom() method in protobuf message class", e);
-			} catch (SecurityException e) {
-				LOG.error("Unable to use parseFrom() method from protobuf message class", e);
-			}
-		}
-	}
+                String timestampFieldName = mConfig.getMessageTimestampName();
+                String timestampFieldSeparator = mConfig.getMessageTimestampNameSeparator();
+                if (timestampFieldSeparator == null || timestampFieldSeparator.isEmpty()) {
+                    timestampFieldSeparator = ".";
+                }
+                LOG.info("Using protobuf timestamp field path: {} with separator: {}", timestampFieldName,
+                        timestampFieldSeparator);
+                timestampFieldPath = timestampFieldName.split(Pattern.quote(timestampFieldSeparator));
+            } catch (ClassNotFoundException e) {
+                LOG.error("Unable to load protobuf message class", e);
+            } catch (NoSuchMethodException e) {
+                LOG.error("Unable to find parseFrom() method in protobuf message class", e);
+            } catch (SecurityException e) {
+                LOG.error("Unable to use parseFrom() method from protobuf message class", e);
+            }
+        }
+    }
 
-	@Override
-	public long extractTimestampMillis(final Message message) throws IOException {
-		if (messageParseMethod != null) {
-			com.google.protobuf.Message decodedMessage;
-			try {
-				decodedMessage = (com.google.protobuf.Message) messageParseMethod.invoke(null, message.getPayload());
-				int i = 0;
-				for (; i < timestampFieldPath.length - 1; ++i) {
-					decodedMessage = (com.google.protobuf.Message) decodedMessage
-					        .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i]));
-				}
-				return toMillis((Long) decodedMessage
-				        .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i])));
-			} catch (IllegalArgumentException e) {
-				throw new IOException("Unable to extract timestamp from protobuf message", e);
-			} catch (IllegalAccessException e) {
-				throw new IOException("Unable to extract timestamp from protobuf message", e);
-			} catch (InvocationTargetException e) {
-				throw new IOException("Unable to extract timestamp from protobuf message", e);
-			}
-		} else {
-			// Assume that the timestamp field is the first field, is required,
-			// and is a uint64.
+    @Override
+    public long extractTimestampMillis(final Message message) throws IOException {
+        if (messageParseMethod != null) {
+            com.google.protobuf.Message decodedMessage;
+            try {
+                decodedMessage = (com.google.protobuf.Message) messageParseMethod.invoke(null, message.getPayload());
+                int i = 0;
+                for (; i < timestampFieldPath.length - 1; ++i) {
+                    decodedMessage = (com.google.protobuf.Message) decodedMessage
+                            .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i]));
+                }
+                return toMillis((Long) decodedMessage
+                        .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i])));
+            } catch (IllegalArgumentException e) {
+                throw new IOException("Unable to extract timestamp from protobuf message", e);
+            } catch (IllegalAccessException e) {
+                throw new IOException("Unable to extract timestamp from protobuf message", e);
+            } catch (InvocationTargetException e) {
+                throw new IOException("Unable to extract timestamp from protobuf message", e);
+            }
+        } else {
+            // Assume that the timestamp field is the first field, is required,
+            // and is a uint64.
 
-			CodedInputStream input = CodedInputStream.newInstance(message.getPayload());
-			// Don't really care about the tag, but need to read it to get, to
-			// the payload.
-			input.readTag();
-			return toMillis(input.readUInt64());
-		}
-	}
+            CodedInputStream input = CodedInputStream.newInstance(message.getPayload());
+            // Don't really care about the tag, but need to read it to get, to
+            // the payload.
+            input.readTag();
+            return toMillis(input.readUInt64());
+        }
+    }
 }
