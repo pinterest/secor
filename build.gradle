@@ -126,7 +126,7 @@ buildscript {
     classpath group: 'com.netflix.nebula',  name: 'gradle-ospackage-plugin', version: '2.2.0'
     classpath group: 'org.jsonschema2pojo', name: 'jsonschema2pojo-gradle-plugin', version: '0.4.+'
     classpath group: 'com.thomsonreuters',  name: '1p-service-api', version: "${servicelib_version}"
-    classpath group: 'com.thomsonreuters.data',  name: '1p-data-event', version: '1.0'
+    classpath group: 'com.thomsonreuters.data',  name: '1p-data-event', version: '1.0.1'
     classpath group: 'com.thomsonreuters.data',  name: '1p-data-util', version: '1.0'
     classpath group: 'net.researchgate',    name: 'gradle-release', version: '2.1.1'
     classpath group: 'com.bmuschko',        name: 'gradle-nexus-plugin', version: '2.3'
