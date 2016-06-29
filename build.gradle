@@ -131,14 +131,10 @@ buildscript {
     // 1p-service stuff - BEGIN
     classpath group: 'com.netflix.nebula',  name: 'gradle-ospackage-plugin', version: '2.2.0'
     classpath group: 'org.jsonschema2pojo', name: 'jsonschema2pojo-gradle-plugin', version: '0.4.+'
-    classpath group: 'com.thomsonreuters',  name: '1p-service-api', version: "${servicelib_version}"
-    classpath group: 'com.thomsonreuters.data',  name: '1p-data-event', version: '1.0.2'
-    classpath group: 'com.thomsonreuters.data',  name: '1p-data-util', version: '1.0'
     classpath group: 'net.researchgate',    name: 'gradle-release', version: '2.1.1'
     classpath group: 'com.bmuschko',        name: 'gradle-nexus-plugin', version: '2.3'
     classpath group: 'eu.appsatori',        name: 'gradle-fatjar-plugin', version: '0.3'
     classpath group: 'com.thomsonreuters',  name: 'storm-deploy', version: '2.4.+'
-    classpath group: 'com.thomsonreuters',  name: '1p-service-swagger', version: "${servicelib_version}"
     classpath group: 'gradle.plugin.org.detoeuf', name: 'swagger-codegen-plugin', version:'1.3'
     // END 
   }
@@ -182,7 +178,7 @@ dependencies {
     compile group: 'com.thomsonreuters', name: '1p-service-swagger', version: "${servicelib_version}"
     
     compile group: 'com.thomsonreuters', name: '1p-service-api', version: "${servicelib_version}"
-    compile group: 'com.thomsonreuters.data', name: '1p-data-event', version: '1.0'
+    compile group: 'com.thomsonreuters.data', name: '1p-data-event', version: '1.0.2'
     compile group: 'com.thomsonreuters.data', name: '1p-data-util', version: '1.0'
     compile group: 'com.thomsonreuters', name: 'eiddo-client', version: '0.4.+'
     compile group: 'com.fasterxml.jackson.core',   name: 'jackson-databind',     version: '2.5.+'
