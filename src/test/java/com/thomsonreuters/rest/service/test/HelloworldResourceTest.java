@@ -1,4 +1,4 @@
-package com.thomsonreuters.rest.service;
+package com.thomsonreuters.rest.service.test;
 
 import java.io.IOException;
 
@@ -31,7 +31,7 @@ import com.thomsonreuters.eiddo.client.EiddoPropertiesLoader;
 import com.thomsonreuters.handler.HealthCheck;
 import com.thomsonreuters.injection.BootstrapInjectionModule;
 import com.thomsonreuters.injection.module.MainModule;
-import com.thomsonreuters.rest.service.HelloworldResourceTest.TestInjectionModule.TestModule;
+import com.thomsonreuters.rest.service.test.HelloworldResourceTest.TestInjectionModule.TestModule;
 
 /**
  * This is really an end-to-end test that verifies Eiddo properties are
@@ -58,7 +58,7 @@ public class HelloworldResourceTest extends JerseyTest {
 
       @Override
       protected void configure() {
-        // bind(HealthCheck.class).toInstance(mockHealthCheck);
+        //super.configure();
       }
     }
   }
@@ -82,7 +82,6 @@ public class HelloworldResourceTest extends JerseyTest {
   }
 
   public HelloworldResourceTest() {
-    super("com.thomsonreuters.rest.service");
   }
 
   @Override
