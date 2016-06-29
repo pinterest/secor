@@ -12,17 +12,17 @@ import com.thomsonreuters.eiddo.client.EiddoPropertiesLoader;
 import com.thomsonreuters.events.karyon.EventsModule;
 import com.thomsonreuters.handler.HealthCheck;
 import com.thomsonreuters.injection.module.MainModule;
+import com.thomsonreuters.karyon.JerseyBasicRoutingModule;
 import com.thomsonreuters.karyon.ShutdownModule;
-import com.thomsonreuters.swagger.JerseySwaggerAwareRoutingModule;
 
 @ArchaiusBootstrap(loader = EiddoPropertiesLoader.class)
 @KaryonBootstrap(name = "1p-secor-service-dev", healthcheck = HealthCheck.class)
 @Singleton
 @Modules(include = { ShutdownModule.class, KaryonServoModule.class, KaryonWebAdminModule.class,
-    KaryonEurekaModule.class, EventsModule.class, MainModule.class, SwaggerHystrixModule.class,
+    KaryonEurekaModule.class, EventsModule.class, MainModule.class, 
     BootstrapInjectionModule.KaryonRxRouterModuleImpl.class, })
 public interface BootstrapInjectionModule {
-  class KaryonRxRouterModuleImpl extends JerseySwaggerAwareRoutingModule {
+  class KaryonRxRouterModuleImpl extends JerseyBasicRoutingModule {
 
     @Override
     protected void configureServer() {

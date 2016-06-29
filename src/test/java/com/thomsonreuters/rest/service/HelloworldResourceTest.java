@@ -30,7 +30,6 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.thomsonreuters.eiddo.client.EiddoPropertiesLoader;
 import com.thomsonreuters.handler.HealthCheck;
 import com.thomsonreuters.injection.BootstrapInjectionModule;
-import com.thomsonreuters.injection.SwaggerHystrixModule;
 import com.thomsonreuters.injection.module.MainModule;
 import com.thomsonreuters.rest.service.HelloworldResourceTest.TestInjectionModule.TestModule;
 
@@ -52,7 +51,6 @@ public class HelloworldResourceTest extends JerseyTest {
   @Modules(include = {
         ShutdownModule.class,
         TestModule.class,
-        SwaggerHystrixModule.class,
         BootstrapInjectionModule.KaryonRxRouterModuleImpl.class
   })
   public interface TestInjectionModule {
