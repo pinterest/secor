@@ -55,6 +55,7 @@ public class ProtobufMessageParserTest extends TestCase {
     @Test
     public void testExtractPathTimestampMillis() throws Exception {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
+        Mockito.when(mConfig.hasProtobufMessageClass()).thenReturn(true);
         Mockito.when(mConfig.getProtobufMessageClass()).thenReturn(UnitTestMessage1.class.getName());
 
         ProtobufMessageParser parser = new ProtobufMessageParser(mConfig);
@@ -71,6 +72,7 @@ public class ProtobufMessageParserTest extends TestCase {
     @Test
     public void testExtractNestedTimestampMillis() throws Exception {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("internal.timestamp");
+        Mockito.when(mConfig.hasProtobufMessageClass()).thenReturn(true);
         Mockito.when(mConfig.getProtobufMessageClass()).thenReturn(UnitTestMessage2.class.getName());
 
         ProtobufMessageParser parser = new ProtobufMessageParser(mConfig);

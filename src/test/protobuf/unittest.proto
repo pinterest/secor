@@ -15,3 +15,9 @@ message UnitTestMessage2 {
 
 	optional Internal internal = 1;
 }
+
+message UnitTestMessage3 {
+	optional string data = 1;
+	optional uint64 timestamp = 2;
+	optional bytes _secor_metadata = 3;
+}

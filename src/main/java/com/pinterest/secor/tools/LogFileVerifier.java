@@ -206,7 +206,8 @@ public class LogFileVerifier {
         FileReader fileReader = ReflectionUtil.createFileReader(
                 mConfig.getFileReaderWriterFactory(),
                 logFilePath,
-                codec
+                codec,
+                mConfig
         );
         return fileReader;
     }

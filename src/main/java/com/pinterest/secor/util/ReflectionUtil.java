@@ -16,19 +16,17 @@
  */
 package com.pinterest.secor.util;
 
-import com.pinterest.secor.common.FileRegistry;
+import org.apache.hadoop.io.compress.CompressionCodec;
+
 import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
-import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.FileReaderWriterFactory;
+import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.UploadManager;
-
 import com.pinterest.secor.uploader.Uploader;
-import org.apache.hadoop.io.compress.CompressionCodec;
 
 /**
  * ReflectionUtil implements utility methods to construct objects of classes
@@ -115,18 +113,26 @@ public class ReflectionUtil {
      * See the secor.file.reader.writer.factory config option.
      *
      * @param className the class name of a subclass of FileReaderWriterFactory
+     * @param config The SecorCondig to initialize the FileReaderWriterFactory with
      * @return a FileReaderWriterFactory with the runtime type of the class passed by name
      * @throws Exception
      */
-    private static FileReaderWriterFactory createFileReaderWriterFactory(String className) throws Exception {
+    private static FileReaderWriterFactory createFileReaderWriterFactory(String className,
+            SecorConfig config) throws Exception {
         Class<?> clazz = Class.forName(className);
         if (!FileReaderWriterFactory.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
                     className, FileReaderWriterFactory.class.getName()));
         }
 
-        // We assume a parameterless constructor
-        return (FileReaderWriterFactory) clazz.newInstance();
+        try {
+            // Try to load constructor that accepts single parameter - secor
+            // configuration instance
+            return (FileReaderWriterFactory) clazz.getConstructor(SecorConfig.class).newInstance(config);
+        } catch (NoSuchMethodException e) {
+            // Fallback to parameterless constructor
+            return (FileReaderWriterFactory) clazz.newInstance();
+        }
     }
 
     /**
@@ -135,13 +141,15 @@ public class ReflectionUtil {
      * @param className the class name of a subclass of FileReaderWriterFactory to create a FileWriter from
      * @param logFilePath the LogFilePath that the returned FileWriter should write to
      * @param codec an instance CompressionCodec to compress the file written with, or null for no compression
+     * @param config The SecorCondig to initialize the FileWriter with
      * @return a FileWriter specialised to write the type of files supported by the FileReaderWriterFactory
      * @throws Exception
      */
     public static FileWriter createFileWriter(String className, LogFilePath logFilePath,
-                                              CompressionCodec codec)
+                                              CompressionCodec codec,
+                                              SecorConfig config)
             throws Exception {
-        return createFileReaderWriterFactory(className).BuildFileWriter(logFilePath, codec);
+        return createFileReaderWriterFactory(className, config).BuildFileWriter(logFilePath, codec);
     }
 
     /**
@@ -150,13 +158,15 @@ public class ReflectionUtil {
      * @param className the class name of a subclass of FileReaderWriterFactory to create a FileReader from
      * @param logFilePath the LogFilePath that the returned FileReader should read from
      * @param codec an instance CompressionCodec to decompress the file being read, or null for no compression
+     * @param config The SecorCondig to initialize the FileReader with
      * @return a FileReader specialised to read the type of files supported by the FileReaderWriterFactory
      * @throws Exception
      */
     public static FileReader createFileReader(String className, LogFilePath logFilePath,
-                                              CompressionCodec codec)
+                                              CompressionCodec codec,
+                                              SecorConfig config)
             throws Exception {
-        return createFileReaderWriterFactory(className).BuildFileReader(logFilePath, codec);
+        return createFileReaderWriterFactory(className, config).BuildFileReader(logFilePath, codec);
     }
     
     /**

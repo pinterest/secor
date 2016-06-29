@@ -439,7 +439,9 @@ public class SecorConfig {
     public String getAzurePath() { return getString("secor.azure.path"); }
     
     public String getProtobufMessageClass() { return getString("secor.protobuf.message.class"); }
-
+    
+    public boolean hasProtobufMessageClass() { return mProperties.containsKey("secor.protobuf.message.class"); }
+    
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
         return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);
