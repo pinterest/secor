@@ -342,7 +342,7 @@ public class SecorConfig {
     public String getMessageTimestampName() {
         return getString("message.timestamp.name");
     }
-    
+
     public String getMessageTimestampNameSeparator() {
         return getString("message.timestamp.name.separator");
     }
@@ -439,6 +439,10 @@ public class SecorConfig {
     public String getAzurePath() { return getString("secor.azure.path"); }
     
     public String getProtobufMessageClass() { return getString("secor.protobuf.message.class"); }
+
+    public String getSchemaRegistryUrl() {
+        return getString("schema.registry.url");
+    }
 
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
