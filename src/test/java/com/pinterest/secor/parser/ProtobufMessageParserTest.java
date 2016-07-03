@@ -16,17 +16,21 @@
  */
 package com.pinterest.secor.parser;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import com.google.protobuf.CodedOutputStream;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.protobuf.Messages.UnitTestMessage1;
 import com.pinterest.secor.protobuf.Messages.UnitTestMessage2;
 
 import junit.framework.TestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.modules.junit4.PowerMockRunner;
-import com.google.protobuf.CodedOutputStream;
 
 @RunWith(PowerMockRunner.class)
 public class ProtobufMessageParserTest extends TestCase {
@@ -54,9 +58,10 @@ public class ProtobufMessageParserTest extends TestCase {
 
     @Test
     public void testExtractPathTimestampMillis() throws Exception {
+        Map<String, String> classPerTopic = new HashMap<String, String>();
+        classPerTopic.put("test", UnitTestMessage1.class.getName());
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
-        Mockito.when(mConfig.hasProtobufMessageClass()).thenReturn(true);
-        Mockito.when(mConfig.getProtobufMessageClass()).thenReturn(UnitTestMessage1.class.getName());
+        Mockito.when(mConfig.getProtobufMessageClassPerTopic()).thenReturn(classPerTopic);
 
         ProtobufMessageParser parser = new ProtobufMessageParser(mConfig);
 
@@ -71,9 +76,10 @@ public class ProtobufMessageParserTest extends TestCase {
 
     @Test
     public void testExtractNestedTimestampMillis() throws Exception {
+        Map<String, String> classPerTopic = new HashMap<String, String>();
+        classPerTopic.put("*", UnitTestMessage2.class.getName());
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("internal.timestamp");
-        Mockito.when(mConfig.hasProtobufMessageClass()).thenReturn(true);
-        Mockito.when(mConfig.getProtobufMessageClass()).thenReturn(UnitTestMessage2.class.getName());
+        Mockito.when(mConfig.getProtobufMessageClassPerTopic()).thenReturn(classPerTopic);
 
         ProtobufMessageParser parser = new ProtobufMessageParser(mConfig);
 

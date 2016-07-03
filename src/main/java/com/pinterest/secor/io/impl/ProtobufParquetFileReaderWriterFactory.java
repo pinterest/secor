@@ -9,8 +9,6 @@ import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.proto.ProtoParquetReader;
 import org.apache.parquet.proto.ProtoParquetWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
@@ -30,13 +28,10 @@ import com.pinterest.secor.util.ProtobufUtil;
  */
 public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProtobufParquetFileReaderWriterFactory.class);
-
     private ProtobufUtil protobufUtil;
 
     public ProtobufParquetFileReaderWriterFactory(SecorConfig config) {
         protobufUtil = new ProtobufUtil(config);
-        LOG.info("Using protobuf message class: {}" + config.getProtobufMessageClass());
     }
 
     @Override
@@ -78,12 +73,14 @@ public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterF
     protected class ProtobufParquetFileWriter implements FileWriter {
 
         private ProtoParquetWriter<Message> writer;
+        private String topic;
 
         public ProtobufParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
             CompressionCodecName codecName = CompressionCodecName
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
-            writer = new ProtoParquetWriter<Message>(path, protobufUtil.getMessageClass(), codecName,
+            topic = logFilePath.getTopic();
+            writer = new ProtoParquetWriter<Message>(path, protobufUtil.getMessageClass(topic), codecName,
                     ParquetWriter.DEFAULT_BLOCK_SIZE, ParquetWriter.DEFAULT_PAGE_SIZE);
         }
 
@@ -94,7 +91,7 @@ public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterF
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            Message message = protobufUtil.decodeMessage(keyValue.getValue());
+            Message message = protobufUtil.decodeMessage(topic, keyValue.getValue());
             writer.write(message);
         }
 

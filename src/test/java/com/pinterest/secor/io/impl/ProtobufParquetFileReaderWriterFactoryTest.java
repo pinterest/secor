@@ -18,6 +18,9 @@ package com.pinterest.secor.io.impl;
 
 import static org.junit.Assert.assertArrayEquals;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -46,13 +49,17 @@ public class ProtobufParquetFileReaderWriterFactoryTest extends TestCase {
 
     @Test
     public void testProtobufParquetReadWriteRoundTrip() throws Exception {
-        Mockito.when(config.getProtobufMessageClass()).thenReturn(UnitTestMessage3.class.getName());
-        Mockito.when(config.getFileReaderWriterFactory()).thenReturn(ProtobufParquetFileReaderWriterFactory.class.getName());
-        
+        Map<String, String> classPerTopic = new HashMap<String, String>();
+        classPerTopic.put("test-pb-topic", UnitTestMessage3.class.getName());
+        Mockito.when(config.getProtobufMessageClassPerTopic()).thenReturn(classPerTopic);
+        Mockito.when(config.getFileReaderWriterFactory())
+                .thenReturn(ProtobufParquetFileReaderWriterFactory.class.getName());
+
         LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-pb-topic",
                 new String[] { "part-1" }, 0, 1, 23232, ".log");
-        
-        FileWriter fileWriter = ReflectionUtil.createFileWriter(config.getFileReaderWriterFactory(), tempLogFilePath, null, config);
+
+        FileWriter fileWriter = ReflectionUtil.createFileWriter(config.getFileReaderWriterFactory(), tempLogFilePath,
+                null, config);
 
         UnitTestMessage3 msg1 = UnitTestMessage3.newBuilder().setData("abc").setTimestamp(1467176315L).build();
         UnitTestMessage3 msg2 = UnitTestMessage3.newBuilder().setData("XYZ").setTimestamp(1467176344L).build();
@@ -63,13 +70,14 @@ public class ProtobufParquetFileReaderWriterFactoryTest extends TestCase {
         fileWriter.write(kv2);
         fileWriter.close();
 
-        FileReader fileReader = ReflectionUtil.createFileReader(config.getFileReaderWriterFactory(), tempLogFilePath, null, config);
-        
+        FileReader fileReader = ReflectionUtil.createFileReader(config.getFileReaderWriterFactory(), tempLogFilePath,
+                null, config);
+
         KeyValue kvout = fileReader.next();
         assertEquals(kv1.getOffset(), kvout.getOffset());
         assertArrayEquals(kv1.getValue(), kvout.getValue());
         assertEquals(msg1.getData(), UnitTestMessage3.parseFrom(kvout.getValue()).getData());
-        
+
         kvout = fileReader.next();
         assertEquals(kv2.getOffset(), kvout.getOffset());
         assertArrayEquals(kv2.getValue(), kvout.getValue());

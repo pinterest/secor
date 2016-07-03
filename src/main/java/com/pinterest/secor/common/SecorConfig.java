@@ -21,6 +21,8 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -438,9 +440,17 @@ public class SecorConfig {
 
     public String getAzurePath() { return getString("secor.azure.path"); }
     
-    public String getProtobufMessageClass() { return getString("secor.protobuf.message.class"); }
-    
-    public boolean hasProtobufMessageClass() { return mProperties.containsKey("secor.protobuf.message.class"); }
+    public Map<String, String> getProtobufMessageClassPerTopic() {
+        String prefix = "secor.protobuf.message.class";
+        Iterator<String> keys = mProperties.getKeys(prefix);
+        Map<String, String> protobufClasses = new HashMap<String, String>();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String className = mProperties.getString(key);
+            protobufClasses.put(key.substring(prefix.length() + 1), className);
+        }
+        return protobufClasses;
+    }
     
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");

@@ -47,10 +47,8 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
     public ProtobufMessageParser(SecorConfig config) {
         super(config);
 
-        if (config.hasProtobufMessageClass()) {
-            protobufUtil = new ProtobufUtil(config);
-            LOG.info("Using protobuf message class: {}" + config.getProtobufMessageClass());
-
+        protobufUtil = new ProtobufUtil(config);
+        if (protobufUtil.isConfigured()) {
             String timestampFieldName = mConfig.getMessageTimestampName();
             String timestampFieldSeparator = mConfig.getMessageTimestampNameSeparator();
             if (timestampFieldSeparator == null || timestampFieldSeparator.isEmpty()) {
@@ -59,13 +57,17 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
             LOG.info("Using protobuf timestamp field path: {} with separator: {}", timestampFieldName,
                     timestampFieldSeparator);
             timestampFieldPath = timestampFieldName.split(Pattern.quote(timestampFieldSeparator));
+        } else {
+            LOG.info(
+                    "Protobuf message class is not configured, will assume that timestamp is the first uint64 field");
         }
     }
 
     @Override
     public long extractTimestampMillis(final Message message) throws IOException {
-        if (protobufUtil != null) {
-            com.google.protobuf.Message decodedMessage = protobufUtil.decodeMessage(message.getPayload());
+        if (timestampFieldPath != null) {
+            com.google.protobuf.Message decodedMessage = protobufUtil.decodeMessage(message.getTopic(),
+                    message.getPayload());
             int i = 0;
             for (; i < timestampFieldPath.length - 1; ++i) {
                 decodedMessage = (com.google.protobuf.Message) decodedMessage
