@@ -17,8 +17,6 @@
 package com.pinterest.secor.parser;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -27,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.CodedInputStream;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
+import com.pinterest.secor.util.ProtobufUtil;
 
 /**
  * Protocol buffer message timestamp extractor
@@ -42,56 +41,40 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProtobufMessageParser.class);
 
-    private Method messageParseMethod;
+    private ProtobufUtil protobufUtil;
     private String[] timestampFieldPath;
 
     public ProtobufMessageParser(SecorConfig config) {
         super(config);
 
-        String messageClassName = mConfig.getProtobufMessageClass();
-        if (messageClassName != null) {
-            try {
-                Class<?> messageClass = (Class<?>) Class.forName(messageClassName);
-                messageParseMethod = messageClass.getDeclaredMethod("parseFrom", new Class<?>[] { byte[].class });
-
-                String timestampFieldName = mConfig.getMessageTimestampName();
-                String timestampFieldSeparator = mConfig.getMessageTimestampNameSeparator();
-                if (timestampFieldSeparator == null || timestampFieldSeparator.isEmpty()) {
-                    timestampFieldSeparator = ".";
-                }
-                LOG.info("Using protobuf timestamp field path: {} with separator: {}", timestampFieldName,
-                        timestampFieldSeparator);
-                timestampFieldPath = timestampFieldName.split(Pattern.quote(timestampFieldSeparator));
-            } catch (ClassNotFoundException e) {
-                LOG.error("Unable to load protobuf message class", e);
-            } catch (NoSuchMethodException e) {
-                LOG.error("Unable to find parseFrom() method in protobuf message class", e);
-            } catch (SecurityException e) {
-                LOG.error("Unable to use parseFrom() method from protobuf message class", e);
+        protobufUtil = new ProtobufUtil(config);
+        if (protobufUtil.isConfigured()) {
+            String timestampFieldName = mConfig.getMessageTimestampName();
+            String timestampFieldSeparator = mConfig.getMessageTimestampNameSeparator();
+            if (timestampFieldSeparator == null || timestampFieldSeparator.isEmpty()) {
+                timestampFieldSeparator = ".";
             }
+            LOG.info("Using protobuf timestamp field path: {} with separator: {}", timestampFieldName,
+                    timestampFieldSeparator);
+            timestampFieldPath = timestampFieldName.split(Pattern.quote(timestampFieldSeparator));
+        } else {
+            LOG.info(
+                    "Protobuf message class is not configured, will assume that timestamp is the first uint64 field");
         }
     }
 
     @Override
     public long extractTimestampMillis(final Message message) throws IOException {
-        if (messageParseMethod != null) {
-            com.google.protobuf.Message decodedMessage;
-            try {
-                decodedMessage = (com.google.protobuf.Message) messageParseMethod.invoke(null, message.getPayload());
-                int i = 0;
-                for (; i < timestampFieldPath.length - 1; ++i) {
-                    decodedMessage = (com.google.protobuf.Message) decodedMessage
-                            .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i]));
-                }
-                return toMillis((Long) decodedMessage
-                        .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i])));
-            } catch (IllegalArgumentException e) {
-                throw new IOException("Unable to extract timestamp from protobuf message", e);
-            } catch (IllegalAccessException e) {
-                throw new IOException("Unable to extract timestamp from protobuf message", e);
-            } catch (InvocationTargetException e) {
-                throw new IOException("Unable to extract timestamp from protobuf message", e);
+        if (timestampFieldPath != null) {
+            com.google.protobuf.Message decodedMessage = protobufUtil.decodeMessage(message.getTopic(),
+                    message.getPayload());
+            int i = 0;
+            for (; i < timestampFieldPath.length - 1; ++i) {
+                decodedMessage = (com.google.protobuf.Message) decodedMessage
+                        .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i]));
             }
+            return toMillis((Long) decodedMessage
+                    .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i])));
         } else {
             // Assume that the timestamp field is the first field, is required,
             // and is a uint64.
