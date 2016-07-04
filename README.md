@@ -68,9 +68,11 @@ If none of the parsers available out-of-the-box is suitable for your use case, n
 
 Currently secor supports the following output formats
 
-- **Sequence Files**: Flat file containing binary key value pairs.
+- **Sequence Files**: Flat file containing binary key value pairs. To use this format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory` option.
 
-- **Delimited Text Files**: A new line delimited raw text file.
+- **Delimited Text Files**: A new line delimited raw text file. To use this format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFactory` option.
+
+- **[Parquet] Files (for Protobuf messages)**: Columnar storage format. To use this output format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.ProtobufParquetFileReaderWriterFactory` option. In addition, Protobuf message class per Kafka topic must be defined using option `secor.protobuf.message.class.<topic>=<protobuf class name>`. If all Kafka topics transfer the same protobuf message type, set `secor.protobuf.message.class.*=<protobuf class name>`.
 
 ## Tools
 Secor comes with a number of tools implementing interactions with the environment.
@@ -158,3 +160,4 @@ If you have any questions or comments, you can reach us at [secor-users@googlegr
 [statsD]: https://github.com/etsy/statsd/
 [Openstack Swift]: http://swift.openstack.org
 [Protocol Buffers]: https://developers.google.com/protocol-buffers/
+[Parquet]: https://parquet.apache.org/
