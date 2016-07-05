@@ -39,6 +39,8 @@ if (snapshot) { rpmRelease = 'SNAPSHOT' }
 configurations.all {
         resolutionStrategy.cacheDynamicVersionsFor 1, 'hours'
         resolutionStrategy.cacheChangingModulesFor 1, 'hours'
+
+         all*.exclude group: "log4j"
 }
 
 sourceSets {
@@ -196,14 +198,7 @@ dependencies {
     compile(group: 'org.apache.kafka', name: 'kafka_2.10', version:'0.8.2.1') {
         exclude(module: 'slf4j-simple')
     }
-    //compile(group: 'log4j', name: 'log4j', version:'1.2.15') {
-    //    exclude(module: 'jmxri')
-    //    exclude(module: 'jmxtools')
-    //    exclude(module: 'jms')
-    //}
-    //compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.2'
-    //compile group: 'org.slf4j', name: 'jcl-over-slf4j', version:'1.7.2'
-    //compile group: 'org.slf4j', name: 'slf4j-log4j12', version:'1.7.2'
+
     compile group: 'commons-configuration', name: 'commons-configuration', version:'1.9'
     compile group: 'org.apache.hadoop', name: 'hadoop-common', version:'2.7.0'
     compile(group: 'org.apache.hadoop', name: 'hadoop-aws', version:'2.7.0') {
