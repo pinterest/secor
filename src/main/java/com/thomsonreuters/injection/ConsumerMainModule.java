@@ -22,10 +22,8 @@ public class ConsumerMainModule {
 	@PostConstruct
 	public void startup() {
 		String prop = ConfigurationManager.getConfigInstance().getString("secor.prop");
-		String log4jProp = ConfigurationManager.getConfigInstance().getString("log4j.prop");
 		log.debug("CosumerMainModule start..... "+ prop);
 		System.setProperty("config", prop);
-		System.setProperty("log4j.configuration",log4jProp);
 		// Create the backup group
 		String[] args = new String[0];
 		ConsumerMain.main(args);
