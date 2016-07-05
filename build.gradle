@@ -40,6 +40,9 @@ configurations.all {
         resolutionStrategy.cacheDynamicVersionsFor 1, 'hours'
         resolutionStrategy.cacheChangingModulesFor 1, 'hours'
 
+        exclude group: "org.slf4j", module: "slf4j-log4j12"
+        exclude group: "log4j", module: "log4j"
+
 }
 
 sourceSets {
