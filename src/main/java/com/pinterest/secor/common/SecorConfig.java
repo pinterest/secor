@@ -197,6 +197,10 @@ public class SecorConfig {
         return getString("secor.kafka.topic_blacklist");
     }
 
+    public String getKafkaTopicUploadAtMinuteMarkFilter() { return getString("secor.kafka.upload_at_minute_mark.topic_filter");}
+
+    public int getUploadMinuteMark(){ return getInt("secor.upload.minute_mark");}
+
     public String getKafkaGroup() {
         return getString("secor.kafka.group");
     }
