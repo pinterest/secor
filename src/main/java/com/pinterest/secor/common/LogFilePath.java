@@ -118,6 +118,10 @@ public class LogFilePath {
         return new LogFilePath(prefix, mTopic, mPartitions, mGeneration, mKafkaPartition, mOffset, mExtension);
     }
 
+    public LogFilePath withoutSchema(String schema) {
+        return new LogFilePath(mPrefix, mTopic.replace(schema + ".", ""), mPartitions, mGeneration, mKafkaPartition, mOffset, mExtension);
+    }
+
     public String getLogFileParentDir() {
         ArrayList<String> elements = new ArrayList<String>();
         elements.add(mPrefix);

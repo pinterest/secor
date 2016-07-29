@@ -72,6 +72,7 @@ public class S3UploadManager extends UploadManager {
     private static final String CUSTOMER = "customer";
 
     private final String s3Path;
+    private final String mSchema;
 
     private TransferManager mManager;
 
@@ -85,6 +86,7 @@ public class S3UploadManager extends UploadManager {
         final String awsRole = mConfig.getAwsRole();
 
         s3Path = mConfig.getS3Path();
+        mSchema = mConfig.getSchema();
 
         AmazonS3 client;
         AWSCredentialsProvider provider;
@@ -134,7 +136,7 @@ public class S3UploadManager extends UploadManager {
 
         File localFile = new File(localPath.getLogFilePath());
 
-        if (FileUtil.s3PathPrefixIsAltered(localPath.withPrefix(curS3Path).getLogFilePath(), mConfig)) {
+        if (FileUtil.s3PathPrefixIsAltered(localPath.withPrefix(curS3Path).withoutSchema(mSchema).getLogFilePath(), mConfig)) {
             curS3Path = FileUtil.getS3AlternativePathPrefix(mConfig);
             LOG.info("Will upload file {} to alternative s3 path s3://{}/{}", localFile, s3Bucket, curS3Path);
         }
