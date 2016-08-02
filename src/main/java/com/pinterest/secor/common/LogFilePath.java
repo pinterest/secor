@@ -118,6 +118,10 @@ public class LogFilePath {
         return new LogFilePath(prefix, mTopic, mPartitions, mGeneration, mKafkaPartition, mOffset, mExtension);
     }
 
+    public LogFilePath offsetPath() {
+        return new LogFilePath(mPrefix, mTopic, mPartitions, mGeneration, mKafkaPartition, mOffset, ".offset");
+    }
+
     public String getLogFileParentDir() {
         ArrayList<String> elements = new ArrayList<String>();
         elements.add(mPrefix);
@@ -154,6 +158,26 @@ public class LogFilePath {
 
     public String getLogFileCrcPath() {
         String basename = "." + getLogFileBasename() + ".crc";
+
+        ArrayList<String> pathElements = new ArrayList<String>();
+        pathElements.add(getLogFileDir());
+        pathElements.add(basename);
+
+        return StringUtils.join(pathElements, "/");
+    }
+
+    public String getLogFileOffsetPath() {
+        String basename = getLogFileBasename() + ".offset";
+
+        ArrayList<String> pathElements = new ArrayList<String>();
+        pathElements.add(getLogFileDir());
+        pathElements.add(basename);
+
+        return StringUtils.join(pathElements, "/");
+    }
+
+    public String getLogFileOffsetCrcPath() {
+        String basename = "." + getLogFileBasename() + ".offset.crc";
 
         ArrayList<String> pathElements = new ArrayList<String>();
         pathElements.add(getLogFileDir());

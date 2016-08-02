@@ -17,6 +17,7 @@
 package com.pinterest.secor.common;
 
 import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFactory;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.util.StatsUtil;
@@ -38,12 +39,15 @@ public class FileRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(FileRegistry.class);
 
     private final SecorConfig mConfig;
+    private final boolean mUseOffsetFile;
     private HashMap<TopicPartition, HashSet<LogFilePath>> mFiles;
     private HashMap<LogFilePath, FileWriter> mWriters;
     private HashMap<LogFilePath, Long> mCreationTimes;
 
-    public FileRegistry(SecorConfig mConfig) {
+    public FileRegistry(SecorConfig mConfig) throws ClassNotFoundException {
         this.mConfig = mConfig;
+        mUseOffsetFile = Class.forName(mConfig.getFileReaderWriterFactory())
+                == DelimitedTextFileReaderWriterFactory.class;
         mFiles = new HashMap<TopicPartition, HashSet<LogFilePath>>();
         mWriters = new HashMap<LogFilePath, FileWriter>();
         mCreationTimes = new HashMap<LogFilePath, Long>();
@@ -99,6 +103,10 @@ public class FileRegistry {
             // Just in case.
             FileUtil.delete(path.getLogFilePath());
             FileUtil.delete(path.getLogFileCrcPath());
+            if (mUseOffsetFile) {
+                FileUtil.delete(path.getLogFileOffsetPath());
+                FileUtil.delete(path.getLogFileOffsetCrcPath());
+            }
             TopicPartition topicPartition = new TopicPartition(path.getTopic(),
                     path.getKafkaPartition());
             HashSet<LogFilePath> files = mFiles.get(topicPartition);
@@ -142,6 +150,10 @@ public class FileRegistry {
         deleteWriter(path);
         FileUtil.delete(path.getLogFilePath());
         FileUtil.delete(path.getLogFileCrcPath());
+        if (mUseOffsetFile) {
+            FileUtil.delete(path.getLogFileOffsetPath());
+            FileUtil.delete(path.getLogFileOffsetCrcPath());
+        }
     }
 
     /**
