@@ -29,6 +29,8 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.KeyValue;
@@ -40,6 +42,9 @@ import com.pinterest.secor.util.FileUtil;
  * @author Praveen Murugesan (praveen@uber.com)
  */
 public class SequenceFileReaderWriterFactory implements FileReaderWriterFactory {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SequenceFileReaderWriterFactory.class);
+
     @Override
     public FileReader BuildFileReader(LogFilePath logFilePath, CompressionCodec codec) throws Exception {
         return new SequenceFileReader(logFilePath);
@@ -83,10 +88,11 @@ public class SequenceFileReaderWriterFactory implements FileReaderWriterFactory 
         private final SequenceFile.Writer mWriter;
         private final LongWritable mKey;
         private final BytesWritable mValue;
+        private final Path fsPath;
 
         public SequenceFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
             Configuration config = new Configuration();
-            Path fsPath = new Path(path.getLogFilePath());
+            fsPath = new Path(path.getLogFilePath());
             FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
             if (codec != null) {
                 this.mWriter = SequenceFile.createWriter(fs, config, fsPath,
@@ -98,6 +104,7 @@ public class SequenceFileReaderWriterFactory implements FileReaderWriterFactory 
             }
             this.mKey = new LongWritable();
             this.mValue = new BytesWritable();
+            LOG.info("Created sequence file writer: {}", fsPath);
         }
 
         @Override
@@ -115,6 +122,7 @@ public class SequenceFileReaderWriterFactory implements FileReaderWriterFactory 
         @Override
         public void close() throws IOException {
             this.mWriter.close();
+            LOG.info("Closing sequence file writer: {}", fsPath);
         }
     }
 }
