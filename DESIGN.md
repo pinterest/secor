@@ -24,13 +24,11 @@ This document assumes familiarity with [Apache Kafka].
 
 * **zero downtime upgrades:** it should be possible to upgrade the system to a new version in a way transparent to the downstream data clients,
 
-* **dependence on public APIs:** the system should rely on public [Kafka] APIs only. Furthermore, it should be compatible with the most recent [Kafka] version (0.8) which offers significant improvements over 0.7, and it comes with Go language bindings (required by other pieces of the Ads infra).
+* **dependence on public APIs:** the system should rely on public [Kafka] APIs only. Furthermore, it should be compatible with [Kafka] version 0.8.
 
 No-goals:
 
 * **minimized resource footprint:** this may become an important objective at some point but currently we don’t optimize for machine or storage footprint.
-
-Secor will be initially used to persist Ads impression logs but in the future it may be considered as a replacement of the current logging pipeline.
 
 ## Related work
 
