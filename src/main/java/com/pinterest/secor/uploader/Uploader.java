@@ -47,6 +47,7 @@ public class Uploader {
     private FileRegistry mFileRegistry;
     private ZookeeperConnector mZookeeperConnector;
     private UploadManager mUploadManager;
+    private String mTopicFilter;
 
 
     /**
@@ -72,6 +73,8 @@ public class Uploader {
         mFileRegistry = fileRegistry;
         mUploadManager = uploadManager;
         mZookeeperConnector = zookeeperConnector;
+        mTopicFilter = mConfig.getKafkaTopicUploadAtMinuteMarkFilter();
+
     }
 
     private void uploadFiles(TopicPartition topicPartition) throws Exception {
@@ -190,9 +193,10 @@ public class Uploader {
      */
     private boolean isRequiredToUploadAtTime(TopicPartition topicPartition) throws Exception{
         final String topic = topicPartition.getTopic();
-        final String topicFilter = mConfig.getKafkaTopicUploadAtMinuteMarkFilter();
-        if (topicFilter == null || topicFilter.isEmpty()){ return false; }
-        if (topic.matches(topicFilter)){
+        if (mTopicFilter == null || mTopicFilter.isEmpty()){
+            return false;
+        }
+        if (topic.matches(mTopicFilter)){
             if (DateTime.now().minuteOfHour().get() == mConfig.getUploadMinuteMark()){
                return true;
             }
