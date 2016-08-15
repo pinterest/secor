@@ -27,6 +27,7 @@ import com.pinterest.secor.util.ReflectionUtil;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,7 @@ public class Uploader {
     private FileRegistry mFileRegistry;
     private ZookeeperConnector mZookeeperConnector;
     private UploadManager mUploadManager;
+    private String mTopicFilter;
 
 
     /**
@@ -71,6 +73,8 @@ public class Uploader {
         mFileRegistry = fileRegistry;
         mUploadManager = uploadManager;
         mZookeeperConnector = zookeeperConnector;
+        mTopicFilter = mConfig.getKafkaTopicUploadAtMinuteMarkFilter();
+
     }
 
     private void uploadFiles(TopicPartition topicPartition) throws Exception {
@@ -181,12 +185,32 @@ public class Uploader {
         }
     }
 
+    /***
+     * If the topic is in the list of topics to upload at a specific time. For example at a minute mark.
+     * @param topicPartition
+     * @return
+     * @throws Exception
+     */
+    private boolean isRequiredToUploadAtTime(TopicPartition topicPartition) throws Exception{
+        final String topic = topicPartition.getTopic();
+        if (mTopicFilter == null || mTopicFilter.isEmpty()){
+            return false;
+        }
+        if (topic.matches(mTopicFilter)){
+            if (DateTime.now().minuteOfHour().get() == mConfig.getUploadMinuteMark()){
+               return true;
+            }
+        }
+        return false;
+    }
+
     private void checkTopicPartition(TopicPartition topicPartition) throws Exception {
         final long size = mFileRegistry.getSize(topicPartition);
         final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
         LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
         if (size >= mConfig.getMaxFileSizeBytes() ||
-                modificationAgeSec >= mConfig.getMaxFileAgeSeconds()) {
+                modificationAgeSec >= mConfig.getMaxFileAgeSeconds() ||
+                isRequiredToUploadAtTime(topicPartition)) {
             long newOffsetCount = mZookeeperConnector.getCommittedOffsetCount(topicPartition);
             long oldOffsetCount = mOffsetTracker.setCommittedOffsetCount(topicPartition,
                     newOffsetCount);
