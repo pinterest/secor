@@ -24,7 +24,19 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
+import kafka.admin.AdminUtils;
+import kafka.api.PartitionOffsetRequestInfo;
+import kafka.common.TopicAndPartition;
+import kafka.common.TopicExistsException;
+import kafka.javaapi.OffsetResponse;
+import kafka.javaapi.consumer.SimpleConsumer;
+import kafka.utils.ZKStringSerializer$;
+import kafka.utils.ZkUtils;
+
 import org.I0Itec.zkclient.ZkClient;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -37,17 +49,6 @@ import com.pinterest.secor.consumer.Consumer;
 import com.pinterest.secor.tools.LogFileDeleter;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.RateLimitUtil;
-
-import kafka.admin.AdminUtils;
-import kafka.api.PartitionOffsetRequestInfo;
-import kafka.common.TopicAndPartition;
-import kafka.common.TopicExistsException;
-import kafka.javaapi.OffsetResponse;
-import kafka.javaapi.consumer.SimpleConsumer;
-import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
-import kafka.producer.ProducerConfig;
-import kafka.utils.ZKStringSerializer$;
 
 /**
  * A performance test for secor
@@ -94,10 +95,8 @@ public class PerformanceTest {
         props.put("request.required.acks", "1");
         props.put("producer.type", "async");
 
-        ProducerConfig producerConfig = new ProducerConfig(props);
 
-        Producer<String, String> producer = new Producer<String, String>(
-                producerConfig);
+        Producer<String, String> producer = new KafkaProducer<String, String>(props);
         long size = 0;
         int message_size = Integer.parseInt(args[3]);
 
@@ -109,7 +108,7 @@ public class PerformanceTest {
                 Arrays.fill(payload, (byte) 1);
                 String msg = new String(payload, "UTF-8");
                 size += msg.length();
-                KeyedMessage<String, String> data = new KeyedMessage<String, String>(
+                ProducerRecord<String, String> data = new ProducerRecord<String, String>(
                         topic, ip, msg);
                 producer.send(data);
             }
@@ -238,13 +237,13 @@ public class PerformanceTest {
             String zkConfig) throws InterruptedException {
 
         ZkClient zkClient = createZkClient(zkConfig);
+        ZkUtils zkUtils = ZkUtils.apply(zkClient, false);
 
         try {
             Properties props = new Properties();
             int replicationFactor = 1;
             for (String topic : topics) {
-                AdminUtils.createTopic(zkClient, topic, partitions,
-                        replicationFactor, props);
+                AdminUtils.createTopic(zkUtils, topic, partitions, replicationFactor, props, null);
             }
         } catch (TopicExistsException e) {
             System.out.println(e.getMessage());

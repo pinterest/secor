@@ -17,10 +17,9 @@
 package com.pinterest.secor.io;
 
 
-import com.pinterest.secor.common.LogFilePath;
 import org.apache.hadoop.io.compress.CompressionCodec;
 
-import java.io.IOException;
+import com.pinterest.secor.common.LogFilePath;
 
 /**
  * Provides a single factory class to make FileReader and FileWriter

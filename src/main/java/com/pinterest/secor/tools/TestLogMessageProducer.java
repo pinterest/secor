@@ -16,10 +16,9 @@
  */
 package com.pinterest.secor.tools;
 
-import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
-import kafka.producer.ProducerConfig;
-
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.thrift.TException;
 import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -64,8 +63,7 @@ public class TestLogMessageProducer extends Thread {
         properties.put("key.serializer.class", "kafka.serializer.StringEncoder");
         properties.put("request.required.acks", "1");
 
-        ProducerConfig config = new ProducerConfig(properties);
-        Producer<String, byte[]> producer = new Producer<String, byte[]>(config);
+        Producer<String, byte[]> producer = new KafkaProducer<String, byte[]>(properties);
 
         TProtocolFactory protocol = null;
         if(mType.equals("json")) {
@@ -92,7 +90,7 @@ public class TestLogMessageProducer extends Thread {
             } catch(TException e) {
                 throw new RuntimeException("Failed to serialize message " + testMessage, e);
             }
-            KeyedMessage<String, byte[]> data = new KeyedMessage<String, byte[]>(
+            ProducerRecord<String, byte[]> data = new ProducerRecord<String, byte[]>(
                 mTopic, Integer.toString(i), bytes);
             producer.send(data);
         }

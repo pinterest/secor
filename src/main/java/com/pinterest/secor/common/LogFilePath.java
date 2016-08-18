@@ -16,12 +16,6 @@
  */
 package com.pinterest.secor.common;
 
-import com.pinterest.secor.message.ParsedMessage;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
-
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
+
+import com.pinterest.secor.message.ParsedMessage;
 
 /**
  * LogFilePath represents path of a log file.  It contains convenience method for building and
