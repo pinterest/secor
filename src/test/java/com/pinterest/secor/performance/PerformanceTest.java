@@ -237,7 +237,8 @@ public class PerformanceTest {
             String zkConfig) throws InterruptedException {
 
         ZkClient zkClient = createZkClient(zkConfig);
-        ZkUtils zkUtils = ZkUtils.apply(zkClient, false);
+        //ZkUtils zkUtils = ZkUtils.apply(zkClient, false);
+        ZkUtils zkUtils = new ZkUtils(zkClient,  null, false);
 
         try {
             Properties props = new Properties();
