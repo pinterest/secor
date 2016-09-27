@@ -43,6 +43,10 @@ configurations.all {
         exclude group: "org.slf4j", module: "slf4j-log4j12"
         //exclude group: "log4j", module: "log4j"
 
+        // Exclude old asm 3.x versions.
+        exclude group: 'asm', module: 'asm'
+        exclude group: 'asm', module: 'asm-all'
+
 }
 
 sourceSets {
