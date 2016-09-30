@@ -118,7 +118,7 @@ public class MessageReader {
         props.put("auto.commit.enable", "false");
         // This option is required to make sure that messages are not lost for new topics and
         // topics whose number of partitions has changed.
-        props.put("auto.offset.reset", "smallest");
+        props.put("auto.offset.reset", mConfig.getAutoOffsetReset());
         props.put("consumer.timeout.ms", Integer.toString(mConfig.getConsumerTimeoutMs()));
         props.put("consumer.id", IdUtil.getConsumerId());
         // Properties required to upgrade from kafka 0.8.x to 0.9.x
