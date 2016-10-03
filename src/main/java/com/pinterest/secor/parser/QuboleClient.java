@@ -31,6 +31,8 @@ import java.util.Map;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class QuboleClient {
+    private static final long MAX_QUBOLE_WAIT_TIME_MS = 300000; // 5 minutes
+
     private String mApiToken;
 
     public QuboleClient(SecorConfig config) {
@@ -94,24 +96,28 @@ public class QuboleClient {
         return (Integer) response.get("id");
     }
 
-    private void waitForCompletion(int commandId) throws IOException, InterruptedException {
+    private int waitForCompletion(int commandId, long timeout) throws IOException, InterruptedException {
         URL url = new URL("https://api.qubole.com/api/v1.2/commands/" + commandId);
-        while (true) {
+        long endTime = System.currentTimeMillis() + timeout;
+
+        while (System.currentTimeMillis() < endTime) {
             Map response = makeRequest(url, null);
             if (response.get("status").equals("done")) {
-                return;
+                return 0;
             }
             System.out.println("waiting 3 seconds for results of query " + commandId +
                                ". Current status " + response.get("status"));
             Thread.sleep(3000);
         }
+
+        return 1; // qubole call failed to return within timeout
     }
 
-    public void addPartition(String table, String partition) throws IOException,
+    public int addPartition(String table, String partition) throws IOException,
             InterruptedException {
         String queryStr = "ALTER TABLE " + table + " ADD IF NOT EXISTS PARTITION (" + partition +
             ")";
         int commandId = query(queryStr);
-        waitForCompletion(commandId);
+        return waitForCompletion(commandId, MAX_QUBOLE_WAIT_TIME_MS);
     }
 }
