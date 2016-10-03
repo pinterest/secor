@@ -376,6 +376,8 @@ public class SecorConfig {
         return mProperties.getString(key, null);
     }
 
+    public boolean getSkipQuboleAddPartition() { return getBoolean("secor.skip.qubole.add.partition", false); }
+
     public String getCompressionCodec() {
         return getString("secor.compression.codec");
     }
