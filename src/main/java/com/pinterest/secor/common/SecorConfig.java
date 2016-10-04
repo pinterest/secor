@@ -383,11 +383,11 @@ public class SecorConfig {
     }
 
     public boolean getQuboleEnabled() {
-        return getBoolean("secor.enable.qubole", true);
+        return getBoolean("secor.enable.qubole");
     }
 
     public long getQuboleTimeoutMs() {
-        return getLong("secor.qubole.timeout.ms", 300000);
+        return getLong("secor.qubole.timeout.ms");
     }
 
     public String getCompressionCodec() {
