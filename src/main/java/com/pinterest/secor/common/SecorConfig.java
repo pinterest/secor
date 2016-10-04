@@ -506,10 +506,6 @@ public class SecorConfig {
         return mProperties.getLong(name);
     }
 
-    public long getLong(String name, long defaultValue) {
-        return mProperties.getLong(name, defaultValue);
-    }
-
     public String[] getStringArray(String name) {
         return mProperties.getStringArray(name);
     }
