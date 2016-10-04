@@ -31,12 +31,13 @@ import java.util.Map;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class QuboleClient {
-    private static final long MAX_QUBOLE_WAIT_TIME_MS = 300000; // 5 minutes
+    private final long MAX_QUBOLE_WAIT_TIME_MS;
 
     private String mApiToken;
 
     public QuboleClient(SecorConfig config) {
         mApiToken = config.getQuboleApiToken();
+        MAX_QUBOLE_WAIT_TIME_MS = config.getQuboleTimeoutMs();
     }
 
     private Map makeRequest(URL url, String body) throws IOException {

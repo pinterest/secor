@@ -168,7 +168,7 @@ public class PartitionFinalizer {
                             LOG.warn("HivePrefix is not defined.  Skip hive registration");
                         }
                     }
-                    if (hiveTableName != null && !mConfig.getSkipQuboleAddPartition()) {
+                    if (hiveTableName != null && mConfig.getQuboleEnabled()) {
                         mQuboleClient.addPartition(hiveTableName, sb.toString());
                     }
                 } catch (Exception e) {

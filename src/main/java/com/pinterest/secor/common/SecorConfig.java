@@ -376,7 +376,13 @@ public class SecorConfig {
         return mProperties.getString(key, null);
     }
 
-    public boolean getSkipQuboleAddPartition() { return getBoolean("secor.skip.qubole.add.partition", false); }
+    public boolean getQuboleEnabled() {
+        return getBoolean("secor.enable.qubole", true);
+    }
+
+    public long getQuboleTimeoutMs() {
+        return getLong("secor.qubole.timeout.ms", 300000);
+    }
 
     public String getCompressionCodec() {
         return getString("secor.compression.codec");
@@ -480,6 +486,10 @@ public class SecorConfig {
 
     public long getLong(String name) {
         return mProperties.getLong(name);
+    }
+
+    public long getLong(String name, long defaultValue) {
+        return mProperties.getLong(name, defaultValue);
     }
 
     public String[] getStringArray(String name) {
