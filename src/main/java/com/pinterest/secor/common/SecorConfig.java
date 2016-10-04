@@ -21,6 +21,8 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -194,6 +196,10 @@ public class SecorConfig {
     public String getKafkaTopicBlacklist() {
         return getString("secor.kafka.topic_blacklist");
     }
+
+    public String getKafkaTopicUploadAtMinuteMarkFilter() { return getString("secor.kafka.upload_at_minute_mark.topic_filter");}
+
+    public int getUploadMinuteMark(){ return getInt("secor.upload.minute_mark");}
 
     public String getKafkaGroup() {
         return getString("secor.kafka.group");
@@ -445,7 +451,19 @@ public class SecorConfig {
     public String getAzureContainer() { return getString("secor.azure.container.name"); }
 
     public String getAzurePath() { return getString("secor.azure.path"); }
-
+    
+    public Map<String, String> getProtobufMessageClassPerTopic() {
+        String prefix = "secor.protobuf.message.class";
+        Iterator<String> keys = mProperties.getKeys(prefix);
+        Map<String, String> protobufClasses = new HashMap<String, String>();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String className = mProperties.getString(key);
+            protobufClasses.put(key.substring(prefix.length() + 1), className);
+        }
+        return protobufClasses;
+    }
+    
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
         return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);

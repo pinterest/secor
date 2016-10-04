@@ -16,14 +16,21 @@
  */
 package com.pinterest.secor.parser;
 
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.message.Message;
-import junit.framework.TestCase;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
+
 import com.google.protobuf.CodedOutputStream;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.message.Message;
+import com.pinterest.secor.protobuf.Messages.UnitTestMessage1;
+import com.pinterest.secor.protobuf.Messages.UnitTestMessage2;
+
+import junit.framework.TestCase;
 
 @RunWith(PowerMockRunner.class)
 public class ProtobufMessageParserTest extends TestCase {
@@ -47,5 +54,43 @@ public class ProtobufMessageParserTest extends TestCase {
 
         assertEquals(1405970352000l, parser.extractTimestampMillis(buildMessage(1405970352l)));
         assertEquals(1405970352123l, parser.extractTimestampMillis(buildMessage(1405970352123l)));
+    }
+
+    @Test
+    public void testExtractPathTimestampMillis() throws Exception {
+        Map<String, String> classPerTopic = new HashMap<String, String>();
+        classPerTopic.put("test", UnitTestMessage1.class.getName());
+        Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
+        Mockito.when(mConfig.getProtobufMessageClassPerTopic()).thenReturn(classPerTopic);
+
+        ProtobufMessageParser parser = new ProtobufMessageParser(mConfig);
+
+        UnitTestMessage1 message = UnitTestMessage1.newBuilder().setTimestamp(1405970352L).build();
+        assertEquals(1405970352000l,
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+
+        message = UnitTestMessage1.newBuilder().setTimestamp(1405970352123l).build();
+        assertEquals(1405970352123l,
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+    }
+
+    @Test
+    public void testExtractNestedTimestampMillis() throws Exception {
+        Map<String, String> classPerTopic = new HashMap<String, String>();
+        classPerTopic.put("*", UnitTestMessage2.class.getName());
+        Mockito.when(mConfig.getMessageTimestampName()).thenReturn("internal.timestamp");
+        Mockito.when(mConfig.getProtobufMessageClassPerTopic()).thenReturn(classPerTopic);
+
+        ProtobufMessageParser parser = new ProtobufMessageParser(mConfig);
+
+        UnitTestMessage2 message = UnitTestMessage2.newBuilder()
+                .setInternal(UnitTestMessage2.Internal.newBuilder().setTimestamp(1405970352L).build()).build();
+        assertEquals(1405970352000l,
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+
+        message = UnitTestMessage2.newBuilder()
+                .setInternal(UnitTestMessage2.Internal.newBuilder().setTimestamp(1405970352123l).build()).build();
+        assertEquals(1405970352123l,
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
     }
 }

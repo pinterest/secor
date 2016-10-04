@@ -9,10 +9,11 @@ Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage
   - **fault tolerance**: any component of Secor is allowed to crash at any given point without compromising data integrity,
   - **load distribution**: Secor may be distributed across multiple machines,
   - **horizontal scalability**: scaling the system out to handle more load is as easy as starting extra Secor processes. Reducing the resource footprint can be achieved by killing any of the running Secor processes. Neither ramping up nor down has any impact on data consistency,
-  - **output partitioning**: Secor parses incoming messages and puts them under partitioned s3 paths to enable direct import into systems like [Hive],
+  - **output partitioning**: Secor parses incoming messages and puts them under partitioned s3 paths to enable direct import into systems like [Hive]. day,hour,minute level partitions are supported by secor
   - **configurable upload policies**: commit points controlling when data is persisted in S3 are configured through size-based and time-based policies (e.g., upload data when local buffer reaches size of 100MB and at least once per hour),
   - **monitoring**: metrics tracking various performance properties are exposed through [Ostrich] and optionally exported to [OpenTSDB] / [statsD],
   - **customizability**: external log message parser may be loaded by updating the configuration,
+  - **event transformation**: external message level tranformation can be done by using customized class.
   - **Qubole interface**: Secor connects to [Qubole] to add finalized output partitions to Hive tables.
 
 ## Setup Guide
@@ -51,11 +52,13 @@ One of the convenience features of Secor is the ability to group messages and sa
 
 - **offset parser**: parser that groups messages based on offset ranges. E.g., messages with offsets in range 0 to 999 will end up under ```s3n://bucket/topic/offset=0/```, offsets 1000 to 2000 will go to ```s3n://bucket/topic/offset=1000/```. To use this parser, start Secor with properties file [secor.prod.backup.properties](src/main/config/secor.prod.backup.properties).
 
-- **thrift date parser**: parser that extracts timestamps from thrift messages and groups the output based on the date (at a day granularity). To keep things simple, this parser assumes that the timestamp is carried in the first field (id 1) of the thrift message schema by default. The field id can be changed by setting ```message.timestamp.id``` as long as the field is at the top level of the thrift object (i.e. it is not in a nested structure). The timestamp may be expressed either in seconds or milliseconds, or nanoseconds since the epoch. The output goes to date-partitioned paths (e.g., ```s3n://bucket/topic/dt=2014-05-01```, ```s3n://bucket/topic/dt=2014-05-02```). Date partitioning is particularly convenient if the output is to be consumed by ETL tools such as [Hive]. To use this parser, start Secor with properties file [secor.prod.partition.properties](src/main/config/secor.prod.partition.properties). Note the ```message.timestamp.name``` property has no effect on the thrift parsing, which is determined by the field id.
+- **Thrift date parser**: parser that extracts timestamps from thrift messages and groups the output based on the date (at a day granularity). To keep things simple, this parser assumes that the timestamp is carried in the first field (id 1) of the thrift message schema by default. The field id can be changed by setting ```message.timestamp.id``` as long as the field is at the top level of the thrift object (i.e. it is not in a nested structure). The timestamp may be expressed either in seconds or milliseconds, or nanoseconds since the epoch. The output goes to date-partitioned paths (e.g., ```s3n://bucket/topic/dt=2014-05-01```, ```s3n://bucket/topic/dt=2014-05-02```). Date partitioning is particularly convenient if the output is to be consumed by ETL tools such as [Hive]. To use this parser, start Secor with properties file [secor.prod.partition.properties](src/main/config/secor.prod.partition.properties). Note the ```message.timestamp.name``` property has no effect on the thrift parsing, which is determined by the field id.
 
 - **JSON date parser**: parser that extracts timestamps from JSON messages and groups the output based on the date, similar to the Thrift parser above. To use this parser, start Secor with properties file [secor.prod.partition.properties](src/main/config/secor.prod.partition.properties) and set `secor.message.parser.class=com.pinterest.secor.parser.JsonMessageParser`. You may override the field used to extract the timestamp by setting the "message.timestamp.name" property.
 
-- **msgpack date parser**: parser that extracts timestamps from MessagePack messages and groups the output based on the date, similar to the Thrift and JSON parser. To use this parser, set `secor.message.parser.class=com.pinterest.secor.parser.MessagePackParser`. Like the Thrift parser, the timestamp may be expressed either in seconds or milliseconds, or nanoseconds since the epoch and respects the "message.timestamp.name" property.
+- **MessagePack date parser**: parser that extracts timestamps from MessagePack messages and groups the output based on the date, similar to the Thrift and JSON parser. To use this parser, set `secor.message.parser.class=com.pinterest.secor.parser.MessagePackParser`. Like the Thrift parser, the timestamp may be expressed either in seconds or milliseconds, or nanoseconds since the epoch and respects the "message.timestamp.name" property.
+
+- **[Protocol Buffers]** date parser: parser that extracts timestamps from protobuf messages and groups the output based on the date, similar to the Thrift, JSON or MessagePack parser. To use this parser, set `secor.message.parser.class=com.pinterest.secor.parser.ProtobufMessageParser`. Like the Thrift parser, the timestamp may be expressed either in seconds or milliseconds, or nanoseconds since the epoch and respects the "message.timestamp.name" property.
 
 
 If none of the parsers available out-of-the-box is suitable for your use case, note that it is very easy to implement a custom parser. All you have to do is to extend [MessageParser](src/main/java/com/pinterest/secor/parser/MessageParser.java) and tell Secor to use your parser by setting ```secor.message.parser.class``` in the properties file.
@@ -65,9 +68,11 @@ If none of the parsers available out-of-the-box is suitable for your use case, n
 
 Currently secor supports the following output formats
 
-- **Sequence Files**: Flat file containing binary key value pairs.
+- **Sequence Files**: Flat file containing binary key value pairs. To use this format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory` option.
 
-- **Delimited Text Files**: A new line delimited raw text file.
+- **Delimited Text Files**: A new line delimited raw text file. To use this format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFactory` option.
+
+- **[Parquet] Files (for Protobuf messages)**: Columnar storage format. To use this output format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.ProtobufParquetFileReaderWriterFactory` option. In addition, Protobuf message class per Kafka topic must be defined using option `secor.protobuf.message.class.<topic>=<protobuf class name>`. If all Kafka topics transfer the same protobuf message type, set `secor.protobuf.message.class.*=<protobuf class name>`.
 
 ## Tools
 Secor comes with a number of tools implementing interactions with the environment.
@@ -122,6 +127,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Leo Woessner](https://github.com/estezz)
   * [Jerome Gagnon](https://github.com/jgagnon1)
   * [Taichi Nakashima](https://github.com/tcnksm)
+  * [Lovenish Goyal] (https://github.com/lovenishgoyal)
 
 ## Companies who use Secor
 
@@ -130,11 +136,13 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Strava](https://www.strava.com)
   * [TiVo](https://www.tivo.com)
   * [Yelp](http://www.yelp.com)
+  * [Credit Karma](https://www.creditkarma.com)
   * [VarageSale](http://www.varagesale.com)
   * [Skyscanner](http://www.skyscanner.net)
   * [Nextperf](http://www.nextperf.com)
   * [Zalando](http://www.zalando.com)
   * [Rakuten](http://techblog.rakuten.co.jp/)
+  * [Appsflyer](https://www.appsflyer.com)
 
 ## Help
 
@@ -151,3 +159,5 @@ If you have any questions or comments, you can reach us at [secor-users@googlegr
 [Qubole]: http://www.qubole.com/
 [statsD]: https://github.com/etsy/statsd/
 [Openstack Swift]: http://swift.openstack.org
+[Protocol Buffers]: https://developers.google.com/protocol-buffers/
+[Parquet]: https://parquet.apache.org/

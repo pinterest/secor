@@ -167,9 +167,7 @@ public class Consumer extends Thread {
     /**
      * Helper to get the offset tracker (used in tests)
      * 
-     * @param topic
-     * @param partition
-     * @return
+     * @return the offset tracker
      */
     public OffsetTracker getOffsetTracker() {
         return this.mOffsetTracker;

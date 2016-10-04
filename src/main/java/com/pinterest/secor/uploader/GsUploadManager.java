@@ -111,7 +111,7 @@ public class GsUploadManager extends UploadManager {
             GoogleCredential credential;
             try {
                 // Lookup if configured path from the properties; otherwise fallback to Google Application default
-                if (credentialsPath != null) {
+                if (credentialsPath != null && !credentialsPath.isEmpty()) {
                     credential = GoogleCredential
                             .fromStream(new FileInputStream(credentialsPath), httpTransport, JSON_FACTORY)
                             .createScoped(Collections.singleton(StorageScopes.CLOUD_PLATFORM));
