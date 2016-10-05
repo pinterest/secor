@@ -382,6 +382,14 @@ public class SecorConfig {
         return mProperties.getString(key, null);
     }
 
+    public boolean getQuboleEnabled() {
+        return getBoolean("secor.enable.qubole");
+    }
+
+    public long getQuboleTimeoutMs() {
+        return getLong("secor.qubole.timeout.ms");
+    }
+
     public String getCompressionCodec() {
         return getString("secor.compression.codec");
     }
