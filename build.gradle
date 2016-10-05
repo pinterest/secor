@@ -43,6 +43,10 @@ configurations.all {
         exclude group: "org.slf4j", module: "slf4j-log4j12"
         //exclude group: "log4j", module: "log4j"
 
+        // Exclude old asm 3.x versions.
+        exclude group: 'asm', module: 'asm'
+        exclude group: 'asm', module: 'asm-all'
+
 }
 
 sourceSets {
@@ -184,10 +188,10 @@ repositories {
 
 dependencies {
      // 1p-service stuff - BEGIN
-    compile group: 'com.thomsonreuters', name: '1p-service-lib', version: "${oneplib_version}"
-    compile group: 'com.thomsonreuters', name: '1p-service-swagger', version: "${oneplib_version}"
+    compile group: 'com.thomsonreuters', name: '1p-service-lib', version: "${servicelib_version}"
+    compile group: 'com.thomsonreuters', name: '1p-service-swagger', version: "${servicelib_version}"
     
-    compile group: 'com.thomsonreuters', name: '1p-service-api', version: "${oneplib_version}"
+    compile group: 'com.thomsonreuters', name: '1p-service-api', version: "${servicelib_version}"
     compile group: 'com.thomsonreuters.data', name: '1p-data-event', version: '1.0.2'
     compile group: 'com.thomsonreuters.data', name: '1p-data-util', version: '1.0'
     compile group: 'com.thomsonreuters', name: 'eiddo-client-karyon', version: "0.6.+"
