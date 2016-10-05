@@ -173,6 +173,10 @@ public class SecorConfig {
         return getString("secor.s3.path");
     }
 
+    public String getSchema() {
+        return getString("secor.topic.schema");
+    }
+
     public String getS3AlternativePath() {
         return getString("secor.s3.alternative.path");
     }

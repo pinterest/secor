@@ -18,6 +18,8 @@ package com.pinterest.secor.common;
 
 import com.pinterest.secor.message.ParsedMessage;
 import junit.framework.TestCase;
+import org.junit.Test;
+import sun.rmi.log.ReliableLog;
 
 import java.util.Arrays;
 
@@ -41,12 +43,16 @@ public class LogFilePathTest extends TestCase {
             ".10_0_00000000000000000100.crc";
 
     private LogFilePath mLogFilePath;
+    private LogFilePath mLogFilePathWithSchema;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         mLogFilePath = new LogFilePath(PREFIX, TOPIC, PARTITIONS, GENERATION, KAFKA_PARTITION,
                                        LAST_COMMITTED_OFFSET, "");
+
+        mLogFilePathWithSchema = new LogFilePath(PREFIX, "log.valid." + TOPIC, PARTITIONS, GENERATION, KAFKA_PARTITION,
+                LAST_COMMITTED_OFFSET, "");
     }
 
     public void testConstructFromMessage() throws Exception {
@@ -82,5 +88,10 @@ public class LogFilePathTest extends TestCase {
 
     public void testGetLogFileCrcPath() throws Exception {
         assertEquals(CRC_PATH, mLogFilePath.getLogFileCrcPath());
+    }
+
+    public void testWithoutSchema() throws Exception {
+        assertNotSame(mLogFilePath.getLogFilePath(), mLogFilePathWithSchema.getLogFilePath());
+        assertEquals(mLogFilePath.getLogFilePath(), mLogFilePathWithSchema.withoutSchema("log.valid").getLogFilePath());
     }
 }
