@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
+import kafka.admin.RackAwareMode;
+import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkClient;
 
 import com.google.common.collect.Lists;
@@ -48,6 +50,7 @@ import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 import kafka.utils.ZKStringSerializer$;
+import org.I0Itec.zkclient.ZkConnection;
 
 /**
  * A performance test for secor
@@ -237,14 +240,16 @@ public class PerformanceTest {
     private static void createTopics(List<String> topics, int partitions,
             String zkConfig) throws InterruptedException {
 
+        ZkConnection zkConnection = new ZkConnection(zkConfig);
         ZkClient zkClient = createZkClient(zkConfig);
+        ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
 
         try {
             Properties props = new Properties();
             int replicationFactor = 1;
             for (String topic : topics) {
-                AdminUtils.createTopic(zkClient, topic, partitions,
-                        replicationFactor, props);
+                AdminUtils.createTopic(zkUtils, topic, partitions,
+                        replicationFactor, props, RackAwareMode.Disabled$.MODULE$);
             }
         } catch (TopicExistsException e) {
             System.out.println(e.getMessage());
