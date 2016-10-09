@@ -16,6 +16,8 @@
  */
 package com.pinterest.secor.parser;
 
+import com.google.protobuf.Timestamp;
+import com.google.protobuf.util.Timestamps;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import org.slf4j.Logger;
@@ -93,6 +95,10 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
             timestampMillis = timestamp * 1000L;
         }
         return timestampMillis;
+    }
+
+    protected static long toMillis(final Timestamp timestamp) {
+       return Timestamps.toMillis(timestamp);
     }
 
     public abstract long extractTimestampMillis(final Message message) throws Exception;

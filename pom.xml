@@ -89,7 +89,12 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>2.6.1</version>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>3.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
@@ -401,7 +406,7 @@
 			<plugin>
 				<groupId>com.github.os72</groupId>
 				<artifactId>protoc-jar-maven-plugin</artifactId>
-				<version>3.0.0-b3</version>
+				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>protobuf-test-sources</id>
@@ -410,13 +415,14 @@
 							<goal>run</goal>
 						</goals>
 						<configuration>
-							<protocVersion>2.6.1</protocVersion>
+							<protocVersion>3.1.0</protocVersion>
 							<includeDirectories>
 								<include>src/test/protobuf</include>
 							</includeDirectories>
 							<inputDirectories>
 								<include>src/test/protobuf</include>
 							</inputDirectories>
+                            <includeStdTypes>true</includeStdTypes>
 							<outputTargets>
 								<outputTarget>
 									<type>java</type>

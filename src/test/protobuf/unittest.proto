@@ -1,5 +1,6 @@
-package com.pinterest.secor.protobuf;
+syntax = "proto2";
 
+package com.pinterest.secor.protobuf;
 option java_package = "com.pinterest.secor.protobuf";
 option java_outer_classname = "Messages";
 
