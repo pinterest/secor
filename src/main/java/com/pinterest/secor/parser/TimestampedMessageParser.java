@@ -97,10 +97,6 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         return timestampMillis;
     }
 
-    protected static long toMillis(final Timestamp timestamp) {
-       return Timestamps.toMillis(timestamp);
-    }
-
     public abstract long extractTimestampMillis(final Message message) throws Exception;
 
     protected String[] generatePartitions(long timestampMillis, boolean usingHourly, boolean usingMinutely)

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.util.Timestamps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +78,7 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
             Object timestampObject = decodedMessage
                     .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i]));
             if (timestampObject instanceof com.google.protobuf.Timestamp){
-                return toMillis((com.google.protobuf.Timestamp)timestampObject);
+                return Timestamps.toMillis((com.google.protobuf.Timestamp) timestampObject);
             }else {
                 return toMillis((Long) timestampObject);
             }
