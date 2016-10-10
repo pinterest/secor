@@ -19,6 +19,8 @@ package com.pinterest.secor.parser;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
+import com.google.protobuf.Descriptors;
+import com.google.protobuf.util.Timestamps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,8 +75,13 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
                 decodedMessage = (com.google.protobuf.Message) decodedMessage
                         .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i]));
             }
-            return toMillis((Long) decodedMessage
-                    .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i])));
+            Object timestampObject = decodedMessage
+                    .getField(decodedMessage.getDescriptorForType().findFieldByName(timestampFieldPath[i]));
+            if (timestampObject instanceof com.google.protobuf.Timestamp){
+                return Timestamps.toMillis((com.google.protobuf.Timestamp) timestampObject);
+            }else {
+                return toMillis((Long) timestampObject);
+            }
         } else {
             // Assume that the timestamp field is the first field, is required,
             // and is a uint64.
