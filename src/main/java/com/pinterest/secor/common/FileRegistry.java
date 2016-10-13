@@ -258,7 +258,12 @@ public class FileRegistry {
 
     public long getModificationAgeSec(TopicPartitionGroup topicPartitionGroup) throws IOException {
         long now = System.currentTimeMillis() / 1000L;
-        long result = Long.MAX_VALUE;
+        long result;
+        if (mConfig.getFileAgeYoungest()) {
+            result = Long.MAX_VALUE;
+        } else {
+            result = -1;
+        }
         Collection<LogFilePath> paths = getPaths(topicPartitionGroup);
         for (LogFilePath path : paths) {
             Long creationTime = mCreationTimes.get(path);
@@ -267,8 +272,14 @@ public class FileRegistry {
                 creationTime = now;
             }
             long age = now - creationTime;
-            if (age < result) {
-                result = age;
+            if (mConfig.getFileAgeYoungest()) {
+                if (age < result) {
+                    result = age;
+                }
+            } else {
+                if (age > result) {
+                    result = age;
+                }
             }
         }
         if (result == Long.MAX_VALUE) {

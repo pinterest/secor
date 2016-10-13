@@ -143,6 +143,10 @@ public class SecorConfig {
         return getLong("secor.max.file.age.seconds");
     }
 
+    public boolean getFileAgeYoungest() {
+        return getBoolean("secor.file.age.youngest");
+    }
+
     public long getOffsetsPerPartition() {
         return getLong("secor.offsets.per.partition");
     }
