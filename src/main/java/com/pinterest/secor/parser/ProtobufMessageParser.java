@@ -67,9 +67,13 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
 
     @Override
     public long extractTimestampMillis(final Message message) throws IOException {
+        return extractTimestampMillis(message.getTopic(), message.getPayload());
+    }
+
+    public long extractTimestampMillis(String topic, final byte[] bytes) throws IOException {
         if (timestampFieldPath != null) {
-            com.google.protobuf.Message decodedMessage = protobufUtil.decodeMessage(message.getTopic(),
-                    message.getPayload());
+            com.google.protobuf.Message decodedMessage = protobufUtil.decodeMessage(topic,
+                    bytes);
             int i = 0;
             for (; i < timestampFieldPath.length - 1; ++i) {
                 decodedMessage = (com.google.protobuf.Message) decodedMessage
@@ -86,7 +90,7 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
             // Assume that the timestamp field is the first field, is required,
             // and is a uint64.
 
-            CodedInputStream input = CodedInputStream.newInstance(message.getPayload());
+            CodedInputStream input = CodedInputStream.newInstance(bytes);
             // Don't really care about the tag, but need to read it to get, to
             // the payload.
             input.readTag();
