@@ -74,6 +74,9 @@ Currently secor supports the following output formats
 
 - **[Parquet] Files (for Protobuf messages)**: Columnar storage format. To use this output format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.ProtobufParquetFileReaderWriterFactory` option. In addition, Protobuf message class per Kafka topic must be defined using option `secor.protobuf.message.class.<topic>=<protobuf class name>`. If all Kafka topics transfer the same protobuf message type, set `secor.protobuf.message.class.*=<protobuf class name>`.
 
+- **Gzip upload format**:  To enable compression on uploaded files to the cloud, in `secor.common.properties` set `secor.compression.codec` to a valid compression codec implementing  `org.apache.hadoop.io.compress.CompressionCodec` interface, such as `org.apache.hadoop.io.compress.GzipCodec`.
+
+
 ## Tools
 Secor comes with a number of tools implementing interactions with the environment.
 
