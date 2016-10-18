@@ -64,7 +64,7 @@ public class SecorConfig {
 
     /**
      * Exposed for testability
-     * 
+     *
      * @param properties
      */
     public SecorConfig(PropertiesConfiguration properties) {
@@ -160,7 +160,7 @@ public class SecorConfig {
     public boolean getSeparateContainersForTopics() {
     	return getString("secor.swift.containers.for.each.topic").toLowerCase().equals("true");
     }
-    
+
     public String getSwiftContainer() {
         return getString("secor.swift.container");
     }
@@ -168,7 +168,7 @@ public class SecorConfig {
     public String getSwiftPath() {
         return getString("secor.swift.path");
     }
-    
+
     public String getS3Bucket() {
         return getString("secor.s3.bucket");
     }
@@ -232,7 +232,7 @@ public class SecorConfig {
     public String getMessageTransformerClass(){
     	return getString("secor.message.transformer.class");
     }
- 
+
     public int getTopicPartitionForgetSeconds() {
         return getInt("secor.topic_partition.forget.seconds");
     }
@@ -252,7 +252,7 @@ public class SecorConfig {
     public String getCloudService() {
         return getString("cloud.service");
     }
-    
+
     public String getAwsAccessKey() {
         return getString("aws.access.key");
     }
@@ -268,15 +268,15 @@ public class SecorConfig {
     public String getAwsRole() {
         return getString("aws.role");
     }
-    
+
     public boolean getAwsProxyEnabled(){
     	return getBoolean("aws.proxy.isEnabled");
     }
-    
+
     public String getAwsProxyHttpHost() {
         return getString("aws.proxy.http.host");
     }
-    
+
     public int getAwsProxyHttpPort() {
         return getInt("aws.proxy.http.port");
     }
@@ -300,35 +300,35 @@ public class SecorConfig {
     public String getSwiftTenant() {
         return getString("swift.tenant");
     }
-    
+
     public String getSwiftUsername() {
         return getString("swift.username");
     }
-    
+
     public String getSwiftPassword() {
         return getString("swift.password");
-    }    
-    
+    }
+
     public String getSwiftAuthUrl() {
         return getString("swift.auth.url");
     }
-    
+
     public String getSwiftPublic() {
     	return getString("swift.public");
     }
-    
+
     public String getSwiftPort() {
     	return getString("swift.port");
     }
-    
+
     public String getSwiftGetAuth() {
     	return getString("swift.use.get.auth");
     }
-    
+
     public String getSwiftApiKey() {
     	return getString("swift.api.key");
     }
-    
+
     public String getQuboleApiToken() {
         return getString("qubole.api.token");
     }
@@ -352,7 +352,7 @@ public class SecorConfig {
     public String getMessageTimestampName() {
         return getString("message.timestamp.name");
     }
-    
+
     public String getMessageTimestampNameSeparator() {
         return getString("message.timestamp.name.separator");
     }
@@ -377,8 +377,8 @@ public class SecorConfig {
         return getInt("secor.finalizer.lookback.periods", 10);
     }
 
-    public String getHivePrefix() { 
-        return getString("secor.hive.prefix"); 
+    public String getHivePrefix() {
+        return getString("secor.hive.prefix");
     }
 
     public String getHiveTableName(String topic) {
@@ -401,11 +401,11 @@ public class SecorConfig {
     public int getMaxMessageSizeBytes() {
         return getInt("secor.max.message.size.bytes");
     }
-    
+
     public String getFileReaderWriterFactory() {
     	return getString("secor.file.reader.writer.factory");
     }
-    
+
     public String getPerfTestTopicPrefix() {
     	return getString("secor.kafka.perf_topic_prefix");
     }
@@ -424,6 +424,22 @@ public class SecorConfig {
 
     public String getGsPath() {
         return getString("secor.gs.path");
+    }
+
+    public Boolean getGsPathPartitionHourly() {
+        return getBoolean("secor.gs.path.partition.hourly");
+    }
+
+    public String getGsPathPartitionHourlyFormat() {
+        return getString("secor.gs.path.partition.hourly.format");
+    }
+
+    public Boolean getGsPathPartitionDaily() {
+        return getBoolean("secor.gs.path.partition.daily");
+    }
+
+    public String getGsPathPartitionDailyFormat() {
+        return getString("secor.gs.path.partition.daily.format");
     }
 
     public int getGsConnectTimeoutInMs() {
@@ -455,7 +471,7 @@ public class SecorConfig {
     public String getAzureContainer() { return getString("secor.azure.container.name"); }
 
     public String getAzurePath() { return getString("secor.azure.path"); }
-    
+
     public Map<String, String> getProtobufMessageClassPerTopic() {
         String prefix = "secor.protobuf.message.class";
         Iterator<String> keys = mProperties.getKeys(prefix);
@@ -467,7 +483,7 @@ public class SecorConfig {
         }
         return protobufClasses;
     }
-    
+
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
         return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);
@@ -476,7 +492,7 @@ public class SecorConfig {
     public boolean getBoolean(String name, boolean defaultValue) {
         return mProperties.getBoolean(name, defaultValue);
     }
-    
+
     public boolean getBoolean(String name) {
         return mProperties.getBoolean(name);
     }

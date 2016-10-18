@@ -18,6 +18,7 @@ import com.google.api.services.storage.StorageScopes;
 import com.google.api.services.storage.model.StorageObject;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,8 @@ import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 /**
  * Manages uploads to Google Cloud Storage using the Storage class from the Google API SDK.
@@ -67,7 +70,8 @@ public class GsUploadManager extends UploadManager {
     @Override
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         final String gsBucket = mConfig.getGsBucket();
-        final String gsKey = localPath.withPrefix(mConfig.getGsPath()).getLogFilePath();
+        final String gsPath = gsPathWithPartitons(mConfig.getGsPath());
+        final String gsKey = localPath.withPrefix(gsPath).getLogFilePath();
         final File localFile = new File(localPath.getLogFilePath());
         final boolean directUpload = mConfig.getGsDirectUpload();
 
@@ -148,6 +152,23 @@ public class GsUploadManager extends UploadManager {
                 httpRequest.setReadTimeout(readTimeoutMs);
             }
         };
+    }
+
+    private String gsPathWithPartitons(String gsPath) {
+      if (!mConfig.getGsPathPartitionDaily()){
+        return gsPath;
+      }
+      Date dateCurrent = new Date();
+      SimpleDateFormat ftDate = new SimpleDateFormat (mConfig.getGsPathPartitionDailyFormat());
+      String datedPartition = ftDate.format(dateCurrent);
+      String gsPathPartitioned =  StringUtils.join(new String [] {gsPath, datedPartition}, '/');
+
+      if (mConfig.getGsPathPartitionHourly()) {
+        SimpleDateFormat ftHour = new SimpleDateFormat (mConfig.getGsPathPartitionHourlyFormat());
+        String hourlyPartition = ftHour.format(dateCurrent);
+        gsPathPartitioned =  StringUtils.join(new String [] {gsPathPartitioned, hourlyPartition}, '/');
+      }
+      return gsPathPartitioned;
     }
 
 }
