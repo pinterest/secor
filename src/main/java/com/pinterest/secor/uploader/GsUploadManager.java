@@ -70,7 +70,7 @@ public class GsUploadManager extends UploadManager {
     @Override
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         final String gsBucket = mConfig.getGsBucket();
-        final String gsPath = gsPathPartitons(mConfig.getGsPath());
+        final String gsPath = gsPathWithPartitons(mConfig.getGsPath());
         final String gsKey = localPath.withPrefix(gsPath).getLogFilePath();
         final File localFile = new File(localPath.getLogFilePath());
         final boolean directUpload = mConfig.getGsDirectUpload();
@@ -154,7 +154,7 @@ public class GsUploadManager extends UploadManager {
         };
     }
 
-    private String gsPathPartitons(String gsPath) {
+    private String gsPathWithPartitons(String gsPath) {
       if (!mConfig.getGsPathPartitionDaily()){
         return gsPath;
       }
