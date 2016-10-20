@@ -55,17 +55,15 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     private final String mHrPrefix;
     private final String mMinPrefix;
 
-    private final boolean mUsingDaily;
     private final boolean mUsingHourly;
     private final boolean mUsingMinutely;
 
 
     public TimestampedMessageParser(SecorConfig config) {
         super(config);
-        mUsingDaily = usingDaily(config);
+
         mUsingHourly = usingHourly(config);
         mUsingMinutely = usingMinutely(config);
-
         mDtFormat = usingDateFormat(config);
         mHrFormat = usingHourFormat(config);
         mMinFormat = usingMinuteFormat(config);
@@ -79,23 +77,21 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         mFinalizerDelaySeconds = config.getFinalizerDelaySeconds();
         LOG.info("FinalizerDelaySeconds: {}", mFinalizerDelaySeconds);
 
-        mDtFormatter = new SimpleDateFormat();
+        mDtFormatter = new SimpleDateFormat(mDtFormat);
         mDtFormatter.setTimeZone(config.getTimeZone());
 
-        mHrFormatter = new SimpleDateFormat("HH");
+        mHrFormatter = new SimpleDateFormat(mHrFormat);
         mHrFormatter.setTimeZone(config.getTimeZone());
 
-        mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
+        mMinFormatter = new SimpleDateFormat(mMinFormat);
+        mMinFormatter.setTimeZone(config.getTimeZone());
+
+        mDtHrFormatter = new SimpleDateFormat(mDtFormat+ "-" + mHrFormat);
         mDtHrFormatter.setTimeZone(config.getTimeZone());
 
-        mDtHrMinFormatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
+        mDtHrMinFormatter = new SimpleDateFormat(mDtFormat+ "-" + mHrFormat + "-" + mMinFormat);
         mDtHrMinFormatter.setTimeZone(config.getTimeZone());
-        mMinFormatter = new SimpleDateFormat("mm");
-        mMinFormatter.setTimeZone(config.getTimeZone());
-    }
 
-    static boolean usingDaily(SecorConfig config) {
-        return config.getBoolean("partitioner.granularity.daily", false);
     }
 
     static boolean usingHourly(SecorConfig config) {
