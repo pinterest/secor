@@ -70,6 +70,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         mHrFormat = usingHourFormat(config);
         mMinFormat = usingMinuteFormat(config);
 
+        mDtPrefix = usingDatePrefix(config);
         mHrPrefix = usingHourPrefix(config);
         mMinPrefix = usingMinutePrefix(config);
 
