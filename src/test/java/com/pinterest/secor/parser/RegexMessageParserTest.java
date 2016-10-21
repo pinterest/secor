@@ -37,6 +37,13 @@ public class RegexMessageParserTest extends TestCase {
         mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("^[^ ]+ [^ ]+ ([^ ]+) .*$");
 
+        Mockito.when(TimestampedMessageParser.usingDateFormat(mConfig)).thenReturn("yyyy-MM-dd");
+        Mockito.when(TimestampedMessageParser.usingHourFormat(mConfig)).thenReturn("HH");
+        Mockito.when(TimestampedMessageParser.usingMinuteFormat(mConfig)).thenReturn("mm");
+        Mockito.when(TimestampedMessageParser.usingDatePrefix(mConfig)).thenReturn("dt=");
+        Mockito.when(TimestampedMessageParser.usingHourPrefix(mConfig)).thenReturn("hr=");
+        Mockito.when(TimestampedMessageParser.usingMinutePrefix(mConfig)).thenReturn("min=");
+
         byte messageWithMillisTimestamp[] =
             "?24.140.88.218 2015/09/22T22:19:00+0000 1442960340 GET http://api.com/test/?id=123 HTTP/1.1 s200 1017 0.384213448 pass - r685206763364 91ea566f - \"for iOS/5.4.2 (iPhone; 9.0)\"".getBytes("UTF-8");
         mMessageWithMillisTimestamp = new Message("test", 0, 0, null, messageWithMillisTimestamp);

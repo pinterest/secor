@@ -426,22 +426,6 @@ public class SecorConfig {
         return getString("secor.gs.path");
     }
 
-    public Boolean getGsPathPartitionHourly() {
-        return getBoolean("secor.gs.path.partition.hourly");
-    }
-
-    public String getGsPathPartitionHourlyFormat() {
-        return getString("secor.gs.path.partition.hourly.format");
-    }
-
-    public Boolean getGsPathPartitionDaily() {
-        return getBoolean("secor.gs.path.partition.daily");
-    }
-
-    public String getGsPathPartitionDailyFormat() {
-        return getString("secor.gs.path.partition.daily.format");
-    }
-
     public int getGsConnectTimeoutInMs() {
         return getInt("secor.gs.connect.timeout.ms", 3 * 60000);
     }

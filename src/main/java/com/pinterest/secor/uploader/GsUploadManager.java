@@ -70,8 +70,7 @@ public class GsUploadManager extends UploadManager {
     @Override
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         final String gsBucket = mConfig.getGsBucket();
-        final String gsPath = gsPathWithPartitons(mConfig.getGsPath());
-        final String gsKey = localPath.withPrefix(gsPath).getLogFilePath();
+        final String gsKey = localPath.withPrefix(mConfig.getGsPath()).getLogFilePath();
         final File localFile = new File(localPath.getLogFilePath());
         final boolean directUpload = mConfig.getGsDirectUpload();
 
@@ -152,23 +151,6 @@ public class GsUploadManager extends UploadManager {
                 httpRequest.setReadTimeout(readTimeoutMs);
             }
         };
-    }
-
-    private String gsPathWithPartitons(String gsPath) {
-      if (!mConfig.getGsPathPartitionDaily()){
-        return gsPath;
-      }
-      Date dateCurrent = new Date();
-      SimpleDateFormat ftDate = new SimpleDateFormat (mConfig.getGsPathPartitionDailyFormat());
-      String datedPartition = ftDate.format(dateCurrent);
-      String gsPathPartitioned =  StringUtils.join(new String [] {gsPath, datedPartition}, '/');
-
-      if (mConfig.getGsPathPartitionHourly()) {
-        SimpleDateFormat ftHour = new SimpleDateFormat (mConfig.getGsPathPartitionHourlyFormat());
-        String hourlyPartition = ftHour.format(dateCurrent);
-        gsPathPartitioned =  StringUtils.join(new String [] {gsPathPartitioned, hourlyPartition}, '/');
-      }
-      return gsPathPartitioned;
     }
 
 }
