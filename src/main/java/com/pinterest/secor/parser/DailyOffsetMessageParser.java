@@ -32,22 +32,8 @@ import com.pinterest.secor.message.Message;
  */
 public class DailyOffsetMessageParser extends TimestampedMessageParser {
 
-    private final boolean dUsingHourly;
-    private final boolean dUsingMinutely;
-
     public DailyOffsetMessageParser(SecorConfig config) {
         super(config);
-        dUsingHourly = usingHourly(config);
-        dUsingMinutely = usingMinutely(config);
-
-    }
-
-    static boolean usingHourly(SecorConfig config) {
-        return config.getBoolean("partitioner.granularity.hour", false);
-    }
-
-    static boolean usingMinutely(SecorConfig config) {
-        return config.getBoolean("partitioner.granularity.minute", false);
     }
 
     @Override
@@ -55,7 +41,7 @@ public class DailyOffsetMessageParser extends TimestampedMessageParser {
         long offset = message.getOffset();
         long offsetsPerPartition = mConfig.getOffsetsPerPartition();
         long partition = (offset / offsetsPerPartition) * offsetsPerPartition;
-        String[] dailyPartition = generatePartitions(new Date().getTime(), dUsingHourly, dUsingMinutely);
+        String[] dailyPartition = generatePartitions(new Date().getTime(), mUsingHourly, mUsingMinutely);
         String dailyPartitionPath = StringUtils.join(dailyPartition, '/');
         String[] result = {dailyPartitionPath, "offset=" + partition};
         return result;
