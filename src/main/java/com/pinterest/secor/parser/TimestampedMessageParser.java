@@ -55,8 +55,8 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     private final String mHrPrefix;
     private final String mMinPrefix;
 
-    private final boolean mUsingHourly;
-    private final boolean mUsingMinutely;
+    protected final boolean mUsingHourly;
+    protected final boolean mUsingMinutely;
 
 
     public TimestampedMessageParser(SecorConfig config) {
