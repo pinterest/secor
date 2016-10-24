@@ -60,6 +60,16 @@ One of the convenience features of Secor is the ability to group messages and sa
 
 - **[Protocol Buffers]** date parser: parser that extracts timestamps from protobuf messages and groups the output based on the date, similar to the Thrift, JSON or MessagePack parser. To use this parser, set `secor.message.parser.class=com.pinterest.secor.parser.ProtobufMessageParser`. Like the Thrift parser, the timestamp may be expressed either in seconds or milliseconds, or nanoseconds since the epoch and respects the "message.timestamp.name" property.
 
+- **Output grouping with Flexible partitions**: The default partitioning granularity for date, hours and minutes have prefix for convenient consumption for `Hive`. If you require different naming of partition with(out) prefix and other date, hour or minute format update the following properties in `secor.common.properties`
+
+          partitioner.granularity.date.prefix=dt=
+          partitioner.granularity.hour.prefix=hr=
+          partitioner.granularity.minute.prefix=min=
+
+          partitioner.granularity.date.format=yyyy-MM-dd
+          partitioner.granularity.hour.format=HH
+          partitioner.granularity.minute.format=mm
+          
 
 If none of the parsers available out-of-the-box is suitable for your use case, note that it is very easy to implement a custom parser. All you have to do is to extend [MessageParser](src/main/java/com/pinterest/secor/parser/MessageParser.java) and tell Secor to use your parser by setting ```secor.message.parser.class``` in the properties file.
 
@@ -131,6 +141,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Jerome Gagnon](https://github.com/jgagnon1)
   * [Taichi Nakashima](https://github.com/tcnksm)
   * [Lovenish Goyal] (https://github.com/lovenishgoyal)
+  * [Ahsan Nabi Dar] (https://github.com/ahsandar)
 
 ## Companies who use Secor
 
@@ -146,6 +157,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Zalando](http://www.zalando.com)
   * [Rakuten](http://techblog.rakuten.co.jp/)
   * [Appsflyer](https://www.appsflyer.com)
+  * [Wego] (http://www.wego.com)
 
 ## Help
 
