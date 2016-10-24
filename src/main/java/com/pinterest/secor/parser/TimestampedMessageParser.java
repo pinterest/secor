@@ -47,32 +47,51 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     private final SimpleDateFormat mDtHrMinFormatter;
     private final SimpleDateFormat mMinFormatter;
 
-    private final boolean mUsingHourly;
-    private final boolean mUsingMinutely;
+    private final String mDtFormat;
+    private final String mHrFormat;
+    private final String mMinFormat;
+
+    private final String mDtPrefix;
+    private final String mHrPrefix;
+    private final String mMinPrefix;
+
+    protected final boolean mUsingHourly;
+    protected final boolean mUsingMinutely;
 
 
     public TimestampedMessageParser(SecorConfig config) {
         super(config);
+
         mUsingHourly = usingHourly(config);
         mUsingMinutely = usingMinutely(config);
+        mDtFormat = usingDateFormat(config);
+        mHrFormat = usingHourFormat(config);
+        mMinFormat = usingMinuteFormat(config);
+
+        mDtPrefix = usingDatePrefix(config);
+        mHrPrefix = usingHourPrefix(config);
+        mMinPrefix = usingMinutePrefix(config);
+
         LOG.info("UsingHourly: {}", mUsingHourly);
         LOG.info("UsingMin: {}", mUsingMinutely);
         mFinalizerDelaySeconds = config.getFinalizerDelaySeconds();
         LOG.info("FinalizerDelaySeconds: {}", mFinalizerDelaySeconds);
 
-        mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        mDtFormatter = new SimpleDateFormat(mDtFormat);
         mDtFormatter.setTimeZone(config.getTimeZone());
 
-        mHrFormatter = new SimpleDateFormat("HH");
+        mHrFormatter = new SimpleDateFormat(mHrFormat);
         mHrFormatter.setTimeZone(config.getTimeZone());
 
-        mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
+        mMinFormatter = new SimpleDateFormat(mMinFormat);
+        mMinFormatter.setTimeZone(config.getTimeZone());
+
+        mDtHrFormatter = new SimpleDateFormat(mDtFormat+ "-" + mHrFormat);
         mDtHrFormatter.setTimeZone(config.getTimeZone());
 
-        mDtHrMinFormatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
+        mDtHrMinFormatter = new SimpleDateFormat(mDtFormat+ "-" + mHrFormat + "-" + mMinFormat);
         mDtHrMinFormatter.setTimeZone(config.getTimeZone());
-        mMinFormatter = new SimpleDateFormat("mm");
-        mMinFormatter.setTimeZone(config.getTimeZone());
+
     }
 
     static boolean usingHourly(SecorConfig config) {
@@ -81,6 +100,30 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
 
     static boolean usingMinutely(SecorConfig config) {
         return config.getBoolean("partitioner.granularity.minute", false);
+    }
+
+    static String usingDateFormat(SecorConfig config) {
+        return config.getString("partitioner.granularity.date.format", "yyyy-MM-dd");
+    }
+
+    static String usingHourFormat(SecorConfig config) {
+        return config.getString("partitioner.granularity.hour.format", "HH");
+    }
+
+    static String usingMinuteFormat(SecorConfig config) {
+        return config.getString("partitioner.granularity.min.format", "mm");
+    }
+
+    static String usingDatePrefix(SecorConfig config) {
+        return config.getString("partitioner.granularity.date.prefix", "dt=");
+    }
+
+    static String usingHourPrefix(SecorConfig config) {
+        return config.getString("partitioner.granularity.hour.prefix", "hr=");
+    }
+
+    static String usingMinutePrefix(SecorConfig config) {
+        return config.getString("partitioner.granularity.min.prefix", "min=");
     }
 
     protected static long toMillis(final long timestamp) {
@@ -102,9 +145,9 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     protected String[] generatePartitions(long timestampMillis, boolean usingHourly, boolean usingMinutely)
             throws Exception {
         Date date = new Date(timestampMillis);
-        String dt = "dt=" + mDtFormatter.format(date);
-        String hr = "hr=" + mHrFormatter.format(date);
-        String min = "min=" + mMinFormatter.format(date);
+        String dt = mDtPrefix + mDtFormatter.format(date);
+        String hr = mHrPrefix + mHrFormatter.format(date);
+        String min = mMinPrefix + mMinFormatter.format(date);
         if (usingMinutely) {
             return new String[]{dt, hr, min};
         } else if (usingHourly) {
