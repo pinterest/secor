@@ -307,3 +307,12 @@ task createOstrichProps << {
     }
 }
 processResources.dependsOn createOstrichProps
+
+task svcVersion() << {
+    def file = new File("$projectDir/build/svcVersion.txt")
+    file.createNewFile()
+    file.text = """version=$version
+applicationName=.name
+"""
+}
+
