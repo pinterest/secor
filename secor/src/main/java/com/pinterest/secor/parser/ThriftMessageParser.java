@@ -16,11 +16,13 @@
  */
 package com.pinterest.secor.parser;
 
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.message.Message;
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TException;
 import org.apache.thrift.TFieldIdEnum;
+import org.apache.thrift.protocol.TProtocolFactory;
+
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.message.Message;
 
 /**
  * Thrift message parser extracts date partitions from thrift messages.
@@ -52,13 +54,16 @@ public class ThriftMessageParser extends TimestampedMessageParser {
         }
     }
 
-    public ThriftMessageParser(SecorConfig config) {
+    @SuppressWarnings("unchecked")
+    public ThriftMessageParser(SecorConfig config) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         super(config);
-        mDeserializer = new TDeserializer();
+        String factoryClassName = mConfig.getThriftProtocolClass().concat("$Factory");
+		TProtocolFactory protocolFactory = ((Class<? extends TProtocolFactory>) Class.forName(factoryClassName)).newInstance();
+        mDeserializer = new TDeserializer(protocolFactory);
         mThriftPath = new ThriftPath(mConfig.getMessageTimestampName(), (short) mConfig.getMessageTimestampId());
         mTimestampType = mConfig.getMessageTimestampType();
     }
-
+    
     @Override
     public long extractTimestampMillis(final Message message) throws TException {
         long timestamp;
