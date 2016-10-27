@@ -43,7 +43,7 @@ public class DailyOffsetMessageParser extends TimestampedMessageParser {
         long partition = (offset / offsetsPerPartition) * offsetsPerPartition;
         String[] dailyPartition = generatePartitions(new Date().getTime(), mUsingHourly, mUsingMinutely);
         String dailyPartitionPath = StringUtils.join(dailyPartition, '/');
-        String[] result = {dailyPartitionPath, "offset=" + partition};
+        String[] result = {dailyPartitionPath, offsetPrefix + partition};
         return result;
     }
 

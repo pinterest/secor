@@ -37,10 +37,12 @@ import java.util.regex.Pattern;
 public abstract class MessageParser {
     protected SecorConfig mConfig;
     protected String[] mNestedFields;
+    protected final String offsetPrefix;
     private static final Logger LOG = LoggerFactory.getLogger(MessageParser.class);
 
     public MessageParser(SecorConfig config) {
         mConfig = config;
+        offsetPrefix = usingOffsetPrefix(mConfig);
         if (mConfig.getMessageTimestampName() != null &&
             !mConfig.getMessageTimestampName().isEmpty() &&
             mConfig.getMessageTimestampNameSeparator() != null &&
@@ -48,6 +50,10 @@ public abstract class MessageParser {
             String separatorPattern = Pattern.quote(mConfig.getMessageTimestampNameSeparator());
             mNestedFields = mConfig.getMessageTimestampName().split(separatorPattern);
         }
+    }
+
+    static String usingOffsetPrefix(SecorConfig config) {
+        return config.getString("secor.offsets.prefix", "offset=");
     }
 
     public ParsedMessage parse(Message message) throws Exception {
@@ -58,11 +64,11 @@ public abstract class MessageParser {
     }
 
     public abstract String[] extractPartitions(Message payload) throws Exception;
-    
+
     public Object getJsonFieldValue(JSONObject jsonObject) {
         Object fieldValue = null;
         if (mNestedFields != null) {
-            Object finalValue = null;            
+            Object finalValue = null;
             for (int i=0; i < mNestedFields.length; i++) {
                 if (!jsonObject.containsKey(mNestedFields[i])) {
                     LOG.warn("Could not find key {} in message", mConfig.getMessageTimestampName());
