@@ -38,7 +38,6 @@ public class PartitionedMessageParser extends TimestampedMessageParser {
 
     @Override
     public String[] extractPartitions(Message message) throws Exception {
-        long offset = message.getOffset();
         String[] dailyPartition = generatePartitions(new Date().getTime(), mUsingHourly, mUsingMinutely);
         String dailyPartitionPath = StringUtils.join(dailyPartition, '/');
         String[] result = {dailyPartitionPath};
