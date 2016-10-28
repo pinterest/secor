@@ -53,7 +53,7 @@ public abstract class MessageParser {
     }
 
     static String usingOffsetPrefix(SecorConfig config) {
-        return config.getString("secor.offsets.prefix", "offset=");
+        return config.getString("secor.offsets.prefix");
     }
 
     public ParsedMessage parse(Message message) throws Exception {
