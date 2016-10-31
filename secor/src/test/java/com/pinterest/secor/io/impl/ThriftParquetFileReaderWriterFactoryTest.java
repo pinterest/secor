@@ -84,14 +84,14 @@ public class ThriftParquetFileReaderWriterFactoryTest extends TestCase {
         assertEquals(kv1.getOffset(), kvout.getOffset());
         assertArrayEquals(kv1.getValue(), kvout.getValue());
         UnitTestMessage actual = new UnitTestMessage();
-        deserializer.deserialize(actual, kvout.getKafkaKey());
+        deserializer.deserialize(actual, kvout.getValue());
         assertEquals(msg1.getRequiredField(), actual.getRequiredField());
 
         kvout = fileReader.next();
         assertEquals(kv2.getOffset(), kvout.getOffset());
         assertArrayEquals(kv2.getValue(), kvout.getValue());
         actual = new UnitTestMessage();
-        deserializer.deserialize(actual, kvout.getKafkaKey());
+        deserializer.deserialize(actual, kvout.getValue());
         assertEquals(msg2.getRequiredField(), actual.getRequiredField());
     }
 }
