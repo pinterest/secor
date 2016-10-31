@@ -21,11 +21,9 @@ import static org.junit.Assert.assertArrayEquals;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TCompactProtocol;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.transport.TMemoryBuffer;
-import org.apache.thrift.transport.TTransport;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -37,7 +35,6 @@ import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
-import com.pinterest.secor.protobuf.Messages.UnitTestMessage3;
 import com.pinterest.secor.thrift.UnitTestMessage;
 import com.pinterest.secor.util.ReflectionUtil;
 
@@ -81,15 +78,20 @@ public class ThriftParquetFileReaderWriterFactoryTest extends TestCase {
 
         FileReader fileReader = ReflectionUtil.createFileReader(config.getFileReaderWriterFactory(), tempLogFilePath,
                 null, config);
-
+        TDeserializer deserializer = new TDeserializer(new TCompactProtocol.Factory());
+        
         KeyValue kvout = fileReader.next();
         assertEquals(kv1.getOffset(), kvout.getOffset());
         assertArrayEquals(kv1.getValue(), kvout.getValue());
-        assertEquals(msg1.getRequiredField(), UnitTestMessage3.parseFrom(kvout.getValue()).getData());
+        UnitTestMessage actual = new UnitTestMessage();
+        deserializer.deserialize(actual, kvout.getKafkaKey());
+        assertEquals(msg1.getRequiredField(), actual.getRequiredField());
 
         kvout = fileReader.next();
         assertEquals(kv2.getOffset(), kvout.getOffset());
         assertArrayEquals(kv2.getValue(), kvout.getValue());
-        assertEquals(msg2.getRequiredField(), UnitTestMessage3.parseFrom(kvout.getValue()).getData());
+        actual = new UnitTestMessage();
+        deserializer.deserialize(actual, kvout.getKafkaKey());
+        assertEquals(msg2.getRequiredField(), actual.getRequiredField());
     }
 }
