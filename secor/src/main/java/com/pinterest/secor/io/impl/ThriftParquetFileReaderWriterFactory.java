@@ -35,7 +35,7 @@ public class ThriftParquetFileReaderWriterFactory implements FileReaderWriterFac
 
     @Override
     public FileReader BuildFileReader(LogFilePath logFilePath, CompressionCodec codec) throws Exception {
-        return new ProtobufParquetFileReader(logFilePath, codec);
+        return new ThriftParquetFileReader(logFilePath, codec);
     }
 
     @Override
@@ -43,14 +43,15 @@ public class ThriftParquetFileReaderWriterFactory implements FileReaderWriterFac
         return new ThriftParquetFileWriter(logFilePath, codec);
     }
 
-    protected class ProtobufParquetFileReader implements FileReader {
+    protected class ThriftParquetFileReader implements FileReader {
 
         private ParquetReader<TBase<?, ?>> reader;
         private long offset;
 
-        public ProtobufParquetFileReader(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
+        public ThriftParquetFileReader(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
-            reader = ThriftParquetReader.build(path).build();
+            Class<? extends TBase> messageClass = thriftUtil.getMessageClass(logFilePath.getTopic());
+            reader = ThriftParquetReader.build(path).withThriftClass((Class<TBase<?, ?>>) messageClass).build();
             offset = logFilePath.getOffset();
         }
 
