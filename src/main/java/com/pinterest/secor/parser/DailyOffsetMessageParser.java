@@ -16,16 +16,23 @@
  */
 package com.pinterest.secor.parser;
 
+import org.apache.commons.lang.StringUtils;
+
+import java.util.Date;
+
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
+
+
 
 /**
  * Offset message parser groups messages based on the offset ranges.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
-public class OffsetMessageParser extends MessageParser {
-    public OffsetMessageParser(SecorConfig config) {
+public class DailyOffsetMessageParser extends TimestampedMessageParser {
+
+    public DailyOffsetMessageParser(SecorConfig config) {
         super(config);
     }
 
@@ -34,7 +41,15 @@ public class OffsetMessageParser extends MessageParser {
         long offset = message.getOffset();
         long offsetsPerPartition = mConfig.getOffsetsPerPartition();
         long partition = (offset / offsetsPerPartition) * offsetsPerPartition;
-        String[] result = {offsetPrefix + partition};
+        String[] dailyPartition = generatePartitions(new Date().getTime(), mUsingHourly, mUsingMinutely);
+        String dailyPartitionPath = StringUtils.join(dailyPartition, '/');
+        String[] result = {dailyPartitionPath, offsetPrefix + partition};
         return result;
     }
+
+    @Override
+    public long extractTimestampMillis(final Message message) {
+        return new Date().getTime(); //Daily Timestamp generation
+    }
+
 }

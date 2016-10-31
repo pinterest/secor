@@ -46,6 +46,12 @@ public class ProtobufMessageParserTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         mConfig = Mockito.mock(SecorConfig.class);
+        Mockito.when(TimestampedMessageParser.usingDateFormat(mConfig)).thenReturn("yyyy-MM-dd");
+        Mockito.when(TimestampedMessageParser.usingHourFormat(mConfig)).thenReturn("HH");
+        Mockito.when(TimestampedMessageParser.usingMinuteFormat(mConfig)).thenReturn("mm");
+        Mockito.when(TimestampedMessageParser.usingDatePrefix(mConfig)).thenReturn("dt=");
+        Mockito.when(TimestampedMessageParser.usingHourPrefix(mConfig)).thenReturn("hr=");
+        Mockito.when(TimestampedMessageParser.usingMinutePrefix(mConfig)).thenReturn("min=");
     }
 
     @Test
