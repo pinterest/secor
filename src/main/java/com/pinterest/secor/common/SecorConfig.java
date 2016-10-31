@@ -426,6 +426,22 @@ public class SecorConfig {
         return getString("secor.gs.path");
     }
 
+    public Boolean getGsPathPartitionHourly() {
+        return getBoolean("secor.gs.path.partition.hourly");
+    }
+
+    public String getGsPathPartitionHourlyFormat() {
+        return getString("secor.gs.path.partition.hourly.format");
+    }
+
+    public Boolean getGsPathPartitionDaily() {
+        return getBoolean("secor.gs.path.partition.daily");
+    }
+
+    public String getGsPathPartitionDailyFormat() {
+        return getString("secor.gs.path.partition.daily.format");
+    }
+
     public int getGsConnectTimeoutInMs() {
         return getInt("secor.gs.connect.timeout.ms", 3 * 60000);
     }
@@ -468,6 +484,18 @@ public class SecorConfig {
         return protobufClasses;
     }
 
+    public Map<String, String> getThriftMessageClassPerTopic() {
+        String prefix = "secor.thrift.message.class";
+        Iterator<String> keys = mProperties.getKeys(prefix);
+        Map<String, String> thriftClasses = new HashMap<String, String>();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String className = mProperties.getString(key);
+            thriftClasses.put(key.substring(prefix.length() + 1), className);
+        }
+        return thriftClasses;
+    }    
+    
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
         return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);
@@ -512,5 +540,9 @@ public class SecorConfig {
 
     public String[] getStringArray(String name) {
         return mProperties.getStringArray(name);
+    }
+
+	public String getThriftProtocolClass() {
+        return mProperties.getString("secor.thrift.protocol.class");
     }
 }
