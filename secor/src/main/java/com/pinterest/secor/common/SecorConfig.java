@@ -16,16 +16,17 @@
  */
 package com.pinterest.secor.common;
 
-import com.google.api.client.repackaged.com.google.common.base.Strings;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.lang.StringUtils;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang.StringUtils;
+
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -468,6 +469,18 @@ public class SecorConfig {
         return protobufClasses;
     }
 
+    public Map<String, String> getThriftMessageClassPerTopic() {
+        String prefix = "secor.thrift.message.class";
+        Iterator<String> keys = mProperties.getKeys(prefix);
+        Map<String, String> thriftClasses = new HashMap<String, String>();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String className = mProperties.getString(key);
+            thriftClasses.put(key.substring(prefix.length() + 1), className);
+        }
+        return thriftClasses;
+    }    
+    
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
         return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);
@@ -512,5 +525,9 @@ public class SecorConfig {
 
     public String[] getStringArray(String name) {
         return mProperties.getStringArray(name);
+    }
+
+	public String getThriftProtocolClass() {
+        return mProperties.getString("secor.thrift.protocol.class");
     }
 }
