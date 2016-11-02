@@ -20,7 +20,8 @@ import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.ThriftUtil;
 
 /**
- * Adapted from com.pinterest.secor.io.impl.ProtobufParquetFileReaderWriterFactory
+ * Adapted from
+ * com.pinterest.secor.io.impl.ProtobufParquetFileReaderWriterFactory
  * Implementation for reading/writing thrift messages to/from Parquet files.
  * 
  * @author jaime sastre (jaime.sastre.s@gmail.com)
@@ -56,20 +57,20 @@ public class ThriftParquetFileReaderWriterFactory implements FileReaderWriterFac
         }
 
         @SuppressWarnings("rawtypes")
-		@Override
+        @Override
         public KeyValue next() throws IOException {
-        	TBase msg = reader.read();
-        	
+            TBase msg = reader.read();
+
             if (msg != null) {
                 try {
-					return new KeyValue(offset++, thriftUtil.encodeMessage(msg));
-				} catch (TException e) {
-					throw new IOException("cannot write message", e);
-				} catch (InstantiationException e) {
-					throw new IOException("cannot write message", e);
-				} catch (IllegalAccessException e) {
-					throw new IOException("cannot write message", e);
-				}
+                    return new KeyValue(offset++, thriftUtil.encodeMessage(msg));
+                } catch (TException e) {
+                    throw new IOException("cannot write message", e);
+                } catch (InstantiationException e) {
+                    throw new IOException("cannot write message", e);
+                } catch (IllegalAccessException e) {
+                    throw new IOException("cannot write message", e);
+                }
             }
             return null;
         }
@@ -82,15 +83,14 @@ public class ThriftParquetFileReaderWriterFactory implements FileReaderWriterFac
 
     protected class ThriftParquetFileWriter implements FileWriter {
 
-		@SuppressWarnings("rawtypes")
-		private ThriftParquetWriter writer;
+        @SuppressWarnings("rawtypes")
+        private ThriftParquetWriter writer;
         private String topic;
-        
+
         @SuppressWarnings({ "rawtypes", "unchecked" })
-		public ThriftParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
+        public ThriftParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
-            CompressionCodecName codecName = CompressionCodecName
-                    .fromCompressionCodec(codec != null ? codec.getClass() : null);
+            CompressionCodecName codecName = CompressionCodecName.fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
             writer = new ThriftParquetWriter(path, thriftUtil.getMessageClass(topic), codecName);
         }
@@ -101,15 +101,15 @@ public class ThriftParquetFileReaderWriterFactory implements FileReaderWriterFac
         }
 
         @SuppressWarnings("unchecked")
-		@Override
+        @Override
         public void write(KeyValue keyValue) throws IOException {
             Object message;
-			try {
-				message = thriftUtil.decodeMessage(topic, keyValue.getValue());
-				writer.write(message);
-			} catch (Exception e) {
-				throw new IOException("cannot write message", e);
-			}
+            try {
+                message = thriftUtil.decodeMessage(topic, keyValue.getValue());
+                writer.write(message);
+            } catch (Exception e) {
+                throw new IOException("cannot write message", e);
+            }
         }
 
         @Override

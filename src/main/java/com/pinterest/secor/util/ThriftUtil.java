@@ -8,6 +8,7 @@ import org.apache.thrift.TBase;
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TException;
 import org.apache.thrift.TSerializer;
+import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +16,9 @@ import org.slf4j.LoggerFactory;
 import com.pinterest.secor.common.SecorConfig;
 
 /**
- * Adapted from ProtobufUtil
- * Various utilities for working with thrift encoded messages. This
- * utility will look for thrift class in the configuration. It can be either
- * per Kafka topic configuration, for example:
+ * Adapted from ProtobufUtil Various utilities for working with thrift encoded
+ * messages. This utility will look for thrift class in the configuration. It
+ * can be either per Kafka topic configuration, for example:
  * 
  * <code>secor.thrift.message.class.&lt;topic&gt;=&lt;thrift class name&gt;</code>
  * 
@@ -35,10 +35,10 @@ public class ThriftUtil {
 
     private boolean allTopics;
     @SuppressWarnings("rawtypes")
-	private Map<String, Class<? extends TBase>> messageClassByTopic = new HashMap<String, Class<? extends TBase>>();
+    private Map<String, Class<? extends TBase>> messageClassByTopic = new HashMap<String, Class<? extends TBase>>();
     @SuppressWarnings("rawtypes")
-	private Class<? extends TBase> messageClassForAll;
-    private Class<? extends TProtocolFactory> messageProtocolClass;
+    private Class<? extends TBase> messageClassForAll;
+    private TProtocolFactory messageProtocolFactory;
 
     /**
      * Creates new instance of {@link ThriftUtil}
@@ -49,13 +49,14 @@ public class ThriftUtil {
      *             when configuration option
      *             <code>secor.thrift.message.class</code> is invalid.
      */
-    @SuppressWarnings({"rawtypes","unchecked"})
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public ThriftUtil(SecorConfig config) {
         Map<String, String> messageClassPerTopic = config.getThriftMessageClassPerTopic();
+        
         for (Entry<String, String> entry : messageClassPerTopic.entrySet()) {
             try {
                 String topic = entry.getKey();
-				Class<? extends TBase> messageClass = (Class<? extends TBase>) Class.forName(entry.getValue());
+                Class<? extends TBase> messageClass = (Class<? extends TBase>) Class.forName(entry.getValue());
 
                 allTopics = "*".equals(topic);
 
@@ -68,14 +69,25 @@ public class ThriftUtil {
                 }
             } catch (ClassNotFoundException e) {
                 LOG.error("Unable to load thrift message class", e);
-            } 
+            }
         }
-        
+
         try {
-			messageProtocolClass = ((Class<? extends TProtocolFactory>) Class.forName(config.getThriftProtocolClass().concat("$Factory")));
-		} catch (ClassNotFoundException e) {
-			LOG.error("Unable to load thrift protocol class", e);
-		}
+            String protocolName = config.getThriftProtocolClass();
+
+            if (protocolName != null) {
+                String factoryClassName = protocolName.concat("$Factory");
+                messageProtocolFactory = ((Class<? extends TProtocolFactory>) Class.forName(factoryClassName)).newInstance();
+            } else
+                messageProtocolFactory = new TBinaryProtocol.Factory();
+
+        } catch (ClassNotFoundException e) {
+            LOG.error("Unable to load thrift protocol class", e);
+        } catch (InstantiationException e) {
+            LOG.error("Unable to load thrift protocol class", e);
+        } catch (IllegalAccessException e) {
+            LOG.error("Unable to load thrift protocol class", e);
+        }
     }
 
     /**
@@ -88,21 +100,23 @@ public class ThriftUtil {
      *         configuration.
      */
     @SuppressWarnings("rawtypes")
-	public Class<? extends TBase> getMessageClass(String topic) {
+    public Class<? extends TBase> getMessageClass(String topic) {
         return allTopics ? messageClassForAll : messageClassByTopic.get(topic);
     }
 
     @SuppressWarnings("rawtypes")
-	public TBase decodeMessage(String topic, byte[] payload) throws InstantiationException, IllegalAccessException, TException {
-    	TDeserializer serializer = new TDeserializer(messageProtocolClass.newInstance());
-		TBase result = this.getMessageClass(topic).newInstance();
-		serializer.deserialize(result, payload);
-		return result;
+    public TBase decodeMessage(String topic, byte[] payload)
+            throws InstantiationException, IllegalAccessException, TException {
+        TDeserializer serializer = new TDeserializer(messageProtocolFactory);
+        TBase result = this.getMessageClass(topic).newInstance();
+        serializer.deserialize(result, payload);
+        return result;
     }
-    
+
     @SuppressWarnings("rawtypes")
-	public byte[] encodeMessage(TBase object) throws InstantiationException, IllegalAccessException, TException  {
-    	TSerializer serializer = new TSerializer(messageProtocolClass.newInstance());
-		return serializer.serialize(object);
+    public byte[] encodeMessage(TBase object) throws InstantiationException,
+            IllegalAccessException, TException {
+        TSerializer serializer = new TSerializer(messageProtocolFactory);
+        return serializer.serialize(object);
     }
 }

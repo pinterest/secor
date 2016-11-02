@@ -17,7 +17,6 @@
 package com.pinterest.secor.tools;
 
 import kafka.javaapi.producer.Producer;
-
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
