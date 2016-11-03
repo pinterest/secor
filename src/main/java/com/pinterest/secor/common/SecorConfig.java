@@ -341,6 +341,10 @@ public class SecorConfig {
         return getString("statsd.hostport");
     }
 
+    public boolean getStatsDPrefixWithConsumerGroup(){
+    	return getBoolean("statsd.prefixWithConsumerGroup");
+    }
+
     public String getMonitoringBlacklistTopics() {
         return getString("monitoring.blacklist.topics");
     }
