@@ -91,6 +91,10 @@ public class SecorConfig {
         return getInt("kafka.consumer.timeout.ms");
     }
 
+    public String getConsumerAutoOffsetReset() {
+        return getString("kafka.consumer.auto.offset.reset", "smallest");
+    }
+
     public String getPartitionAssignmentStrategy() {
         return getString("kafka.partition.assignment.strategy");
     }
