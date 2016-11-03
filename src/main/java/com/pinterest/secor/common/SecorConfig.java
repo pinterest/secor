@@ -350,7 +350,7 @@ public class SecorConfig {
     }
 
     public long getMonitoringIntervalSeconds() {
-        return getLong("monitoring.interval.seconds", 0);
+        return getLong("monitoring.interval.seconds");
     }
 
     public String getMessageTimestampName() {
@@ -512,10 +512,6 @@ public class SecorConfig {
 
     public long getLong(String name) {
         return mProperties.getLong(name);
-    }
-
-    public long getLong(String name, long defaultValue) {
-	return mProperties.getLong(name, defaultValue);
     }
 
     public String[] getStringArray(String name) {
