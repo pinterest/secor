@@ -349,6 +349,10 @@ public class SecorConfig {
         return getString("monitoring.prefix");
     }
 
+    public long getMonitoringIntervalSeconds() {
+        return getLong("monitoring.interval.seconds", 0);
+    }
+
     public String getMessageTimestampName() {
         return getString("message.timestamp.name");
     }
@@ -508,6 +512,10 @@ public class SecorConfig {
 
     public long getLong(String name) {
         return mProperties.getLong(name);
+    }
+
+    public long getLong(String name, long defaultValue) {
+	return mProperties.getLong(name, defaultValue);
     }
 
     public String[] getStringArray(String name) {

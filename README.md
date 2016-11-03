@@ -118,6 +118,9 @@ Progress monitor exports offset consumption lags per topic partition to [OpenTSD
 java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.ProgressMonitorMain
 ```
 
+Set `monitoring.interval.seconds` to a value larger than 0 to run in a loop, exporting stats every `monitoring.interval.seconds` seconds.
+
+
 ## Detailed design
 
 Design details are available in [DESIGN.md](DESIGN.md).
