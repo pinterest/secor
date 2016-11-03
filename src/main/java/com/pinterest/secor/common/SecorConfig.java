@@ -342,7 +342,7 @@ public class SecorConfig {
     }
 
     public boolean getStatsDPrefixWithConsumerGroup(){
-    	return getBoolean("statsd.prefixWithConsumerGroup", true);
+    	return getBoolean("statsd.prefixWithConsumerGroup");
     }
 
     public String getMonitoringBlacklistTopics() {
