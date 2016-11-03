@@ -92,7 +92,7 @@ public class SecorConfig {
     }
 
     public String getConsumerAutoOffsetReset() {
-        return getString("kafka.consumer.auto.offset.reset", "smallest");
+        return getString("kafka.consumer.auto.offset.reset");
     }
 
     public String getPartitionAssignmentStrategy() {
