@@ -353,6 +353,10 @@ public class SecorConfig {
         return getString("monitoring.prefix");
     }
 
+    public long getMonitoringIntervalSeconds() {
+        return getLong("monitoring.interval.seconds");
+    }
+
     public String getMessageTimestampName() {
         return getString("message.timestamp.name");
     }
