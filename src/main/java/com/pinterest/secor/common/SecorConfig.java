@@ -87,6 +87,10 @@ public class SecorConfig {
         return StringUtils.join(getStringArray("zookeeper.quorum"), ',');
     }
 
+    public String getAutoOffsetReset() {
+        return getString("kafka.auto.offset.reset", "smallest");
+    }
+
     public int getConsumerTimeoutMs() {
         return getInt("kafka.consumer.timeout.ms");
     }
