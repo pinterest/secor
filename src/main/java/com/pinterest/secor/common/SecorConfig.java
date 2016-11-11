@@ -91,6 +91,10 @@ public class SecorConfig {
         return getInt("kafka.consumer.timeout.ms");
     }
 
+    public String getConsumerAutoOffsetReset() {
+        return getString("kafka.consumer.auto.offset.reset");
+    }
+
     public String getPartitionAssignmentStrategy() {
         return getString("kafka.partition.assignment.strategy");
     }
@@ -341,12 +345,20 @@ public class SecorConfig {
         return getString("statsd.hostport");
     }
 
+    public boolean getStatsDPrefixWithConsumerGroup(){
+    	return getBoolean("statsd.prefixWithConsumerGroup");
+    }
+
     public String getMonitoringBlacklistTopics() {
         return getString("monitoring.blacklist.topics");
     }
 
     public String getMonitoringPrefix() {
         return getString("monitoring.prefix");
+    }
+
+    public long getMonitoringIntervalSeconds() {
+        return getLong("monitoring.interval.seconds");
     }
 
     public String getMessageTimestampName() {

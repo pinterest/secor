@@ -29,9 +29,13 @@ Edit `src/main/config/*.properties` files to specify parameters describing the e
 
 ##### Create and install jars
 ```sh
+# By default this will install the "release" (Kafka 0.8 profile)
 mvn package
 mkdir ${SECOR_INSTALL_DIR} # directory to place Secor binaries in.
 tar -zxvf target/secor-0.1-SNAPSHOT-bin.tar.gz -C ${SECOR_INSTALL_DIR}
+
+# To use the Kafka 0.10 client you should use the kafka-0.10-dev profile
+mvn -Pkafka-0.10-dev package
 ```
 
 ##### Run tests (optional)
@@ -119,6 +123,9 @@ Progress monitor exports offset consumption lags per topic partition to [OpenTSD
 ```sh
 java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.ProgressMonitorMain
 ```
+
+Set `monitoring.interval.seconds` to a value larger than 0 to run in a loop, exporting stats every `monitoring.interval.seconds` seconds.
+
 
 ## Detailed design
 
