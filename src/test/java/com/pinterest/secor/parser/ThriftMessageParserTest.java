@@ -40,6 +40,7 @@ public class ThriftMessageParserTest extends TestCase {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("blasdjlkjasdkl");
         Mockito.when(mConfig.getMessageTimestampId()).thenReturn(1);
         Mockito.when(mConfig.getMessageTimestampType()).thenReturn("i64");
+        Mockito.when(mConfig.getThriftProtocolClass()).thenReturn("org.apache.thrift.protocol.TBinaryProtocol");
 
         ThriftMessageParser parser = new ThriftMessageParser(mConfig);
 
@@ -52,6 +53,7 @@ public class ThriftMessageParserTest extends TestCase {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestampTwo");
         Mockito.when(mConfig.getMessageTimestampId()).thenReturn(3);
         Mockito.when(mConfig.getMessageTimestampType()).thenReturn("i32");
+        Mockito.when(mConfig.getThriftProtocolClass()).thenReturn("org.apache.thrift.protocol.TBinaryProtocol");
 
         ThriftMessageParser parser = new ThriftMessageParser(mConfig);
 
@@ -64,7 +66,8 @@ public class ThriftMessageParserTest extends TestCase {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestampThree");
         Mockito.when(mConfig.getMessageTimestampId()).thenReturn(6);
         Mockito.when(mConfig.getMessageTimestampType()).thenReturn("i64");
-
+        Mockito.when(mConfig.getThriftProtocolClass()).thenReturn("org.apache.thrift.protocol.TBinaryProtocol");
+        
         ThriftMessageParser parser = new ThriftMessageParser(mConfig);
 
         assertEquals(1405970352000L, parser.extractTimestampMillis(buildMessage(1L, 2, 1405970352L)));
