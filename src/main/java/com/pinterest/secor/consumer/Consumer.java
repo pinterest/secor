@@ -50,16 +50,16 @@ import java.lang.Thread;
 public class Consumer extends Thread {
     private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);
 
-    private SecorConfig mConfig;
+    protected SecorConfig mConfig;
 
-    private MessageReader mMessageReader;
-    private MessageWriter mMessageWriter;
-    private MessageParser mMessageParser;
-    private OffsetTracker mOffsetTracker;
-    private MessageTransformer mMessageTransformer;
-    private Uploader mUploader;
+    protected MessageReader mMessageReader;
+    protected MessageWriter mMessageWriter;
+    protected MessageParser mMessageParser;
+    protected OffsetTracker mOffsetTracker;
+    protected MessageTransformer mMessageTransformer;
+    protected Uploader mUploader;
     // TODO(pawel): we should keep a count per topic partition.
-    private double mUnparsableMessages;
+    protected double mUnparsableMessages;
 
     public Consumer(SecorConfig config) {
         mConfig = config;
@@ -109,7 +109,7 @@ public class Consumer extends Thread {
         checkUploadPolicy();
     }
 
-    private void checkUploadPolicy() {
+    protected void checkUploadPolicy() {
         try {
             mUploader.applyPolicy();
         } catch (Exception e) {
@@ -118,7 +118,7 @@ public class Consumer extends Thread {
     }
 
     // @return whether there are more messages left to consume
-    private boolean consumeNextMessage() {
+    protected boolean consumeNextMessage() {
         Message rawMessage = null;
         try {
             boolean hasNext = mMessageReader.hasNext();

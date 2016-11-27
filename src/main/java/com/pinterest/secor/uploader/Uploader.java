@@ -42,12 +42,12 @@ import java.util.*;
 public class Uploader {
     private static final Logger LOG = LoggerFactory.getLogger(Uploader.class);
 
-    private SecorConfig mConfig;
-    private OffsetTracker mOffsetTracker;
-    private FileRegistry mFileRegistry;
-    private ZookeeperConnector mZookeeperConnector;
-    private UploadManager mUploadManager;
-    private String mTopicFilter;
+    protected SecorConfig mConfig;
+    protected OffsetTracker mOffsetTracker;
+    protected FileRegistry mFileRegistry;
+    protected ZookeeperConnector mZookeeperConnector;
+    protected UploadManager mUploadManager;
+    protected String mTopicFilter;
 
 
     /**
@@ -77,7 +77,7 @@ public class Uploader {
 
     }
 
-    private void uploadFiles(TopicPartition topicPartition) throws Exception {
+    protected void uploadFiles(TopicPartition topicPartition) throws Exception {
         long committedOffsetCount = mOffsetTracker.getTrueCommittedOffsetCount(topicPartition);
         long lastSeenOffset = mOffsetTracker.getLastSeenOffset(topicPartition);
 
@@ -204,7 +204,7 @@ public class Uploader {
         return false;
     }
 
-    private void checkTopicPartition(TopicPartition topicPartition) throws Exception {
+    protected void checkTopicPartition(TopicPartition topicPartition) throws Exception {
         final long size = mFileRegistry.getSize(topicPartition);
         final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
         LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
