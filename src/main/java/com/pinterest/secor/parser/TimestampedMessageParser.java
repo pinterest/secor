@@ -40,20 +40,20 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
      * SimpleDateFormat are NOT thread-safe.
      * Each parser needs to have their own local SimpleDateFormat or it'll cause race condition.
      */
-    private final SimpleDateFormat mDtFormatter;
-    private final SimpleDateFormat mHrFormatter;
-    private final SimpleDateFormat mDtHrFormatter;
-    private final int mFinalizerDelaySeconds;
-    private final SimpleDateFormat mDtHrMinFormatter;
-    private final SimpleDateFormat mMinFormatter;
+    protected final SimpleDateFormat mDtFormatter;
+    protected final SimpleDateFormat mHrFormatter;
+    protected final SimpleDateFormat mDtHrFormatter;
+    protected final int mFinalizerDelaySeconds;
+    protected final SimpleDateFormat mDtHrMinFormatter;
+    protected final SimpleDateFormat mMinFormatter;
 
-    private final String mDtFormat;
-    private final String mHrFormat;
-    private final String mMinFormat;
+    protected final String mDtFormat;
+    protected final String mHrFormat;
+    protected final String mMinFormat;
 
-    private final String mDtPrefix;
-    private final String mHrPrefix;
-    private final String mMinPrefix;
+    protected final String mDtPrefix;
+    protected final String mHrPrefix;
+    protected final String mMinPrefix;
 
     protected final boolean mUsingHourly;
     protected final boolean mUsingMinutely;

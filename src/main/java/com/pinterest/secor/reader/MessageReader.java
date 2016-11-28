@@ -50,14 +50,14 @@ import java.util.Properties;
 public class MessageReader {
     private static final Logger LOG = LoggerFactory.getLogger(MessageReader.class);
 
-    private SecorConfig mConfig;
-    private OffsetTracker mOffsetTracker;
-    private ConsumerConnector mConsumerConnector;
-    private ConsumerIterator mIterator;
-    private HashMap<TopicPartition, Long> mLastAccessTime;
-    private final int mTopicPartitionForgetSeconds;
-    private final int mCheckMessagesPerSecond;
-    private int mNMessages;
+    protected SecorConfig mConfig;
+    protected OffsetTracker mOffsetTracker;
+    protected ConsumerConnector mConsumerConnector;
+    protected ConsumerIterator mIterator;
+    protected HashMap<TopicPartition, Long> mLastAccessTime;
+    protected final int mTopicPartitionForgetSeconds;
+    protected final int mCheckMessagesPerSecond;
+    protected int mNMessages;
 
     public MessageReader(SecorConfig config, OffsetTracker offsetTracker) throws
             UnknownHostException {
