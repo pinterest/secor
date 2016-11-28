@@ -418,6 +418,10 @@ public class SecorConfig {
     	return getString("secor.file.reader.writer.factory");
     }
 
+    public String getFileReaderWriterDelimiter(){
+      return getString("secor.file.reader.writer.Delimiter");
+    }
+
     public String getPerfTestTopicPrefix() {
     	return getString("secor.kafka.perf_topic_prefix");
     }
@@ -490,8 +494,8 @@ public class SecorConfig {
             thriftClasses.put(key.substring(prefix.length() + 1), className);
         }
         return thriftClasses;
-    }    
-    
+    }
+
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
         return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);
