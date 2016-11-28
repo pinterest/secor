@@ -33,18 +33,20 @@ import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.CodecPool;
 import org.apache.hadoop.io.compress.Decompressor;
 
+import org.apache.commons.configuration.ConfigurationException;
+
 import com.google.common.io.CountingOutputStream;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.FileUtil;
+import com.pinterest.secor.common.SecorConfig;
 
 /**
- * Delimited Text File Reader Writer with Compression
+ * Flexible Delimited Text File Reader Writer with Compression
  *
- * @author Praveen Murugesan (praveen@uber.com)
+ * @author Ahsan Nabi Dar (ahsan@wego.com)
  */
 public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWriterFactory {
-    private static byte DELIMITER = SecorConfig.load().getFileReaderWriterDelimiter();
 
     @Override
     public FileReader BuildFileReader(LogFilePath logFilePath, CompressionCodec codec)
@@ -57,10 +59,13 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
         return new FlexibleDelimitedFileWriter(logFilePath, codec);
     }
 
+
+
     protected class FlexibleDelimitedFileReader implements FileReader {
         private final BufferedInputStream mReader;
         private long mOffset;
         private Decompressor mDecompressor = null;
+        private byte DELIMITER = delimterReader();
 
         public FlexibleDelimitedFileReader(LogFilePath path, CompressionCodec codec) throws IOException {
             Path fsPath = new Path(path.getLogFilePath());
@@ -71,6 +76,14 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
                     codec.createInputStream(inputStream,
                                             mDecompressor = CodecPool.getDecompressor(codec)));
             this.mOffset = path.getOffset();
+        }
+
+        public byte delimterReader() {
+          byte delimiter = '\n';
+          try {
+            delimiter = Byte.valueOf(SecorConfig.load().getFileReaderDelimiter());
+          }catch(ConfigurationException e){}
+            return delimiter;
         }
 
         @Override
@@ -103,6 +116,7 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
         private final CountingOutputStream mCountingStream;
         private final BufferedOutputStream mWriter;
         private Compressor mCompressor = null;
+        private byte DELIMITER = delimterWriter();
 
         public FlexibleDelimitedFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
             Path fsPath = new Path(path.getLogFilePath());
@@ -112,6 +126,14 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
                     this.mCountingStream) : new BufferedOutputStream(
                     codec.createOutputStream(this.mCountingStream,
                                              mCompressor = CodecPool.getCompressor(codec)));
+        }
+
+        public byte delimterWriter() {
+          byte delimiter = '\n';
+          try {
+            delimiter =  Byte.valueOf(SecorConfig.load().getFileWriterDelimiter());
+          }catch(ConfigurationException e){}
+            return delimiter;
         }
 
         @Override

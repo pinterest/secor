@@ -418,8 +418,12 @@ public class SecorConfig {
     	return getString("secor.file.reader.writer.factory");
     }
 
-    public String getFileReaderWriterDelimiter(){
-      return getString("secor.file.reader.writer.Delimiter");
+    public String getFileReaderDelimiter(){
+      return getString("secor.file.reader.Delimiter");
+    }
+
+    public String getFileWriterDelimiter(){
+      return getString("secor.file.writer.Delimiter");
     }
 
     public String getPerfTestTopicPrefix() {
