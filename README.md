@@ -29,9 +29,13 @@ Edit `src/main/config/*.properties` files to specify parameters describing the e
 
 ##### Create and install jars
 ```sh
+# By default this will install the "release" (Kafka 0.8 profile)
 mvn package
 mkdir ${SECOR_INSTALL_DIR} # directory to place Secor binaries in.
 tar -zxvf target/secor-0.1-SNAPSHOT-bin.tar.gz -C ${SECOR_INSTALL_DIR}
+
+# To use the Kafka 0.10 client you should use the kafka-0.10-dev profile
+mvn -Pkafka-0.10-dev package
 ```
 
 ##### Run tests (optional)
@@ -43,7 +47,11 @@ cd ${SECOR_INSTALL_DIR}
 ##### Run Secor
 ```sh
 cd ${SECOR_INSTALL_DIR}
-java -ea -Dsecor_group=secor_backup -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp secor-0.1-SNAPSHOT.jar:lib/* com.pinterest.secor.main.ConsumerMain
+java -ea -Dsecor_group=secor_backup \
+  -Dlog4j.configuration=log4j.prod.properties \
+  -Dconfig=secor.prod.backup.properties \
+  -cp secor-0.1-SNAPSHOT.jar:lib/* \
+  com.pinterest.secor.main.ConsumerMain
 ```
 
 ## Output grouping
@@ -84,6 +92,8 @@ Currently secor supports the following output formats
 
 - **[Parquet] Files (for Protobuf messages)**: Columnar storage format. To use this output format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.ProtobufParquetFileReaderWriterFactory` option. In addition, Protobuf message class per Kafka topic must be defined using option `secor.protobuf.message.class.<topic>=<protobuf class name>`. If all Kafka topics transfer the same protobuf message type, set `secor.protobuf.message.class.*=<protobuf class name>`.
 
+- **[Parquet] Files (for Thrift messages)**: Columnar storage format. To use this output format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.ThriftParquetFileReaderWriterFactory` option. In addition, thrift message class per Kafka topic must be defined using option `secor.thrift.message.class.<topic>=<thrift class name>`. If all Kafka topics transfer the same thrift message type, set `secor.thrift.message.class.*=<thrift class name>`. It is asumed all messages use the same thrift protocol. Thrift protocol is set in `secor.thrift.protocol.class`.
+
 - **Gzip upload format**:  To enable compression on uploaded files to the cloud, in `secor.common.properties` set `secor.compression.codec` to a valid compression codec implementing  `org.apache.hadoop.io.compress.CompressionCodec` interface, such as `org.apache.hadoop.io.compress.GzipCodec`.
 
 
@@ -117,6 +127,9 @@ Progress monitor exports offset consumption lags per topic partition to [OpenTSD
 ```sh
 java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.ProgressMonitorMain
 ```
+
+Set `monitoring.interval.seconds` to a value larger than 0 to run in a loop, exporting stats every `monitoring.interval.seconds` seconds.
+
 
 ## Detailed design
 

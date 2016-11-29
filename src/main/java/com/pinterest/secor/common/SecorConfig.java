@@ -91,6 +91,10 @@ public class SecorConfig {
         return getInt("kafka.consumer.timeout.ms");
     }
 
+    public String getConsumerAutoOffsetReset() {
+        return getString("kafka.consumer.auto.offset.reset");
+    }
+
     public String getPartitionAssignmentStrategy() {
         return getString("kafka.partition.assignment.strategy");
     }
@@ -341,12 +345,20 @@ public class SecorConfig {
         return getString("statsd.hostport");
     }
 
+    public boolean getStatsDPrefixWithConsumerGroup(){
+    	return getBoolean("statsd.prefixWithConsumerGroup");
+    }
+
     public String getMonitoringBlacklistTopics() {
         return getString("monitoring.blacklist.topics");
     }
 
     public String getMonitoringPrefix() {
         return getString("monitoring.prefix");
+    }
+
+    public long getMonitoringIntervalSeconds() {
+        return getLong("monitoring.interval.seconds");
     }
 
     public String getMessageTimestampName() {
@@ -404,6 +416,14 @@ public class SecorConfig {
 
     public String getFileReaderWriterFactory() {
     	return getString("secor.file.reader.writer.factory");
+    }
+
+    public String getFileReaderDelimiter(){
+      return getString("secor.file.reader.Delimiter");
+    }
+
+    public String getFileWriterDelimiter(){
+      return getString("secor.file.writer.Delimiter");
     }
 
     public String getPerfTestTopicPrefix() {
@@ -468,6 +488,18 @@ public class SecorConfig {
         return protobufClasses;
     }
 
+    public Map<String, String> getThriftMessageClassPerTopic() {
+        String prefix = "secor.thrift.message.class";
+        Iterator<String> keys = mProperties.getKeys(prefix);
+        Map<String, String> thriftClasses = new HashMap<String, String>();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String className = mProperties.getString(key);
+            thriftClasses.put(key.substring(prefix.length() + 1), className);
+        }
+        return thriftClasses;
+    }
+
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
         return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);
@@ -512,5 +544,9 @@ public class SecorConfig {
 
     public String[] getStringArray(String name) {
         return mProperties.getStringArray(name);
+    }
+
+    public String getThriftProtocolClass() {
+        return mProperties.getString("secor.thrift.protocol.class");
     }
 }
