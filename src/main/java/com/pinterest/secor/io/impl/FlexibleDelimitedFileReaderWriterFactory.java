@@ -81,7 +81,10 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     public byte delimterReader() {
       byte delimiter = '\n';
       try {
-        delimiter = Byte.valueOf(SecorConfig.load().getFileReaderDelimiter());
+        String readerDelimiter = SecorConfig.load().getFileReaderDelimiter();
+        if (!readerDelimiter.isEmpty()){
+          delimiter = (byte)readerDelimiter.charAt(0);
+        }
       }catch(ConfigurationException e){}
         return delimiter;
       }
@@ -133,7 +136,7 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
         try {
           String writerDelimiter = SecorConfig.load().getFileWriterDelimiter();
           if (!writerDelimiter.isEmpty()){
-            delimiter =  Byte.valueOf(writerDelimiter);
+            delimiter = (byte)writerDelimiter.charAt(0);
           }
         }catch(ConfigurationException e){}
           return delimiter;
