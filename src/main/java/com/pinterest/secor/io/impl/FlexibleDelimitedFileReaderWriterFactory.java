@@ -151,7 +151,7 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
         @Override
         public void write(KeyValue keyValue) throws IOException {
           this.mWriter.write(keyValue.getValue());
-          if (DELIMITER != 92){
+          if (DELIMITER != (byte)'\\'){
             this.mWriter.write(DELIMITER);
           }
         }
