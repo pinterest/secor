@@ -419,11 +419,19 @@ public class SecorConfig {
     }
 
     public String getFileReaderDelimiter(){
-      return getString("secor.file.reader.Delimiter");
+      String readerDelimiter = getString("secor.file.reader.Delimiter");
+      if (readerDelimiter.length() > 1) {
+        throw new RuntimeException("secor.file.reader.Delimiter length can not be greater than 1 character");
+      }
+      return readerDelimiter;
     }
 
     public String getFileWriterDelimiter(){
-      return getString("secor.file.writer.Delimiter");
+      String writerDelimiter = getString("secor.file.writer.Delimiter");
+      if (writerDelimiter.length() > 1) {
+        throw new RuntimeException("secor.file.writer.Delimiter length can not be greater than 1 character");
+      }
+      return writerDelimiter;
     }
 
     public String getPerfTestTopicPrefix() {

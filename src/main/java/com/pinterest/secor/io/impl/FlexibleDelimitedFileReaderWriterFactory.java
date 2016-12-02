@@ -65,7 +65,7 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     private final BufferedInputStream mReader;
     private long mOffset;
     private Decompressor mDecompressor = null;
-    private byte DELIMITER = delimterReader();
+    private byte DELIMITER = getReaderDelimiter();
 
     public FlexibleDelimitedFileReader(LogFilePath path, CompressionCodec codec) throws IOException {
       Path fsPath = new Path(path.getLogFilePath());
@@ -78,89 +78,93 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
       this.mOffset = path.getOffset();
     }
 
-    public byte delimterReader() {
+    public byte getReaderDelimiter() {
       byte delimiter = '\n';
       try {
         String readerDelimiter = SecorConfig.load().getFileReaderDelimiter();
         if (!readerDelimiter.isEmpty()){
           delimiter = (byte)readerDelimiter.charAt(0);
         }
-      }catch(ConfigurationException e){}
-        return delimiter;
+      } catch(ConfigurationException e) {
+          throw new RuntimeException("Error loading configuration from getFileReaderDelimiter()");
       }
+      return delimiter;
+    }
 
-      @Override
-      public KeyValue next() throws IOException {
-        ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
-        int nextByte;
-        while ((nextByte = mReader.read()) != DELIMITER) {
-          if (nextByte == -1) { // end of stream?
-            if (messageBuffer.size() == 0) { // if no byte read
-              return null;
-            } else { // if bytes followed by end of stream: framing error
-              throw new EOFException(
-              "Non-empty message without delimiter");
-            }
+    @Override
+    public KeyValue next() throws IOException {
+      ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
+      int nextByte;
+      while ((nextByte = mReader.read()) != DELIMITER) {
+        if (nextByte == -1) { // end of stream?
+          if (messageBuffer.size() == 0) { // if no byte read
+            return null;
+          } else { // if bytes followed by end of stream: framing error
+            throw new EOFException(
+            "Non-empty message without delimiter");
           }
-          messageBuffer.write(nextByte);
         }
-        return new KeyValue(this.mOffset++, messageBuffer.toByteArray());
+        messageBuffer.write(nextByte);
       }
+      return new KeyValue(this.mOffset++, messageBuffer.toByteArray());
+    }
 
-      @Override
-      public void close() throws IOException {
-        this.mReader.close();
-        CodecPool.returnDecompressor(mDecompressor);
-        mDecompressor = null;
+    @Override
+    public void close() throws IOException {
+      this.mReader.close();
+      CodecPool.returnDecompressor(mDecompressor);
+      mDecompressor = null;
+    }
+  }
+
+  protected class FlexibleDelimitedFileWriter implements FileWriter {
+    private final CountingOutputStream mCountingStream;
+    private final BufferedOutputStream mWriter;
+    private Compressor mCompressor = null;
+    private byte DELIMITER = getWriterDelimiter();
+
+    public FlexibleDelimitedFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
+      Path fsPath = new Path(path.getLogFilePath());
+      FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
+      this.mCountingStream = new CountingOutputStream(fs.create(fsPath));
+      this.mWriter = (codec == null) ? new BufferedOutputStream(
+      this.mCountingStream) : new BufferedOutputStream(
+      codec.createOutputStream(this.mCountingStream,
+      mCompressor = CodecPool.getCompressor(codec)));
+    }
+
+    public byte getWriterDelimiter() {
+      byte delimiter = '\\';
+      try {
+        String writerDelimiter = SecorConfig.load().getFileWriterDelimiter();
+        if (!writerDelimiter.isEmpty()){
+          delimiter = (byte)writerDelimiter.charAt(0);
+        }
+      } catch(ConfigurationException e) {
+          throw new RuntimeException("Error loading configuration from getFileWriterDelimiter()");
+      }
+      return delimiter;
+    }
+
+    @Override
+    public long getLength() throws IOException {
+      assert this.mCountingStream != null;
+      return this.mCountingStream.getCount();
+    }
+
+    @Override
+    public void write(KeyValue keyValue) throws IOException {
+      this.mWriter.write(keyValue.getValue());
+      if (DELIMITER != (byte)'\\'){
+        this.mWriter.write(DELIMITER);
       }
     }
 
-    protected class FlexibleDelimitedFileWriter implements FileWriter {
-      private final CountingOutputStream mCountingStream;
-      private final BufferedOutputStream mWriter;
-      private Compressor mCompressor = null;
-      private byte DELIMITER = delimterWriter();
-
-      public FlexibleDelimitedFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
-        Path fsPath = new Path(path.getLogFilePath());
-        FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
-        this.mCountingStream = new CountingOutputStream(fs.create(fsPath));
-        this.mWriter = (codec == null) ? new BufferedOutputStream(
-        this.mCountingStream) : new BufferedOutputStream(
-        codec.createOutputStream(this.mCountingStream,
-        mCompressor = CodecPool.getCompressor(codec)));
-      }
-
-      public byte delimterWriter() {
-        byte delimiter = '\\';
-        try {
-          String writerDelimiter = SecorConfig.load().getFileWriterDelimiter();
-          if (!writerDelimiter.isEmpty()){
-            delimiter = (byte)writerDelimiter.charAt(0);
-          }
-        }catch(ConfigurationException e){}
-          return delimiter;
-        }
-
-        @Override
-        public long getLength() throws IOException {
-          assert this.mCountingStream != null;
-          return this.mCountingStream.getCount();
-        }
-
-        @Override
-        public void write(KeyValue keyValue) throws IOException {
-          this.mWriter.write(keyValue.getValue());
-          if (DELIMITER != (byte)'\\'){
-            this.mWriter.write(DELIMITER);
-          }
-        }
-
-        @Override
-        public void close() throws IOException {
-          this.mWriter.close();
-          CodecPool.returnCompressor(mCompressor);
-          mCompressor = null;
-        }
-      }
+    @Override
+    public void close() throws IOException {
+      this.mWriter.close();
+      CodecPool.returnCompressor(mCompressor);
+      mCompressor = null;
     }
+  }
+}
