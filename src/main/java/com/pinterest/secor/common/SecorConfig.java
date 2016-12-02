@@ -418,6 +418,22 @@ public class SecorConfig {
     	return getString("secor.file.reader.writer.factory");
     }
 
+    public String getFileReaderDelimiter(){
+      String readerDelimiter = getString("secor.file.reader.Delimiter");
+      if (readerDelimiter.length() > 1) {
+        throw new RuntimeException("secor.file.reader.Delimiter length can not be greater than 1 character");
+      }
+      return readerDelimiter;
+    }
+
+    public String getFileWriterDelimiter(){
+      String writerDelimiter = getString("secor.file.writer.Delimiter");
+      if (writerDelimiter.length() > 1) {
+        throw new RuntimeException("secor.file.writer.Delimiter length can not be greater than 1 character");
+      }
+      return writerDelimiter;
+    }
+
     public String getPerfTestTopicPrefix() {
     	return getString("secor.kafka.perf_topic_prefix");
     }
@@ -490,8 +506,8 @@ public class SecorConfig {
             thriftClasses.put(key.substring(prefix.length() + 1), className);
         }
         return thriftClasses;
-    }    
-    
+    }
+
     public TimeZone getTimeZone() {
         String timezone = getString("secor.parser.timezone");
         return Strings.isNullOrEmpty(timezone) ? TimeZone.getTimeZone("UTC") : TimeZone.getTimeZone(timezone);
