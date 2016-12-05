@@ -122,6 +122,7 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     private final BufferedOutputStream mWriter;
     private Compressor mCompressor = null;
     private byte DELIMITER = getWriterDelimiter();
+    private boolean addDelimiter = true;
 
     public FlexibleDelimitedFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
       Path fsPath = new Path(path.getLogFilePath());
@@ -134,10 +135,12 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     }
 
     public byte getWriterDelimiter() {
-      byte delimiter = '\\';
+      byte delimiter = '\n';
       try {
         String writerDelimiter = SecorConfig.load().getFileWriterDelimiter();
-        if (!writerDelimiter.isEmpty()){
+        if (writerDelimiter.isEmpty()){
+          addDelimiter = false;
+        } else {
           delimiter = (byte)writerDelimiter.charAt(0);
         }
       } catch(ConfigurationException e) {
@@ -155,7 +158,7 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     @Override
     public void write(KeyValue keyValue) throws IOException {
       this.mWriter.write(keyValue.getValue());
-      if (DELIMITER != (byte)'\\'){
+      if (addDelimiter){
         this.mWriter.write(DELIMITER);
       }
     }
