@@ -65,7 +65,7 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     private final BufferedInputStream mReader;
     private long mOffset;
     private Decompressor mDecompressor = null;
-    private byte DELIMITER = getReaderDelimiter();
+    private byte mDelimiter = getReaderDelimiter();
 
     public FlexibleDelimitedFileReader(LogFilePath path, CompressionCodec codec) throws IOException {
       Path fsPath = new Path(path.getLogFilePath());
@@ -95,7 +95,7 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     public KeyValue next() throws IOException {
       ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
       int nextByte;
-      while ((nextByte = mReader.read()) != DELIMITER) {
+      while ((nextByte = mReader.read()) != mDelimiter) {
         if (nextByte == -1) { // end of stream?
           if (messageBuffer.size() == 0) { // if no byte read
             return null;
@@ -121,8 +121,8 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     private final CountingOutputStream mCountingStream;
     private final BufferedOutputStream mWriter;
     private Compressor mCompressor = null;
-    private byte DELIMITER = getWriterDelimiter();
-    private boolean addDelimiter = true;
+    private byte mDelimiter = getWriterDelimiter();
+    private boolean addDelimiter = false;
 
     public FlexibleDelimitedFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
       Path fsPath = new Path(path.getLogFilePath());
@@ -135,12 +135,11 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     }
 
     public byte getWriterDelimiter() {
-      byte delimiter = '\n';
+      byte delimiter = '\\';
       try {
         String writerDelimiter = SecorConfig.load().getFileWriterDelimiter();
-        if (writerDelimiter.isEmpty()){
-          addDelimiter = false;
-        } else {
+        if (!writerDelimiter.isEmpty()){
+          addDelimiter = true;
           delimiter = (byte)writerDelimiter.charAt(0);
         }
       } catch(ConfigurationException e) {
@@ -159,7 +158,7 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     public void write(KeyValue keyValue) throws IOException {
       this.mWriter.write(keyValue.getValue());
       if (addDelimiter){
-        this.mWriter.write(DELIMITER);
+        this.mWriter.write(mDelimiter);
       }
     }
 
