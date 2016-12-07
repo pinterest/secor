@@ -135,7 +135,7 @@ public class FlexibleDelimitedFileReaderWriterFactory implements FileReaderWrite
     }
 
     public byte getWriterDelimiter() {
-      byte delimiter = '\\';
+      byte delimiter = '\n';
       try {
         String writerDelimiter = SecorConfig.load().getFileWriterDelimiter();
         if (!writerDelimiter.isEmpty()){
