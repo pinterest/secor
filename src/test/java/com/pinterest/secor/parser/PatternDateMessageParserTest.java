@@ -42,7 +42,7 @@ public class PatternDateMessageParserTest extends TestCase {
     public void setUp() throws Exception {
         mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
-        Mockito.when(mConfig.getMessageEventName()).thenReturn("event");
+        Mockito.when(mConfig.getPartitionPrefixIdentifier()).thenReturn("event");
 
         byte format1[] = "{\"timestamp\":\"2014-07-30 10:53:20\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
                 .getBytes("UTF-8");
@@ -97,15 +97,14 @@ public class PatternDateMessageParserTest extends TestCase {
     	
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
     	Mockito.when(mConfig.getPartitionOutputDtFormat()).thenReturn("yyyy-MM-dd");
-    	Mockito.when(mConfig.isMessagePartitionByEvent()).thenReturn(false);
+    	Mockito.when(mConfig.isPartitionPrefixEnabled()).thenReturn(false);
         assertEquals("2014-07-30", new PatternDateMessageParser(mConfig).extractPartitions(mFormat5)[0]);
         assertEquals("2014-07-30", new PatternDateMessageParser(mConfig).extractPartitions(mFormat6)[0]);
 
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
     	Mockito.when(mConfig.getPartitionOutputDtFormat()).thenReturn("yyyy-MM-dd");
-    	Mockito.when(mConfig.getMessageEventMapping("XYZ")).thenReturn("1/");
-    	Mockito.when(mConfig.getMessageEventMapping("ABC")).thenReturn("2/");
-    	Mockito.when(mConfig.isMessagePartitionByEvent()).thenReturn(true);
+    	Mockito.when(mConfig.getPartitionPrefixMapping()).thenReturn("{\"XYZ\":\"1\",\"ABC\":\"2\"}");
+    	Mockito.when(mConfig.isPartitionPrefixEnabled()).thenReturn(true);
         assertEquals("1/2014-07-30", new PatternDateMessageParser(mConfig).extractPartitions(mFormat5)[0]);
         assertEquals("2/2014-07-30", new PatternDateMessageParser(mConfig).extractPartitions(mFormat6)[0]);
     }

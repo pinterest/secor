@@ -18,6 +18,9 @@ package com.pinterest.secor.parser;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
@@ -45,20 +48,30 @@ public class PatternDateMessageParser extends MessageParser {
 	private static final Logger LOG = LoggerFactory.getLogger(PatternDateMessageParser.class);
     protected static final String defaultDate = "1970-01-01";
     protected static final String defaultFormatter = "yyyy-MM-dd";
+    private Map<String, String> partitionPrefixMap;
 
     public PatternDateMessageParser(SecorConfig config) {
         super(config);
+        partitionPrefixMap = new HashMap<String, String>();
+        String partitionMapping = config.getPartitionPrefixMapping();
+        if(null != partitionMapping) {
+	        JSONObject jsonObject = (JSONObject) JSONValue.parse(partitionMapping);
+	        for(Entry<String, Object> entry: jsonObject.entrySet()) {
+	        	partitionPrefixMap.put(entry.getKey(), entry.getValue().toString() + "/");
+	        }
+        }
     }
 
     @Override
     public String[] extractPartitions(Message message) {
+    	System.out.println("partitionPrefixMap" + partitionPrefixMap);
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
-        boolean useEvent = mConfig.isMessagePartitionByEvent();
-        String result[] = { useEvent ? mConfig.getMessageEventMapping("DEFAULT") + defaultDate : defaultDate };
+        boolean prefixEnabled = mConfig.isPartitionPrefixEnabled();
+        String result[] = { prefixEnabled ? partitionPrefixMap.get("DEFAULT") + defaultDate : defaultDate };
         
         if (jsonObject != null) {
             Object fieldValue = jsonObject.get(mConfig.getMessageTimestampName());
-            Object eventValue = jsonObject.get(mConfig.getMessageEventName());
+            Object eventValue = jsonObject.get(mConfig.getPartitionPrefixIdentifier());
             Object inputPattern = mConfig.getMessageTimestampInputPattern();
             if (fieldValue != null && inputPattern != null) {
                 try {
@@ -71,7 +84,7 @@ public class PatternDateMessageParser extends MessageParser {
                 		dateFormat = inputFormatter.parse(fieldValue.toString());
                 	}
                     
-                    result[0] = useEvent ? mConfig.getMessageEventMapping(eventValue.toString()) + outputFormatter.format(dateFormat) : outputFormatter.format(dateFormat);
+                    result[0] = prefixEnabled ? partitionPrefixMap.get(eventValue.toString()) + outputFormatter.format(dateFormat) : outputFormatter.format(dateFormat);
                     return result;
                 } catch (Exception e) {
                     LOG.warn("Impossible to convert date = " + fieldValue.toString()

@@ -20,8 +20,13 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 
+import net.minidev.json.JSONObject;
+import net.minidev.json.JSONValue;
+
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Map.Entry;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -215,16 +220,16 @@ public class SecorConfig {
         return getString("message.timestamp.input.pattern");
     }
     
-    public String getMessageEventName() {
-        return getString("message.event.name");
+    public String getPartitionPrefixIdentifier() {
+        return getString("secor.partition.prefix.identifier", "");
     }
     
-    public String getMessageEventMapping(String event) {
-        return getString("message.event.mapping." + event, getString("message.event.mapping.DEFAULT", ""));
+    public String getPartitionPrefixMapping() {
+        return getString("secor.partition.prefix.mapping", "");
     }
     
-    public boolean isMessagePartitionByEvent() {
-        return getBoolean("message.partition.byevent", false);
+    public boolean isPartitionPrefixEnabled() {
+        return getBoolean("secor.partition.prefix.enable", false);
     }
 
     public int getFinalizerLookbackPeriods() {
@@ -299,4 +304,5 @@ public class SecorConfig {
     private String[] getStringArray(String name) {
         return mProperties.getStringArray(name);
     }
+    
 }
