@@ -64,7 +64,7 @@ public class PatternDateMessageParser extends MessageParser {
 
     @Override
     public String[] extractPartitions(Message message) {
-    	System.out.println("partitionPrefixMap" + partitionPrefixMap);
+
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
         boolean prefixEnabled = mConfig.isPartitionPrefixEnabled();
         String result[] = { prefixEnabled ? partitionPrefixMap.get("DEFAULT") + defaultDate : defaultDate };
