@@ -23,6 +23,8 @@ import org.apache.commons.lang.StringUtils;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -225,7 +227,10 @@ public class SecorConfig {
     }
     
     public String getPartitionPrefixMapping() {
-        return getString("secor.partition.prefix.mapping", "");
+    	String[] map = getStringArray("secor.partition.prefix.mapping");
+    	if(null != map)
+    		return StringUtils.join(map, ',');
+        return "";
     }
     
     public boolean isPartitionPrefixEnabled() {
