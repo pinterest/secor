@@ -16,19 +16,12 @@
  */
 package com.pinterest.secor.common;
 
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
-
-import net.minidev.json.JSONObject;
-import net.minidev.json.JSONValue;
-
-import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Map.Entry;
 
 /**
  * One-stop shop for Secor configuration options.
