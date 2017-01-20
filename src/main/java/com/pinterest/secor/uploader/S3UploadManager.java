@@ -28,6 +28,7 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.auth.AWSCredentials;
@@ -117,6 +118,12 @@ public class S3UploadManager extends UploadManager {
         }
 
         client = new AmazonS3Client(provider, clientConfiguration);
+
+        if (mConfig.getAwsClientPathStyleAccess()) {
+            S3ClientOptions clientOptions = new S3ClientOptions();
+            clientOptions.setPathStyleAccess(true);
+            client.setS3ClientOptions(clientOptions);
+        }
 
         if (!endpoint.isEmpty()) {
             client.setEndpoint(endpoint);
