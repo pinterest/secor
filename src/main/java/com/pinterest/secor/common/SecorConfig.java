@@ -273,6 +273,10 @@ public class SecorConfig {
         return getString("aws.role");
     }
 
+    public boolean getAwsClientPathStyleAccess() {
+        return getBoolean("aws.client.pathstyleaccess", false);
+    }
+
     public boolean getAwsProxyEnabled(){
     	return getBoolean("aws.proxy.isEnabled");
     }
