@@ -146,8 +146,12 @@ public class LogFilePath {
 
     public String getLogFileParentDir() {
         ArrayList<String> elements = new ArrayList<String>();
-        elements.add(mPrefix);
-        elements.add(mTopic);
+        if(mPrefix.length() > 0) {
+            elements.add(mPrefix);
+        }
+        if(mTopic.length() > 0) {
+            elements.add(mTopic);
+        }
         return StringUtils.join(elements, "/");
     }
 
