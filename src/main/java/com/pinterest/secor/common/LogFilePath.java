@@ -146,10 +146,10 @@ public class LogFilePath {
 
     public String getLogFileParentDir() {
         ArrayList<String> elements = new ArrayList<String>();
-        if(mPrefix.length() > 0) {
+        if (mPrefix != null && mPrefix.length() > 0) {
             elements.add(mPrefix);
         }
-        if(mTopic.length() > 0) {
+        if (mTopic != null && mTopic.length() > 0) {
             elements.add(mTopic);
         }
         return StringUtils.join(elements, "/");
