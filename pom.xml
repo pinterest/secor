@@ -6,7 +6,7 @@
 
     <groupId>com.pinterest</groupId>
     <artifactId>secor</artifactId>
-    <version>0.23-FALCON</version>
+    <version>0.23-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>secor</name>
     <description>Kafka to s3/gs/swift logs exporter</description>
