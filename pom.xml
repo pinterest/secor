@@ -6,7 +6,7 @@
 
     <groupId>com.pinterest</groupId>
     <artifactId>secor</artifactId>
-    <version>0.23-SNAPSHOT</version>
+    <version>0.23-FALCON</version>
     <packaging>jar</packaging>
     <name>secor</name>
     <description>Kafka to s3/gs/swift logs exporter</description>
@@ -52,6 +52,7 @@
         <encoding>UTF-8</encoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <parquet.version>1.8.1</parquet.version>
+        <org.apache.hadoop.version>2.7.3</org.apache.hadoop.version>
     </properties>
 
     <distributionManagement>
@@ -149,23 +150,23 @@
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
-            <version>1.9</version>
+            <version>1.10</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>2.7.0</version>
+            <version>${org.apache.hadoop.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
-            <version>2.7.0</version>
+            <version>${org.apache.hadoop.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-aws</artifactId>
-            <version>2.7.0</version>
+            <version>${org.apache.hadoop.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>net.java.dev.jets3t</groupId>
@@ -192,7 +193,7 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-openstack</artifactId>
-            <version>2.7.0</version>
+            <version>${org.apache.hadoop.version}</version>
         </dependency>
 
         <!-- Parquet file format dependencies -->
@@ -233,8 +234,8 @@
         </dependency>
         <dependency>
             <groupId>com.twitter</groupId>
-            <artifactId>ostrich_2.10</artifactId>
-            <version>9.2.1</version>
+            <artifactId>ostrich_2.11</artifactId>
+            <version>9.18.0</version>
         </dependency>
         <dependency>
             <groupId>com.twitter.common.zookeeper</groupId>
@@ -249,7 +250,7 @@
         <dependency>
             <groupId>net.minidev</groupId>
             <artifactId>json-smart</artifactId>
-            <version>2.0-RC3</version>
+            <version>2.2.1</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -309,6 +310,17 @@
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure-storage</artifactId>
             <version>4.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.11</artifactId>
+            <version>0.10.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
@@ -581,54 +593,6 @@
                     </plugin>
                 </plugins>
             </build>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.kafka</groupId>
-                    <artifactId>kafka_2.10</artifactId>
-                    <version>0.8.2.1</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-simple</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>kafka-0.8-dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.kafka</groupId>
-                    <artifactId>kafka_2.10</artifactId>
-                    <version>0.8.2.1</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-simple</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>kafka-0.10-dev</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.kafka</groupId>
-                    <artifactId>kafka_2.10</artifactId>
-                    <version>0.10.0.1</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-simple</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
         </profile>
     </profiles>
 </project>

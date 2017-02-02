@@ -28,6 +28,7 @@ import scala.Option;
 import scala.collection.Map$;
 import scala.collection.immutable.List;
 import scala.collection.immutable.List$;
+import scala.collection.immutable.Nil$;
 import scala.util.matching.Regex;
 
 /**
@@ -44,7 +45,6 @@ public class OstrichAdminService {
     }
 
     public void start() {
-        Duration[] defaultLatchIntervals = {Duration.apply(1, TimeUnit.MINUTES)};
         @SuppressWarnings("deprecation")
         AdminServiceFactory adminServiceFactory = new AdminServiceFactory(
             this.mPort,
@@ -53,7 +53,7 @@ public class OstrichAdminService {
             Option.<String>empty(),
             List$.MODULE$.<Regex>empty(),
             Map$.MODULE$.<String, CustomHttpHandler>empty(),
-            List.<Duration>fromArray(defaultLatchIntervals)
+            Nil$.MODULE$.$colon$colon(Duration.apply(1, TimeUnit.MINUTES))
         );
         RuntimeEnvironment runtimeEnvironment = new RuntimeEnvironment(this);
         adminServiceFactory.apply(runtimeEnvironment);
