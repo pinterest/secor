@@ -58,7 +58,7 @@ public class DateMessageParser extends MessageParser {
         inputFormatter.setTimeZone(timeZone);
         outputFormatter.setTimeZone(timeZone);
 
-        mDtPrefix = (TimestampedMessageParser.usingDatePrefix(config) == null) ? "" : TimestampedMessageParser.usingDatePrefix(config);
+        mDtPrefix = TimestampedMessageParser.usingDatePrefix(config);
     }
 
     @Override

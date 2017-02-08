@@ -74,15 +74,16 @@ public class DateMessageParserTest extends TestCase {
     @Test
     public void testExtractDateUsingInputPattern() throws Exception {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
+        Mockito.when(mConfig.getString("partitioner.granularity.date.prefix", "dt=")).thenReturn("dt=");
 
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
-        assertEquals("2014-07-30", new DateMessageParser(mConfig).extractPartitions(mFormat1)[0]);
+        assertEquals("dt=2014-07-30", new DateMessageParser(mConfig).extractPartitions(mFormat1)[0]);
 
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy/MM/d");
-        assertEquals("2014-10-25", new DateMessageParser(mConfig).extractPartitions(mFormat2)[0]);
+        assertEquals("dt=2014-10-25", new DateMessageParser(mConfig).extractPartitions(mFormat2)[0]);
 
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyyy.MMMMM.dd GGG hh:mm aaa");
-        assertEquals("2001-07-04", new DateMessageParser(mConfig).extractPartitions(mFormat3)[0]);
+        assertEquals("dt=2001-07-04", new DateMessageParser(mConfig).extractPartitions(mFormat3)[0]);
     }
 
     @Test
@@ -113,7 +114,8 @@ public class DateMessageParserTest extends TestCase {
         Mockito.when(mConfig.getMessageTimestampNameSeparator()).thenReturn(".");
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("meta_data.created");
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
+        Mockito.when(mConfig.getString("partitioner.granularity.date.prefix", "dt=")).thenReturn("dt=");
 
-        assertEquals("2016-01-11", new DateMessageParser(mConfig).extractPartitions(mNestedISOFormat)[0]);
+        assertEquals("dt=2016-01-11", new DateMessageParser(mConfig).extractPartitions(mNestedISOFormat)[0]);
     } 
 }
