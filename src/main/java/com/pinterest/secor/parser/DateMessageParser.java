@@ -18,6 +18,7 @@ package com.pinterest.secor.parser;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import org.slf4j.Logger;
@@ -43,7 +44,8 @@ public class DateMessageParser extends MessageParser {
     private static final Logger LOG = LoggerFactory.getLogger(DateMessageParser.class);
     protected static final String defaultDate = "dt=1970-01-01";
     protected static final String defaultFormatter = "yyyy-MM-dd";
-    protected SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter);
+    protected static final Locale defaultLocale = Locale.US;
+    protected SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter, defaultLocale);
     protected Object inputPattern;
     protected SimpleDateFormat inputFormatter;
 
@@ -54,7 +56,7 @@ public class DateMessageParser extends MessageParser {
 
         TimeZone timeZone = config.getTimeZone();
         inputPattern = mConfig.getMessageTimestampInputPattern();
-        inputFormatter = new SimpleDateFormat(inputPattern.toString());
+        inputFormatter = new SimpleDateFormat(inputPattern.toString(), defaultLocale);
         inputFormatter.setTimeZone(timeZone);
         outputFormatter.setTimeZone(timeZone);
 
