@@ -38,7 +38,6 @@ public class Iso8601ParserTest extends TestCase {
     private Message mFormat3;
     private Message mFormat4;
     private Message mInvalidDate;
-    private Message mISOFormat;
     private Message mNestedISOFormat;
     private Message mNanosecondISOFormat;
     private Message mMissingDate;
