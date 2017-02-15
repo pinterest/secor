@@ -80,6 +80,7 @@ public class DateMessageParserTest extends TestCase {
     public void testExtractDateUsingInputPattern() throws Exception {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
         Mockito.when(mConfig.getString("partitioner.granularity.date.prefix", "dt=")).thenReturn("dt=");
+        Mockito.when(mConfig.getString("partitioner.granularity.date.format", "yyyy-MM-dd")).thenReturn("yyyy-MM-dd");
 
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
         assertEquals("dt=2014-07-30", new DateMessageParser(mConfig).extractPartitions(mFormat1)[0]);
@@ -103,6 +104,8 @@ public class DateMessageParserTest extends TestCase {
     @Test
     public void testExtractDateWithWrongEntries() throws Exception {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
+        Mockito.when(mConfig.getString("partitioner.granularity.date.format", "yyyy-MM-dd")).thenReturn("yyyy-MM-dd");
+
         // invalid date
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss"); // any pattern
         assertEquals(DateMessageParser.defaultDate, new DateMessageParser(
@@ -119,6 +122,7 @@ public class DateMessageParserTest extends TestCase {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
         Mockito.when(mConfig.getString("partitioner.granularity.date.prefix", "dt=")).thenReturn("foo");
+        Mockito.when(mConfig.getString("partitioner.granularity.date.format", "yyyy-MM-dd")).thenReturn("yyyy-MM-dd");
 
         assertEquals("foo2014-07-30", new DateMessageParser(mConfig).extractPartitions(mFormat1)[0]);
     }
@@ -129,7 +133,18 @@ public class DateMessageParserTest extends TestCase {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("meta_data.created");
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
         Mockito.when(mConfig.getString("partitioner.granularity.date.prefix", "dt=")).thenReturn("dt=");
+        Mockito.when(mConfig.getString("partitioner.granularity.date.format", "yyyy-MM-dd")).thenReturn("yyyy-MM-dd");
 
         assertEquals("dt=2016-01-11", new DateMessageParser(mConfig).extractPartitions(mNestedISOFormat)[0]);
+    }
+
+    @Test
+    public void testCustomDateFormat() throws Exception {
+        Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
+        Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
+        Mockito.when(mConfig.getString("partitioner.granularity.date.prefix", "dt=")).thenReturn("");
+        Mockito.when(mConfig.getString("partitioner.granularity.date.format", "yyyy-MM-dd")).thenReturn("'yr='yyyy'/mo='MM'/dy='dd'/hr='HH");
+
+        assertEquals("yr=2014/mo=07/dy=30/hr=10", new DateMessageParser(mConfig).extractPartitions(mFormat1)[0]);
     }
 }
