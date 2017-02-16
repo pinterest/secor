@@ -32,18 +32,17 @@ import net.minidev.json.JSONValue;
 /**
  * DateMessageParser extracts the timestamp field (specified by 'message.timestamp.name')
  *  and the date pattern (specified by 'message.timestamp.input.pattern')
- * 
+ *
  * @see http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html
- * 
+ *
  * @author Lucas Zago (lucaszago@gmail.com)
- * 
+ *
  */
 public class DateMessageParser extends MessageParser {
 
     private static final Logger LOG = LoggerFactory.getLogger(DateMessageParser.class);
     protected static final String defaultDate = "dt=1970-01-01";
-    protected static final String defaultFormatter = "yyyy-MM-dd";
-    protected SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter);
+    protected SimpleDateFormat outputFormatter;
     protected Object inputPattern;
     protected SimpleDateFormat inputFormatter;
 
@@ -56,6 +55,8 @@ public class DateMessageParser extends MessageParser {
         inputPattern = mConfig.getMessageTimestampInputPattern();
         inputFormatter = new SimpleDateFormat(inputPattern.toString());
         inputFormatter.setTimeZone(timeZone);
+
+        outputFormatter = new SimpleDateFormat(TimestampedMessageParser.usingDateFormat(config));
         outputFormatter.setTimeZone(timeZone);
 
         mDtPrefix = TimestampedMessageParser.usingDatePrefix(config);
