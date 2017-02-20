@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.pinterest</groupId>
+    <groupId>com.smartling</groupId>
     <artifactId>secor</artifactId>
     <version>0.23-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>secor</name>
     <description>Kafka to s3/gs/swift logs exporter</description>
-    <url>https://github.com/pinterest/secor</url>
+    <url>https://github.com/Smartling/secor</url>
 
     <licenses>
         <license>
@@ -41,9 +41,9 @@
     </developers>
 
     <scm>
-        <connection>https://github.com/pinterest/secor.git</connection>
-        <developerConnection>https://github.com/pinterest/secor.git</developerConnection>
-        <url>https://github.com/pinterest/secor</url>
+        <connection>https://github.com/Smartling/secor.git</connection>
+        <developerConnection>https://github.com/Smartling/secor.git</developerConnection>
+        <url>https://github.com/Smartling/secor</url>
     </scm>
 
     <properties>
@@ -597,9 +597,6 @@
         </profile>
         <profile>
             <id>kafka-0.8-dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
@@ -616,6 +613,9 @@
         </profile>
         <profile>
             <id>kafka-0.10-dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
