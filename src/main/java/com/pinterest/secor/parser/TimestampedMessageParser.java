@@ -128,10 +128,13 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
 
     protected static long toMillis(final long timestamp) {
         final long nanosecondDivider = (long) Math.pow(10, 9 + 9);
+        final long microsecondDivider = (long) Math.pow(10, 9 + 6);
         final long millisecondDivider = (long) Math.pow(10, 9 + 3);
         long timestampMillis;
         if (timestamp / nanosecondDivider > 0L) {
             timestampMillis = timestamp / (long) Math.pow(10, 6);
+        } else if (timestamp / microsecondDivider > 0L) {
+            timestampMillis = timestamp / (long) Math.pow(10, 3);
         } else if (timestamp / millisecondDivider > 0L) {
             timestampMillis = timestamp;
         } else {  // assume seconds
