@@ -33,8 +33,7 @@ import java.util.List;
  *
  * Caution: this parser doesn't support finalization of partitions.
  */
-public class SplitByFieldMessageParser extends TimestampedMessageParser implements Partitioner
-{
+public class SplitByFieldMessageParser extends TimestampedMessageParser implements Partitioner {
     private static final Logger LOG = LoggerFactory.getLogger(SplitByFieldMessageParser.class);
     private final String mSplitFieldName;
 
@@ -45,14 +44,12 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
     }
 
     @Override
-    public long extractTimestampMillis(Message message) throws Exception
-    {
+    public long extractTimestampMillis(Message message) throws Exception {
         throw new UnsupportedOperationException("Unsupported, use extractPartitions method instead");
     }
 
     @Override
-    public String[] extractPartitions(Message message) throws Exception
-    {
+    public String[] extractPartitions(Message message) throws Exception {
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
         if (jsonObject == null) {
             throw new RuntimeException("Failed to parse message as Json object");
@@ -67,17 +64,13 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
 
     @Override
     public String[] getFinalizedUptoPartitions(List<Message> lastMessages,
-                                               List<Message> committedMessages) throws Exception
-    {
-        // Partition finalization is not supported
-        return null;
+                                               List<Message> committedMessages) throws Exception {
+        throw new UnsupportedOperationException("Partition finalization is not supported");
     }
 
     @Override
-    public String[] getPreviousPartitions(String[] partition) throws Exception
-    {
-        // Partition finalization is not supported
-        return null;
+    public String[] getPreviousPartitions(String[] partitions) throws Exception {
+        throw new UnsupportedOperationException("Partition finalization is not supported");
     }
 
     protected String extractEventType(JSONObject jsonObject) {

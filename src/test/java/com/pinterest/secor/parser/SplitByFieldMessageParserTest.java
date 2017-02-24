@@ -39,8 +39,7 @@ public class SplitByFieldMessageParserTest extends TestCase {
     private Message mMessageWithoutType;
 
     @Override
-    public void setUp() throws Exception
-    {
+    public void setUp() throws Exception {
         mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getMessageSplitFieldName()).thenReturn("type");
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
@@ -68,8 +67,7 @@ public class SplitByFieldMessageParserTest extends TestCase {
     }
 
     @Test
-    public void testExtractTypeAndTimestamp() throws Exception
-    {
+    public void testExtractTypeAndTimestamp() throws Exception {
         SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
 
         assertEquals(1405911096000l, jsonMessageParser.extractTimestampMillis((JSONObject) JSONValue.parse(mMessageWithTypeAndTimestamp.getPayload())));
@@ -80,26 +78,23 @@ public class SplitByFieldMessageParserTest extends TestCase {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testExtractTimestampMillisExceptionNoTimestamp() throws Exception
-    {
+    public void testExtractTimestampMillisExceptionNoTimestamp() throws Exception {
         SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
 
         // Throws exception if there's no timestamp, for any reason.
         jsonMessageParser.extractTimestampMillis((JSONObject) JSONValue.parse(mMessageWithoutTimestamp.getPayload()));
     }
 
-    @Test(expected=ClassCastException.class)
-    public void testExtractTimestampMillisException1() throws Exception
-    {
+    @Test(expected = ClassCastException.class)
+    public void testExtractTimestampMillisException1() throws Exception {
         SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
 
         byte emptyBytes1[] = {};
         jsonMessageParser.extractTimestampMillis((JSONObject) JSONValue.parse(emptyBytes1));
     }
 
-    @Test(expected=ClassCastException.class)
-    public void testExtractTimestampMillisException2() throws Exception
-    {
+    @Test(expected = ClassCastException.class)
+    public void testExtractTimestampMillisException2() throws Exception {
         SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
 
         byte emptyBytes2[] = "".getBytes();
@@ -107,8 +102,7 @@ public class SplitByFieldMessageParserTest extends TestCase {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testExtractTimestampMillisExceptionNoType() throws Exception
-    {
+    public void testExtractTimestampMillisExceptionNoType() throws Exception {
         SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
 
         // Throws exception if there's no timestamp, for any reason.
@@ -116,8 +110,7 @@ public class SplitByFieldMessageParserTest extends TestCase {
     }
 
     @Test
-    public void testExtractPartitions() throws Exception
-    {
+    public void testExtractPartitions() throws Exception {
         SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
 
         String expectedEventTypePartition = "event1";
@@ -130,8 +123,7 @@ public class SplitByFieldMessageParserTest extends TestCase {
     }
 
     @Test
-    public void testExtractHourlyPartitions() throws Exception
-    {
+    public void testExtractHourlyPartitions() throws Exception {
         Mockito.when(TimestampedMessageParser.usingHourly(mConfig)).thenReturn(true);
         SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
 
@@ -147,8 +139,7 @@ public class SplitByFieldMessageParserTest extends TestCase {
     }
 
     @Test
-    public void testExtractHourlyPartitionsForNonUTCTimezone() throws Exception
-    {
+    public void testExtractHourlyPartitionsForNonUTCTimezone() throws Exception {
         Mockito.when(mConfig.getTimeZone()).thenReturn(TimeZone.getTimeZone("IST"));
         Mockito.when(TimestampedMessageParser.usingHourly(mConfig)).thenReturn(true);
         SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
@@ -164,9 +155,8 @@ public class SplitByFieldMessageParserTest extends TestCase {
         assertEquals(expectedHrPartition, result[2]);
     }
 
-    @Test
-    public void testGetFinalizedUptoPartitions() throws Exception
-    {
+    @Test(expected = UnsupportedOperationException.class)
+    public void testGetFinalizedUptoPartitions() throws Exception {
         SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
 
         List<Message> lastMessages = new ArrayList<Message>();
@@ -174,11 +164,15 @@ public class SplitByFieldMessageParserTest extends TestCase {
         List<Message> committedMessages = new ArrayList<Message>();
         committedMessages.add(mMessageWithTypeAndTimestamp);
 
-        String uptoPartitions[] = jsonMessageParser.getFinalizedUptoPartitions(lastMessages,
-            committedMessages);
-        assertNull(uptoPartitions);
-
-        String previous[] = jsonMessageParser.getPreviousPartitions(uptoPartitions);
-        assertNull(previous);
+        jsonMessageParser.getFinalizedUptoPartitions(lastMessages, committedMessages);
     }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testGetPreviousPartitions() throws Exception {
+        SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
+
+        String partitions[] = {"event1", "dt=2014-07-21"};
+        jsonMessageParser.getPreviousPartitions(partitions);
+    }
+
 }
