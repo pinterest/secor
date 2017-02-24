@@ -389,6 +389,10 @@ public class SecorConfig {
         return mProperties.getBoolean("message.timestamp.required");
     }
 
+    public String getMessageSplitFieldName() {
+        return getString("message.split.field.name");
+    }
+
     public int getFinalizerLookbackPeriods() {
         return getInt("secor.finalizer.lookback.periods", 10);
     }
