@@ -12,6 +12,14 @@ else
     echo "zookeeper.quorum=$ZOOKEEPER_QUORUM"
 fi
 
+if [ -z "$ZOOKEEPER_PATH" ]; then
+	echo "ZOOKEEPER_PATH variable not set, launch with -e ZOOKEEPER_PATH=/"
+    exit 1
+else
+    SECOR_CONFIG="$SECOR_CONFIG -Dkafka.zookeeper.path=$ZOOKEEPER_PATH"
+    echo "kafka.zookeeper.path=$ZOOKEEPER_PATH"
+fi
+
 if [[ ! -z "$KAFKA_SEED_BROKER_HOST" ]]; then
 	SECOR_CONFIG="$SECOR_CONFIG -Dkafka.seed.broker.host=$KAFKA_SEED_BROKER_HOST"
     echo "kafka.seed.broker.host=$KAFKA_SEED_BROKER_HOST"
