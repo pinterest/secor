@@ -69,7 +69,10 @@ if [[ ! -z "$SECOR_WRITER_FACTORY" ]]; then
 	SECOR_CONFIG="$SECOR_CONFIG -Dsecor.file.reader.writer.factory=$SECOR_WRITER_FACTORY"
     echo "secor.file.reader.writer.factory=$SECOR_WRITER_FACTORY"
 fi
-
+if [[ ! -z "$SECOR_MESSAGE_PARSER" ]]; then
+	SECOR_CONFIG="$SECOR_CONFIG -Dsecor.message.parser.class=$SECOR_MESSAGE_PARSER"
+    echo "secor.message.parser.class=$SECOR_MESSAGE_PARSER"
+fi
 SECOR_CONFIG="$SECOR_CONFIG $SECOR_EXTRA_OPTS"
 
 
