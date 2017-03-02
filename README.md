@@ -13,7 +13,7 @@ Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage
   - **configurable upload policies**: commit points controlling when data is persisted in S3 are configured through size-based and time-based policies (e.g., upload data when local buffer reaches size of 100MB and at least once per hour),
   - **monitoring**: metrics tracking various performance properties are exposed through [Ostrich] and optionally exported to [OpenTSDB] / [statsD],
   - **customizability**: external log message parser may be loaded by updating the configuration,
-  - **event transformation**: external message level tranformation can be done by using customized class.
+  - **event transformation**: external message level transformation can be done by using customized class.
   - **Qubole interface**: Secor connects to [Qubole] to add finalized output partitions to Hive tables.
 
 ## Setup Guide
