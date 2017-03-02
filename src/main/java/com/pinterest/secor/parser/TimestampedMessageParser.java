@@ -123,7 +123,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     }
 
     static String usingMinutePrefix(SecorConfig config) {
-        return config.getString("partitioner.granularity.min.prefix", "min=");
+        return config.getString("partitioner.granularity.minute.prefix", "min=");
     }
 
     protected static long toMillis(final long timestamp) {
