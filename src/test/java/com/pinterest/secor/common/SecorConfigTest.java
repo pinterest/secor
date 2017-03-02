@@ -1,16 +1,15 @@
 package com.pinterest.secor.common;
 
+import com.pinterest.secor.protobuf.Messages.UnitTestMessage1;
+import com.pinterest.secor.protobuf.Messages.UnitTestMessage2;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.Test;
 
-import com.pinterest.secor.protobuf.Messages.UnitTestMessage1;
-import com.pinterest.secor.protobuf.Messages.UnitTestMessage2;
-
 import java.net.URL;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class SecorConfigTest {
 
@@ -48,5 +47,16 @@ public class SecorConfigTest {
         assertEquals(2, messageClassPerTopic.size());
         assertEquals(UnitTestMessage1.class.getName(), messageClassPerTopic.get("mytopic1"));
         assertEquals(UnitTestMessage2.class.getName(), messageClassPerTopic.get("mytopic2"));
-    }    
+    }
+
+    @Test
+    public void shouldReadMetricCollectorConfiguration() throws ConfigurationException {
+
+        URL configFile = Thread.currentThread().getContextClassLoader().getResource("secor.test.monitoring.properties");
+        PropertiesConfiguration properties = new PropertiesConfiguration(configFile);
+
+        SecorConfig secorConfig = new SecorConfig(properties);
+
+        assertEquals("com.pinterest.secor.monitoring.OstrichMetricCollector", secorConfig.getMetricsCollectorClass());
+    }
 }

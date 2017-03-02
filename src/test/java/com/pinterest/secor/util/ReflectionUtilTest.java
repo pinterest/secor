@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,10 +18,14 @@ package com.pinterest.secor.util;
 
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.monitoring.MetricCollector;
+import com.pinterest.secor.monitoring.OstrichMetricCollector;
 import com.pinterest.secor.parser.MessageParser;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.junit.Test;
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 
 public class ReflectionUtilTest {
 
@@ -31,12 +35,12 @@ public class ReflectionUtilTest {
     @Before
     public void setUp() throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.addProperty("message.timestamp.name","");
-        properties.addProperty("message.timestamp.name.separator","");
-        properties.addProperty("secor.offsets.prefix","offset=");
+        properties.addProperty("message.timestamp.name", "");
+        properties.addProperty("message.timestamp.name.separator", "");
+        properties.addProperty("secor.offsets.prefix", "offset=");
         mSecorConfig = new SecorConfig(properties);
         mLogFilePath = new LogFilePath("/foo", "/foo/bar/baz/1_1_1");
-        
+
     }
 
     @Test
@@ -69,5 +73,25 @@ public class ReflectionUtilTest {
         // assignable to MessageParser
         ReflectionUtil.createFileWriter("java.lang.Object",
                 mLogFilePath, null, mSecorConfig);
+    }
+
+    @Test
+    public void testCreateMetricsCollector() throws Exception {
+        MetricCollector metricCollector = ReflectionUtil.createMetricCollector("com.pinterest.secor.monitoring.OstrichMetricCollector");
+
+        Assert.assertNotNull(metricCollector);
+        Assert.assertThat(metricCollector, CoreMatchers.instanceOf(OstrichMetricCollector.class));
+    }
+
+    @Test(expected = ClassNotFoundException.class)
+    public void testCreateMetricsCollectorClassNotFound() throws Exception {
+        ReflectionUtil.createMetricCollector("com.example.foo");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateMetricsCollectorNotAssignable() throws Exception {
+        // Try to create a message parser using an existent and available class, but one not
+        // assignable to MessageParser
+        ReflectionUtil.createMetricCollector("java.lang.Object");
     }
 }

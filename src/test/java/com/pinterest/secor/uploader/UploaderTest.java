@@ -20,6 +20,7 @@ import com.pinterest.secor.common.*;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.monitoring.MetricCollector;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
 
@@ -55,7 +56,7 @@ public class UploaderTest extends TestCase {
                             FileRegistry fileRegistry,
                             UploadManager uploadManager,
                             ZookeeperConnector zookeeperConnector) {
-            init(config, offsetTracker, fileRegistry, uploadManager, zookeeperConnector);
+            init(config, offsetTracker, fileRegistry, uploadManager, zookeeperConnector, Mockito.mock(MetricCollector.class));
             mReader = Mockito.mock(FileReader.class);
         }
 
