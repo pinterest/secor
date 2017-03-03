@@ -12,6 +12,14 @@ else
     echo "zookeeper.quorum=$ZOOKEEPER_QUORUM"
 fi
 
+if [ -z "$ZOOKEEPER_PATH" ]; then
+	echo "ZOOKEEPER_PATH variable not set, launch with -e ZOOKEEPER_PATH=/"
+    exit 1
+else
+    SECOR_CONFIG="$SECOR_CONFIG -Dkafka.zookeeper.path=$ZOOKEEPER_PATH"
+    echo "kafka.zookeeper.path=$ZOOKEEPER_PATH"
+fi
+
 if [[ ! -z "$KAFKA_SEED_BROKER_HOST" ]]; then
 	SECOR_CONFIG="$SECOR_CONFIG -Dkafka.seed.broker.host=$KAFKA_SEED_BROKER_HOST"
     echo "kafka.seed.broker.host=$KAFKA_SEED_BROKER_HOST"
@@ -27,6 +35,18 @@ if [[ ! -z "$SECOR_GROUP" ]]; then
 fi
 
 
+if [[ ! -z "$AWS_REGION" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Daws.region=$AWS_REGION"
+    echo "aws.region=$AWS_REGION"
+fi
+if [[ ! -z "$AWS_ENDPOINT" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Daws.endpoint=$AWS_ENDPOINT"
+    echo "aws.endpoint=$AWS_ENDPOINT"
+fi
+if [[ ! -z "$AWS_PATH_STYLE_ACCESS" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Daws.client.pathstyleaccess=$AWS_PATH_STYLE_ACCESS"
+    echo "aws.client.pathstyleaccess=$AWS_PATH_STYLE_ACCESS"
+fi
 if [[ ! -z "$AWS_ACCESS_KEY" ]]; then
 	SECOR_CONFIG="$SECOR_CONFIG -Daws.access.key=$AWS_ACCESS_KEY"
 fi
@@ -41,6 +61,7 @@ if [[ ! -z "$S3_PATH" ]]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.s3.path=$S3_PATH"
     echo "secor.s3.path=$S3_PATH"
 fi
+
 
 
 if [[ ! -z "$SECOR_MAX_FILE_BYTES" ]]; then
@@ -61,7 +82,10 @@ if [[ ! -z "$SECOR_WRITER_FACTORY" ]]; then
 	SECOR_CONFIG="$SECOR_CONFIG -Dsecor.file.reader.writer.factory=$SECOR_WRITER_FACTORY"
     echo "secor.file.reader.writer.factory=$SECOR_WRITER_FACTORY"
 fi
-
+if [[ ! -z "$SECOR_MESSAGE_PARSER" ]]; then
+	SECOR_CONFIG="$SECOR_CONFIG -Dsecor.message.parser.class=$SECOR_MESSAGE_PARSER"
+    echo "secor.message.parser.class=$SECOR_MESSAGE_PARSER"
+fi
 SECOR_CONFIG="$SECOR_CONFIG $SECOR_EXTRA_OPTS"
 
 
