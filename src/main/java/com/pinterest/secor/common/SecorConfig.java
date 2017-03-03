@@ -21,11 +21,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -564,5 +560,9 @@ public class SecorConfig {
 
     public String getThriftProtocolClass() {
         return mProperties.getString("secor.thrift.protocol.class");
+    }
+
+    public String getMetricsCollectorClass() {
+        return mProperties.getString("secor.monitoring.metrics.collector.class");
     }
 }
