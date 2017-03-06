@@ -10,7 +10,7 @@ apply plugin: 'distribution'
 apply plugin: 'java-library-distribution'
 apply plugin: 'os-package'
 apply plugin: 'net.researchgate.release'
-apply plugin: 'sonar-runner'
+apply plugin: 'org.sonarqube'
 apply plugin: 'jacoco'
 // END
 
@@ -146,7 +146,8 @@ buildscript {
     classpath group: 'com.bmuschko',        name: 'gradle-nexus-plugin', version: '2.3'
     classpath group: 'eu.appsatori',        name: 'gradle-fatjar-plugin', version: '0.3'
     classpath group: 'com.thomsonreuters',  name: 'storm-deploy', version: '2.4.+'
-    //classpath group: 'gradle.plugin.org.detoeuf', name: 'swagger-codegen-plugin', version:'1.3'
+
+    classpath group: 'org.sonarsource.scanner.gradle', name: 'sonarqube-gradle-plugin', version: '1.2'
     // END 
   }
 }
@@ -269,14 +270,22 @@ ospackage {
 
 buildRpm.dependsOn installDist
 
-sonarRunner {
-  sonarProperties {
-    property "sonar.host.url", "http://sonar.oneplatform.build"
-    property "sonar.jdbc.url", "jdbc:mysql://sonar.c35w2xq4gxyh.us-west-2.rds.amazonaws.com:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true"
-    property "sonar.jdbc.driverClassName", "com.mysql.jdbc.Driver"
-    property "sonar.jdbc.username", "$System.env.sonarUsername"
-    property "sonar.jdbc.password", "$System.env.sonarPassword"
-  }
+sonarqube {
+    properties {
+        property "sonar.projectName", "1p-data"
+        property "sonar.projectKey", "com.thomsonreuters:1p-data"
+        property "sonar.branch", System.getenv("GIT_BRANCH") ?: ""
+        property "sonar.jacoco.reportPath", "${project.buildDir}/jacoco/test.exec"
+        property "sonar.exclusions", [
+            'src/main/java/com/thomsonreuters/handler/**',
+            'src/main/java/com/thomsonreuters/util/**',
+            'src/main/java/com/thomsonreuters/server/**',
+            'src/main/java/com/thomsonreuters/injection/**',
+            'src/main/java/com/thomsonreuters/**/*Module.java',
+            'src/main/java/com/thomsonreuters/rest/service/StatusResource.java',
+            'src/main/java/com/thomsonreuters/rest/service/HealthcheckResource.java'
+        ]
+                                                                                                                                                     }
 }
 
 jacoco {
