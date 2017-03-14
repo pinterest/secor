@@ -89,7 +89,7 @@ public class KafkaClient {
         return "secorClient_" + topicPartition.getTopic() + "_" + topicPartition.getPartition();
     }
 
-    private long findLastOffset(TopicPartition topicPartition, SimpleConsumer consumer) {
+    public long findLastOffset(TopicPartition topicPartition, SimpleConsumer consumer) {
         TopicAndPartition topicAndPartition = new TopicAndPartition(topicPartition.getTopic(),
                 topicPartition.getPartition());
         Map<TopicAndPartition, PartitionOffsetRequestInfo> requestInfo =
@@ -111,7 +111,29 @@ public class KafkaClient {
         return offsets[0] - 1;
     }
 
-    private Message getMessage(TopicPartition topicPartition, long offset,
+  public long earliestFirstOffset(TopicPartition topicPartition, SimpleConsumer consumer) {
+    TopicAndPartition topicAndPartition = new TopicAndPartition(topicPartition.getTopic(),
+        topicPartition.getPartition());
+    Map<TopicAndPartition, PartitionOffsetRequestInfo> requestInfo =
+        new HashMap<TopicAndPartition, PartitionOffsetRequestInfo>();
+    requestInfo.put(topicAndPartition, new PartitionOffsetRequestInfo(
+        kafka.api.OffsetRequest.EarliestTime(), 1));
+    final String clientName = getClientName(topicPartition);
+    OffsetRequest request = new OffsetRequest(requestInfo,
+        kafka.api.OffsetRequest.CurrentVersion(),
+        clientName);
+    OffsetResponse response = consumer.getOffsetsBefore(request);
+
+    if (response.hasError()) {
+      throw new RuntimeException("Error fetching offset data. Reason: " +
+          response.errorCode(topicPartition.getTopic(), topicPartition.getPartition()));
+    }
+    long[] offsets = response.offsets(topicPartition.getTopic(),
+        topicPartition.getPartition());
+    return offsets[0];
+  }
+
+  private Message getMessage(TopicPartition topicPartition, long offset,
                                SimpleConsumer consumer) {
         LOG.debug("fetching message topic {} partition {} offset {}",
                 topicPartition.getTopic(), topicPartition.getPartition(), offset);
