@@ -100,10 +100,12 @@ public class UnifiedEventMessageProducerMain {
         Gson gson = new Gson();
 
         for (int i = 0; i < numMessages; ++i) {
+            String network = i % 2 == 0 ? "facebook" : "twitter";
+            String instanceId = i % 2 == 0 ? "1" : "2";
             Message testMessage = new Message(
                 "messageType",
-                "test",
-                "job_4",
+                network,
+                "job_" + instanceId,
                 "tag",
                 "1.0",
                 "2.0"
