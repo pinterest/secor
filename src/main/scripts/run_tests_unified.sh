@@ -48,29 +48,28 @@ post_and_verify_test() {
     echo "running post_and_verify_test"
     initialize
 
-    start_secor
+    # TODO: This is hard coded
+    run_command "mkdir -p /tmp/secor_dev/message_logs/replay"
+
+    start_secor_with_config secor.unified.job_instance_id.properties
     sleep 3
-    post_messages ${MESSAGES} 0
+    post_event_messages ${MESSAGES} 0
     echo "Waiting ${WAIT_TIME} sec for Secor to upload logs to s3"
     sleep ${WAIT_TIME}
-    verify ${MESSAGES} 0
+
+    # TODO: Need to look into how to verify
+#    verify_event    s ${MESSAGES} 0 secor.unified.job_instance_id.properties
 
     stop_all
     echo -e "\e[1;42;97mpost_and_verify_test succeeded\e[0m"
 }
 
-start_secor1() {
+start_secor_with_config() {
     CONFIG=${1:-secor.test.backup.properties}
-    echo
+    echo ${CONFIG}
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-        -Dconfig=secor.test.backup.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
+        -Dconfig=${CONFIG} ${ADDITIONAL_OPTS} -cp $CLASSPATH \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
-
-#    if [ "${MESSAGE_TYPE}" = "binary" ]; then
-#       run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
-#           -Dconfig=secor.test.partition.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
-#           com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
-#    fi
 }
 
 
@@ -88,7 +87,7 @@ for fkey in ${S3_FILESYSTEMS}; do
         echo "********************************************************"
         echo "Running tests for Message Type: ${MESSAGE_TYPE} and  ReaderWriter:${READER_WRITERS[${key}]} using filesystem: ${FILESYSTEM_TYPE}"
 
-        start_secor1
+        post_and_verify_test
     done
 done
 

@@ -195,6 +195,13 @@ post_messages() {
         ${LOGS_DIR}/test_log_message_producer.log 2>&1"
 }
 
+post_event_messages() {
+    run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
+        -cp ${CLASSPATH} \
+        com.unified.secor.tools.UnifiedEventMessageProducerMain -t events -m $1 > \
+        ${LOGS_DIR}/test_log_event_producer.log 2>&1"
+}
+
 # verify the messages
 # $1: number of messages
 # $2: number of _SUCCESS files
@@ -256,6 +263,59 @@ create /consumers/${group}/offsets/test/${partition} $1
 quit
 EOF
         done
+    done
+}
+
+verify_events() {
+    echo "Verifying $1 $2 $3"
+
+    RUNMODE_0="backup"
+    if [ "${MESSAGE_TYPE}" = "binary" ]; then
+      RUNMODE_1="partition"
+    else
+       RUNMODE_1="backup"
+    fi
+
+    if [ -z $3 ]; then
+        CONFIG=secor.test.${RUNMODE}.properties
+    else
+        CONFIG=$3
+    fi
+
+    for RUNMODE in ${RUNMODE_0} ${RUNMODE_1}; do
+      run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
+          -Dconfig=${CONFIG} ${ADDITIONAL_OPTS} -cp ${CLASSPATH} \
+          com.pinterest.secor.main.LogFileVerifierMain -t events -m $1 -q > \
+          ${LOGS_DIR}/log_verifier_${RUNMODE}.log 2>&1"
+      VERIFICATION_EXIT_CODE=$?
+      if [ ${VERIFICATION_EXIT_CODE} -ne 0 ]; then
+        echo -e "\e[1;41;97mVerification FAILED\e[0m"
+        echo "See log ${LOGS_DIR}/log_verifier_${RUNMODE}.log for more details"
+        tail -n 50 ${LOGS_DIR}/log_verifier_${RUNMODE}.log
+        echo "See log ${LOGS_DIR}/secor_${RUNMODE}.log for more details"
+        tail -n 50 ${LOGS_DIR}/secor_${RUNMODE}.log
+        echo "See log ${LOGS_DIR}/test_log_message_producer.log for more details"
+        tail -n 50 ${LOGS_DIR}/test_log_message_producer.log
+        exit ${VERIFICATION_EXIT_CODE}
+      fi
+
+      # Verify SUCCESS file
+      if [ ${cloudService} = "swift" ]; then
+        run_command "swift list ${SWIFT_CONTAINER} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+      else
+        if [ -n "${SECOR_LOCAL_S3}" ]; then
+            run_command "s3cmd ls -c ${CONF_DIR}/test.s3cfg -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+        else
+            run_command "s3cmd ls -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+        fi
+      fi
+      count=$(</tmp/secor_tests_output.txt)
+      count="${count//[[:space:]]/}"
+      echo "Success file count: $count"
+      if [ "$count" != "$2" ]; then
+        echo -e "\e[1;41;97m_SUCCESS files not as expected: $2 \e[0m"
+        exit 1
+      fi
     done
 }
 
