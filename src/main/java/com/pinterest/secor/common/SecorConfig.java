@@ -565,4 +565,8 @@ public class SecorConfig {
     public String getThriftProtocolClass() {
         return mProperties.getString("secor.thrift.protocol.class");
     }
+
+    public String getMetricsCollectorClass() {
+        return mProperties.getString("secor.monitoring.metrics.collector.class");
+    }
 }

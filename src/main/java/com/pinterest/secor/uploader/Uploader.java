@@ -21,6 +21,7 @@ import com.pinterest.secor.common.*;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.monitoring.MetricCollector;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.ReflectionUtil;
@@ -43,6 +44,7 @@ public class Uploader {
     private static final Logger LOG = LoggerFactory.getLogger(Uploader.class);
 
     protected SecorConfig mConfig;
+    protected MetricCollector mMetricCollector;
     protected OffsetTracker mOffsetTracker;
     protected FileRegistry mFileRegistry;
     protected ZookeeperConnector mZookeeperConnector;
@@ -57,24 +59,25 @@ public class Uploader {
      * @param offsetTracker Tracker of the current offset of topics partitions
      * @param fileRegistry Registry of log files on a per-topic and per-partition basis
      * @param uploadManager Manager of the physical upload of log files to the remote repository
+     * @param metricCollector component that ingest metrics into monitoring system
      */
     public void init(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
-                     UploadManager uploadManager) {
+                     UploadManager uploadManager, MetricCollector metricCollector) {
         init(config, offsetTracker, fileRegistry, uploadManager,
-                new ZookeeperConnector(config));
+                new ZookeeperConnector(config), metricCollector);
     }
 
     // For testing use only.
     public void init(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
                      UploadManager uploadManager,
-                     ZookeeperConnector zookeeperConnector) {
+                     ZookeeperConnector zookeeperConnector, MetricCollector metricCollector) {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
         mUploadManager = uploadManager;
         mZookeeperConnector = zookeeperConnector;
         mTopicFilter = mConfig.getKafkaTopicUploadAtMinuteMarkFilter();
-
+        mMetricCollector = metricCollector;
     }
 
     protected void uploadFiles(TopicPartition topicPartition) throws Exception {
@@ -110,6 +113,8 @@ public class Uploader {
                 mFileRegistry.deleteTopicPartition(topicPartition);
                 mZookeeperConnector.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
                 mOffsetTracker.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
+
+                mMetricCollector.increment("uploader.file_uploads.count", paths.size(), topicPartition.getTopic());
             }
         } finally {
             mZookeeperConnector.unlock(lockPath);
