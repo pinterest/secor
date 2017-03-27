@@ -23,3 +23,4 @@ VOLUME /opt/secor/data
 EXPOSE 80
 
 ENTRYPOINT ["/bin/bash", "/start.sh"]
+

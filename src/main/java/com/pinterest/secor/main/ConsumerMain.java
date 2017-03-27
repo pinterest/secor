@@ -62,11 +62,11 @@ public class ConsumerMain {
             RateLimitUtil.configure(config);
             Thread.UncaughtExceptionHandler handler = new Thread.UncaughtExceptionHandler() {
                 public void uncaughtException(Thread thread, Throwable exception) {
-                    LOG.error("Thread " + thread + " failed", exception);
+                    LOG.error("Thread {} failed", thread, exception);
                     System.exit(1);
                 }
             };
-            LOG.info("starting " + config.getConsumerThreads() + " consumer threads");
+            LOG.info("starting {} consumer threads", config.getConsumerThreads());
             LinkedList<Consumer> consumers = new LinkedList<Consumer>();
             for (int i = 0; i < config.getConsumerThreads(); ++i) {
                 Consumer consumer = new Consumer(config);

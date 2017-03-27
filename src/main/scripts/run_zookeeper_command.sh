@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -17,9 +17,7 @@
 
 # Author: Pawel Garbacki (pawel@pinterest.com)
 
-if [ $# -lt 3 ]; then
-    echo "USAGE: $0 zookeeper_host:port cmd args"
-    exit 1
-fi
+CURR_DIR=`dirname $0`
+source ${CURR_DIR}/run_common.sh
 
-java -ea -cp "secor-0.1-SNAPSHOT.jar:lib/*" org.apache.zookeeper.ZooKeeperMain -server $@
+${JAVA} -ea -cp "$CLASSPATH" org.apache.zookeeper.ZooKeeperMain -server $@

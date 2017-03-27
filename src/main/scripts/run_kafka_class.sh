@@ -24,22 +24,6 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-base_dir=$(dirname $0)/..
-
-SCALA_VERSION=2.8.0
-
-# assume all dependencies have been packaged into one jar with sbt-assembly's task
-# "assembly-package-dependency"
-# for file in lib/*.jar; do
-#   CLASSPATH=$CLASSPATH:$file
-# done
-
-# for file in $base_dir/kafka*.jar; do
-#   CLASSPATH=$CLASSPATH:$file
-# done
-
-CLASSPATH=${CLASSPATH}:${base_dir}/lib/*
-
 # JMX settings
 KAFKA_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false "
 
@@ -49,12 +33,8 @@ KAFKA_LOG4J_OPTS="-Dlog4j.configuration=log4j.dev.properties"
 # Generic jvm settings you want to add
 KAFKA_OPTS=""
 
-# Which java to use
-if [ -z "${JAVA_HOME}" ]; then
-    JAVA="java"
-else
-    JAVA="${JAVA_HOME}/bin/java"
-fi
+CURR_DIR=`dirname $0`
+source ${CURR_DIR}/run_common.sh
 
 # Memory options
 KAFKA_HEAP_OPTS="-Xmx256M"

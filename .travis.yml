@@ -1,0 +1,19 @@
+language: java
+addons:
+  hosts:
+    - test-bucket.localhost
+env:
+  - PATH=$PATH:$HOME/.s3cmd SECOR_LOCAL_S3=true S3CMD=1.0.1
+jdk:
+  - oraclejdk7
+  - oraclejdk8
+before_install:
+  - wget https://github.com/s3tools/s3cmd/archive/v$S3CMD.tar.gz -O /tmp/s3cmd.tar.gz
+  - tar -xzf /tmp/s3cmd.tar.gz -C $HOME
+  - mv $HOME/s3cmd-$S3CMD $HOME/.s3cmd
+  - cd $HOME/.s3cmd && python setup.py install --user && cd -
+  - gem install fakes3 -v 0.1.7
+script:
+  - make unit
+  - make integration
+

@@ -26,29 +26,23 @@ import net.minidev.json.JSONValue;
  * from JSON data and partitions data by date.
  */
 public class JsonMessageParser extends TimestampedMessageParser {
+    private final boolean m_timestampRequired;
+
     public JsonMessageParser(SecorConfig config) {
         super(config);
+        m_timestampRequired = config.isMessageTimestampRequired();
     }
 
     @Override
-    public long extractTimestampMillis(final Message message) throws ClassCastException {
+    public long extractTimestampMillis(final Message message) {
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
         if (jsonObject != null) {
-            Object fieldValue = jsonObject.get(mConfig.getMessageTimestampName());
+            Object fieldValue = getJsonFieldValue(jsonObject);
             if (fieldValue != null) {
-                long timestamp = 0;
-                if (fieldValue instanceof Number) {
-                    timestamp = ((Number) fieldValue).longValue();
-                } else {
-                    // Sadly, I don't know of a better way to support all numeric types in Java
-                    try {
-                        timestamp = Long.valueOf(fieldValue.toString());
-                    } catch (NumberFormatException e) {
-                        timestamp = Double.valueOf(fieldValue.toString()).longValue();
-                    }
-                }
-                return toMillis(timestamp);
+                return toMillis(Double.valueOf(fieldValue.toString()).longValue());
             }
+        } else if (m_timestampRequired) {
+            throw new RuntimeException("Missing timestamp field for message: " + message);
         }
         return 0;
     }

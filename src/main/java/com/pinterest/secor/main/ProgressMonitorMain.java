@@ -21,6 +21,10 @@ import com.pinterest.secor.tools.ProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * Progress monitor main.
  *
@@ -36,11 +40,33 @@ import org.slf4j.LoggerFactory;
 public class ProgressMonitorMain {
     private static final Logger LOG = LoggerFactory.getLogger(ProgressMonitorMain.class);
 
+    private static void loop(ProgressMonitor progressMonitor, long interval) {
+	final ProgressMonitor monitor = progressMonitor;
+	Runnable runner = new Runnable() {
+		public void run() {
+		    try {
+			monitor.exportStats();
+		    } catch (Throwable t) {
+			LOG.error("Progress monitor failed", t);
+		    }
+		}
+	    };
+
+	ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	scheduler.scheduleAtFixedRate(runner, 0, interval, TimeUnit.SECONDS);
+    }
+
     public static void main(String[] args) {
         try {
             SecorConfig config = SecorConfig.load();
             ProgressMonitor progressMonitor = new ProgressMonitor(config);
-            progressMonitor.exportStats();
+
+	    long interval = config.getMonitoringIntervalSeconds();
+	    if (interval > 0) {
+		loop(progressMonitor, interval);
+	    } else {
+		progressMonitor.exportStats();
+	    }
         } catch (Throwable t) {
             LOG.error("Progress monitor failed", t);
             System.exit(1);

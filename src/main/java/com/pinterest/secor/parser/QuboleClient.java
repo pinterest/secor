@@ -31,10 +31,13 @@ import java.util.Map;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class QuboleClient {
+    private final long MAX_QUBOLE_WAIT_TIME_MS;
+
     private String mApiToken;
 
     public QuboleClient(SecorConfig config) {
         mApiToken = config.getQuboleApiToken();
+        MAX_QUBOLE_WAIT_TIME_MS = config.getQuboleTimeoutMs();
     }
 
     private Map makeRequest(URL url, String body) throws IOException {
@@ -66,7 +69,12 @@ public class QuboleClient {
             // Get Response.
             InputStream inputStream = connection.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            Map response = (Map) JSONValue.parse(reader);
+            Object responseObj = JSONValue.parse(reader);
+            if (!(responseObj instanceof Map)) {
+                throw new RuntimeException("command " + url + " body " + body + " unexpected " +
+                    responseObj);
+            }
+            Map response = (Map)responseObj;
             if (response.get("status").equals("error")) {
                 throw new RuntimeException("command " + url + " with body " + body + " failed " +
                     JSONObject.toJSONString(response));
@@ -81,7 +89,7 @@ public class QuboleClient {
     }
 
     private int query(String query) throws IOException {
-        URL url = new URL("http://api.qubole.com/api/v1.2/commands");
+        URL url = new URL("https://api.qubole.com/api/v1.2/commands");
         JSONObject queryJson = new JSONObject();
         queryJson.put("query", query);
         String body = queryJson.toString();
@@ -89,9 +97,11 @@ public class QuboleClient {
         return (Integer) response.get("id");
     }
 
-    private void waitForCompletion(int commandId) throws IOException, InterruptedException {
-        URL url = new URL("http://api.qubole.com/api/v1.2/commands/" + commandId);
-        while (true) {
+    private void waitForCompletion(int commandId, long timeout) throws IOException, InterruptedException {
+        URL url = new URL("https://api.qubole.com/api/v1.2/commands/" + commandId);
+        long endTime = System.currentTimeMillis() + timeout;
+
+        while (System.currentTimeMillis() < endTime) {
             Map response = makeRequest(url, null);
             if (response.get("status").equals("done")) {
                 return;
@@ -100,13 +110,15 @@ public class QuboleClient {
                                ". Current status " + response.get("status"));
             Thread.sleep(3000);
         }
+
+        throw new IOException("Qubole commandId" + commandId + " failed to return within timeout.");
     }
 
     public void addPartition(String table, String partition) throws IOException,
             InterruptedException {
         String queryStr = "ALTER TABLE " + table + " ADD IF NOT EXISTS PARTITION (" + partition +
-            ")";
+                ")";
         int commandId = query(queryStr);
-        waitForCompletion(commandId);
+        waitForCompletion(commandId, MAX_QUBOLE_WAIT_TIME_MS);
     }
 }

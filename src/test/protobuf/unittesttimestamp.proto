@@ -1,0 +1,19 @@
+syntax = "proto3";
+package com.pinterest.secor.protobuf;
+
+option java_package = "com.pinterest.secor.protobuf";
+import "google/protobuf/timestamp.proto";
+option java_outer_classname = "TimestampedMessages";
+
+
+message UnitTestTimestamp1 {
+    google.protobuf.Timestamp timestamp = 5;
+}
+
+message UnitTestTimestamp2 {
+	message Internal {
+		google.protobuf.Timestamp timestamp = 1;
+	}
+
+	Internal internal = 1;
+}

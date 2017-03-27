@@ -1,0 +1,23 @@
+syntax = "proto2";
+
+package com.pinterest.secor.protobuf;
+option java_package = "com.pinterest.secor.protobuf";
+option java_outer_classname = "Messages";
+
+message UnitTestMessage1 {
+	optional string somefield = 1;
+	optional uint64 timestamp = 2;
+}
+
+message UnitTestMessage2 {
+	message Internal {
+		optional uint64 timestamp = 1;
+	}
+
+	optional Internal internal = 1;
+}
+
+message UnitTestMessage3 {
+	optional string data = 1;
+	optional uint64 timestamp = 2;
+}
