@@ -1,7 +1,7 @@
 pipeline_dev_snapshot-us-west-2:
   name: 1p-secor-service-v2 DEV Snapshot Deploy
-  application: 1psecorserviceV2 
-  stages.0.clusters.0.application: 1psecorserviceV2 
+  application: 1psecorservicev2 
+  stages.0.clusters.0.application: 1psecorservicev2 
   stages.0.clusters.0.keyPair: KP_developer
   stages.0.clusters.0.iamRole: 1pSecorRoleV2
   stages.0.clusters.0.tags.Name: 1p-secor-service-v2 
@@ -13,8 +13,8 @@ pipeline_dev_snapshot-us-west-2:
 
 pipeline_dev_stable-us-west-2:
   name: 1p-secor-service-v2 DEV Stable Deploy
-  application: 1psecorserviceV2 
-  stages.0.clusters.0.application: 1psecorserviceV2
+  application: 1psecorservicev2 
+  stages.0.clusters.0.application: 1psecorservicesv2
   stages.0.clusters.0.keyPair: KP_developer
   stages.0.clusters.0.iamRole: 1pSecorRoleV2
   stages.0.clusters.0.tags.Name: 1p-secor-service-v2
@@ -24,9 +24,23 @@ pipeline_dev_stable-us-west-2:
   triggers.0.job: "karyon-stable-1p-secor-service-v2"
   triggers.0.propertyFile: "AMI-1p-secor-service-v2.json"
 
+pipeline_promote_stable_to_prod_v1.0-us-west-2:
+   name: 1p-secor-service-v2 promote-stable-to-prod
+   application: 1psecorservicev2
+   stages.1.clusters.0.application: 1psecorservicev2
+   stages.1.clusters.0.keyPair: KP_developer
+   stages.1.clusters.0.freeFormDetails: "d0prod1-r01"
+   stages.1.clusters.0.iamRole: 1pSecorRoleV2
+   stages.1.clusters.0.securityGroups: ["sg-f5148393", "sg-f2e65796"]
+   stages.1.clusters.0.tags.Name: 1p-secor-service-v2
+   stages.1.clusters.0.capacity.desired: <cluster size, default is 3, set here to override>
+   stages.1.clusters.0.capacity.max: <cluster size, default is 3, set here to override>
+   stages.1.clusters.0.capacity.min: <cluster size, default is 3, set here to override>
+   stages.2.job: "application-integration-test"
+
 application:
-  application: 1psecorserviceV2 
-  description: "Create Application: 1psecorserviceV2"
+  application: 1psecorservicev2 
+  description: "Create Application: 1psecorservicev2"
   job.0.application.email: sam.sgro@thomsonreuters.com
   job.0.application.name: 1psecorserviceV2 
 
