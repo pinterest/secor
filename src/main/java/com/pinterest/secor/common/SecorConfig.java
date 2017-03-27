@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -559,10 +560,28 @@ public class SecorConfig {
     }
 
     public String[] getStringArray(String name) {
+        checkProperty(name);
         return mProperties.getStringArray(name);
     }
 
     public String getThriftProtocolClass() {
         return mProperties.getString("secor.thrift.protocol.class");
+    }
+
+    public LinkedHashMap<String, String> getMessagePartitionFieldPrefixToJsonPathMap () {
+        String[] fieldPrefix = getStringArray("message.field.partition.prefix");
+        String[] fieldJsonPath = getStringArray("message.field.partition.jsonpath");
+
+        if ( fieldPrefix.length != fieldJsonPath.length ) {
+            throw new IllegalArgumentException(
+                "Number of entries in message.field.partition.prefix must match message.field.partition.jsonpath");
+        }
+
+        LinkedHashMap<String, String> fieldPrefixToJsonPathMap = new LinkedHashMap<String, String>();
+        for (int i = 0; i < fieldPrefix.length; ++i) {
+            fieldPrefixToJsonPathMap.put(fieldPrefix[i], fieldJsonPath[i]);
+        }
+
+        return fieldPrefixToJsonPathMap;
     }
 }
