@@ -1,4 +1,4 @@
-pipeline_dev_snapshot-us-west-2:
+pipeline_dev_snapshot_v2.0-us-west-2:
   name: 1p-secor-service-v2 DEV Snapshot Deploy
   application: 1psecorservicev2 
   stages.0.clusters.0.application: 1psecorservicev2 
@@ -11,7 +11,7 @@ pipeline_dev_snapshot-us-west-2:
   triggers.0.job: "karyon-snapshot-1p-secor-service-v2"
   triggers.0.propertyFile: "AMI-1p-secor-service-v2.json"
 
-pipeline_dev_stable-us-west-2:
+pipeline_dev_stable_v2.0-us-west-2:
   name: 1p-secor-service-v2 DEV Stable Deploy
   application: 1psecorservicev2 
   stages.0.clusters.0.application: 1psecorservicesv2
@@ -33,15 +33,15 @@ pipeline_promote_stable_to_prod_v1.0-us-west-2:
    stages.1.clusters.0.iamRole: 1pSecorRoleV2
    stages.1.clusters.0.securityGroups: ["sg-f5148393", "sg-f2e65796"]
    stages.1.clusters.0.tags.Name: 1p-secor-service-v2
-   stages.1.clusters.0.capacity.desired: <cluster size, default is 3, set here to override>
-   stages.1.clusters.0.capacity.max: <cluster size, default is 3, set here to override>
-   stages.1.clusters.0.capacity.min: <cluster size, default is 3, set here to override>
+   stages.1.clusters.0.capacity.desired: 1
+   stages.1.clusters.0.capacity.max: 1
+   stages.1.clusters.0.capacity.min: 1
    stages.2.job: "application-integration-test"
 
 application:
   application: 1psecorservicev2 
   description: "Create Application: 1psecorservicev2"
   job.0.application.email: sam.sgro@thomsonreuters.com
-  job.0.application.name: 1psecorserviceV2 
+  job.0.application.name: 1psecorservicev2 
 
 accounts: [tr-dev]
