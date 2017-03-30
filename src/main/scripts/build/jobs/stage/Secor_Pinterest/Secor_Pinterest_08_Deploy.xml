@@ -1,9 +1,9 @@
-<?xml version='1.0' encoding='UTF-8'?><project>
+<?xml version="1.0" encoding="UTF-8"?><project>
   <actions/>
-  <description></description>
+  <description/>
   <keepDependencies>false</keepDependencies>
   <properties>
-    <com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty plugin="naginator@1.15">
+    <com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty plugin="naginator@1.17.2">
       <optOut>false</optOut>
     </com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty>
     <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
@@ -25,7 +25,7 @@
       <includeTestSummary>true</includeTestSummary>
       <showCommitList>true</showCommitList>
       <includeCustomMessage>false</includeCustomMessage>
-      <customMessage></customMessage>
+      <customMessage/>
     </jenkins.plugins.slack.SlackNotifier_-SlackJobProperty>
     <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@1.9.0">
       <maxConcurrentPerNode>0</maxConcurrentPerNode>
@@ -34,7 +34,7 @@
       <throttleEnabled>false</throttleEnabled>
       <throttleOption>project</throttleOption>
       <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
-      <paramsToUseForLimit></paramsToUseForLimit>
+      <paramsToUseForLimit/>
     </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
   </properties>
   <scm class="hudson.scm.NullSCM"/>
@@ -42,21 +42,40 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers/>
+  <triggers>
+    <jenkins.triggers.ReverseBuildTrigger>
+      <spec/>
+      <upstreamProjects>Secor_05_Package</upstreamProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+        <completeBuild>true</completeBuild>
+      </threshold>
+    </jenkins.triggers.ReverseBuildTrigger>
+  </triggers>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>mco service secor restart -F hostname=&quot;/stage-0001-secor/&quot; -t 360 || echo Command &apos;mco service secor restart&apos; failed.</command>
+      <command>sleep 5; mco rpc package yum_clean mode=all -F hostname="/stage-0001-secor-pinterest/" -t 360</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>sleep 5; mco package unified-secor-pinterest status -F hostname="/stage-0001-secor-pinterest/" -t 360</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>sleep 5; mco package unified-secor-pinterest update -F hostname="/stage-0001-secor-pinterest/" -t 360</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>sleep 5; mco puppet runonce -F hostname="/stage-0001-secor-pinterest/" -t 360</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
     <jenkins.plugins.slack.SlackNotifier plugin="slack@1.8.1">
       <teamDomain>unified-slack</teamDomain>
       <authToken>vl52JGoQU88oPN83ItYYs2r7</authToken>
-      <buildServerUrl>https://stage-0000-jenkins-master.unified.com/</buildServerUrl>
-      <room>#jenkins-test, #platform-engineering, #cloud-experts, #commit-deploy-alerts, #pagerduty, #quality-engineering</room>
+      <buildServerUrl>https://stage-jenkins.unified.com/</buildServerUrl>
+      <room>#jenkins-test, #platform-engineering, #ops-tickets, #commit-deploy-alerts, #quality-engineering</room>
     </jenkins.plugins.slack.SlackNotifier>
   </publishers>
   <buildWrappers/>
 </project>
-

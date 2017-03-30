@@ -1,6 +1,11 @@
-<?xml version='1.0' encoding='UTF-8'?><maven2-moduleset plugin="maven-plugin@2.13">
-  <actions/>
-  <description></description>
+<?xml version="1.0" encoding="UTF-8"?><maven2-moduleset plugin="maven-plugin@2.13">  <actions/>
+  <description/>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>-1</daysToKeep>
+    <numToKeep>7</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty plugin="naginator@1.15">
@@ -11,9 +16,9 @@
       <rebuildDisabled>false</rebuildDisabled>
     </com.sonyericsson.rebuild.RebuildSettings>
     <jenkins.plugins.slack.SlackNotifier_-SlackJobProperty plugin="slack@1.8.1">
-      <teamDomain></teamDomain>
-      <token></token>
-      <room></room>
+      <teamDomain/>
+      <token/>
+      <room/>
       <startNotification>false</startNotification>
       <notifySuccess>false</notifySuccess>
       <notifyAborted>false</notifyAborted>
@@ -25,7 +30,7 @@
       <includeTestSummary>false</includeTestSummary>
       <showCommitList>false</showCommitList>
       <includeCustomMessage>false</includeCustomMessage>
-      <customMessage></customMessage>
+      <customMessage/>
     </jenkins.plugins.slack.SlackNotifier_-SlackJobProperty>
     <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@1.9.0">
       <maxConcurrentPerNode>0</maxConcurrentPerNode>
@@ -34,14 +39,14 @@
       <throttleEnabled>false</throttleEnabled>
       <throttleOption>project</throttleOption>
       <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
-      <paramsToUseForLimit></paramsToUseForLimit>
+      <paramsToUseForLimit/>
     </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
   </properties>
   <scm class="hudson.plugins.git.GitSCM" plugin="git@2.4.2">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
-        <url>git@github.com:Unified/secor.git</url>
+        <url>git@github.com:Unified/secor_pinterest.git</url>
         <credentialsId>d6e29dff-b49c-453e-a525-2f55f1103af4</credentialsId>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
@@ -54,18 +59,22 @@
     <submoduleCfg class="list"/>
     <extensions/>
   </scm>
-  <assignedNode>master</assignedNode>
-  <canRoam>false</canRoam>
+  <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers/>
+  <triggers>
+    <hudson.triggers.SCMTrigger>
+      <spec>*/5 * * * *</spec>
+      <ignorePostCommitHooks>false</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
+  </triggers>
   <concurrentBuild>false</concurrentBuild>
   <rootModule>
     <groupId>com.pinterest.secor</groupId>
     <artifactId>secor</artifactId>
   </rootModule>
-  <goals>clean package -DskipTests</goals>
+  <goals>clean package</goals>
   <aggregatorStyleBuild>true</aggregatorStyleBuild>
   <incrementalBuild>false</incrementalBuild>
   <ignoreUpstremChanges>true</ignoreUpstremChanges>
@@ -82,23 +91,24 @@
   <settings class="jenkins.mvn.DefaultSettingsProvider"/>
   <globalSettings class="jenkins.mvn.DefaultGlobalSettingsProvider"/>
   <reporters/>
-  <publishers/>
+  <publishers>
+    <hudson.tasks.BuildTrigger>
+      <childProjects>Secor_Stage_Deploy_NEW</childProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+        <completeBuild>true</completeBuild>
+      </threshold>
+    </hudson.tasks.BuildTrigger>
+  </publishers>
   <buildWrappers/>
   <prebuilders/>
-  <postbuilders>
-    <hudson.tasks.Shell>
-      <command>mkdir &quot;${WORKSPACE}/tmp&quot;
-tar xzvf &quot;${WORKSPACE}/target/secor-0.1-SNAPSHOT-bin.tar.gz&quot; -C &quot;${WORKSPACE}/tmp/&quot;
-cd &quot;${WORKSPACE}/tmp/&quot;
-/srv/yum/scripts/shipit.sh secor 0.0.1 ${BUILD_NUMBER} &quot;${WORKSPACE}/tmp/&quot; /opt/secor &apos;Secor is a service persisting Kafka logs to Amazon S3.&apos; https://github.com/Unified/secor secor secor s3://yum-unified-stage/
-cd -; rm -rf &quot;${WORKSPACE}/tmp/&quot;</command>
-    </hudson.tasks.Shell>
-  </postbuilders>
+  <postbuilders/>
   <runPostStepsIfResult>
-    <name>SUCCESS</name>
-    <ordinal>0</ordinal>
-    <color>BLUE</color>
+    <name>FAILURE</name>
+    <ordinal>2</ordinal>
+    <color>RED</color>
     <completeBuild>true</completeBuild>
   </runPostStepsIfResult>
 </maven2-moduleset>
-

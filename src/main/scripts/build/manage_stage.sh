@@ -36,11 +36,11 @@ source "${DIR_BASE}/src/main/scripts/build/jenkins.sh"
 
 # ----------  Local configuration  ----------
 
-declare -a JOBS=(                   \
-    Secor_02_Snapshot               \
-    Secor_05_Package                \
-    Secor_08_Deploy                 \
-    Secor_09_Restart	            \
+declare -a JOBS=(                     \
+    Secor_Pinterest_02_Snapshot       \
+    Secor_Pinterest_04_Package        \
+    Secor_Pinterest_08_Deploy         \
+    Secor_Pinterest_09_Manage_Service \
 )
 
 
@@ -48,7 +48,7 @@ declare -a JOBS=(                   \
 # MAIN
 # ======================================================================================================================
 
-main_loop "$1" "Secor" JOBS "$2"
+main_loop "$1" "Secor_Pinterest" JOBS "$2"
 
 
 # ======================================================================================================================
