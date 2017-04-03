@@ -24,6 +24,20 @@ pipeline_dev_stable-us-west-2:
   triggers.0.job: "karyon-stable-1p-secor-service"
   triggers.0.propertyFile: "AMI-1p-secor-service.json"
 
+pipeline_promote_stable_to_prod_v1.0-us-west-2:
+   name: 1p-secor-service promote-stable-to-prod
+   application: 1psecorservice
+   stages.1.clusters.0.application: 1psecorservice
+   stages.1.clusters.0.keyPair: KP_developer
+   stages.1.clusters.0.freeFormDetails: "d0prod1-r01"
+   stages.1.clusters.0.iamRole: 1pSecorRole
+   stages.1.clusters.0.securityGroups: ["sg-f5148393", "sg-f2e65796"]
+   stages.1.clusters.0.tags.Name: 1p-secor-service
+   stages.1.clusters.0.capacity.desired: 1
+   stages.1.clusters.0.capacity.max: 1
+   stages.1.clusters.0.capacity.min: 1
+   stages.2.job: "application-integration-test"
+
 application:
   application: 1psecorservice 
   description: "Create Application: 1psecorservice"
