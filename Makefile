@@ -3,6 +3,7 @@ TEST_HOME=/tmp/secor_test
 TEST_CONFIG=src/test/config
 JAR_FILE=target/secor-*-SNAPSHOT-bin.tar.gz
 MVN_OPTS=-DskipTests=true -Dmaven.javadoc.skip=true
+CONTAINERS=$(shell ls containers)
 
 build:
 	@mvn package $(MVN_OPTS)
@@ -21,3 +22,14 @@ integration: build
 
 test: build unit integration
 
+container_%:
+	docker build -t secor_$* containers/$*
+
+test_%: container_%
+	@mkdir -p .m2
+	docker run -v $(CURDIR)/.m2:/root/.m2:rw -v $(CURDIR):/work:rw secor_$* sh -c "echo 127.0.0.1 test-bucket.localhost >> /etc/hosts && make clean test"
+
+docker_test: $(foreach container, $(CONTAINERS), test_$(container))
+
+clean:
+	rm -rf target/

@@ -113,7 +113,7 @@ public class KafkaClient {
 
     private Message getMessage(TopicPartition topicPartition, long offset,
                                SimpleConsumer consumer) {
-        LOG.debug("fetching message topic {} partition {} offset ",
+        LOG.debug("fetching message topic {} partition {} offset {}",
                 topicPartition.getTopic(), topicPartition.getPartition(), offset);
         final int MAX_MESSAGE_SIZE_BYTES = mConfig.getMaxMessageSizeBytes();
         final String clientName = getClientName(topicPartition);

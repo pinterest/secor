@@ -34,7 +34,7 @@ public class OffsetMessageParser extends MessageParser {
         long offset = message.getOffset();
         long offsetsPerPartition = mConfig.getOffsetsPerPartition();
         long partition = (offset / offsetsPerPartition) * offsetsPerPartition;
-        String[] result = {"offset=" + partition};
+        String[] result = {offsetPrefix + partition};
         return result;
     }
 }

@@ -44,6 +44,10 @@ bin/
 .settings/
 .project
 .classpath
+
 /build/
 /conf/
 src/test/java/com/thomsonreuters
+
+.m2
+

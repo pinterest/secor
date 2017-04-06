@@ -37,7 +37,7 @@ import java.util.concurrent.Future;
 public class HadoopS3UploadManager extends UploadManager {
     private static final Logger LOG = LoggerFactory.getLogger(HadoopS3UploadManager.class);
 
-    private static final ExecutorService executor = Executors.newFixedThreadPool(256);
+    protected static final ExecutorService executor = Executors.newFixedThreadPool(256);
 
     public HadoopS3UploadManager(SecorConfig config) {
         super(config);
@@ -47,14 +47,23 @@ public class HadoopS3UploadManager extends UploadManager {
         String prefix = FileUtil.getPrefix(localPath.getTopic(), mConfig);
         LogFilePath path = localPath.withPrefix(prefix);
         final String localLogFilename = localPath.getLogFilePath();
-        final String logFilename = path.getLogFilePath();
-        LOG.info("uploading file {} to {}", localLogFilename, logFilename);
+        final String logFileName;
+
+        if (FileUtil.s3PathPrefixIsAltered(path.getLogFilePath(), mConfig)) {
+           logFileName = localPath.withPrefix(FileUtil.getS3AlternativePrefix(mConfig)).getLogFilePath();
+           LOG.info("Will upload file to alternative s3 prefix path {}", logFileName);
+        }
+        else {
+            logFileName = path.getLogFilePath();
+        }
+
+        LOG.info("uploading file {} to {}", localLogFilename, logFileName);
 
         final Future<?> f = executor.submit(new Runnable() {
             @Override
             public void run() {
                 try {
-                    FileUtil.moveToCloud(localLogFilename, logFilename);
+                    FileUtil.moveToCloud(localLogFilename, logFileName);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

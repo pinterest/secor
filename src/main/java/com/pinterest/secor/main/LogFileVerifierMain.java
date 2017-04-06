@@ -49,11 +49,13 @@ public class LogFileVerifierMain {
                .create("t"));
         options.addOption(OptionBuilder.withLongOpt("start_offset")
                .withDescription("offset identifying the first set of files to check")
+               .hasArg()
                .withArgName("<offset>")
                .withType(Long.class)
                .create("s"));
         options.addOption(OptionBuilder.withLongOpt("end_offset")
                .withDescription("offset identifying the last set of files to check")
+               .hasArg()
                .withArgName("<offset>")
                .withType(Long.class)
                .create("e"));

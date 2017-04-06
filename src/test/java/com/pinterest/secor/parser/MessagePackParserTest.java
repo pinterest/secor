@@ -45,8 +45,16 @@ public class MessagePackParserTest extends TestCase {
         SecorConfig mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("ts");
         Mockito.when(mConfig.getTimeZone()).thenReturn(TimeZone.getTimeZone("UTC"));
+        Mockito.when(TimestampedMessageParser.usingDateFormat(mConfig)).thenReturn("yyyy-MM-dd");
+        Mockito.when(TimestampedMessageParser.usingHourFormat(mConfig)).thenReturn("HH");
+        Mockito.when(TimestampedMessageParser.usingMinuteFormat(mConfig)).thenReturn("mm");
+        Mockito.when(TimestampedMessageParser.usingDatePrefix(mConfig)).thenReturn("dt=");
+        Mockito.when(TimestampedMessageParser.usingHourPrefix(mConfig)).thenReturn("hr=");
+        Mockito.when(TimestampedMessageParser.usingMinutePrefix(mConfig)).thenReturn("min=");
+
         mMessagePackParser = new MessagePackParser(mConfig);
         mObjectMapper = new ObjectMapper(new MessagePackFactory());
+
 
         HashMap<String, Object> mapWithSecondTimestamp = new HashMap<String, Object>();
         mapWithSecondTimestamp.put("ts", 1405970352);
@@ -77,6 +85,8 @@ public class MessagePackParserTest extends TestCase {
         mapWithMillisStringTimestamp.put("age", 67);
         mMessageWithMillisStringTimestamp = new Message("test", 0, 0, null,
                 mObjectMapper.writeValueAsBytes(mapWithMillisStringTimestamp));
+
+
 
     }
 
