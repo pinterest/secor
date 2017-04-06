@@ -22,12 +22,9 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.pinterest.secor.common.*;
-<<<<<<< HEAD
 import com.amazonaws.auth.AWSCredentialsProvider;
-=======
 import com.pinterest.secor.util.FileUtil;
 import com.amazonaws.ClientConfiguration;
->>>>>>> upstream/master
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
@@ -109,12 +106,7 @@ public class S3UploadManager extends UploadManager {
         }
 
         if (accessKey.isEmpty() || secretKey.isEmpty()) {
-<<<<<<< HEAD
-        	    AWSCredentialsProvider provider = new InstanceProfileCredentialsProvider();
-            client = new AmazonS3Client(provider);
-=======
-            provider = new DefaultAWSCredentialsProviderChain();
->>>>>>> upstream/master
+        	    provider = new InstanceProfileCredentialsProvider();
         } else {
             provider = new AWSCredentialsProvider() {
                 public AWSCredentials getCredentials() {
@@ -168,10 +160,9 @@ public class S3UploadManager extends UploadManager {
 
         // make upload request, taking into account configured options for encryption
         PutObjectRequest uploadRequest = new PutObjectRequest(s3Bucket, s3Key, localFile);
-<<<<<<< HEAD
+
         uploadRequest.setCannedAcl(CannedAccessControlList.BucketOwnerFullControl);
-=======
->>>>>>> upstream/master
+
         if (!mConfig.getAwsSseType().isEmpty()) {
             if (S3.equals(mConfig.getAwsSseType())) {
                 LOG.info("uploading file {} to s3://{}/{} with S3-managed encryption", localFile, s3Bucket, s3Key);
