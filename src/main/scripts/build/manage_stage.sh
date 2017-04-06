@@ -36,11 +36,14 @@ source "${DIR_BASE}/src/main/scripts/build/jenkins.sh"
 
 # ----------  Local configuration  ----------
 
-declare -a JOBS=(                     \
-    Secor_Pinterest_02_Snapshot       \
-    Secor_Pinterest_04_Package        \
-    Secor_Pinterest_08_Deploy         \
-    Secor_Pinterest_09_Manage_Service \
+declare -a JOBS=(                       \
+    Secor_Pinterest_02_Snapshot         \
+    Secor_Pinterest_04_Package          \
+    Secor_Pinterest_05_Provision        \
+    Secor_Pinterest_06_Provision_Update \
+    Secor_Pinterest_07_Deploy           \
+    Secor_Pinterest_08_Manage_Service   \
+    Secor_Pinterest_09_Deprovision      \
 )
 
 
