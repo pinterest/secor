@@ -37,6 +37,7 @@ source "${DIR_BASE}/src/main/scripts/build/jenkins.sh"
 # ----------  Local configuration  ----------
 
 declare -a JOBS=(                       \
+    Secor_Pinterest_01_Pull_Requests    \
     Secor_Pinterest_02_Snapshot         \
     Secor_Pinterest_04_Package          \
     Secor_Pinterest_05_Provision        \
