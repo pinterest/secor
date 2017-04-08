@@ -226,12 +226,14 @@ public class FileReaderWriterFactoryTest extends TestCase {
                 );
         assert writer.getLength() == 0L;
 
+        /*
         mockDelimitedTextFileWriter(true);
         writer = (FileWriter) ReflectionUtil
                 .createFileWriter(mConfig.getFileReaderWriterFactory(),
                         mLogFilePathGz, new GzipCodec(), mConfig
                 );
         assert writer.getLength() == 0L;
+        */
     }
 
     public void testDelimitedTextFileReader() throws Exception {

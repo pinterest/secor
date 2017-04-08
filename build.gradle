@@ -12,6 +12,7 @@ apply plugin: 'os-package'
 apply plugin: 'net.researchgate.release'
 apply plugin: 'org.sonarqube'
 apply plugin: 'jacoco'
+apply plugin: 'com.google.protobuf'
 // END
 
 // group = 'com.pinterest'
@@ -25,7 +26,7 @@ targetCompatibility = 1.8
 
 // 1p-service stuff - BEGIN
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.2'
+    gradleVersion = '3.4.1'
 }
 
 apply from: file('codequality/check.gradle')
@@ -65,6 +66,9 @@ sourceSets {
         }
         resources {
             srcDir 'src/test/resources'
+        }
+        proto {
+            srcDir 'src/test/protobuf'
         }
     }
 }
@@ -135,6 +139,7 @@ buildscript {
      maven { url "http://maven.twttr.com" }
      maven { url "http://repo.typesafe.com/typesafe/releases" }
      maven { url "http://repo.maven.apache.org/maven2" }
+     maven { url "https://plugins.gradle.org/m2/" }
   }
 
   dependencies {
@@ -149,6 +154,9 @@ buildscript {
 
     classpath group: 'org.sonarsource.scanner.gradle', name: 'sonarqube-gradle-plugin', version: '1.2'
     // END 
+
+    classpath "gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.1"
+
   }
 }
 
