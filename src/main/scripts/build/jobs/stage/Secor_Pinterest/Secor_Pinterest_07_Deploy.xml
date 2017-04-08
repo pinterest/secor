@@ -42,31 +42,23 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers>
-    <jenkins.triggers.ReverseBuildTrigger>
-      <spec/>
-      <upstreamProjects>Secor_05_Package</upstreamProjects>
-      <threshold>
-        <name>SUCCESS</name>
-        <ordinal>0</ordinal>
-        <color>BLUE</color>
-        <completeBuild>true</completeBuild>
-      </threshold>
-    </jenkins.triggers.ReverseBuildTrigger>
-  </triggers>
+  <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>sleep 5; mco rpc package yum_clean mode=all -F hostname="/stage-0001-secor-pinterest/" -t 360</command>
+      <command>sleep 5; mco rpc package yum_clean mode=all -F hostname="/stage-0001-secor-(jobinstanceid|collectiontime)/" -t 360</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
-      <command>sleep 5; mco package unified-secor-pinterest status -F hostname="/stage-0001-secor-pinterest/" -t 360</command>
+      <command>sleep 5; mco package unified-secor-pinterest status -F hostname="/stage-0001-secor-(jobinstanceid|collectiontime)/" -t 360</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
-      <command>sleep 5; mco package unified-secor-pinterest update -F hostname="/stage-0001-secor-pinterest/" -t 360</command>
+      <command>sleep 5; mco package unified-secor-pinterest update -F hostname="/stage-0001-secor-(jobinstanceid|collectiontime)/" -t 360</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
-      <command>sleep 5; mco puppet runonce -F hostname="/stage-0001-secor-pinterest/" -t 360</command>
+      <command>sleep 5; mco service puppet stop -F hostname="/stage-0001-secor-(jobinstanceid|collectiontime)/" -t 360</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>sleep 5; mco puppet runonce -F hostname="/stage-0001-secor-(jobinstanceid|collectiontime)/" -t 360</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>

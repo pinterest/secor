@@ -39,6 +39,26 @@
           <description>Username creating this stack (using all lowercase, username is usually the first letter of firstname then full lastname)</description>
           <defaultValue/>
         </hudson.model.TextParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>JOB_INSTANCE_ID_INSTANCE_COUNT</name>
+          <description>Number of EC2 instances to launch for each Secor JobInstanceId role.</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>1</string>
+              <string>3</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>COLLECTION_TIME_INSTANCE_COUNT</name>
+          <description>Number of EC2 instances to launch for each Secor CollectionTime role.</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>1</string>
+              <string>3</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
     <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
@@ -105,7 +125,7 @@
 [ -z "${PROJECT_NAME}"  ] &amp;&amp; declare PROJECT_NAME="secor-pinterest"
 [ -z "${TEMPLATE_NAME}" ] &amp;&amp; declare TEMPLATE_NAME="secor_pinterest.json"
 
-declare PARAMETERS="ParameterKey=UsernameOfOwner,ParameterValue=${USERNAME_OF_OWNER} ParameterKey=UsernameOfProvisioner,ParameterValue=${USERNAME_OF_PROVISIONER}"
+declare PARAMETERS="ParameterKey=UsernameOfOwner,ParameterValue=${USERNAME_OF_OWNER} ParameterKey=UsernameOfProvisioner,ParameterValue=${USERNAME_OF_PROVISIONER} ParameterKey=JobInstanceIdInstanceCount,ParameterValue=${JOB_INSTANCE_ID_INSTANCE_COUNT} ParameterKey=CollectionTimeInstanceCount,ParameterValue=${COLLECTION_TIME_INSTANCE_COUNT}"
 
 ~/techops/repo/cloudformation/update.sh                                              \
     "${PROJECT_NAME}"                                                                \

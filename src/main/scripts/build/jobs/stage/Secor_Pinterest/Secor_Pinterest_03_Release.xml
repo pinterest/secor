@@ -1,11 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?><maven2-moduleset plugin="maven-plugin@2.13">
   <actions/>
-  <description/>
+  <description>Create a versioned release with a git tag.&#13;
+</description>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>-1</daysToKeep>
+    <numToKeep>50</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty plugin="naginator@1.17.2">
       <optOut>false</optOut>
     </com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>MAJOR_VERSION</name>
+          <description/>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>MINOR_VERSION</name>
+          <description/>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PATCH_VERSION</name>
+          <description/>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
     <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
       <autoRebuild>false</autoRebuild>
       <rebuildDisabled>false</rebuildDisabled>
@@ -52,20 +78,23 @@
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
     <submoduleCfg class="list"/>
-    <extensions/>
+    <extensions>
+      <hudson.plugins.git.extensions.impl.UserExclusion>
+        <excludedUsers>jenkins-unified</excludedUsers>
+      </hudson.plugins.git.extensions.impl.UserExclusion>
+    </extensions>
   </scm>
-  <assignedNode>master</assignedNode>
-  <canRoam>false</canRoam>
+  <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <rootModule>
-    <groupId>com.pinterest</groupId>
-    <artifactId>secor</artifactId>
+    <groupId>com.unified.platform</groupId>
+    <artifactId>ECM-Updater</artifactId>
   </rootModule>
-  <goals>clean package -DskipTests</goals>
+  <goals>deploy</goals>
   <aggregatorStyleBuild>true</aggregatorStyleBuild>
   <incrementalBuild>false</incrementalBuild>
   <ignoreUpstremChanges>true</ignoreUpstremChanges>
@@ -83,27 +112,46 @@
   <globalSettings class="jenkins.mvn.DefaultGlobalSettingsProvider"/>
   <reporters/>
   <publishers>
-    <hudson.tasks.BuildTrigger>
-      <childProjects>Secor_Pinterest_07_Deploy</childProjects>
-      <threshold>
-        <name>SUCCESS</name>
-        <ordinal>0</ordinal>
-        <color>BLUE</color>
-        <completeBuild>true</completeBuild>
-      </threshold>
-    </hudson.tasks.BuildTrigger>
+    <hudson.plugins.jacoco.JacocoPublisher plugin="jacoco@1.0.19">
+      <execPattern>**/target/**.exec</execPattern>
+      <classPattern>**/target/classes</classPattern>
+      <sourcePattern>**/src/main/java</sourcePattern>
+      <inclusionPattern/>
+      <exclusionPattern>**/test</exclusionPattern>
+      <minimumInstructionCoverage>0</minimumInstructionCoverage>
+      <minimumBranchCoverage>0</minimumBranchCoverage>
+      <minimumComplexityCoverage>0</minimumComplexityCoverage>
+      <minimumLineCoverage>0</minimumLineCoverage>
+      <minimumMethodCoverage>0</minimumMethodCoverage>
+      <minimumClassCoverage>0</minimumClassCoverage>
+      <maximumInstructionCoverage>0</maximumInstructionCoverage>
+      <maximumBranchCoverage>0</maximumBranchCoverage>
+      <maximumComplexityCoverage>0</maximumComplexityCoverage>
+      <maximumLineCoverage>0</maximumLineCoverage>
+      <maximumMethodCoverage>0</maximumMethodCoverage>
+      <maximumClassCoverage>0</maximumClassCoverage>
+      <changeBuildStatus>false</changeBuildStatus>
+    </hudson.plugins.jacoco.JacocoPublisher>
   </publishers>
-  <buildWrappers/>
-  <prebuilders/>
-  <postbuilders>
+  <buildWrappers>
+    <org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper plugin="credentials-binding@1.10">
+      <bindings>
+        <org.jenkinsci.plugins.credentialsbinding.impl.StringBinding>
+          <credentialsId>a836197d-df5b-471a-a912-eacd59da185f</credentialsId>
+          <variable>GITHUB_TOKEN</variable>
+        </org.jenkinsci.plugins.credentialsbinding.impl.StringBinding>
+      </bindings>
+    </org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper>
+  </buildWrappers>
+  <prebuilders>
     <hudson.tasks.Shell>
-      <command>if [ ! -d "${WORKSPACE}/tmp" ]; then mkdir "${WORKSPACE}/tmp"; fi
-tar xzvf "${WORKSPACE}/target/secor-0.23-SNAPSHOT-bin.tar.gz" -C "${WORKSPACE}/tmp/"
-cd "${WORKSPACE}/tmp/"
-/srv/yum/scripts/shipit.sh secor-pinterest 0.0.23 ${BUILD_NUMBER} "${WORKSPACE}/tmp/" /opt/secor 'Secor is a service persisting Kafka logs to Amazon S3.' https://github.com/Unified/secor_pinterest secor secor s3://yum-unified-stage/
-cd -; rm -rf "${WORKSPACE}/tmp/"</command>
+      <command>PROJECT_NAME="secor_pinterest" \
+	bash ~/repo/Base/src/main/scripts/build/release/release.sh
+
+#~/techops/source_control/release.sh</command>
     </hudson.tasks.Shell>
-  </postbuilders>
+  </prebuilders>
+  <postbuilders/>
   <runPostStepsIfResult>
     <name>SUCCESS</name>
     <ordinal>0</ordinal>
