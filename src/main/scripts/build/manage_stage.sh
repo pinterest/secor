@@ -36,11 +36,16 @@ source "${DIR_BASE}/src/main/scripts/build/jenkins.sh"
 
 # ----------  Local configuration  ----------
 
-declare -a JOBS=(                   \
-    Secor_02_Snapshot               \
-    Secor_05_Package                \
-    Secor_08_Deploy                 \
-    Secor_09_Restart	            \
+declare -a JOBS=(                       \
+    Secor_Pinterest_01_Pull_Requests    \
+    Secor_Pinterest_02_Snapshot         \
+    Secor_Pinterest_03_Release          \
+    Secor_Pinterest_04_Package          \
+    Secor_Pinterest_05_Provision        \
+    Secor_Pinterest_06_Provision_Update \
+    Secor_Pinterest_07_Deploy           \
+    Secor_Pinterest_08_Manage_Service   \
+    Secor_Pinterest_09_Deprovision      \
 )
 
 
@@ -48,7 +53,7 @@ declare -a JOBS=(                   \
 # MAIN
 # ======================================================================================================================
 
-main_loop "$1" "Secor" JOBS "$2"
+main_loop "$1" "Secor_Pinterest" JOBS "$2"
 
 
 # ======================================================================================================================

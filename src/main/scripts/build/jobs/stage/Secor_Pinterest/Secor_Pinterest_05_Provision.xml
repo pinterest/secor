@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><project>
+  <actions/>
+  <description/>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>-1</daysToKeep>
+    <numToKeep>50</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty plugin="naginator@1.17.2">
+      <optOut>false</optOut>
+    </com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>REGION</name>
+          <description>AWS region</description>
+          <defaultValue>us-east-1</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ENVIRONMENT_TYPE</name>
+          <description>The type of environment (stage or production)</description>
+          <defaultValue>stage</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ENVIRONMENT_ID</name>
+          <description>The identifier for the environment (format DDDD)</description>
+          <defaultValue>0001</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.TextParameterDefinition>
+          <name>USERNAME_OF_OWNER</name>
+          <description>Username responsible for this stack (using all lowercase, username is usually the first letter of firstname then full lastname)</description>
+          <defaultValue/>
+        </hudson.model.TextParameterDefinition>
+        <hudson.model.TextParameterDefinition>
+          <name>USERNAME_OF_PROVISIONER</name>
+          <description>Username creating this stack (using all lowercase, username is usually the first letter of firstname then full lastname)</description>
+          <defaultValue/>
+        </hudson.model.TextParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>JOB_INSTANCE_ID_INSTANCE_COUNT</name>
+          <description>Number of EC2 instances to launch for each Secor JobInstanceId role.</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>1</string>
+              <string>3</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>COLLECTION_TIME_INSTANCE_COUNT</name>
+          <description>Number of EC2 instances to launch for each Secor CollectionTime role.</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>1</string>
+              <string>3</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
+      <autoRebuild>false</autoRebuild>
+      <rebuildDisabled>false</rebuildDisabled>
+    </com.sonyericsson.rebuild.RebuildSettings>
+    <jenkins.plugins.slack.SlackNotifier_-SlackJobProperty plugin="slack@1.8.1">
+      <teamDomain/>
+      <token/>
+      <room/>
+      <startNotification>false</startNotification>
+      <notifySuccess>false</notifySuccess>
+      <notifyAborted>false</notifyAborted>
+      <notifyNotBuilt>false</notifyNotBuilt>
+      <notifyUnstable>false</notifyUnstable>
+      <notifyFailure>false</notifyFailure>
+      <notifyBackToNormal>false</notifyBackToNormal>
+      <notifyRepeatedFailure>false</notifyRepeatedFailure>
+      <includeTestSummary>false</includeTestSummary>
+      <showCommitList>false</showCommitList>
+      <includeCustomMessage>false</includeCustomMessage>
+      <customMessage/>
+    </jenkins.plugins.slack.SlackNotifier_-SlackJobProperty>
+    <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@1.9.0">
+      <maxConcurrentPerNode>0</maxConcurrentPerNode>
+      <maxConcurrentTotal>0</maxConcurrentTotal>
+      <categories class="java.util.concurrent.CopyOnWriteArrayList"/>
+      <throttleEnabled>false</throttleEnabled>
+      <throttleOption>project</throttleOption>
+      <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
+      <paramsToUseForLimit/>
+    </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.5.3">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>git@github.com:Unified/secor_pinterest.git</url>
+        <credentialsId>d6e29dff-b49c-453e-a525-2f55f1103af4</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <assignedNode>provisioner</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>[ -z "${REGION}"           ] &amp;&amp; { echo "Variable REGION is not defined, exiting.";           exit 1; }
+[ -z "${ENVIRONMENT_TYPE}" ] &amp;&amp; { echo "Variable ENVIRONMENT_TYPE is not defined, exiting."; exit 1; }
+[ -z "${ENVIRONMENT_ID}"   ] &amp;&amp; { echo "Variable ENVIRONMENT_ID is not defined, exiting.";   exit 1; }
+
+[ -z "${PROJECT_NAME}"  ] &amp;&amp; declare PROJECT_NAME="secor-pinterest"
+[ -z "${TEMPLATE_NAME}" ] &amp;&amp; declare TEMPLATE_NAME="secor_pinterest.json"
+
+declare PARAMETERS="ParameterKey=UsernameOfOwner,ParameterValue=${USERNAME_OF_OWNER} ParameterKey=UsernameOfProvisioner,ParameterValue=${USERNAME_OF_PROVISIONER} ParameterKey=JobInstanceIdInstanceCount,ParameterValue=${JOB_INSTANCE_ID_INSTANCE_COUNT} ParameterKey=CollectionTimeInstanceCount,ParameterValue=${COLLECTION_TIME_INSTANCE_COUNT}"
+
+~/techops/repo/cloudformation/create.sh                                              \
+    "${PROJECT_NAME}"                                                                \
+    "${ENVIRONMENT_ID}"                                                              \
+    ~/techops/cloudformation_templates/unified/instances/app_subnet/${TEMPLATE_NAME} \
+    "${ENVIRONMENT_TYPE}"                                                            \
+    "${REGION}"                                                                      \
+"${PARAMETERS}"
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
