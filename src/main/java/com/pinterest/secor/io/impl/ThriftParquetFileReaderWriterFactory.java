@@ -17,6 +17,7 @@ import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.ParquetUtil;
 import com.pinterest.secor.util.ThriftUtil;
 
 /**
@@ -30,8 +31,18 @@ public class ThriftParquetFileReaderWriterFactory implements FileReaderWriterFac
 
     private ThriftUtil thriftUtil;
 
+    protected final int blockSize;
+    protected final int pageSize;
+    protected final boolean enableDictionary;
+    protected final boolean validating;
+
     public ThriftParquetFileReaderWriterFactory(SecorConfig config) {
         thriftUtil = new ThriftUtil(config);
+
+        blockSize = ParquetUtil.getParquetBlockSize(config);
+        pageSize = ParquetUtil.getParquetPageSize(config);
+        enableDictionary = ParquetUtil.getParquetEnableDictionary(config);
+        validating = ParquetUtil.getParquetValidation(config);
     }
 
     @Override
@@ -92,7 +103,8 @@ public class ThriftParquetFileReaderWriterFactory implements FileReaderWriterFac
             Path path = new Path(logFilePath.getLogFilePath());
             CompressionCodecName codecName = CompressionCodecName.fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
-            writer = new ThriftParquetWriter(path, thriftUtil.getMessageClass(topic), codecName);
+            writer = new ThriftParquetWriter(path, thriftUtil.getMessageClass(topic), codecName,
+                    blockSize, pageSize, enableDictionary, validating);
         }
 
         @Override
