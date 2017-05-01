@@ -12,6 +12,7 @@ apply plugin: 'os-package'
 apply plugin: 'net.researchgate.release'
 apply plugin: 'org.sonarqube'
 apply plugin: 'jacoco'
+apply plugin: 'com.google.protobuf'
 // END
 
 // group = 'com.pinterest'
@@ -25,7 +26,7 @@ targetCompatibility = 1.8
 
 // 1p-service stuff - BEGIN
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.2'
+    gradleVersion = '3.4.1'
 }
 
 apply from: file('codequality/check.gradle')
@@ -65,6 +66,9 @@ sourceSets {
         }
         resources {
             srcDir 'src/test/resources'
+        }
+        proto {
+            srcDir 'src/test/protobuf'
         }
     }
 }
@@ -135,6 +139,7 @@ buildscript {
      maven { url "http://maven.twttr.com" }
      maven { url "http://repo.typesafe.com/typesafe/releases" }
      maven { url "http://repo.maven.apache.org/maven2" }
+     maven { url "https://plugins.gradle.org/m2/" }
   }
 
   dependencies {
@@ -149,6 +154,9 @@ buildscript {
 
     classpath group: 'org.sonarsource.scanner.gradle', name: 'sonarqube-gradle-plugin', version: '1.2'
     // END 
+
+    classpath "gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.1"
+
   }
 }
 
@@ -205,8 +213,9 @@ dependencies {
     testCompile 'com.sun.jersey.jersey-test-framework:jersey-test-framework-external:1.11'
     // END
     
-    compile group: 'com.google.protobuf', name: 'protobuf-java', version:'2.6.1'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version:'1.10.2'
+    compile group: 'com.google.protobuf', name: 'protobuf-java', version:'3.1.0'
+    compile group: 'com.google.protobuf', name: 'protobuf-java-util', version:'3.1.0'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version:'1.10.68'
     compile group: 'net.java.dev.jets3t', name: 'jets3t', version:'0.9.4'
     compile(group: 'org.apache.kafka', name: 'kafka_2.10', version:'0.8.2.1') {
         exclude(module: 'slf4j-simple')
@@ -214,12 +223,21 @@ dependencies {
 
     compile group: 'commons-configuration', name: 'commons-configuration', version:'1.9'
     compile group: 'org.apache.hadoop', name: 'hadoop-common', version:'2.7.0'
+    compile group: 'org.apache.hadoop', name: 'hadoop-mapreduce-client-core', version:'2.7.0'
     compile(group: 'org.apache.hadoop', name: 'hadoop-aws', version:'2.7.0') {
         exclude(module: 'jets3t')
         exclude(module: 'jackson-annotations')
         exclude(module: 'jackson-core')
         exclude(module: 'jackson-databind')
     }
+
+    compile group: 'org.apache.parquet', name: 'parquet-common', version:'1.8.1'
+    compile group: 'org.apache.parquet', name: 'parquet-encoding', version:'1.8.1'
+    compile group: 'org.apache.parquet', name: 'parquet-column', version:'1.8.1'
+    compile group: 'org.apache.parquet', name: 'parquet-hadoop', version:'1.8.1'
+    compile group: 'org.apache.parquet', name: 'parquet-protobuf', version:'1.8.1'
+    compile group: 'org.apache.parquet', name: 'parquet-thrift', version:'1.8.1'
+
     compile group: 'org.apache.hadoop', name: 'hadoop-openstack', version:'2.7.0'
     compile group: 'org.apache.thrift', name: 'libthrift', version:'0.9.3'
     compile group: 'com.twitter', name: 'ostrich_2.10', version:'9.2.1'
@@ -232,6 +250,8 @@ dependencies {
     compile(group: 'com.google.apis', name: 'google-api-services-storage', version:'v1-rev40-1.20.0') {
        exclude(module: 'guava-jdk5')
     }
+    compile group: 'com.microsoft.azure', name: 'azure-storage', version:'4.0.0'
+
     testCompile group: 'junit', name: 'junit', version:'4.11'
     testCompile group: 'org.powermock', name: 'powermock-module-junit4', version:'1.5.2'
     testCompile group: 'org.powermock', name: 'powermock-api-mockito', version:'1.5.2'

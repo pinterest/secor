@@ -63,6 +63,7 @@ public class ProgressMonitor {
     private KafkaClient mKafkaClient;
     private MessageParser mMessageParser;
     private String mPrefix;
+    private NonBlockingStatsDClient mStatsDClient;
 
     public ProgressMonitor(SecorConfig config)
             throws Exception
@@ -76,6 +77,11 @@ public class ProgressMonitor {
         mPrefix = mConfig.getMonitoringPrefix();
         if (Strings.isNullOrEmpty(mPrefix)) {
             mPrefix = "secor";
+        }
+
+        if (mConfig.getStatsDHostPort() != null && !mConfig.getStatsDHostPort().isEmpty()) {
+            HostAndPort hostPort = HostAndPort.fromString(mConfig.getStatsDHostPort());
+            mStatsDClient = new NonBlockingStatsDClient(null, hostPort.getHostText(), hostPort.getPort());
         }
     }
 
@@ -129,7 +135,7 @@ public class ProgressMonitor {
 
     public void exportStats() throws Exception {
         List<Stat> stats = getStats();
-        System.out.println(JSONArray.toJSONString(stats));
+        LOG.info("Stats: {}", JSONArray.toJSONString(stats));
 
         // if there is a valid openTSDB port configured export to openTSDB
         if (mConfig.getTsdbHostport() != null && !mConfig.getTsdbHostport().isEmpty()) {
@@ -139,7 +145,7 @@ public class ProgressMonitor {
         }
 
         // if there is a valid statsD port configured export to statsD
-        if (mConfig.getStatsDHostPort() != null && !mConfig.getStatsDHostPort().isEmpty()) {
+        if (mStatsDClient != null) {
             exportToStatsD(stats);
         }
     }
@@ -148,22 +154,24 @@ public class ProgressMonitor {
      * Helper to publish stats to statsD client
      */
     private void exportToStatsD(List<Stat> stats) {
-        HostAndPort hostPort = HostAndPort.fromString(mConfig.getStatsDHostPort());
-
         // group stats by kafka group
-        NonBlockingStatsDClient client = new NonBlockingStatsDClient(mConfig.getKafkaGroup(),
-                hostPort.getHostText(), hostPort.getPort());
-
         for (Stat stat : stats) {
             @SuppressWarnings("unchecked")
             Map<String, String> tags = (Map<String, String>) stat.get(Stat.STAT_KEYS.TAGS.getName());
-            String aspect = new StringBuilder((String)stat.get(Stat.STAT_KEYS.METRIC.getName()))
-                    .append(PERIOD)
-                    .append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
-                    .append(PERIOD)
-                    .append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
-                    .toString();
-            client.recordGaugeValue(aspect, Long.parseLong((String)stat.get(Stat.STAT_KEYS.VALUE.getName())));
+            StringBuilder builder = new StringBuilder();
+	    if (mConfig.getStatsDPrefixWithConsumerGroup()) {
+		builder.append(tags.get(Stat.STAT_KEYS.GROUP.getName()))
+		    .append(PERIOD);
+	    }
+	    String aspect = builder
+		.append((String)stat.get(Stat.STAT_KEYS.METRIC.getName()))
+		.append(PERIOD)
+		.append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
+		.append(PERIOD)
+		.append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
+		.toString();
+            long value = Long.parseLong((String)stat.get(Stat.STAT_KEYS.VALUE.getName()));
+            mStatsDClient.recordGaugeValue(aspect, value);
         }
     }
 
@@ -203,7 +211,8 @@ public class ProgressMonitor {
                     long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
                     Map<String, String> tags = ImmutableMap.of(
                             Stat.STAT_KEYS.TOPIC.getName(), topic,
-                            Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition)
+                            Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition),
+                            Stat.STAT_KEYS.GROUP.getName(), mConfig.getKafkaGroup()
                     );
 
                     long timestamp = System.currentTimeMillis() / 1000;
@@ -246,7 +255,8 @@ public class ProgressMonitor {
             VALUE("value"),
             TIMESTAMP("timestamp"),
             TOPIC("topic"),
-            PARTITION("partition");
+            PARTITION("partition"),
+            GROUP("group");
 
             STAT_KEYS(String name) {
                 this.mName = name;

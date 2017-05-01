@@ -38,13 +38,13 @@ public class FileRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(FileRegistry.class);
 
     private final SecorConfig mConfig;
-    private HashMap<TopicPartition, HashSet<LogFilePath>> mFiles;
+    private HashMap<TopicPartitionGroup, HashSet<LogFilePath>> mFiles;
     private HashMap<LogFilePath, FileWriter> mWriters;
     private HashMap<LogFilePath, Long> mCreationTimes;
 
     public FileRegistry(SecorConfig mConfig) {
         this.mConfig = mConfig;
-        mFiles = new HashMap<TopicPartition, HashSet<LogFilePath>>();
+        mFiles = new HashMap<TopicPartitionGroup, HashSet<LogFilePath>>();
         mWriters = new HashMap<LogFilePath, FileWriter>();
         mCreationTimes = new HashMap<LogFilePath, Long>();
     }
@@ -54,12 +54,23 @@ public class FileRegistry {
      * @return Collection of all registered topic partitions.
      */
     public Collection<TopicPartition> getTopicPartitions() {
-        Set<TopicPartition> topicPartitions = mFiles.keySet();
-        if (topicPartitions == null) {
-            return new HashSet<TopicPartition>();
+        Collection<TopicPartitionGroup> topicPartitions = getTopicPartitionGroups();
+        Set<TopicPartition> tps = new HashSet<TopicPartition>();
+        if (topicPartitions != null) {
+            for (TopicPartitionGroup g : topicPartitions) {
+                tps.addAll(g.getTopicPartitions());
+            }
         }
-        // Return a copy of the collection to prevent the caller from modifying internals.
-        return new HashSet<TopicPartition>(topicPartitions);
+        return tps;
+    }
+
+    public Collection<TopicPartitionGroup> getTopicPartitionGroups() {
+        Set<TopicPartitionGroup> topicPartitions = mFiles.keySet();
+        Set<TopicPartitionGroup> tps = new HashSet<TopicPartitionGroup>();
+        if (topicPartitions != null) {
+            tps.addAll(topicPartitions);
+        }
+        return tps;
     }
 
     /**
@@ -68,11 +79,30 @@ public class FileRegistry {
      * @return Collection of file paths in the given topic partition.
      */
     public Collection<LogFilePath> getPaths(TopicPartition topicPartition) {
-        HashSet<LogFilePath> logFilePaths = mFiles.get(topicPartition);
+        return getPaths(new TopicPartitionGroup(topicPartition));
+    }
+
+    /**
+     * Get paths in a given topic partition.
+     * @param topicPartitionGroup The topic partition to retrieve paths for.
+     * @return Collection of file paths in the given topic partition.
+     */
+    public Collection<LogFilePath> getPaths(TopicPartitionGroup topicPartitionGroup) {
+        HashSet<LogFilePath> logFilePaths = mFiles.get(topicPartitionGroup);
         if (logFilePaths == null) {
             return new HashSet<LogFilePath>();
         }
         return new HashSet<LogFilePath>(logFilePaths);
+    }
+
+    /**
+     * Retrieve an existing writer for a given path.
+     * @param path The path to retrieve writer for.
+     * @return Writer for a given path or null if no writer has been created yet.
+     */
+    public FileWriter getWriter(LogFilePath path)
+            throws Exception {
+        return mWriters.get(path);
     }
 
     /**
@@ -89,8 +119,8 @@ public class FileRegistry {
             // Just in case.
             FileUtil.delete(path.getLogFilePath());
             FileUtil.delete(path.getLogFileCrcPath());
-            TopicPartition topicPartition = new TopicPartition(path.getTopic(),
-                    path.getKafkaPartition());
+            TopicPartitionGroup topicPartition = new TopicPartitionGroup(path.getTopic(),
+                    path.getKafkaPartitions());
             HashSet<LogFilePath> files = mFiles.get(topicPartition);
             if (files == null) {
                 files = new HashSet<LogFilePath>();
@@ -99,7 +129,7 @@ public class FileRegistry {
             if (!files.contains(path)) {
                 files.add(path);
             }
-            writer = ReflectionUtil.createFileWriter(mConfig.getFileReaderWriterFactory(), path, codec);
+            writer = ReflectionUtil.createFileWriter(mConfig.getFileReaderWriterFactory(), path, codec, mConfig);
             mWriters.put(path, writer);
             mCreationTimes.put(path, System.currentTimeMillis() / 1000L);
             LOG.debug("created writer for path {}", path.getLogFilePath());
@@ -118,16 +148,16 @@ public class FileRegistry {
      * @throws IOException
      */
     public void deletePath(LogFilePath path) throws IOException {
-        TopicPartition topicPartition = new TopicPartition(path.getTopic(),
-                                                           path.getKafkaPartition());
+        TopicPartitionGroup topicPartition = new TopicPartitionGroup(path.getTopic(),
+                                                           path.getKafkaPartitions());
         HashSet<LogFilePath> paths = mFiles.get(topicPartition);
         paths.remove(path);
         if (paths.isEmpty()) {
             mFiles.remove(topicPartition);
             StatsUtil.clearLabel("secor.size." + topicPartition.getTopic() + "." +
-                                 topicPartition.getPartition());
+                                 topicPartition.getPartitions()[0]);
             StatsUtil.clearLabel("secor.modification_age_sec." + topicPartition.getTopic() + "." +
-                                 topicPartition.getPartition());
+                                 topicPartition.getPartitions()[0]);
         }
         deleteWriter(path);
         FileUtil.delete(path.getLogFilePath());
@@ -140,7 +170,11 @@ public class FileRegistry {
      * @throws IOException
      */
     public void deleteTopicPartition(TopicPartition topicPartition) throws IOException {
-        HashSet<LogFilePath> paths = mFiles.get(topicPartition);
+        deleteTopicPartitionGroup((new TopicPartitionGroup(topicPartition)));
+    }
+
+    public void deleteTopicPartitionGroup(TopicPartitionGroup topicPartitioGroup) throws IOException {
+        HashSet<LogFilePath> paths = mFiles.get(topicPartitioGroup);
         if (paths == null) {
             return;
         }
@@ -171,9 +205,14 @@ public class FileRegistry {
      * @param topicPartition The topic partition to remove the writers for.
      */
     public void deleteWriters(TopicPartition topicPartition) throws IOException {
-        HashSet<LogFilePath> paths = mFiles.get(topicPartition);
+        deleteWriters(new TopicPartitionGroup(topicPartition));
+    }
+
+    public void deleteWriters(TopicPartitionGroup topicPartitionGroup) throws IOException {
+        HashSet<LogFilePath> paths = mFiles.get(topicPartitionGroup);
         if (paths == null) {
-            LOG.warn("No paths found for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
+            LOG.warn("No paths found for topic {} partition {}", topicPartitionGroup.getTopic(),
+                Arrays.toString(topicPartitionGroup.getPartitions()));
         } else {
             for (LogFilePath path : paths) {
                 deleteWriter(path);
@@ -189,7 +228,11 @@ public class FileRegistry {
      * @throws IOException
      */
     public long getSize(TopicPartition topicPartition) throws IOException {
-        Collection<LogFilePath> paths = getPaths(topicPartition);
+        return getSize(new TopicPartitionGroup(topicPartition));
+    }
+
+    public long getSize(TopicPartitionGroup topicPartitionGroup) throws IOException {
+        Collection<LogFilePath> paths = getPaths(topicPartitionGroup);
         long result = 0;
         for (LogFilePath path : paths) {
             FileWriter writer = mWriters.get(path);
@@ -197,8 +240,8 @@ public class FileRegistry {
                 result += writer.getLength();
             }
         }
-        StatsUtil.setLabel("secor.size." + topicPartition.getTopic() + "." +
-                           topicPartition.getPartition(), Long.toString(result));
+        StatsUtil.setLabel("secor.size." + topicPartitionGroup.getTopic() + "." +
+            Arrays.toString(topicPartitionGroup.getPartitions()), Long.toString(result));
         return result;
     }
 
@@ -210,9 +253,18 @@ public class FileRegistry {
      * @throws IOException
      */
     public long getModificationAgeSec(TopicPartition topicPartition) throws IOException {
+        return getModificationAgeSec(new TopicPartitionGroup(topicPartition));
+    }
+
+    public long getModificationAgeSec(TopicPartitionGroup topicPartitionGroup) throws IOException {
         long now = System.currentTimeMillis() / 1000L;
-        long result = Long.MAX_VALUE;
-        Collection<LogFilePath> paths = getPaths(topicPartition);
+        long result;
+        if (mConfig.getFileAgeYoungest()) {
+            result = Long.MAX_VALUE;
+        } else {
+            result = -1;
+        }
+        Collection<LogFilePath> paths = getPaths(topicPartitionGroup);
         for (LogFilePath path : paths) {
             Long creationTime = mCreationTimes.get(path);
             if (creationTime == null) {
@@ -220,15 +272,21 @@ public class FileRegistry {
                 creationTime = now;
             }
             long age = now - creationTime;
-            if (age < result) {
-                result = age;
+            if (mConfig.getFileAgeYoungest()) {
+                if (age < result) {
+                    result = age;
+                }
+            } else {
+                if (age > result) {
+                    result = age;
+                }
             }
         }
         if (result == Long.MAX_VALUE) {
             result = -1;
         }
-        StatsUtil.setLabel("secor.modification_age_sec." + topicPartition.getTopic() + "." +
-            topicPartition.getPartition(), Long.toString(result));
+        StatsUtil.setLabel("secor.modification_age_sec." + topicPartitionGroup.getTopic() + "." +
+            Arrays.toString(topicPartitionGroup.getPartitions()), Long.toString(result));
         return result;
     }
 }
