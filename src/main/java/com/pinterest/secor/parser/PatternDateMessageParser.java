@@ -84,7 +84,7 @@ public class PatternDateMessageParser extends MessageParser {
                 		dateFormat = inputFormatter.parse(fieldValue.toString());
                 	}
                     
-                    result[0] = prefixEnabled ? partitionPrefixMap.get(eventValue.toString()) + outputFormatter.format(dateFormat) : outputFormatter.format(dateFormat);
+                    result[0] = prefixEnabled ? getPrefix(eventValue.toString()) + outputFormatter.format(dateFormat) : outputFormatter.format(dateFormat);
                     return result;
                 } catch (Exception e) {
                     LOG.warn("Impossible to convert date = " + fieldValue.toString()
@@ -95,6 +95,12 @@ public class PatternDateMessageParser extends MessageParser {
         }
 
         return result;
+    }
+    
+    private String getPrefix(String prefixIdentifier) {
+    	 String prefix = partitionPrefixMap.get(prefixIdentifier);
+    	 if (StringUtils.isBlank(prefix)) prefix = partitionPrefixMap.get("DEFAULT");
+    	 return prefix;
     }
     
 }
