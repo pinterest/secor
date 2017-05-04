@@ -152,7 +152,7 @@ buildscript {
     classpath group: 'eu.appsatori',        name: 'gradle-fatjar-plugin', version: '0.3'
     classpath group: 'com.thomsonreuters',  name: 'storm-deploy', version: '2.4.+'
 
-    classpath group: 'org.sonarsource.scanner.gradle', name: 'sonarqube-gradle-plugin', version: '1.2'
+    classpath group: 'org.sonarsource.scanner.gradle', name: 'sonarqube-gradle-plugin', version: '2.3'
     // END 
 
     classpath "gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.1"
@@ -309,7 +309,8 @@ sonarqube {
 }
 
 jacoco {
-    toolVersion = "0.7.4.+"
+    //toolVersion = "0.7.4.+"
+    toolVersion = "0.7.5.+"
     reportsDir = file("$buildDir/reports/coverage")
 }
 
