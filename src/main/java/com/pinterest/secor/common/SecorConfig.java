@@ -569,4 +569,19 @@ public class SecorConfig {
     public String getMetricsCollectorClass() {
         return mProperties.getString("secor.monitoring.metrics.collector.class");
     }
+    
+    public Map<String, String> getPropertyMapForPrefix(String prefix) {
+        Iterator<String> keys = mProperties.getKeys(prefix);
+        Map<String, String> map = new HashMap<String, String>();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String value = mProperties.getString(key);
+            map.put(key.substring(prefix.length() + 1), value);
+        }
+        return map;
+    }
+    
+    public Map<String, String> getORCMessageSchema() {
+        return getPropertyMapForPrefix("secor.orc.message.schema");
+    }
 }
