@@ -111,8 +111,7 @@ public class KafkaClient {
         return offsets[0] - 1;
     }
 
-    private Message getMessage(TopicPartition topicPartition, long offset,
-                               SimpleConsumer consumer) {
+    private Message getMessage(TopicPartition topicPartition, long offset, SimpleConsumer consumer) {
         LOG.debug("fetching message topic {} partition {} offset {}",
                 topicPartition.getTopic(), topicPartition.getPartition(), offset);
         final int MAX_MESSAGE_SIZE_BYTES = mConfig.getMaxMessageSizeBytes();
@@ -141,8 +140,9 @@ public class KafkaClient {
             payloadBytes = new byte[payload.limit()];
             payload.get(payloadBytes);
         }
+
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
-                messageAndOffset.offset(), keyBytes, payloadBytes);
+                messageAndOffset.offset(), keyBytes, payloadBytes, null);
     }
 
     private SimpleConsumer createConsumer(String host, int port, String clientName) {

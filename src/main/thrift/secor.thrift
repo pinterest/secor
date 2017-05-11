@@ -8,7 +8,7 @@ enum TestEnum {
 }
 
 struct TestMessage {
-    1: required i64 timestamp,
+    1: required i64 mTimestamp,
     2: required string requiredField,
     3: optional string optionalField,
     4: optional TestEnum enumField

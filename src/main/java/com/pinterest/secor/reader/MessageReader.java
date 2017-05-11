@@ -162,7 +162,7 @@ public class MessageReader {
         MessageAndMetadata<byte[], byte[]> kafkaMessage = mIterator.next();
         Message message = new Message(kafkaMessage.topic(), kafkaMessage.partition(),
                                       kafkaMessage.offset(), kafkaMessage.key(),
-                                      kafkaMessage.message());
+                                      kafkaMessage.message(), null);
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         updateAccessTime(topicPartition);
