@@ -584,4 +584,8 @@ public class SecorConfig {
     public Map<String, String> getORCMessageSchema() {
         return getPropertyMapForPrefix("secor.orc.message.schema");
     }
+    
+    public String getORCSchemaProviderClass(){
+        return getString("secor.orc.schema.provider");
+    }
 }

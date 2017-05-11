@@ -28,10 +28,10 @@ import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.util.orc.JsonFieldFiller;
 import com.pinterest.secor.util.orc.VectorColumnFiller;
 import com.pinterest.secor.util.orc.VectorColumnFiller.JsonConverter;
-import com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider;
 import com.pinterest.secor.util.orc.schema.ORCScehmaProvider;
 
 /**
@@ -44,8 +44,9 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
 
     private ORCScehmaProvider schemaProvider;
 
-    public JsonORCFileReaderWriterFactory(SecorConfig config) {
-        schemaProvider = new DefaultORCSchemaProvider(config);
+    public JsonORCFileReaderWriterFactory(SecorConfig config) throws Exception {
+        schemaProvider = ReflectionUtil.createORCSchemaProvider(
+                config.getORCSchemaProviderClass(), config);
     }
 
     @Override
@@ -71,7 +72,8 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
         @SuppressWarnings("deprecation")
         public JsonORCFileReader(LogFilePath logFilePath, CompressionCodec codec)
                 throws IOException {
-            schema = schemaProvider.getSchema(logFilePath.getTopic());
+            schema = schemaProvider.getSchema(logFilePath.getTopic(),
+                    logFilePath);
             Path path = new Path(logFilePath.getLogFilePath());
             Reader reader = OrcFile.createReader(path,
                     OrcFile.readerOptions(new Configuration(true)));
@@ -125,7 +127,8 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
                 throws IOException {
             Configuration conf = new Configuration();
             Path path = new Path(logFilePath.getLogFilePath());
-            schema = schemaProvider.getSchema(logFilePath.getTopic());
+            schema = schemaProvider.getSchema(logFilePath.getTopic(),
+                    logFilePath);
             List<TypeDescription> fieldTypes = schema.getChildren();
             converters = new JsonConverter[fieldTypes.size()];
             for (int c = 0; c < converters.length; ++c) {

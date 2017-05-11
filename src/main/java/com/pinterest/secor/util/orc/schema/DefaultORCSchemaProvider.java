@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import org.apache.orc.TypeDescription;
 
 import com.google.common.collect.Maps;
+import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 
 /**
@@ -27,7 +28,7 @@ public class DefaultORCSchemaProvider implements ORCScehmaProvider {
     }
 
     @Override
-    public TypeDescription getSchema(String topic) {
+    public TypeDescription getSchema(String topic, LogFilePath logFilePath) {
         return topicToSchemaMap.getOrDefault(topic, schemaForAlltopic);
     }
 

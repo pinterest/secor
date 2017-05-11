@@ -26,6 +26,8 @@ import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.uploader.Uploader;
+import com.pinterest.secor.util.orc.schema.ORCScehmaProvider;
+
 import org.apache.hadoop.io.compress.CompressionCodec;
 
 /**
@@ -220,5 +222,31 @@ public class ReflectionUtil {
         }
 
         return (MetricCollector) clazz.newInstance();
+    }
+    
+    /**
+     * Create a ORCScehmaProvider from it's fully qualified class name. The
+     * class passed in by name must be assignable to ORCScehmaProvider and have
+     * 1-parameter constructor accepting a SecorConfig. Allows the ORCScehmaProvider
+     * to be pluggable by providing the class name of a desired ORCScehmaProvider in
+     * config.
+     *
+     * See the secor.orc.schema.provider config option.
+     *
+     * @param className
+     * @param config
+     * @return
+     * @throws Exception
+     */
+    public static ORCScehmaProvider createORCSchemaProvider(
+            String className, SecorConfig config) throws Exception {
+        Class<?> clazz = Class.forName(className);
+        if (!ORCScehmaProvider.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(String.format(
+                    "The class '%s' is not assignable to '%s'.", className,
+                    ORCScehmaProvider.class.getName()));
+        }
+        return (ORCScehmaProvider) clazz.getConstructor(SecorConfig.class)
+                .newInstance(config);
     }
 }
