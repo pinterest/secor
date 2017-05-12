@@ -90,8 +90,7 @@ Currently secor supports the following output formats
 
 - **Delimited Text Files**: A new line delimited raw text file. To use this format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFactory` option.
 
-- **ORC Files**: Optimized row columnar format. To use this format, set 
-`secor.file.reader.writer.factory=com.pinterest.secor.io.impl.JsonORCFileReaderWriterFactory` option. Additionally, ORC schema must be specified per topic like this `secor.orc.message.schema.<topic>=<orc schema>`. If all Kafka topics receive same format data then this option can be used `secor.orc.message.schema.*=<orc schema>`. User can implement custom ORC schema provider by implementing ORCScehmaProvider interface and the new provider class should be specified using option `secor.orc.schema.provider=<orc schema provider class name>`. By default this property is DefaultORCSchemaProvider.
+- **ORC Files**: Optimized row columnar format. To use this format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.JsonORCFileReaderWriterFactory` option. Additionally, ORC schema must be specified per topic like this `secor.orc.message.schema.<topic>=<orc schema>`. If all Kafka topics receive same format data then this option can be used `secor.orc.message.schema.*=<orc schema>`. User can implement custom ORC schema provider by implementing ORCScehmaProvider interface and the new provider class should be specified using option `secor.orc.schema.provider=<orc schema provider class name>`. By default this property is DefaultORCSchemaProvider.
 
 - **[Parquet] Files (for Protobuf messages)**: Columnar storage format. To use this output format, set `secor.file.reader.writer.factory=com.pinterest.secor.io.impl.ProtobufParquetFileReaderWriterFactory` option. In addition, Protobuf message class per Kafka topic must be defined using option `secor.protobuf.message.class.<topic>=<protobuf class name>`. If all Kafka topics transfer the same protobuf message type, set `secor.protobuf.message.class.*=<protobuf class name>`.
 
@@ -156,9 +155,10 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Leo Woessner](https://github.com/estezz)
   * [Jerome Gagnon](https://github.com/jgagnon1)
   * [Taichi Nakashima](https://github.com/tcnksm)
-  * [Lovenish Goyal] (https://github.com/lovenishgoyal)
-  * [Ahsan Nabi Dar] (https://github.com/ahsandar)
-  * [Ashish Kumar] (https://github.com/ashubhumca)
+  * [Lovenish Goyal](https://github.com/lovenishgoyal)
+  * [Ahsan Nabi Dar](https://github.com/ahsandar)
+  * [Ashish Kumar](https://github.com/ashubhumca)
+
 
 ## Companies who use Secor
 
@@ -174,7 +174,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Zalando](http://www.zalando.com)
   * [Rakuten](http://techblog.rakuten.co.jp/)
   * [Appsflyer](https://www.appsflyer.com)
-  * [Wego] (http://www.wego.com)
+  * [Wego](https://www.wego.com)
 
 ## Help
 
