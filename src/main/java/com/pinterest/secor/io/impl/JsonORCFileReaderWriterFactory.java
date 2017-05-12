@@ -19,9 +19,12 @@ import org.apache.orc.Writer;
 import org.apache.orc.impl.ZlibCodec;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
@@ -42,6 +45,7 @@ import com.pinterest.secor.util.orc.schema.ORCScehmaProvider;
  */
 public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
 
+    private static final Logger LOG = LoggerFactory.getLogger(FileRegistry.class);
     private ORCScehmaProvider schemaProvider;
 
     public JsonORCFileReaderWriterFactory(SecorConfig config) throws Exception {
@@ -102,7 +106,7 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
                 JsonFieldFiller.processRow(new JSONWriter(sw), batch, schema,
                         rowIndex);
             } catch (JSONException e) {
-                e.printStackTrace();
+                LOG.error("Unable to parse json {}", sw.toString());
             }
             rowIndex++;
             return new KeyValue(offset++, sw.toString().getBytes("UTF-8"));
