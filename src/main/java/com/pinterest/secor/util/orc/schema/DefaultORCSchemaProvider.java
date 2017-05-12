@@ -1,11 +1,11 @@
 package com.pinterest.secor.util.orc.schema;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.orc.TypeDescription;
 
-import com.google.common.collect.Maps;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 
@@ -23,7 +23,7 @@ public class DefaultORCSchemaProvider implements ORCScehmaProvider {
     private TypeDescription schemaForAlltopic;
 
     public DefaultORCSchemaProvider(SecorConfig config) {
-        topicToSchemaMap = Maps.newHashMap();
+        topicToSchemaMap = new HashMap<String, TypeDescription>();
         setSchemas(config);
     }
 
