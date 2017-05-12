@@ -107,6 +107,7 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
                         rowIndex);
             } catch (JSONException e) {
                 LOG.error("Unable to parse json {}", sw.toString());
+                return null;
             }
             rowIndex++;
             return new KeyValue(offset++, sw.toString().getBytes("UTF-8"));
