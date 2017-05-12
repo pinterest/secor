@@ -29,7 +29,11 @@ public class DefaultORCSchemaProvider implements ORCScehmaProvider {
 
     @Override
     public TypeDescription getSchema(String topic, LogFilePath logFilePath) {
-        return topicToSchemaMap.getOrDefault(topic, schemaForAlltopic);
+        TypeDescription topicSpecificTD = topicToSchemaMap.get(topic);
+        if (null != topicSpecificTD) {
+            return topicSpecificTD;
+        }
+        return schemaForAlltopic;
     }
 
     /**
