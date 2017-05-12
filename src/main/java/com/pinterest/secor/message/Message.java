@@ -41,7 +41,8 @@ public class Message {
                ", kafkaPartition=" + mKafkaPartition +
                ", offset=" + mOffset +
                ", kafkaKey=" + new String(mKafkaKey) +
-               ", payload=" + new String(mPayload);
+               ", payload=" + new String(mPayload) +
+               ", timestamp=" + mTimestamp;
     }
 
     @Override
