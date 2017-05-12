@@ -170,7 +170,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Zalando](http://www.zalando.com)
   * [Rakuten](http://techblog.rakuten.co.jp/)
   * [Appsflyer](https://www.appsflyer.com)
-  * [Wego](http://www.wego.com)
+  * [Wego](https://www.wego.com)
 
 ## Help
 
