@@ -155,7 +155,7 @@ public class KafkaClient {
         kafkaConsumer.partitionsFor(topicPartition.getTopic());
         doOffsetReset(kafkaConsumer, topicPartition.getTopic(), topicPartition.getPartition(), offset-1);
         kafkaConsumer.resume(Arrays.asList(topicPartition));
-        ConsumerRecords<byte[], byte[]> records = (ConsumerRecords) kafkaConsumer.poll(10000);
+        ConsumerRecords<byte[], byte[]> records = (ConsumerRecords) kafkaConsumer.poll(Long.MAX_VALUE);
         if (records.iterator().next() != null) {
             timestamp = records.iterator().next().timestamp();
         }
