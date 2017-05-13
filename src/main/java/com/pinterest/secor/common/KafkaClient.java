@@ -145,7 +145,10 @@ public class KafkaClient {
         }
 
         Long timestamp = null;
-        ConsumerConfig consumerConfig = new ConsumerConfig(mConfig.getKafkaSeedBrokerHost() + ":" + mConfig.getKafkaSeedBrokerPort());
+        ConsumerConfig consumerConfig = new ConsumerConfig(
+                                mConfig.getKafkaSeedBrokerHost() + ":" + mConfig.getKafkaSeedBrokerPort(),
+                                                mConfig.getKafkaGroup()
+        );
         KafkaConsumer kafkaConsumer = new KafkaConsumer(consumerConfig.getProperties());
         doOffsetReset(kafkaConsumer, topicPartition.getTopic(), topicPartition.getPartition(), offset);
         ConsumerRecords<byte[], byte[]> records = (ConsumerRecords) kafkaConsumer.poll(100);
