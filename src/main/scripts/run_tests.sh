@@ -166,7 +166,7 @@ stop_secor() {
 run_finalizer() {
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.test.partition.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
-        com.pinterest.secor.main.PartitionFinalizerMain > ${LOGS_DIR}/finalizer.log 2>&1 "
+        com.pinterest.secor.main.PartitionFinalizerMain"
 
     EXIT_CODE=$?
     if [ ${EXIT_CODE} -ne 0 ]; then
