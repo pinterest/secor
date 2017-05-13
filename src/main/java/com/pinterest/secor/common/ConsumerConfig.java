@@ -21,7 +21,7 @@ public class ConsumerConfig {
         properties.put("max.poll.records", "1");
         properties.put("enable.auto.commit", "false");
         properties.put("session.timeout.ms", "1790000");
-        properties.put("request.timeout.ms", "1800000")
+        properties.put("request.timeout.ms", "1800000");
         properties.put("heartbeat.interval.ms", "200000");
         properties.put("max.poll.interval.ms", Integer.MAX_VALUE);
         properties.put("key.deserializer", "org.apache.kafka.common.serialization.BytesDeserializer");
