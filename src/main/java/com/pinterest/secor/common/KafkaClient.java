@@ -152,6 +152,7 @@ public class KafkaClient {
         );
         KafkaConsumer kafkaConsumer = new KafkaConsumer(consumerConfig.getProperties());
         kafkaConsumer.subscribe(Arrays.asList(topicPartition.getTopic()));
+        kafkaConsumer.partitionsFor(topicPartition.getTopic());
         doOffsetReset(kafkaConsumer, topicPartition.getTopic(), topicPartition.getPartition(), offset-1);
         ConsumerRecords<byte[], byte[]> records = (ConsumerRecords) kafkaConsumer.poll(10000);
         if (records.iterator().next() != null) {
