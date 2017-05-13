@@ -75,8 +75,8 @@ public class ThriftParquetFileReaderWriterFactoryTest extends TestCase {
         FileWriter fileWriter = ReflectionUtil.createFileWriter(config.getFileReaderWriterFactory(), tempLogFilePath,
                 null, config);
 
-        UnitTestMessage msg1 = new UnitTestMessage().setRequiredField("abc").setMTimestamp(1467176315L);
-        UnitTestMessage msg2 = new UnitTestMessage().setRequiredField("XYZ").setMTimestamp(1467176344L);
+        UnitTestMessage msg1 = new UnitTestMessage().setRequiredField("abc").setTimestamp(1467176315L);
+        UnitTestMessage msg2 = new UnitTestMessage().setRequiredField("XYZ").setTimestamp(1467176344L);
 
         TSerializer serializer = new TSerializer(new TCompactProtocol.Factory());
         KeyValue kv1 = new KeyValue(23232, serializer.serialize(msg1));
