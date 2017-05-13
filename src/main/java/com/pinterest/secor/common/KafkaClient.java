@@ -154,7 +154,6 @@ public class KafkaClient {
         kafkaConsumer.subscribe(Arrays.asList(topicPartition.getTopic()));
         kafkaConsumer.partitionsFor(topicPartition.getTopic());
         doOffsetReset(kafkaConsumer, topicPartition.getTopic(), topicPartition.getPartition(), offset-1);
-        kafkaConsumer.resume(Arrays.asList(topicPartition));
         ConsumerRecords<byte[], byte[]> records = (ConsumerRecords) kafkaConsumer.poll(Long.MAX_VALUE);
         if (records.iterator().next() != null) {
             timestamp = records.iterator().next().timestamp();
@@ -167,7 +166,6 @@ public class KafkaClient {
     public void doOffsetReset(KafkaConsumer consumer, String kafkaTopic, Integer partitionNumber, Long newOffset) {
         Map<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> offsets = createOffsetsAndMetadata(partitionNumber, kafkaTopic, newOffset);
         consumer.commitSync(offsets);
-        consumer.pause(offsets.keySet());
     }
 
     private Map<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> createOffsetsAndMetadata(Integer partition, String kafkaTopic, Long offset) {
