@@ -18,6 +18,7 @@ public class ConsumerConfig {
 
     private void createConfig(String bootstrapServers) {
         properties.put("bootstrap.servers", bootstrapServers);
+        properties.put("max.poll.records", 1);
         properties.put("enable.auto.commit", "false");
         properties.put("auto.commit.interval.ms", "1000");
         properties.put("session.timeout.ms", "30000");
