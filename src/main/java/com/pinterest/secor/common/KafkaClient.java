@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -150,6 +151,7 @@ public class KafkaClient {
                                                 mConfig.getKafkaGroup()
         );
         KafkaConsumer kafkaConsumer = new KafkaConsumer(consumerConfig.getProperties());
+        kafkaConsumer.subscribe(Arrays.asList(topicPartition.getTopic()));
         doOffsetReset(kafkaConsumer, topicPartition.getTopic(), topicPartition.getPartition(), offset);
         ConsumerRecords<byte[], byte[]> records = (ConsumerRecords) kafkaConsumer.poll(100);
         if (records.iterator().next() != null) {
