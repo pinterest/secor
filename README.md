@@ -155,6 +155,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Taichi Nakashima](https://github.com/tcnksm)
   * [Lovenish Goyal] (https://github.com/lovenishgoyal)
   * [Ahsan Nabi Dar] (https://github.com/ahsandar)
+  * [Ashwin Sinha](https://github.com/tygrash)
 
 ## Companies who use Secor
 
@@ -171,6 +172,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Rakuten](http://techblog.rakuten.co.jp/)
   * [Appsflyer](https://www.appsflyer.com)
   * [Wego] (http://www.wego.com)
+  * [GO-JEK](https://www.go-jek.com/)
 
 ## Help
 

@@ -30,8 +30,6 @@ import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.TopicMetadataResponse;
 import kafka.javaapi.consumer.SimpleConsumer;
 import kafka.message.MessageAndOffset;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,22 +147,6 @@ public class KafkaClient {
 
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
                 messageAndOffset.offset(), keyBytes, payloadBytes, timestamp);
-    }
-
-    public void doOffsetReset(KafkaConsumer consumer, String kafkaTopic, Integer partitionNumber, Long newOffset) {
-        Map<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> offsets = createOffsetsAndMetadata(partitionNumber, kafkaTopic, newOffset);
-        consumer.commitSync(offsets);
-    }
-
-    private Map<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> createOffsetsAndMetadata(Integer partition, String kafkaTopic, Long offset) {
-        Map<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> topicPartitionAndOffset =
-                new HashMap<org.apache.kafka.common.TopicPartition, OffsetAndMetadata>();
-
-        org.apache.kafka.common.TopicPartition topicPartition = new org.apache.kafka.common.TopicPartition(kafkaTopic, partition);
-        OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(offset);
-        topicPartitionAndOffset.put(topicPartition, offsetAndMetadata);
-
-        return topicPartitionAndOffset;
     }
 
     private SimpleConsumer createConsumer(String host, int port, String clientName) {
