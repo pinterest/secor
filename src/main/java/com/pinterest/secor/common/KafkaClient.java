@@ -30,7 +30,6 @@ import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.TopicMetadataResponse;
 import kafka.javaapi.consumer.SimpleConsumer;
 import kafka.message.MessageAndOffset;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.thrift.TException;
@@ -39,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,19 +142,9 @@ public class KafkaClient {
             payloadBytes = new byte[payload.limit()];
             payload.get(payloadBytes);
         }
-
         Long timestamp = null;
-        ConsumerConfig consumerConfig = new ConsumerConfig(
-                                mConfig.getKafkaSeedBrokerHost() + ":" + mConfig.getKafkaSeedBrokerPort(),
-                                                mConfig.getKafkaGroup()
-        );
-        KafkaConsumer kafkaConsumer = new KafkaConsumer(consumerConfig.getProperties());
-        kafkaConsumer.subscribe(Arrays.asList(topicPartition.getTopic()));
-        kafkaConsumer.partitionsFor(topicPartition.getTopic());
-        doOffsetReset(kafkaConsumer, topicPartition.getTopic(), topicPartition.getPartition(), offset-1);
-        ConsumerRecords<byte[], byte[]> records = (ConsumerRecords) kafkaConsumer.poll(100);
-        if (records.iterator().next() != null) {
-            timestamp = records.iterator().next().timestamp();
+        if (!messageAndOffset.message().isNull()) {
+            timestamp = messageAndOffset.message().timestamp();
         }
 
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
