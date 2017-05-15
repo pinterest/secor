@@ -16,21 +16,6 @@
  */
 package com.pinterest.secor.io.impl;
 
-import static org.junit.Assert.assertArrayEquals;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.parquet.hadoop.ParquetWriter;
-
-import org.apache.thrift.TDeserializer;
-import org.apache.thrift.TSerializer;
-import org.apache.thrift.protocol.TCompactProtocol;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import com.google.common.io.Files;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
@@ -40,8 +25,20 @@ import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.thrift.UnitTestMessage;
 import com.pinterest.secor.util.ParquetUtil;
 import com.pinterest.secor.util.ReflectionUtil;
-
 import junit.framework.TestCase;
+import org.apache.parquet.hadoop.ParquetWriter;
+import org.apache.thrift.TDeserializer;
+import org.apache.thrift.TSerializer;
+import org.apache.thrift.protocol.TCompactProtocol;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertArrayEquals;
 
 @RunWith(PowerMockRunner.class)
 public class ThriftParquetFileReaderWriterFactoryTest extends TestCase {

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,9 +61,9 @@ public class KafkaClient {
         try {
             LOG.debug("looking up leader for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
             consumer = createConsumer(
-                mConfig.getKafkaSeedBrokerHost(),
-                mConfig.getKafkaSeedBrokerPort(),
-                "leaderLookup");
+                    mConfig.getKafkaSeedBrokerHost(),
+                    mConfig.getKafkaSeedBrokerPort(),
+                    "leaderLookup");
             List<String> topics = new ArrayList<String>();
             topics.add(topicPartition.getTopic());
             TopicMetadataRequest request = new TopicMetadataRequest(topics);
@@ -98,8 +98,8 @@ public class KafkaClient {
                 kafka.api.OffsetRequest.LatestTime(), 1));
         final String clientName = getClientName(topicPartition);
         OffsetRequest request = new OffsetRequest(requestInfo,
-                                                  kafka.api.OffsetRequest.CurrentVersion(),
-                                                  clientName);
+                kafka.api.OffsetRequest.CurrentVersion(),
+                clientName);
         OffsetResponse response = consumer.getOffsetsBefore(request);
 
         if (response.hasError()) {
@@ -111,15 +111,14 @@ public class KafkaClient {
         return offsets[0] - 1;
     }
 
-    private Message getMessage(TopicPartition topicPartition, long offset,
-                               SimpleConsumer consumer) {
+    private Message getMessage(TopicPartition topicPartition, long offset, SimpleConsumer consumer) {
         LOG.debug("fetching message topic {} partition {} offset {}",
                 topicPartition.getTopic(), topicPartition.getPartition(), offset);
         final int MAX_MESSAGE_SIZE_BYTES = mConfig.getMaxMessageSizeBytes();
         final String clientName = getClientName(topicPartition);
         kafka.api.FetchRequest request = new FetchRequestBuilder().clientId(clientName)
                 .addFetch(topicPartition.getTopic(), topicPartition.getPartition(), offset,
-                          MAX_MESSAGE_SIZE_BYTES)
+                        MAX_MESSAGE_SIZE_BYTES)
                 .build();
         FetchResponse response = consumer.fetch(request);
         if (response.hasError()) {
@@ -127,8 +126,8 @@ public class KafkaClient {
             throw new RuntimeException("Error fetching offset data. Reason: " +
                     response.errorCode(topicPartition.getTopic(), topicPartition.getPartition()));
         }
-        MessageAndOffset messageAndOffset = response.messageSet(
-                topicPartition.getTopic(), topicPartition.getPartition()).iterator().next();
+        MessageAndOffset messageAndOffset = response.messageSet(topicPartition.getTopic(),
+                topicPartition.getPartition()).iterator().next();
         byte[] keyBytes = null;
         if (messageAndOffset.message().hasKey()) {
             ByteBuffer key = messageAndOffset.message().key();
@@ -141,8 +140,13 @@ public class KafkaClient {
             payloadBytes = new byte[payload.limit()];
             payload.get(payloadBytes);
         }
+        Long timestamp = null;
+        if (!messageAndOffset.message().isNull()) {
+            timestamp = messageAndOffset.message().timestamp();
+        }
+
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
-                messageAndOffset.offset(), keyBytes, payloadBytes);
+                messageAndOffset.offset(), keyBytes, payloadBytes, timestamp);
     }
 
     private SimpleConsumer createConsumer(String host, int port, String clientName) {
@@ -160,16 +164,16 @@ public class KafkaClient {
         SimpleConsumer consumer = null;
         try {
             consumer = createConsumer(
-                mConfig.getKafkaSeedBrokerHost(),
-                mConfig.getKafkaSeedBrokerPort(),
-                "partitionLookup");
+                    mConfig.getKafkaSeedBrokerHost(),
+                    mConfig.getKafkaSeedBrokerPort(),
+                    "partitionLookup");
             List<String> topics = new ArrayList<String>();
             topics.add(topic);
             TopicMetadataRequest request = new TopicMetadataRequest(topics);
             TopicMetadataResponse response = consumer.send(request);
             if (response.topicsMetadata().size() != 1) {
                 throw new RuntimeException("Expected one metadata for topic " + topic + " found " +
-                    response.topicsMetadata().size());
+                        response.topicsMetadata().size());
             }
             TopicMetadata topicMetadata = response.topicsMetadata().get(0);
             return topicMetadata.partitionsMetadata().size();

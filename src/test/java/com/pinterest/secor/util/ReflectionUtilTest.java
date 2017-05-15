@@ -40,7 +40,6 @@ public class ReflectionUtilTest {
         properties.addProperty("secor.offsets.prefix", "offset=");
         mSecorConfig = new SecorConfig(properties);
         mLogFilePath = new LogFilePath("/foo", "/foo/bar/baz/1_1_1");
-
     }
 
     @Test

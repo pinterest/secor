@@ -16,21 +16,19 @@
  */
 package com.pinterest.secor.parser;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import com.google.protobuf.CodedOutputStream;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.protobuf.Messages.UnitTestMessage1;
 import com.pinterest.secor.protobuf.Messages.UnitTestMessage2;
-
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 public class ProtobufMessageParserTest extends TestCase {
@@ -40,7 +38,7 @@ public class ProtobufMessageParserTest extends TestCase {
         byte data[] = new byte[16];
         CodedOutputStream output = CodedOutputStream.newInstance(data);
         output.writeUInt64(1, timestamp);
-        return new Message("test", 0, 0, null, data);
+        return new Message("test", 0, 0, null, data, null);
     }
 
     @Override
@@ -73,11 +71,11 @@ public class ProtobufMessageParserTest extends TestCase {
 
         UnitTestMessage1 message = UnitTestMessage1.newBuilder().setTimestamp(1405970352L).build();
         assertEquals(1405970352000l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), null)));
 
         message = UnitTestMessage1.newBuilder().setTimestamp(1405970352123l).build();
         assertEquals(1405970352123l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), null)));
     }
 
     @Test
@@ -92,11 +90,11 @@ public class ProtobufMessageParserTest extends TestCase {
         UnitTestMessage2 message = UnitTestMessage2.newBuilder()
                 .setInternal(UnitTestMessage2.Internal.newBuilder().setTimestamp(1405970352L).build()).build();
         assertEquals(1405970352000l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), null)));
 
         message = UnitTestMessage2.newBuilder()
                 .setInternal(UnitTestMessage2.Internal.newBuilder().setTimestamp(1405970352123l).build()).build();
         assertEquals(1405970352123l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), null)));
     }
 }

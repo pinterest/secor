@@ -34,9 +34,9 @@ public class ParsedMessage extends Message {
                Arrays.toString(mPartitions) + '}';
     }
 
-    public ParsedMessage(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload,
+    public ParsedMessage(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload, Long timestamp,
                          String[] mPartitions) {
-        super(topic, kafkaPartition, offset, kafkaKey, payload);
+        super(topic, kafkaPartition, offset, kafkaKey, payload, timestamp);
         this.mPartitions = mPartitions;
     }
 

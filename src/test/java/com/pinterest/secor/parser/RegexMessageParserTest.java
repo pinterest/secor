@@ -31,6 +31,7 @@ public class RegexMessageParserTest extends TestCase {
     private SecorConfig mConfig;
     private Message mMessageWithMillisTimestamp;
     private Message mMessageWithWrongFormatTimestamp;
+    private long timestamp;
 
     @Override
     public void setUp() throws Exception {
@@ -44,13 +45,15 @@ public class RegexMessageParserTest extends TestCase {
         Mockito.when(TimestampedMessageParser.usingHourPrefix(mConfig)).thenReturn("hr=");
         Mockito.when(TimestampedMessageParser.usingMinutePrefix(mConfig)).thenReturn("min=");
 
+        timestamp = System.currentTimeMillis();
+
         byte messageWithMillisTimestamp[] =
             "?24.140.88.218 2015/09/22T22:19:00+0000 1442960340 GET http://api.com/test/?id=123 HTTP/1.1 s200 1017 0.384213448 pass - r685206763364 91ea566f - \"for iOS/5.4.2 (iPhone; 9.0)\"".getBytes("UTF-8");
-        mMessageWithMillisTimestamp = new Message("test", 0, 0, null, messageWithMillisTimestamp);
+        mMessageWithMillisTimestamp = new Message("test", 0, 0, null, messageWithMillisTimestamp, timestamp);
 
       byte messageWithWrongFormatTimestamp[] =
           "?24.140.88.218 2015/09/22T22:19:00+0000 A1442960340 GET http://api.com/test/?id=123 HTTP/1.1 s200 1017 0.384213448 pass - r685206763364 91ea566f - \"for iOS/5.4.2 (iPhone; 9.0)\"".getBytes("UTF-8");
-      mMessageWithWrongFormatTimestamp = new Message("test", 0, 0, null, messageWithWrongFormatTimestamp);
+      mMessageWithWrongFormatTimestamp = new Message("test", 0, 0, null, messageWithWrongFormatTimestamp, timestamp);
 
     }
 
@@ -65,7 +68,7 @@ public class RegexMessageParserTest extends TestCase {
     public void testExtractTimestampMillisEmpty() throws Exception {
         RegexMessageParser regexMessageParser = new RegexMessageParser(mConfig);
         byte emptyBytes2[] = "".getBytes();
-        regexMessageParser.extractTimestampMillis(new Message("test", 0, 0, null, emptyBytes2));
+        regexMessageParser.extractTimestampMillis(new Message("test", 0, 0, null, emptyBytes2, timestamp));
     }
 
     @Test(expected=NumberFormatException.class)
