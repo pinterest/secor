@@ -569,4 +569,38 @@ public class SecorConfig {
     public String getMetricsCollectorClass() {
         return mProperties.getString("secor.monitoring.metrics.collector.class");
     }
+    
+    /**
+     * This method is used for fetching all the properties which start with the given prefix.
+     * It returns a Map of all those key-val.
+     * 
+     * e.g.
+     * a.b.c=val1
+     * a.b.d=val2
+     * a.b.e=val3
+     * 
+     * If prefix is a.b then,
+     * These will be fetched as a map {c => val1, d => val2, e => val3}
+     * 
+     * @param prefix
+     * @return
+     */
+    public Map<String, String> getPropertyMapForPrefix(String prefix) {
+        Iterator<String> keys = mProperties.getKeys(prefix);
+        Map<String, String> map = new HashMap<String, String>();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String value = mProperties.getString(key);
+            map.put(key.substring(prefix.length() + 1), value);
+        }
+        return map;
+    }
+    
+    public Map<String, String> getORCMessageSchema() {
+        return getPropertyMapForPrefix("secor.orc.message.schema");
+    }
+    
+    public String getORCSchemaProviderClass(){
+        return getString("secor.orc.schema.provider");
+    }
 }
