@@ -6,7 +6,7 @@
 
     <groupId>com.pinterest</groupId>
     <artifactId>secor</artifactId>
-    <version>0.23-SNAPSHOT</version>
+    <version>0.24-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>secor</name>
     <description>Kafka to s3/gs/swift logs exporter</description>
@@ -602,9 +602,6 @@
         </profile>
         <profile>
             <id>kafka-0.8-dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
@@ -621,6 +618,9 @@
         </profile>
         <profile>
             <id>kafka-0.10-dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
