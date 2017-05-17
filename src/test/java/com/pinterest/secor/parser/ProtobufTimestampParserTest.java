@@ -22,12 +22,13 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 public class ProtobufTimestampParserTest extends TestCase {
     private SecorConfig mConfig;
+    private long timestamp;
 
     private Message buildMessage(long timestamp) throws Exception {
         byte data[] = new byte[16];
         CodedOutputStream output = CodedOutputStream.newInstance(data);
         output.writeUInt64(1, timestamp);
-        return new Message("test", 0, 0, null, data);
+        return new Message("test", 0, 0, null, data, timestamp);
     }
 
     @Override
@@ -39,6 +40,8 @@ public class ProtobufTimestampParserTest extends TestCase {
         Mockito.when(TimestampedMessageParser.usingDatePrefix(mConfig)).thenReturn("dt=");
         Mockito.when(TimestampedMessageParser.usingHourPrefix(mConfig)).thenReturn("hr=");
         Mockito.when(TimestampedMessageParser.usingMinutePrefix(mConfig)).thenReturn("min=");
+
+        timestamp = System.currentTimeMillis();
     }
 
     @Test
@@ -65,13 +68,13 @@ public class ProtobufTimestampParserTest extends TestCase {
 
         TimestampedMessages.UnitTestTimestamp1 message = TimestampedMessages.UnitTestTimestamp1.newBuilder().setTimestamp(timestamp).build();
         assertEquals(1405970352000l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp.getSeconds())));
 
         Timestamp timestampWithNano = Timestamp.newBuilder().setSeconds(1405970352l)
                 .setNanos(123000000).build();
         message = TimestampedMessages.UnitTestTimestamp1.newBuilder().setTimestamp(timestampWithNano).build();
         assertEquals(1405970352123l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp.getSeconds())));
     }
 
     @Test
@@ -88,12 +91,12 @@ public class ProtobufTimestampParserTest extends TestCase {
         TimestampedMessages.UnitTestTimestamp2 message = TimestampedMessages.UnitTestTimestamp2.newBuilder()
                 .setInternal(TimestampedMessages.UnitTestTimestamp2.Internal.newBuilder().setTimestamp(timestamp).build()).build();
         assertEquals(1405970352000l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp.getSeconds())));
 
         timestamp = Timestamps.fromMillis(1405970352123l);
         message = TimestampedMessages.UnitTestTimestamp2.newBuilder()
                 .setInternal(TimestampedMessages.UnitTestTimestamp2.Internal.newBuilder().setTimestamp(timestamp).build()).build();
         assertEquals(1405970352123l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray())));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp.getSeconds())));
     }
 }

@@ -141,8 +141,11 @@ public class KafkaClient {
             payloadBytes = new byte[payload.limit()];
             payload.get(payloadBytes);
         }
+        Long timestamp = null;
+        timestamp = messageAndOffset.message().timestamp();
+
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
-                messageAndOffset.offset(), keyBytes, payloadBytes);
+                messageAndOffset.offset(), keyBytes, payloadBytes, timestamp);
     }
 
     private SimpleConsumer createConsumer(String host, int port, String clientName) {

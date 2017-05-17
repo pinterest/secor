@@ -41,17 +41,19 @@ public class LogFilePathTest extends TestCase {
             ".10_0_00000000000000000100.crc";
 
     private LogFilePath mLogFilePath;
+    private long timestamp;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         mLogFilePath = new LogFilePath(PREFIX, TOPIC, PARTITIONS, GENERATION, KAFKA_PARTITION,
                                        LAST_COMMITTED_OFFSET, "");
+        timestamp = System.currentTimeMillis();
     }
 
     public void testConstructFromMessage() throws Exception {
         ParsedMessage message = new ParsedMessage(TOPIC, KAFKA_PARTITION, 1000, null,
-                                                  "some_payload".getBytes(), PARTITIONS);
+                                                  "some_payload".getBytes(), PARTITIONS, timestamp);
         LogFilePath logFilePath = new LogFilePath(PREFIX, GENERATION, LAST_COMMITTED_OFFSET,
                                                   message, "");
         assertEquals(PATH, logFilePath.getLogFilePath());
