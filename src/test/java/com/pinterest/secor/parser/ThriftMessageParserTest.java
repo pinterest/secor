@@ -39,6 +39,20 @@ public class ThriftMessageParserTest extends TestCase {
     }
 
     @Test
+    public void testExtractTimestampFromKafkaTimestamp() throws Exception {
+        Mockito.when(mConfig.getUseKafkaTimestamp()).thenReturn(true);
+        Mockito.when(mConfig.getMessageTimestampName()).thenReturn("blasdjlkjasdkl");
+        Mockito.when(mConfig.getMessageTimestampId()).thenReturn(1);
+        Mockito.when(mConfig.getMessageTimestampType()).thenReturn("i64");
+        Mockito.when(mConfig.getThriftProtocolClass()).thenReturn("org.apache.thrift.protocol.TBinaryProtocol");
+
+        ThriftMessageParser parser = new ThriftMessageParser(mConfig);
+
+        assertEquals(1405970352000L, parser.extractTimestampMillis(buildMessage(1405970352L, 1, 2L)));
+        assertEquals(1405970352123L, parser.extractTimestampMillis(buildMessage(1405970352123L, 1, 2L)));
+    }
+
+    @Test
     public void testExtractTimestamp() throws Exception {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("blasdjlkjasdkl");
         Mockito.when(mConfig.getMessageTimestampId()).thenReturn(1);
@@ -87,5 +101,4 @@ public class ThriftMessageParserTest extends TestCase {
 
         parser.extractTimestampMillis(buildMessage(1L, 2, 3L));
     }
-
 }

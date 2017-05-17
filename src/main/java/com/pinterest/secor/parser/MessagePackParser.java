@@ -45,7 +45,7 @@ public class MessagePackParser extends TimestampedMessageParser {
     public long extractTimestampMillis(Message message) throws Exception {
         HashMap<String, Object> msgHash = mMessagePackObjectMapper.readValue(message.getPayload(),
                 mTypeReference);
-        Object timestampValue = msgHash.get(mConfig.getMessageTimestampName());
+        Object timestampValue = (mConfig.getUseKafkaTimestamp()) ? message.getTimestamp() : msgHash.get(mConfig.getMessageTimestampName());
 
         if (timestampValue instanceof Number) {
             return toMillis(((Number) timestampValue).longValue());

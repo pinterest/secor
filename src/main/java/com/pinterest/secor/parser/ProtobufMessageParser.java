@@ -16,18 +16,16 @@
  */
 package com.pinterest.secor.parser;
 
-import java.io.IOException;
-import java.util.regex.Pattern;
-
-import com.google.protobuf.Descriptors;
-import com.google.protobuf.util.Timestamps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.util.Timestamps;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.ProtobufUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.regex.Pattern;
 
 /**
  * Protocol buffer message timestamp extractor
@@ -67,7 +65,7 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
 
     @Override
     public long extractTimestampMillis(final Message message) throws IOException {
-        return extractTimestampMillis(message.getTopic(), message.getPayload());
+        return (mConfig.getUseKafkaTimestamp()) ? message.getTimestamp() : extractTimestampMillis(message.getTopic(), message.getPayload());
     }
 
     public long extractTimestampMillis(String topic, final byte[] bytes) throws IOException {

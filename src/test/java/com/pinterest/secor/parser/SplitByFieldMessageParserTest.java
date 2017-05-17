@@ -70,6 +70,18 @@ public class SplitByFieldMessageParserTest extends TestCase {
     }
 
     @Test
+    public void testExtractTypeAndTimestampFromKafkaTimestamp() throws Exception {
+        Mockito.when(mConfig.getUseKafkaTimestamp()).thenReturn(true);
+        SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
+
+        assertEquals(timestamp, jsonMessageParser.extractTimestampMillis(mMessageWithTypeAndTimestamp));
+        assertEquals(timestamp, jsonMessageParser.extractTimestampMillis(mMessageWithoutType));
+
+        assertEquals("event1", jsonMessageParser.extractEventType((JSONObject) JSONValue.parse(mMessageWithTypeAndTimestamp.getPayload())));
+        assertEquals("event2", jsonMessageParser.extractEventType((JSONObject) JSONValue.parse(mMessageWithoutTimestamp.getPayload())));
+    }
+
+    @Test
     public void testExtractTypeAndTimestamp() throws Exception {
         SplitByFieldMessageParser jsonMessageParser = new SplitByFieldMessageParser(mConfig);
 

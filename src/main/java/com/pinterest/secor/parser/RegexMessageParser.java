@@ -18,11 +18,11 @@ package com.pinterest.secor.parser;
 
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * RegexMessageParser extracts timestamp field (specified by 'message.timestamp.input.pattern')
@@ -44,6 +44,9 @@ public class RegexMessageParser extends TimestampedMessageParser {
 
     @Override
     public long extractTimestampMillis(final Message message) {
+        if (mConfig.getUseKafkaTimestamp()) {
+            return message.getTimestamp();
+        }
         String line = new String(message.getPayload());
         Matcher m = mTsPattern.matcher(line);
         if (m.find()) {
@@ -54,5 +57,4 @@ public class RegexMessageParser extends TimestampedMessageParser {
         }
         throw new NumberFormatException("Cannot find timestamp field in: " + line);
     }
-
 }

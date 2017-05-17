@@ -36,15 +36,18 @@ public class JsonMessageParser extends TimestampedMessageParser {
     @Override
     public long extractTimestampMillis(final Message message) {
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
-        if (jsonObject != null) {
-            Object fieldValue = getJsonFieldValue(jsonObject);
-            if (fieldValue != null) {
-                return toMillis(Double.valueOf(fieldValue.toString()).longValue());
+        if (mConfig.getUseKafkaTimestamp()) {
+            return message.getTimestamp();
+        } else {
+            if (jsonObject != null) {
+                Object fieldValue = getJsonFieldValue(jsonObject);
+                if (fieldValue != null) {
+                    return toMillis(Double.valueOf(fieldValue.toString()).longValue());
+                }
+            } else if (m_timestampRequired) {
+                throw new RuntimeException("Missing timestamp field for message: " + message);
             }
-        } else if (m_timestampRequired) {
-            throw new RuntimeException("Missing timestamp field for message: " + message);
         }
         return 0;
     }
-
 }
