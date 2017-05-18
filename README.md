@@ -176,7 +176,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Rakuten](http://techblog.rakuten.co.jp/)
   * [Appsflyer](https://www.appsflyer.com)
   * [Wego](https://www.wego.com)
-  * [GO_JEK](http://gojekengineering.com/)
+  * [GO-JEK](http://gojekengineering.com/)
 
 ## Help
 

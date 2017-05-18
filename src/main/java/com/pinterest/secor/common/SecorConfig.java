@@ -131,6 +131,10 @@ public class SecorConfig {
         return getString("kafka.offsets.storage");
     }
 
+    public boolean useKafkaTimestamp() {
+        return getBoolean("kafka.useTimestamp", false);
+    }
+
     public int getGeneration() {
         return getInt("secor.generation");
     }
