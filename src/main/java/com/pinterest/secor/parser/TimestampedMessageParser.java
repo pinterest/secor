@@ -127,7 +127,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     }
 
     static boolean useKafkaTimestamp(SecorConfig config) {
-        return config.getBoolean("kafka.useTimestamp", false);
+        return config.useKafkaTimestamp();
     }
 
     protected static long toMillis(final long timestamp) {

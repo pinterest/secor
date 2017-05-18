@@ -92,7 +92,7 @@ public class MessagePackParserTest extends TestCase {
 
     @Test
     public void testExtractTimestampMillisFromKafkaTimestamp() throws Exception {
-        Mockito.when(mConfig.getBoolean("kafka.useTimestamp", false)).thenReturn(true);
+        Mockito.when(mConfig.useKafkaTimestamp()).thenReturn(true);
         mMessagePackParser = new MessagePackParser(mConfig);
 
         assertEquals(timestamp, mMessagePackParser.getTimestampMillis(

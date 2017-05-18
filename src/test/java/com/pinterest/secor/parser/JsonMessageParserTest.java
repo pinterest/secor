@@ -79,7 +79,7 @@ public class JsonMessageParserTest extends TestCase {
 
 	@Test
 	public void testExtractTimestampMillisFromKafkaTimestamp() throws Exception {
-    	Mockito.when(mConfig.getBoolean("kafka.useTimestamp", false)).thenReturn(true);
+    	Mockito.when(mConfig.useKafkaTimestamp()).thenReturn(true);
 		JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
 
 		assertEquals(timestamp, jsonMessageParser.getTimestampMillis(mMessageWithSecondsTimestamp));

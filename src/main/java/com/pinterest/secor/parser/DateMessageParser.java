@@ -82,5 +82,4 @@ public class DateMessageParser extends MessageParser {
 
         return result;
     }
-
 }
