@@ -45,9 +45,6 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
 
     @Override
     public long extractTimestampMillis(Message message) throws Exception {
-        if (mConfig.getUseKafkaTimestamp()) {
-            return message.getTimestamp();
-        }
         throw new UnsupportedOperationException("Unsupported, use extractPartitions method instead");
     }
 
@@ -59,7 +56,7 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
         }
 
         String eventType = extractEventType(jsonObject);
-        long timestampMillis = (mConfig.getUseKafkaTimestamp()) ? message.getTimestamp() : extractTimestampMillis(jsonObject);
+        long timestampMillis = extractTimestampMillis(jsonObject);
 
         String[] timestampPartitions = generatePartitions(timestampMillis, mUsingHourly, mUsingMinutely);
         return ArrayUtils.addAll(new String[]{eventType}, timestampPartitions);

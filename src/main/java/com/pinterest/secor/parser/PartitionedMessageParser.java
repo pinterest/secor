@@ -16,11 +16,12 @@
  */
 package com.pinterest.secor.parser;
 
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.message.Message;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Date;
+
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.message.Message;
 
 
 
@@ -45,6 +46,7 @@ public class PartitionedMessageParser extends TimestampedMessageParser {
 
     @Override
     public long extractTimestampMillis(final Message message) {
-        return (mConfig.getUseKafkaTimestamp()) ? message.getTimestamp() : new Date().getTime(); //Daily Timestamp generation
+        return new Date().getTime(); //Daily Timestamp generation
     }
+
 }

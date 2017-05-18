@@ -77,16 +77,6 @@ public class JsonMessageParserTest extends TestCase {
         mMessageWithNestedTimestamp = new Message("test", 0, 0, null, messageWithNestedTimestamp, timestamp);
     }
 
-	@Test
-	public void testExtractTimestampMillisFromKafkaTimestamp() throws Exception {
-		Mockito.when(mConfig.getUseKafkaTimestamp()).thenReturn(true);
-		JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
-
-		assertEquals(timestamp, jsonMessageParser.extractTimestampMillis(mMessageWithSecondsTimestamp));
-		assertEquals(timestamp, jsonMessageParser.extractTimestampMillis(mMessageWithMillisTimestamp));
-		assertEquals(timestamp, jsonMessageParser.extractTimestampMillis(mMessageWithMillisFloatTimestamp));
-	}
-
     @Test
     public void testExtractTimestampMillis() throws Exception {
         JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);

@@ -33,7 +33,6 @@ import java.util.TimeZone;
 @RunWith(PowerMockRunner.class)
 public class MessagePackParserTest extends TestCase {
 
-    private SecorConfig mConfig;
     private MessagePackParser mMessagePackParser;
     private Message mMessageWithSecondsTimestamp;
     private Message mMessageWithMillisTimestamp;
@@ -44,7 +43,7 @@ public class MessagePackParserTest extends TestCase {
 
     @Override
     public void setUp() throws Exception {
-        mConfig = Mockito.mock(SecorConfig.class);
+        SecorConfig mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("ts");
         Mockito.when(mConfig.getTimeZone()).thenReturn(TimeZone.getTimeZone("UTC"));
         Mockito.when(TimestampedMessageParser.usingDateFormat(mConfig)).thenReturn("yyyy-MM-dd");
@@ -88,19 +87,6 @@ public class MessagePackParserTest extends TestCase {
         mapWithMillisStringTimestamp.put("age", 67);
         mMessageWithMillisStringTimestamp = new Message("test", 0, 0, null,
                 mObjectMapper.writeValueAsBytes(mapWithMillisStringTimestamp), timestamp);
-    }
-
-    @Test
-    public void testExtractTimestampMillisFromKafkaTimestamp() throws Exception {
-        Mockito.when(mConfig.getUseKafkaTimestamp()).thenReturn(true);
-        assertEquals(timestamp, mMessagePackParser.extractTimestampMillis(
-                mMessageWithSecondsTimestamp));
-        assertEquals(timestamp, mMessagePackParser.extractTimestampMillis(
-                mMessageWithMillisTimestamp));
-        assertEquals(timestamp, mMessagePackParser.extractTimestampMillis(
-                mMessageWithMillisFloatTimestamp));
-        assertEquals(timestamp, mMessagePackParser.extractTimestampMillis(
-                mMessageWithMillisStringTimestamp));
     }
 
     @Test

@@ -77,14 +77,10 @@ public class ThriftMessageParser extends TimestampedMessageParser {
     @Override
     public long extractTimestampMillis(final Message message) throws TException {
         long timestamp;
-        if (mConfig.getUseKafkaTimestamp()) {
-            timestamp = message.getTimestamp();
+        if ("i32".equals(mTimestampType)) {
+            timestamp = (long) mDeserializer.partialDeserializeI32(message.getPayload(), mThriftPath);
         } else {
-            if ("i32".equals(mTimestampType)) {
-                timestamp = (long) mDeserializer.partialDeserializeI32(message.getPayload(), mThriftPath);
-            } else {
-                timestamp = mDeserializer.partialDeserializeI64(message.getPayload(), mThriftPath);
-            }
+            timestamp = mDeserializer.partialDeserializeI64(message.getPayload(), mThriftPath);
         }
 
         return toMillis(timestamp);
