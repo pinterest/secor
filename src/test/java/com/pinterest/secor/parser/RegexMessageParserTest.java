@@ -58,6 +58,14 @@ public class RegexMessageParserTest extends TestCase {
     }
 
     @Test
+    public void testExtractTimestampMillisFromKafkaTimestamp() throws Exception {
+        Mockito.when(mConfig.getBoolean("kafka.useTimestamp", false)).thenReturn(true);
+        RegexMessageParser regexMessageParser = new RegexMessageParser(mConfig);
+
+        assertEquals(timestamp, regexMessageParser.getTimestampMillis(mMessageWithMillisTimestamp));
+    }
+
+    @Test
     public void testExtractTimestampMillis() throws Exception {
         RegexMessageParser regexMessageParser = new RegexMessageParser(mConfig);
 

@@ -70,24 +70,34 @@ public class JsonMessageParserTest extends TestCase {
 
         byte messageWithoutTimestamp[] =
                 "{\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}".getBytes("UTF-8");
-        mMessageWithoutTimestamp = new Message("test", 0, 0, null, messageWithoutTimestamp, timestamp);
+        mMessageWithoutTimestamp = new Message("test", 0, 0, null, messageWithoutTimestamp, null);
 
         byte messageWithNestedTimestamp[] =
                 "{\"meta_data\":{\"created\":\"1405911096123\"},\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}".getBytes("UTF-8");
         mMessageWithNestedTimestamp = new Message("test", 0, 0, null, messageWithNestedTimestamp, timestamp);
     }
 
+	@Test
+	public void testExtractTimestampMillisFromKafkaTimestamp() throws Exception {
+    	Mockito.when(mConfig.getBoolean("kafka.useTimestamp", false)).thenReturn(true);
+		JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
+
+		assertEquals(timestamp, jsonMessageParser.getTimestampMillis(mMessageWithSecondsTimestamp));
+		assertEquals(timestamp, jsonMessageParser.getTimestampMillis(mMessageWithMillisTimestamp));
+		assertEquals(timestamp, jsonMessageParser.getTimestampMillis(mMessageWithMillisFloatTimestamp));
+	}
+
     @Test
     public void testExtractTimestampMillis() throws Exception {
         JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
 
-        assertEquals(1405911096000l, jsonMessageParser.extractTimestampMillis(mMessageWithSecondsTimestamp));
-        assertEquals(1405911096123l, jsonMessageParser.extractTimestampMillis(mMessageWithMillisTimestamp));
-        assertEquals(1405911096123l, jsonMessageParser.extractTimestampMillis(mMessageWithMillisFloatTimestamp));
+        assertEquals(1405911096000l, jsonMessageParser.getTimestampMillis(mMessageWithSecondsTimestamp));
+        assertEquals(1405911096123l, jsonMessageParser.getTimestampMillis(mMessageWithMillisTimestamp));
+        assertEquals(1405911096123l, jsonMessageParser.getTimestampMillis(mMessageWithMillisFloatTimestamp));
 
         // Return 0 if there's no timestamp, for any reason.
 
-        assertEquals(0l, jsonMessageParser.extractTimestampMillis(mMessageWithoutTimestamp));
+        assertEquals(0l, jsonMessageParser.getTimestampMillis(mMessageWithoutTimestamp));
     }
 
     @Test
@@ -96,7 +106,7 @@ public class JsonMessageParserTest extends TestCase {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("meta_data.created");
 
         JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
-        assertEquals(1405911096123l, jsonMessageParser.extractTimestampMillis(mMessageWithNestedTimestamp));
+        assertEquals(1405911096123l, jsonMessageParser.getTimestampMillis(mMessageWithNestedTimestamp));
     }
 
     @Test(expected=ClassCastException.class)
@@ -104,7 +114,7 @@ public class JsonMessageParserTest extends TestCase {
         JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
 
         byte emptyBytes1[] = {};
-        jsonMessageParser.extractTimestampMillis(new Message("test", 0, 0, null, emptyBytes1, timestamp));
+        jsonMessageParser.getTimestampMillis(new Message("test", 0, 0, null, emptyBytes1, timestamp));
     }
 
     @Test(expected=ClassCastException.class)
@@ -112,7 +122,7 @@ public class JsonMessageParserTest extends TestCase {
         JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);
 
         byte emptyBytes2[] = "".getBytes();
-        jsonMessageParser.extractTimestampMillis(new Message("test", 0, 0, null, emptyBytes2, timestamp));
+        jsonMessageParser.getTimestampMillis(new Message("test", 0, 0, null, emptyBytes2, timestamp));
     }
 
     @Test
@@ -265,7 +275,8 @@ public class JsonMessageParserTest extends TestCase {
             assertEquals(expectedPartition, retrievedPartition);
         }
     }
-@Test
+
+	@Test
 	public void testMinutelyGetFinalizedUptoPartitions() throws Exception {
 		Mockito.when(TimestampedMessageParser.usingMinutely(mConfig)).thenReturn(true);
 		JsonMessageParser jsonMessageParser = new JsonMessageParser(mConfig);

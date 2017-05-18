@@ -132,7 +132,7 @@ public class SecorConfig {
     }
 
     public boolean getUseKafkaTimestamp() {
-        return getBoolean("kafka.useKafkaTimestamp", false);
+        return getBoolean("kafka.useTimestamp", false);
     }
 
     public int getGeneration() {

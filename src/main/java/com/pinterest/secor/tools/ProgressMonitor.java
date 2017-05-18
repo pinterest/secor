@@ -235,7 +235,7 @@ public class ProgressMonitor {
 
     private long getTimestamp(Message message) throws Exception {
         if (mMessageParser instanceof TimestampedMessageParser) {
-            return ((TimestampedMessageParser)mMessageParser).extractTimestampMillis(message);
+            return ((TimestampedMessageParser)mMessageParser).getTimestampMillis(message);
         } else {
             return -1;
         }

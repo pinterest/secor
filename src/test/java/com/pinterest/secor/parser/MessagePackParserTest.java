@@ -33,6 +33,7 @@ import java.util.TimeZone;
 @RunWith(PowerMockRunner.class)
 public class MessagePackParserTest extends TestCase {
 
+    SecorConfig mConfig;
     private MessagePackParser mMessagePackParser;
     private Message mMessageWithSecondsTimestamp;
     private Message mMessageWithMillisTimestamp;
@@ -43,7 +44,7 @@ public class MessagePackParserTest extends TestCase {
 
     @Override
     public void setUp() throws Exception {
-        SecorConfig mConfig = Mockito.mock(SecorConfig.class);
+        mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("ts");
         Mockito.when(mConfig.getTimeZone()).thenReturn(TimeZone.getTimeZone("UTC"));
         Mockito.when(TimestampedMessageParser.usingDateFormat(mConfig)).thenReturn("yyyy-MM-dd");
@@ -90,14 +91,29 @@ public class MessagePackParserTest extends TestCase {
     }
 
     @Test
-    public void testExtractTimestampMillis() throws Exception {
-        assertEquals(1405970352000l, mMessagePackParser.extractTimestampMillis(
+    public void testExtractTimestampMillisFromKafkaTimestamp() throws Exception {
+        Mockito.when(mConfig.getBoolean("kafka.useTimestamp", false)).thenReturn(true);
+        mMessagePackParser = new MessagePackParser(mConfig);
+
+        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(
                 mMessageWithSecondsTimestamp));
-        assertEquals(1405970352123l, mMessagePackParser.extractTimestampMillis(
+        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(
                 mMessageWithMillisTimestamp));
-        assertEquals(1405970352123l, mMessagePackParser.extractTimestampMillis(
+        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(
                 mMessageWithMillisFloatTimestamp));
-        assertEquals(1405970352123l, mMessagePackParser.extractTimestampMillis(
+        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(
+                mMessageWithMillisStringTimestamp));
+    }
+
+    @Test
+    public void testExtractTimestampMillis() throws Exception {
+        assertEquals(1405970352000l, mMessagePackParser.getTimestampMillis(
+                mMessageWithSecondsTimestamp));
+        assertEquals(1405970352123l, mMessagePackParser.getTimestampMillis(
+                mMessageWithMillisTimestamp));
+        assertEquals(1405970352123l, mMessagePackParser.getTimestampMillis(
+                mMessageWithMillisFloatTimestamp));
+        assertEquals(1405970352123l, mMessagePackParser.getTimestampMillis(
                 mMessageWithMillisStringTimestamp));
     }
 
@@ -107,7 +123,7 @@ public class MessagePackParserTest extends TestCase {
         mapWithoutTimestamp.put("email", "mary@example.com");
         Message nMessageWithoutTimestamp = new Message("test", 0, 0, null,
                 mObjectMapper.writeValueAsBytes(mapWithoutTimestamp), timestamp);
-        mMessagePackParser.extractTimestampMillis(nMessageWithoutTimestamp);
+        mMessagePackParser.getTimestampMillis(nMessageWithoutTimestamp);
     }
 
     @Test(expected=NumberFormatException.class)
@@ -116,7 +132,7 @@ public class MessagePackParserTest extends TestCase {
         mapWitUnsupportedFormatTimestamp.put("ts", "2014-11-14T18:12:52.878Z");
         Message nMessageWithUnsupportedFormatTimestamp = new Message("test", 0, 0, null,
                 mObjectMapper.writeValueAsBytes(mapWitUnsupportedFormatTimestamp), timestamp);
-        mMessagePackParser.extractTimestampMillis(nMessageWithUnsupportedFormatTimestamp);
+        mMessagePackParser.getTimestampMillis(nMessageWithUnsupportedFormatTimestamp);
     }
 
     @Test(expected=NullPointerException.class)
@@ -125,7 +141,7 @@ public class MessagePackParserTest extends TestCase {
         mapWitNullTimestamp.put("ts", null);
         Message nMessageWithNullTimestamp = new Message("test", 0, 0, null,
                 mObjectMapper.writeValueAsBytes(mapWitNullTimestamp), timestamp);
-        mMessagePackParser.extractTimestampMillis(nMessageWithNullTimestamp);
+        mMessagePackParser.getTimestampMillis(nMessageWithNullTimestamp);
     }
 
     @Test

@@ -45,6 +45,15 @@ public class ProtobufTimestampParserTest extends TestCase {
     }
 
     @Test
+    public void testExtractTimestampMillisFromKafkaTimestamp() throws Exception {
+        Mockito.when(mConfig.getBoolean("kafka.useTimestamp", false)).thenReturn(true);
+        ProtobufMessageParser parser = new ProtobufMessageParser(mConfig);
+
+        assertEquals(1405970352000l, parser.extractTimestampMillis(buildMessage(1405970352l)));
+        assertEquals(1405970352123l, parser.extractTimestampMillis(buildMessage(1405970352123l)));
+    }
+
+    @Test
     public void testExtractTimestampMillis() throws Exception {
         ProtobufMessageParser parser = new ProtobufMessageParser(mConfig);
 
