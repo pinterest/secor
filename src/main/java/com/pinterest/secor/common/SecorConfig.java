@@ -571,7 +571,7 @@ public class SecorConfig {
     }
 
     public String getMetricsCollectorClass() {
-        return mProperties.getString("secor.monitoring.metrics.collector.class");
+        return getString("secor.monitoring.metrics.collector.class");
     }
     
     /**
