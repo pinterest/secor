@@ -16,14 +16,11 @@
  */
 package com.pinterest.secor.parser;
 
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.message.Message;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Date;
-
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.message.Message;
-
-
 
 /**
  * Offset message parser groups messages based on the offset ranges.
@@ -48,5 +45,4 @@ public class PartitionedMessageParser extends TimestampedMessageParser {
     public long extractTimestampMillis(final Message message) {
         return new Date().getTime(); //Daily Timestamp generation
     }
-
 }
