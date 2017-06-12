@@ -43,8 +43,14 @@ public class MessagePackSequenceFileReaderWriterFactoryTest {
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, null);
         KeyValue kv1 = (new KeyValue(23232, new byte[]{44, 55, 66, 77, 88}, new byte[]{23, 45, 40 ,10, 122}));
         KeyValue kv2 = (new KeyValue(23233, new byte[]{2, 3, 4, 5}));
+        KeyValue kv3 =  (new KeyValue(23234, new byte[]{44, 55, 66, 77, 88}, new byte[]{23, 45, 40 ,10, 122}, 1496318250));
+        KeyValue kv4 =  (new KeyValue(23235, null, new byte[]{23, 45, 40 ,10, 122}, 1496318250));
+
         fileWriter.write(kv1);
         fileWriter.write(kv2);
+        fileWriter.write(kv3);
+        fileWriter.write(kv4);
+
         fileWriter.close();
         FileReader fileReader = factory.BuildFileReader(tempLogFilePath, null);
 
@@ -56,7 +62,17 @@ public class MessagePackSequenceFileReaderWriterFactoryTest {
         assertEquals(kv2.getOffset(), kvout.getOffset());
         assertArrayEquals(kv2.getKafkaKey(), kvout.getKafkaKey());
         assertArrayEquals(kv2.getValue(), kvout.getValue());
-    }
+        kvout = fileReader.next();
+        assertEquals(kv3.getOffset(), kvout.getOffset());
+        assertArrayEquals(kv3.getKafkaKey(), kvout.getKafkaKey());
+        assertArrayEquals(kv3.getValue(), kvout.getValue());
+        assertEquals(kv3.getTimestamp(), kvout.getTimestamp());
+        kvout = fileReader.next();
+        assertEquals(kv4.getOffset(), kvout.getOffset());
+        assertArrayEquals(new byte[0], kvout.getKafkaKey());
+        assertArrayEquals(kv4.getValue(), kvout.getValue());
+        assertEquals(kv4.getTimestamp(), kvout.getTimestamp());
 
+    }
 
 }
