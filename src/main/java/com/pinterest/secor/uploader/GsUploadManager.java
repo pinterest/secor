@@ -70,7 +70,7 @@ public class GsUploadManager extends UploadManager {
     @Override
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         final String gsBucket = mConfig.getGsBucket();
-        final String gsKey = localPath.withPrefix(mConfig.getGsPath()).getLogFilePath();
+        final String gsKey = localPath.withPrefix(mConfig.getGsPath(), mConfig).getLogFilePath();
         final File localFile = new File(localPath.getLogFilePath());
         final boolean directUpload = mConfig.getGsDirectUpload();
 
