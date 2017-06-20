@@ -34,15 +34,13 @@ public class Message {
     private long mOffset;
     private byte[] mKafkaKey;
     private byte[] mPayload;
-    private Long mTimestamp;
 
     protected String fieldsToString() {
         return "topic='" + mTopic + '\'' +
                ", kafkaPartition=" + mKafkaPartition +
                ", offset=" + mOffset +
                ", kafkaKey=" + new String(mKafkaKey) +
-               ", payload=" + new String(mPayload) +
-               ", timestamp=" + mTimestamp;
+               ", payload=" + new String(mPayload);
     }
 
     @Override
@@ -50,7 +48,7 @@ public class Message {
         return "Message{" + fieldsToString() + '}';
     }
 
-    public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload, Long timestamp) {
+    public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload) {
         mTopic = topic;
         mKafkaPartition = kafkaPartition;
         mOffset = offset;
@@ -62,7 +60,6 @@ public class Message {
         if (mPayload == null) {
             mPayload = EMPTY_BYTES;
         }
-        mTimestamp = timestamp;
     }
 
     public String getTopic() {
@@ -83,10 +80,6 @@ public class Message {
 
     public byte[] getPayload() {
         return mPayload;
-    }
-
-    public Long getTimestamp() {
-        return mTimestamp;
     }
 
     public void write(OutputStream output) throws IOException {

@@ -47,7 +47,7 @@ public class AzureUploadManager extends UploadManager {
     @java.lang.Override
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         final String azureContainer = mConfig.getAzureContainer();
-        final String azureKey = localPath.withPrefix(mConfig.getAzurePath()).getLogFilePath();
+        final String azureKey = localPath.withPrefix(mConfig.getAzurePath(), mConfig).getLogFilePath();
         final File localFile = new File(localPath.getLogFilePath());
 
         LOG.info("uploading file {} to azure://{}/{}", localFile, azureContainer, azureKey);

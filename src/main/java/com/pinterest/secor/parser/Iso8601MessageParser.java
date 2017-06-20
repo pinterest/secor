@@ -16,16 +16,18 @@
  */
 package com.pinterest.secor.parser;
 
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.message.Message;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
+import javax.xml.bind.DatatypeConverter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.message.Message;
 
 /**
  * Iso8601MessageParser extracts timestamp field (specified by 'message.timestamp.name')
@@ -66,4 +68,5 @@ public class Iso8601MessageParser extends MessageParser {
 
         return result;
     }
+
 }

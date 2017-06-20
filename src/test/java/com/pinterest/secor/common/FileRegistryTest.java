@@ -58,6 +58,7 @@ public class FileRegistryTest extends TestCase {
         properties.addProperty("secor.file.reader.writer.factory",
                 "com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory");
         properties.addProperty("secor.file.age.youngest", true);
+        properties.addProperty("secor.max.file.age.policy", "");
         SecorConfig secorConfig = new SecorConfig(properties);
         mRegistry = new FileRegistry(secorConfig);
         mLogFilePath = new LogFilePath("/some_parent_dir", PATH);

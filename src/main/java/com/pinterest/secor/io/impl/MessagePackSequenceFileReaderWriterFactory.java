@@ -44,7 +44,6 @@ import java.util.Arrays;
 public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWriterFactory {
     private static final int KAFKA_MESSAGE_OFFSET = 1;
     private static final int KAFKA_HASH_KEY = 2;
-    private static final int KAFKA_MESSAGE_TIMESTAMP = 3;
     private static final byte[] EMPTY_BYTES = new byte[0];
 
     @Override
@@ -77,16 +76,12 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
                 MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(mKey.getBytes());
                 int mapSize = unpacker.unpackMapHeader();
                 long offset = 0;
-                long timestamp = -1;
                 byte[] keyBytes = EMPTY_BYTES;
                 for (int i = 0; i < mapSize; i++) {
                     int key = unpacker.unpackInt();
                     switch (key) {
                         case KAFKA_MESSAGE_OFFSET:
                             offset = unpacker.unpackLong();
-                            break;
-                        case KAFKA_MESSAGE_TIMESTAMP:
-                            timestamp = unpacker.unpackLong();
                             break;
                         case KAFKA_HASH_KEY:
                             int keySize = unpacker.unpackBinaryHeader();
@@ -96,7 +91,7 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
                     }
                 }
                 unpacker.close();
-                return new KeyValue(offset, keyBytes, Arrays.copyOfRange(mValue.getBytes(), 0, mValue.getLength()), timestamp);
+                return new KeyValue(offset, keyBytes, Arrays.copyOfRange(mValue.getBytes(), 0, mValue.getLength()));
             } else {
                 return null;
             }
@@ -136,34 +131,25 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            byte[] kafkaKey = keyValue.hasKafkaKey() ? keyValue.getKafkaKey() : new byte[0];
-            long timestamp = keyValue.getTimestamp();
-            final int timestampLength = (keyValue.hasTimestamp()) ? 10 : 0;
+            byte[] kafkaKey = keyValue.getKafkaKey();
             // output size estimate
             // 1 - map header
             // 1 - message pack key
             // 9 - max kafka offset
             // 1 - message pack key
-            // 9 - kafka timestamp
-            // 1 - message pack key
             // 5 - max (sane) kafka key size
             // N - size of kafka key
-            // = 27 + N
-            ByteArrayOutputStream out = new ByteArrayOutputStream(17 + timestampLength + kafkaKey.length);
+            // = 17 + N
+            ByteArrayOutputStream out = new ByteArrayOutputStream(17 + kafkaKey.length);
             MessagePacker packer = MessagePack.newDefaultPacker(out)
-                    .packMapHeader(numberOfFieldsMappedInHeader(keyValue))
+                    .packMapHeader((kafkaKey.length == 0) ? 1 : 2)
                     .packInt(KAFKA_MESSAGE_OFFSET)
                     .packLong(keyValue.getOffset());
-
-            if (keyValue.hasTimestamp())
-                packer.packInt(KAFKA_MESSAGE_TIMESTAMP)
-                        .packLong(timestamp);
-
-            if (keyValue.hasKafkaKey())
+            if (kafkaKey.length != 0) {
                 packer.packInt(KAFKA_HASH_KEY)
                         .packBinaryHeader(kafkaKey.length)
                         .writePayload(kafkaKey);
-
+            }
             packer.close();
             byte[] outBytes = out.toByteArray();
             this.mKey.set(outBytes, 0, outBytes.length);
@@ -174,18 +160,6 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
         @Override
         public void close() throws IOException {
             this.mWriter.close();
-        }
-
-        private int numberOfFieldsMappedInHeader(KeyValue keyValue) {
-            int fields = 1;
-
-            if (keyValue.hasKafkaKey())
-                fields++;
-
-            if (keyValue.hasTimestamp())
-                fields++;
-
-            return fields;
         }
     }
 }

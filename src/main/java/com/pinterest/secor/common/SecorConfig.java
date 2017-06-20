@@ -131,10 +131,6 @@ public class SecorConfig {
         return getString("kafka.offsets.storage");
     }
 
-    public boolean useKafkaTimestamp() {
-        return getBoolean("kafka.useTimestamp", false);
-    }
-
     public int getGeneration() {
         return getInt("secor.generation");
     }
@@ -571,8 +567,36 @@ public class SecorConfig {
     }
 
     public String getMetricsCollectorClass() {
-        return getString("secor.monitoring.metrics.collector.class");
+        return mProperties.getString("secor.monitoring.metrics.collector.class");
     }
+    
+    public String getS3OutputFilePattern() {
+    	return getString("secor.s3.output_file_pattern");
+    }
+    
+    public String getPartitionPrefixMapping() {
+    	String[] map = getStringArray("secor.partition.prefix.mapping");
+    	if(null != map)
+    		return StringUtils.join(map, ',');
+        return "";
+    }
+    
+    public boolean isPartitionPrefixEnabled() {
+        return getBoolean("secor.partition.prefix.enable", false);
+    }
+    
+    public String getPartitionPrefixIdentifier() {
+        return getString("secor.partition.prefix.identifier", "");
+    }
+    
+    public String getPartitionOutputDtFormat() {
+    	return getString("secor.partition.output_dt_format");
+    }
+    
+    public String getMaxFileAgePolicy() {
+        return getString("secor.max.file.age.policy");
+    }
+    
     
     /**
      * This method is used for fetching all the properties which start with the given prefix.

@@ -141,7 +141,7 @@ public class S3UploadManager extends UploadManager {
 
         File localFile = new File(localPath.getLogFilePath());
 
-        if (FileUtil.s3PathPrefixIsAltered(localPath.withPrefix(curS3Path).getLogFilePath(), mConfig)) {
+        if (FileUtil.s3PathPrefixIsAltered(localPath.withPrefix(curS3Path, mConfig).getLogFilePath(), mConfig)) {
             curS3Path = FileUtil.getS3AlternativePathPrefix(mConfig);
             LOG.info("Will upload file {} to alternative s3 path s3://{}/{}", localFile, s3Bucket, curS3Path);
         }
@@ -149,10 +149,10 @@ public class S3UploadManager extends UploadManager {
         if (mConfig.getS3MD5HashPrefix()) {
             // add MD5 hash to the prefix to have proper partitioning of the secor logs on s3
             String md5Hash = FileUtil.getMd5Hash(localPath.getTopic(), localPath.getPartitions());
-            s3Key = localPath.withPrefix(md5Hash + "/" + curS3Path).getLogFilePath();
+            s3Key = localPath.withPrefix(md5Hash + "/" + curS3Path, mConfig).getLogFilePath();
         }
         else {
-            s3Key = localPath.withPrefix(curS3Path).getLogFilePath();
+            s3Key = localPath.withPrefix(curS3Path, mConfig).getLogFilePath();
         }
 
         // make upload request, taking into account configured options for encryption
