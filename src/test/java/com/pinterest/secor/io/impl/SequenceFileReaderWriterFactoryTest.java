@@ -53,10 +53,10 @@ public class SequenceFileReaderWriterFactoryTest {
         FileReader fileReader = factory.BuildFileReader(tempLogFilePath, null);
 
         KeyValue kvout = fileReader.next();
-        assertEquals(kv1.getKey(), kvout.getKey());
+        assertEquals(kv1.getOffset(), kvout.getOffset());
         assertArrayEquals(kv1.getValue(), kvout.getValue());
         kvout = fileReader.next();
-        assertEquals(kv2.getKey(), kvout.getKey());
+        assertEquals(kv2.getOffset(), kvout.getOffset());
         assertArrayEquals(kv2.getValue(), kvout.getValue());
     }
 

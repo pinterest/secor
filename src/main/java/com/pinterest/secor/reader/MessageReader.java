@@ -29,6 +29,7 @@ import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import kafka.consumer.TopicFilter;
 import kafka.consumer.Whitelist;
+import kafka.consumer.Blacklist;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import org.slf4j.Logger;
@@ -49,11 +50,14 @@ import java.util.Properties;
 public class MessageReader {
     private static final Logger LOG = LoggerFactory.getLogger(MessageReader.class);
 
-    private SecorConfig mConfig;
-    private OffsetTracker mOffsetTracker;
-    private ConsumerConnector mConsumerConnector;
-    private ConsumerIterator mIterator;
-    private HashMap<TopicPartition, Long> mLastAccessTime;
+    protected SecorConfig mConfig;
+    protected OffsetTracker mOffsetTracker;
+    protected ConsumerConnector mConsumerConnector;
+    protected ConsumerIterator mIterator;
+    protected HashMap<TopicPartition, Long> mLastAccessTime;
+    protected final int mTopicPartitionForgetSeconds;
+    protected final int mCheckMessagesPerSecond;
+    protected int mNMessages;
 
     public MessageReader(SecorConfig config, OffsetTracker offsetTracker) throws
             UnknownHostException {
@@ -62,13 +66,20 @@ public class MessageReader {
 
         mConsumerConnector = Consumer.createJavaConsumerConnector(createConsumerConfig());
 
-        TopicFilter topicFilter = new Whitelist(mConfig.getKafkaTopicFilter());
+        if (!mConfig.getKafkaTopicBlacklist().isEmpty() && !mConfig.getKafkaTopicFilter().isEmpty()) {
+            throw new RuntimeException("Topic filter and blacklist cannot be both specified.");
+        }
+        TopicFilter topicFilter = !mConfig.getKafkaTopicBlacklist().isEmpty()? new Blacklist(mConfig.getKafkaTopicBlacklist()):
+                new Whitelist(mConfig.getKafkaTopicFilter());
+        LOG.debug("Use TopicFilter {}({})", topicFilter.getClass(), topicFilter);
         List<KafkaStream<byte[], byte[]>> streams =
             mConsumerConnector.createMessageStreamsByFilter(topicFilter);
         KafkaStream<byte[], byte[]> stream = streams.get(0);
         mIterator = stream.iterator();
         mLastAccessTime = new HashMap<TopicPartition, Long>();
         StatsUtil.setLabel("secor.kafka.consumer.id", IdUtil.getConsumerId());
+        mTopicPartitionForgetSeconds = mConfig.getTopicPartitionForgetSeconds();
+        mCheckMessagesPerSecond = mConfig.getMessagesPerSecond() / mConfig.getConsumerThreads();
     }
 
     private void updateAccessTime(TopicPartition topicPartition) {
@@ -78,7 +89,7 @@ public class MessageReader {
         while (iterator.hasNext()) {
             Map.Entry pair = (Map.Entry) iterator.next();
             long lastAccessTime = (Long) pair.getValue();
-            if (now - lastAccessTime > mConfig.getTopicPartitionForgetSeconds()) {
+            if (now - lastAccessTime > mTopicPartitionForgetSeconds) {
                 iterator.remove();
             }
         }
@@ -105,12 +116,14 @@ public class MessageReader {
                   Integer.toString(mConfig.getZookeeperSessionTimeoutMs()));
         props.put("zookeeper.sync.time.ms", Integer.toString(mConfig.getZookeeperSyncTimeMs()));
         props.put("auto.commit.enable", "false");
-        // This option is required to make sure that messages are not lost for new topics and
-        // topics whose number of partitions has changed.
-        props.put("auto.offset.reset", "smallest");
+        props.put("auto.offset.reset", mConfig.getConsumerAutoOffsetReset());
         props.put("consumer.timeout.ms", Integer.toString(mConfig.getConsumerTimeoutMs()));
         props.put("consumer.id", IdUtil.getConsumerId());
-        props.put("partition.assignment.strategy", "roundrobin");
+        // Properties required to upgrade from kafka 0.8.x to 0.9.x
+        props.put("dual.commit.enabled", mConfig.getDualCommitEnabled());
+        props.put("offsets.storage", mConfig.getOffsetsStorage());
+
+        props.put("partition.assignment.strategy", mConfig.getPartitionAssignmentStrategy());
         if (mConfig.getRebalanceMaxRetries() != null &&
             !mConfig.getRebalanceMaxRetries().isEmpty()) {
             props.put("rebalance.max.retries", mConfig.getRebalanceMaxRetries());
@@ -119,9 +132,9 @@ public class MessageReader {
             !mConfig.getRebalanceBackoffMs().isEmpty()) {
             props.put("rebalance.backoff.ms", mConfig.getRebalanceBackoffMs());
         }
-        if (mConfig.getSocketReceieveBufferBytes() != null &&
-            !mConfig.getSocketReceieveBufferBytes().isEmpty()) {
-            props.put("socket.receive.buffer.bytes", mConfig.getSocketReceieveBufferBytes());
+        if (mConfig.getSocketReceiveBufferBytes() != null &&
+            !mConfig.getSocketReceiveBufferBytes().isEmpty()) {
+            props.put("socket.receive.buffer.bytes", mConfig.getSocketReceiveBufferBytes());
         }
         if (mConfig.getFetchMessageMaxBytes() != null && !mConfig.getFetchMessageMaxBytes().isEmpty()) {
             props.put("fetch.message.max.bytes", mConfig.getFetchMessageMaxBytes());
@@ -142,17 +155,23 @@ public class MessageReader {
 
     public Message read() {
         assert hasNext();
-        RateLimitUtil.acquire();
+        mNMessages = (mNMessages + 1) % mCheckMessagesPerSecond;
+        if (mNMessages % mCheckMessagesPerSecond == 0) {
+            RateLimitUtil.acquire(mCheckMessagesPerSecond);
+        }
         MessageAndMetadata<byte[], byte[]> kafkaMessage = mIterator.next();
         Message message = new Message(kafkaMessage.topic(), kafkaMessage.partition(),
-                                      kafkaMessage.offset(), kafkaMessage.message());
+                                      kafkaMessage.offset(), kafkaMessage.key(),
+                                      kafkaMessage.message());
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         updateAccessTime(topicPartition);
         // Skip already committed messages.
         long committedOffsetCount = mOffsetTracker.getTrueCommittedOffsetCount(topicPartition);
         LOG.debug("read message {}", message);
-        exportStats();
+        if (mNMessages % mCheckMessagesPerSecond == 0) {
+            exportStats();
+        }
         if (message.getOffset() < committedOffsetCount) {
             LOG.debug("skipping message {} because its offset precedes committed offset count {}",
                     message, committedOffsetCount);

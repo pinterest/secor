@@ -117,6 +117,7 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
         @Override
         public long getLength() throws IOException {
             assert this.mCountingStream != null;
+            this.mWriter.flush();
             return this.mCountingStream.getCount();
         }
 

@@ -6,13 +6,13 @@
         <format>tar.gz</format>
     </formats>
     <fileSets>
-        <!-- <fileSet>
+        <fileSet>
             <directory>src/main/scripts</directory>
             <outputDirectory>scripts</outputDirectory>
             <includes>
                 <include>*.sh</include>
             </includes>
-        </fileSet> -->
+        </fileSet>
         <fileSet>
             <directory>target</directory>
             <outputDirectory></outputDirectory>

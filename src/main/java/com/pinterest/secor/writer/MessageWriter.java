@@ -42,12 +42,13 @@ import java.io.IOException;
 public class MessageWriter {
     private static final Logger LOG = LoggerFactory.getLogger(MessageWriter.class);
 
-    private SecorConfig mConfig;
-    private OffsetTracker mOffsetTracker;
-    private FileRegistry mFileRegistry;
-    private String mFileExtension;
-    private CompressionCodec mCodec;
-    private String mLocalPrefix;
+    protected SecorConfig mConfig;
+    protected OffsetTracker mOffsetTracker;
+    protected FileRegistry mFileRegistry;
+    protected String mFileExtension;
+    protected CompressionCodec mCodec;
+    protected String mLocalPrefix;
+    protected final int mGeneration;
 
     public MessageWriter(SecorConfig config, OffsetTracker offsetTracker,
                          FileRegistry fileRegistry) throws Exception {
@@ -57,10 +58,15 @@ public class MessageWriter {
         if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
             mCodec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
             mFileExtension = mCodec.getDefaultExtension();
-        } else {
+        }
+        if (mConfig.getFileExtension() != null && !mConfig.getFileExtension().isEmpty()) {
+            mFileExtension = mConfig.getFileExtension();
+        } else if (mFileExtension == null){
             mFileExtension = "";
         }
+        
         mLocalPrefix = mConfig.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
+        mGeneration = mConfig.getGeneration();
     }
 
     public void adjustOffset(Message message) throws IOException {
@@ -83,11 +89,11 @@ public class MessageWriter {
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         long offset = mOffsetTracker.getAdjustedCommittedOffsetCount(topicPartition);
-        LogFilePath path = new LogFilePath(mLocalPrefix, mConfig.getGeneration(), offset, message,
+        LogFilePath path = new LogFilePath(mLocalPrefix, mGeneration, offset, message,
         		mFileExtension);
         FileWriter writer = mFileRegistry.getOrCreateWriter(path, mCodec);
-        writer.write(new KeyValue(message.getOffset(), message.getPayload()));
+        writer.write(new KeyValue(message.getOffset(), message.getKafkaKey(), message.getPayload()));
         LOG.debug("appended message {} to file {}.  File length {}",
-                  message, path.getLogFilePath(), writer.getLength());
+                  message, path, writer.getLength());
     }
 }

@@ -16,26 +16,22 @@
  */
 package com.pinterest.secor.common;
 
-import java.text.SimpleDateFormat;
+import com.pinterest.secor.message.ParsedMessage;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.StringUtils;
+
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
-
-import com.pinterest.secor.message.ParsedMessage;
 
 /**
  * LogFilePath represents path of a log file.  It contains convenience method for building and
  * decomposing paths.
  *
  * Log file path has the following form:
- *     prefix/topic/partition1/.../partitionN/generation_kafkaParition_firstMessageOffset
+ *     prefix/topic/partition1/.../partitionN/generation_kafkaPartition_firstMessageOffset
  * where:
  *     prefix is top-level directory for log files.  It can be a local path or an s3 dir,
  *     topic is a kafka topic,
@@ -54,54 +50,51 @@ public class LogFilePath {
     private final String mTopic;
     private final String[] mPartitions;
     private final int mGeneration;
-    private final int mKafkaPartition;
-    private final long mOffset;
+    private final int[] mKafkaPartitions;
+    private final long[] mOffsets;
     private final String mExtension;
-    private String mOutputFilePattern;
-    private SimpleDateFormat timeFormat = new SimpleDateFormat("HH-mm");
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("YYYYMMdd");
+    private MessageDigest messageDigest;
+
+
+    public LogFilePath(String prefix, String topic, String[] partitions, int generation,
+                       int[] kafkaPartitions, long[] offsets, String extension) {
+        assert kafkaPartitions != null & kafkaPartitions.length >= 1
+            : "Wrong kafkaParttions: " + Arrays.toString(kafkaPartitions);
+        assert offsets != null & offsets.length >= 1 : "Wrong offsets: " + Arrays.toString(offsets);
+        assert kafkaPartitions.length == offsets.length
+            : "Size mismatch partitions: " + Arrays.toString(kafkaPartitions) +
+            " offsets: " + Arrays.toString(offsets);
+        for (int i = 1; i < kafkaPartitions.length; i++) {
+            assert kafkaPartitions[i] == kafkaPartitions[i - 1] + 1
+                : "Non consecutive partitions " + kafkaPartitions[i] +
+                " and " + kafkaPartitions[i-1];
+        }
+        mPrefix = prefix;
+        mTopic = topic;
+        mPartitions = Arrays.copyOf(partitions, partitions.length);
+        mGeneration = generation;
+        mKafkaPartitions = Arrays.copyOf(kafkaPartitions, kafkaPartitions.length);
+        mOffsets = Arrays.copyOf(offsets, offsets.length);
+        mExtension = extension;
+
+        try {
+            messageDigest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Unable to find mdt digest.", e);
+        }
+    }
 
     public LogFilePath(String prefix, int generation, long lastCommittedOffset,
                        ParsedMessage message, String extension) {
-        mPrefix = prefix;
-        mTopic = message.getTopic();
-        mPartitions = message.getPartitions();
-        mGeneration = generation;
-        mKafkaPartition = message.getKafkaPartition();
-        mOffset = lastCommittedOffset;
-        mExtension = extension;
+        this(prefix, message.getTopic(), message.getPartitions(), generation,
+            new int[]{message.getKafkaPartition()}, new long[]{lastCommittedOffset},
+            extension);
     }
 
     public LogFilePath(String prefix, String topic, String[] partitions, int generation,
                        int kafkaPartition, long offset, String extension) {
-        mPrefix = prefix;
-        mTopic = topic;
-        mPartitions = partitions;
-        mGeneration = generation;
-        mKafkaPartition = kafkaPartition;
-        mOffset = offset;
-        mExtension = extension;
-    }
-    
-    public LogFilePath(String prefix, String topic, String[] partitions, int generation,
-            int kafkaPartition, long offset, String extension, SecorConfig config) {
-		
-		mPrefix = prefix;
-		mTopic = topic;
-		mPartitions = partitions;
-		mGeneration = generation;
-		mKafkaPartition = kafkaPartition;
-		mOffset = offset;
-		mExtension = extension;
-		mOutputFilePattern = config.getS3OutputFilePattern();
-    }
-
-    private static String[] subArray(String[] array, int startIndex, int endIndex) {
-        String[] result = new String[endIndex - startIndex + 1];
-        for (int i = startIndex; i <= endIndex; ++i) {
-            result[i - startIndex] = array[i];
-        }
-        return result;
+        this(prefix, topic, partitions, generation, new int[]{kafkaPartition},
+            new long[]{offset}, extension);
     }
 
     public LogFilePath(String prefix, String path) {
@@ -134,14 +127,31 @@ public class LogFilePath {
         String[] basenameElements = basename.split("_");
         assert basenameElements.length == 3: Integer.toString(basenameElements.length) + " == 3";
         mGeneration = Integer.parseInt(basenameElements[0]);
-        mKafkaPartition = Integer.parseInt(basenameElements[1]);
-        mOffset = Long.parseLong(basenameElements[2]);
+        mKafkaPartitions = new int[]{Integer.parseInt(basenameElements[1])};
+        mOffsets = new long[]{Long.parseLong(basenameElements[2])};
+    }
+
+    private static String[] subArray(String[] array, int startIndex, int endIndex) {
+        String[] result = new String[endIndex - startIndex + 1];
+        for (int i = startIndex; i <= endIndex; ++i) {
+            result[i - startIndex] = array[i];
+        }
+        return result;
+    }
+
+    public LogFilePath withPrefix(String prefix) {
+        return new LogFilePath(prefix, mTopic, mPartitions, mGeneration, mKafkaPartitions, mOffsets,
+            mExtension);
     }
 
     public String getLogFileParentDir() {
         ArrayList<String> elements = new ArrayList<String>();
-        elements.add(mPrefix);
-        elements.add(mTopic);
+        if (mPrefix != null && mPrefix.length() > 0) {
+            elements.add(mPrefix);
+        }
+        if (mTopic != null && mTopic.length() > 0) {
+            elements.add(mTopic);
+        }
         return StringUtils.join(elements, "/");
     }
 
@@ -157,17 +167,30 @@ public class LogFilePath {
     private String getLogFileBasename() {
         ArrayList<String> basenameElements = new ArrayList<String>();
         basenameElements.add(Integer.toString(mGeneration));
-        basenameElements.add(Integer.toString(mKafkaPartition));
-        basenameElements.add(String.format("%020d", mOffset));
+        if (mKafkaPartitions.length > 1) {
+            String kafkaPartitions = mKafkaPartitions[0] + "-" +
+                mKafkaPartitions[mKafkaPartitions.length - 1];
+            basenameElements.add(kafkaPartitions);
+
+            StringBuilder sb = new StringBuilder();
+            for (long offset : mOffsets) {
+                sb.append(offset);
+            }
+            try {
+                byte[] md5Bytes = messageDigest.digest(sb.toString().getBytes("UTF-8"));
+                byte[] encodedBytes = Base64.encodeBase64URLSafe(md5Bytes);
+                basenameElements.add(new String(encodedBytes));
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            basenameElements.add(Integer.toString(mKafkaPartitions[0]));
+            basenameElements.add(String.format("%020d", mOffsets[0]));
+        }
         return StringUtils.join(basenameElements, "_");
     }
 
     public String getLogFilePath() {
-    	
-		if (StringUtils.isNotBlank(mOutputFilePattern)) {
-			return getLogFilePath(mOutputFilePattern);
-		}
-    	
         String basename = getLogFileBasename();
 
         ArrayList<String> pathElements = new ArrayList<String>();
@@ -175,31 +198,6 @@ public class LogFilePath {
         pathElements.add(basename);
 
         return StringUtils.join(pathElements, "/") + mExtension;
-    }
-    
-    private String getLogFilePath(String pattern) {
-    	
-    	List<String> pathElements = new ArrayList<String>();
-    	pathElements.add(mPrefix);
-    	pathElements.add(StrSubstitutor.replace(pattern, getValueMap(), "{", "}"));
-    	System.out.println("Path:" + StringUtils.join(pathElements, "/") + mExtension);
-    	return StringUtils.join(pathElements, "/") + mExtension;
-    }
-    
-    private Map<String, String> getValueMap() {
-    	
-    	
-    	Map<String, String> valueMap = new HashMap<String, String>();
-		valueMap.put("randomHex", getRandomHex());
-		valueMap.put("partition", mPartitions[0]);
-		valueMap.put("topic", mTopic);
-		valueMap.put("generation", mGeneration + "");
-		valueMap.put("kafkaPartition", mKafkaPartition + "");
-		valueMap.put("fmOffset", String.format("%020d", mOffset));
-		valueMap.put("currentTimestamp", System.currentTimeMillis() + "");
-		valueMap.put("currentTime", timeFormat.format(new Date()));
-		valueMap.put("currentDate", dateFormat.format(new Date()));
-		return valueMap;
     }
 
     public String getLogFileCrcPath() {
@@ -224,12 +222,22 @@ public class LogFilePath {
         return mGeneration;
     }
 
+    @Deprecated
     public int getKafkaPartition() {
-        return mKafkaPartition;
+        return mKafkaPartitions[0];
     }
 
+    public int[] getKafkaPartitions() {
+        return mKafkaPartitions;
+    }
+
+    @Deprecated
     public long getOffset() {
-        return mOffset;
+        return mOffsets[0];
+    }
+
+    public long[] getOffsets() {
+        return mOffsets;
     }
 
     public String getExtension() {
@@ -244,8 +252,8 @@ public class LogFilePath {
         LogFilePath that = (LogFilePath) o;
 
         if (mGeneration != that.mGeneration) return false;
-        if (mKafkaPartition != that.mKafkaPartition) return false;
-        if (mOffset != that.mOffset) return false;
+        if (!Arrays.equals(mKafkaPartitions, that.mKafkaPartitions)) return false;
+        if (!Arrays.equals(mOffsets, that.mOffsets)) return false;
         if (!Arrays.equals(mPartitions, that.mPartitions)) return false;
         if (mPrefix != null ? !mPrefix.equals(that.mPrefix) : that.mPrefix != null) return false;
         if (mTopic != null ? !mTopic.equals(that.mTopic) : that.mTopic != null) return false;
@@ -259,19 +267,13 @@ public class LogFilePath {
         result = 31 * result + (mTopic != null ? mTopic.hashCode() : 0);
         result = 31 * result + (mPartitions != null ? Arrays.hashCode(mPartitions) : 0);
         result = 31 * result + mGeneration;
-        result = 31 * result + mKafkaPartition;
-        result = 31 * result + (int) (mOffset ^ (mOffset >>> 32));
+        result = 31 * result + Arrays.hashCode(mKafkaPartitions);
+        result = 31 * result + Arrays.hashCode(mOffsets);
         return result;
     }
 
     @Override
     public String toString() {
         return getLogFilePath();
-    }
-    
-    public static String getRandomHex() {
-
-    	Random random = new Random();
-        return StringUtils.substring(Integer.toHexString(random.nextInt()), 0, 4);
     }
 }

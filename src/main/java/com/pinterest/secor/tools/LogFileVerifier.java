@@ -48,16 +48,12 @@ public class LogFileVerifier {
             new HashMap<TopicPartition, SortedMap<Long, HashSet<LogFilePath>>>();
     }
 
-    private String getPrefix() {
-        return "s3n://" + mConfig.getS3Bucket() + "/" + mConfig.getS3Path();
-    }
-
-    private String getTopicPrefix() {
-        return getPrefix() + "/" + mTopic;
+    private String getTopicPrefix() throws IOException {
+        return FileUtil.getPrefix(mTopic, mConfig) + "/" + mTopic;
     }
 
     private void populateTopicPartitionToOffsetToFiles() throws IOException {
-        String prefix = getPrefix();
+        String prefix = FileUtil.getPrefix(mTopic, mConfig);
         String topicPrefix = getTopicPrefix();
         String[] paths = FileUtil.listRecursively(topicPrefix);
         for (String path : paths) {
@@ -159,8 +155,8 @@ public class LogFileVerifier {
         FileReader reader = createFileReader(logFilePath);
         KeyValue record;
         while ((record = reader.next()) != null) {
-            if (!offsets.add(record.getKey())) {
-                throw new RuntimeException("duplicate key " + record.getKey() + " found in file " +
+            if (!offsets.add(record.getOffset())) {
+                throw new RuntimeException("duplicate key " + record.getOffset() + " found in file " +
                     logFilePath.getLogFilePath());
             }
         }
@@ -210,7 +206,8 @@ public class LogFileVerifier {
         FileReader fileReader = ReflectionUtil.createFileReader(
                 mConfig.getFileReaderWriterFactory(),
                 logFilePath,
-                codec
+                codec,
+                mConfig
         );
         return fileReader;
     }
