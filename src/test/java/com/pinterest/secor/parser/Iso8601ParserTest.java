@@ -43,7 +43,16 @@ public class Iso8601ParserTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         mConfig = Mockito.mock(SecorConfig.class);
+        Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
+        Mockito.when(mConfig.getFinalizerDelaySeconds()).thenReturn(3600);
         Mockito.when(mConfig.getTimeZone()).thenReturn(TimeZone.getTimeZone("UTC"));
+
+        Mockito.when(TimestampedMessageParser.usingDateFormat(mConfig)).thenReturn("yyyy-MM-dd");
+        Mockito.when(TimestampedMessageParser.usingHourFormat(mConfig)).thenReturn("HH");
+        Mockito.when(TimestampedMessageParser.usingMinuteFormat(mConfig)).thenReturn("mm");
+        Mockito.when(TimestampedMessageParser.usingDatePrefix(mConfig)).thenReturn("dt=");
+        Mockito.when(TimestampedMessageParser.usingHourPrefix(mConfig)).thenReturn("hr=");
+        Mockito.when(TimestampedMessageParser.usingMinutePrefix(mConfig)).thenReturn("min=");
 
         timestamp = System.currentTimeMillis();
 
@@ -81,22 +90,27 @@ public class Iso8601ParserTest extends TestCase {
     }
 
     @Test
-    public void testExtractDate() throws Exception {
-        Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
-        assertEquals("dt=2014-07-30", new Iso8601MessageParser(mConfig).extractPartitions(mFormat1)[0]);
-        assertEquals("dt=2014-07-29", new Iso8601MessageParser(mConfig).extractPartitions(mFormat2)[0]);
-        assertEquals("dt=2001-07-04", new Iso8601MessageParser(mConfig).extractPartitions(mFormat3)[0]);
-        assertEquals("dt=2016-03-02", new Iso8601MessageParser(mConfig).extractPartitions(mFormat4)[0]);
-        assertEquals("dt=2006-01-02", new Iso8601MessageParser(mConfig).extractPartitions(mNanosecondISOFormat)[0]);
-        assertEquals("dt=1970-01-01", new Iso8601MessageParser(mConfig).extractPartitions(mInvalidDate)[0]);
-        assertEquals("dt=1970-01-01", new Iso8601MessageParser(mConfig).extractPartitions(mMissingDate)[0]);
+    public void testExtractTimestampMillis() throws Exception {
+        Iso8601MessageParser parser = new Iso8601MessageParser(mConfig);
+
+        assertEquals(1406717600001l, parser.getTimestampMillis(mFormat1));
+        assertEquals(1406631200000l, parser.getTimestampMillis(mFormat2));
+        assertEquals(994204800000l, parser.getTimestampMillis(mFormat3));
+        assertEquals(1456943774000l, parser.getTimestampMillis(mFormat4));
+        assertEquals(1136246399999l, parser.getTimestampMillis(mNanosecondISOFormat));
+
+        // Return 0 if there's no timestamp, for any reason.
+        assertEquals(0l, parser.getTimestampMillis(mInvalidDate));
+        assertEquals(0l, parser.getTimestampMillis(mMissingDate));
     }
 
     @Test
-    public void testNestedField() throws Exception {
+    public void testExtractNestedTimestampMillis() throws Exception {
         Mockito.when(mConfig.getMessageTimestampNameSeparator()).thenReturn(".");
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("meta_data.created");
 
-        assertEquals("dt=2016-01-11", new Iso8601MessageParser(mConfig).extractPartitions(mNestedISOFormat)[0]);
+        Iso8601MessageParser parser = new Iso8601MessageParser(mConfig);
+
+        assertEquals(1452513028647l, parser.getTimestampMillis(mNestedISOFormat));
     }
 }
