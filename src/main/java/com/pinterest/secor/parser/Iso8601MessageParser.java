@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -33,37 +32,34 @@ import java.util.Date;
  * @author Jurriaan Pruis (email@jurriaanpruis.nl)
  *
  */
-public class Iso8601MessageParser extends MessageParser {
-    private static final Logger LOG = LoggerFactory.getLogger(Iso8601MessageParser.class);
-    protected static final String defaultDate = "dt=1970-01-01";
-    protected static final String defaultFormatter = "yyyy-MM-dd";
-    protected static final SimpleDateFormat outputFormatter = new SimpleDateFormat(defaultFormatter);
+public class Iso8601MessageParser extends TimestampedMessageParser {
+    private final boolean m_timestampRequired;
 
     public Iso8601MessageParser(SecorConfig config) {
         super(config);
-        outputFormatter.setTimeZone(config.getTimeZone());
+        m_timestampRequired = config.isMessageTimestampRequired();
     }
 
     @Override
-    public String[] extractPartitions(Message message) throws Exception {
+    public long extractTimestampMillis(final Message message) {
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
-        String result[] = { defaultDate };
+        Object fieldValue = jsonObject != null ? getJsonFieldValue(jsonObject) : null;
 
-        if (jsonObject != null) {
-            Object fieldValue = getJsonFieldValue(jsonObject);
-            if (fieldValue == null) {
-                LOG.warn("Missing field value. Using default partition = {}", defaultDate);
-            } else {
-                try {
-                    Date dateFormat = DatatypeConverter.parseDateTime(fieldValue.toString()).getTime();
-                    result[0] = "dt=" + outputFormatter.format(dateFormat);
-                } catch (Exception e) {
-                    LOG.warn("Impossible to convert date = {} as ISO-8601. Using date default = {}",
-                            fieldValue.toString(), result[0]);
+        if (m_timestampRequired && fieldValue == null) {
+            throw new RuntimeException("Missing timestamp field for message: " + message);
+        }
+
+        if (fieldValue != null) {
+            try {
+                Date dateFormat = DatatypeConverter.parseDateTime(fieldValue.toString()).getTime();
+                return dateFormat.getTime();
+            } catch (IllegalArgumentException ex) {
+                if (m_timestampRequired){
+                    throw new RuntimeException("Bad timestamp field for message: " + message);
                 }
             }
         }
 
-        return result;
+        return 0;
     }
 }
