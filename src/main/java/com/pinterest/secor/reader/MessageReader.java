@@ -20,6 +20,7 @@ import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.message.Message;
+import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.RateLimitUtil;
 import com.pinterest.secor.util.StatsUtil;
@@ -58,6 +59,8 @@ public class MessageReader {
     protected final int mTopicPartitionForgetSeconds;
     protected final int mCheckMessagesPerSecond;
     protected int mNMessages;
+    protected String mKafkaMessageTimestampClassName;
+    protected KafkaMessageTimestampFactory mKafkaMessageTimestampFactory;
 
     public MessageReader(SecorConfig config, OffsetTracker offsetTracker) throws
             UnknownHostException {
@@ -80,6 +83,8 @@ public class MessageReader {
         StatsUtil.setLabel("secor.kafka.consumer.id", IdUtil.getConsumerId());
         mTopicPartitionForgetSeconds = mConfig.getTopicPartitionForgetSeconds();
         mCheckMessagesPerSecond = mConfig.getMessagesPerSecond() / mConfig.getConsumerThreads();
+        mKafkaMessageTimestampClassName = mConfig.getKafkaMessageTimestampClass();
+        mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory();
     }
 
     private void updateAccessTime(TopicPartition topicPartition) {
@@ -160,9 +165,11 @@ public class MessageReader {
             RateLimitUtil.acquire(mCheckMessagesPerSecond);
         }
         MessageAndMetadata<byte[], byte[]> kafkaMessage = mIterator.next();
+
+        Long timestamp = mKafkaMessageTimestampFactory.create(mKafkaMessageTimestampClassName).getTimestamp(kafkaMessage);
         Message message = new Message(kafkaMessage.topic(), kafkaMessage.partition(),
                                       kafkaMessage.offset(), kafkaMessage.key(),
-                                      kafkaMessage.message(), kafkaMessage.timestamp());
+                                      kafkaMessage.message(), timestamp);
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         updateAccessTime(topicPartition);
