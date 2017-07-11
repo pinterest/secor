@@ -166,7 +166,10 @@ public class MessageReader {
         }
         MessageAndMetadata<byte[], byte[]> kafkaMessage = mIterator.next();
 
-        Long timestamp = mKafkaMessageTimestampFactory.create(mKafkaMessageTimestampClassName).getTimestamp(kafkaMessage);
+        Long timestamp = null;
+        if (mConfig.useKafkaTimestamp()) {
+            timestamp = mKafkaMessageTimestampFactory.create(mKafkaMessageTimestampClassName).getTimestamp(kafkaMessage);
+        }
         Message message = new Message(kafkaMessage.topic(), kafkaMessage.partition(),
                                       kafkaMessage.offset(), kafkaMessage.key(),
                                       kafkaMessage.message(), timestamp);
