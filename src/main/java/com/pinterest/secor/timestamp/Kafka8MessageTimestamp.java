@@ -7,11 +7,11 @@ public class Kafka8MessageTimestamp implements KafkaMessageTimestamp {
 
     @Override
     public Long getTimestamp(MessageAndMetadata<byte[], byte[]> kafkaMessage) {
-        return null;
+        return 0l;
     }
 
     @Override
     public Long getTimestamp(MessageAndOffset messageAndOffset) {
-        return null;
+        return 0l;
     }
 }

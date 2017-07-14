@@ -59,7 +59,6 @@ public class MessageReader {
     protected final int mTopicPartitionForgetSeconds;
     protected final int mCheckMessagesPerSecond;
     protected int mNMessages;
-    protected String mKafkaMessageTimestampClassName;
     protected KafkaMessageTimestampFactory mKafkaMessageTimestampFactory;
 
     public MessageReader(SecorConfig config, OffsetTracker offsetTracker) throws
@@ -83,8 +82,7 @@ public class MessageReader {
         StatsUtil.setLabel("secor.kafka.consumer.id", IdUtil.getConsumerId());
         mTopicPartitionForgetSeconds = mConfig.getTopicPartitionForgetSeconds();
         mCheckMessagesPerSecond = mConfig.getMessagesPerSecond() / mConfig.getConsumerThreads();
-        mKafkaMessageTimestampClassName = mConfig.getKafkaMessageTimestampClass();
-        mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory();
+        mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory(mConfig.getKafkaMessageTimestampClass());
     }
 
     private void updateAccessTime(TopicPartition topicPartition) {
@@ -166,10 +164,7 @@ public class MessageReader {
         }
         MessageAndMetadata<byte[], byte[]> kafkaMessage = mIterator.next();
 
-        Long timestamp = null;
-        if (mConfig.useKafkaTimestamp()) {
-            timestamp = mKafkaMessageTimestampFactory.create(mKafkaMessageTimestampClassName).getTimestamp(kafkaMessage);
-        }
+        Long timestamp = mKafkaMessageTimestampFactory.getKafkaMessageTimestamp().getTimestamp(kafkaMessage);
         Message message = new Message(kafkaMessage.topic(), kafkaMessage.partition(),
                                       kafkaMessage.offset(), kafkaMessage.key(),
                                       kafkaMessage.message(), timestamp);

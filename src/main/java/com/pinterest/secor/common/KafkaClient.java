@@ -51,14 +51,12 @@ public class KafkaClient {
 
     private SecorConfig mConfig;
     private ZookeeperConnector mZookeeperConnector;
-    private String mKafkaTimestampClassName;
     private KafkaMessageTimestampFactory mKafkaMessageTimestampFactory;
 
     public KafkaClient(SecorConfig config) {
         mConfig = config;
         mZookeeperConnector = new ZookeeperConnector(mConfig);
-        mKafkaTimestampClassName = mConfig.getKafkaMessageTimestampClass();
-        mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory();
+        mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory(mConfig.getKafkaMessageTimestampClass());
     }
 
     private HostAndPort findLeader(TopicPartition topicPartition) {
@@ -146,10 +144,7 @@ public class KafkaClient {
             payloadBytes = new byte[payload.limit()];
             payload.get(payloadBytes);
         }
-        Long timestamp = null;
-        if (mConfig.useKafkaTimestamp()) {
-            timestamp = mKafkaMessageTimestampFactory.create(mKafkaTimestampClassName).getTimestamp(messageAndOffset);
-        }
+        Long timestamp = mKafkaMessageTimestampFactory.getKafkaMessageTimestamp().getTimestamp(messageAndOffset);
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
                 messageAndOffset.offset(), keyBytes, payloadBytes, timestamp);
     }
