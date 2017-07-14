@@ -28,14 +28,14 @@ public class KeyValue {
 	private final long mOffset;
 	private final byte[] mKafkaKey;
 	private final byte[] mValue;
-	private final Long mTimestamp;
+	private final long mTimestamp;
 
 	// constructor
 	public KeyValue(long offset, byte[] value) {
 		this.mOffset = offset;
 		this.mKafkaKey = new byte[0];
 		this.mValue = value;
-		this.mTimestamp = -1l;
+		this.mTimestamp = -1;
 	}
 
 	// constructor
@@ -43,7 +43,7 @@ public class KeyValue {
 		this.mOffset = offset;
 		this.mKafkaKey = kafkaKey;
 		this.mValue = value;
-		this.mTimestamp = -1l;
+		this.mTimestamp = -1;
 	}
 
 	// constructor
@@ -66,7 +66,7 @@ public class KeyValue {
 		return this.mValue;
 	}
 
-	public Long getTimestamp() {
+	public long getTimestamp() {
 		return this.mTimestamp;
 	}
 

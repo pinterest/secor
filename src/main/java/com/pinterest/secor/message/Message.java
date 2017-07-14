@@ -34,7 +34,7 @@ public class Message {
     private long mOffset;
     private byte[] mKafkaKey;
     private byte[] mPayload;
-    private Long mTimestamp;
+    private long mTimestamp;
 
     protected String fieldsToString() {
         return "topic='" + mTopic + '\'' +
@@ -50,7 +50,7 @@ public class Message {
         return "Message{" + fieldsToString() + '}';
     }
 
-    public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload, Long timestamp) {
+    public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload, long timestamp) {
         mTopic = topic;
         mKafkaPartition = kafkaPartition;
         mOffset = offset;
@@ -85,7 +85,7 @@ public class Message {
         return mPayload;
     }
 
-    public Long getTimestamp() {
+    public long getTimestamp() {
         return mTimestamp;
     }
 

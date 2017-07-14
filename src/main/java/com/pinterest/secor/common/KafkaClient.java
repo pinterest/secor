@@ -144,7 +144,10 @@ public class KafkaClient {
             payloadBytes = new byte[payload.limit()];
             payload.get(payloadBytes);
         }
-        Long timestamp = mKafkaMessageTimestampFactory.getKafkaMessageTimestamp().getTimestamp(messageAndOffset);
+        long timestamp = (mConfig.useKafkaTimestamp())
+                ? mKafkaMessageTimestampFactory.getKafkaMessageTimestamp().getTimestamp(messageAndOffset)
+                : 0l;
+
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
                 messageAndOffset.offset(), keyBytes, payloadBytes, timestamp);
     }
