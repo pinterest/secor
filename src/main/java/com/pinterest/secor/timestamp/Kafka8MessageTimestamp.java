@@ -6,12 +6,12 @@ import kafka.message.MessageAndOffset;
 public class Kafka8MessageTimestamp implements KafkaMessageTimestamp {
 
     @Override
-    public Long getTimestamp(MessageAndMetadata<byte[], byte[]> kafkaMessage) {
+    public long getTimestamp(MessageAndMetadata<byte[], byte[]> kafkaMessage) {
         return 0l;
     }
 
     @Override
-    public Long getTimestamp(MessageAndOffset messageAndOffset) {
+    public long getTimestamp(MessageAndOffset messageAndOffset) {
         return 0l;
     }
 }

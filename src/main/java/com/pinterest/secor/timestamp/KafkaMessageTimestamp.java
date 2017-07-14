@@ -5,7 +5,7 @@ import kafka.message.MessageAndOffset;
 
 public interface KafkaMessageTimestamp {
 
-    Long getTimestamp(MessageAndMetadata<byte[], byte[]> kafkaMessage);
+    long getTimestamp(MessageAndMetadata<byte[], byte[]> kafkaMessage);
 
-    Long getTimestamp(MessageAndOffset messageAndOffset);
+    long getTimestamp(MessageAndOffset messageAndOffset);
 }
