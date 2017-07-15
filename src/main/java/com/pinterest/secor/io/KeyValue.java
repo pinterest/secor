@@ -47,7 +47,7 @@ public class KeyValue {
 	}
 
 	// constructor
-	public KeyValue(long offset, byte[] kafkaKey, byte[] value, Long timestamp) {
+	public KeyValue(long offset, byte[] kafkaKey, byte[] value, long timestamp) {
 		this.mOffset = offset;
 		this.mKafkaKey = kafkaKey;
 		this.mValue = value;
