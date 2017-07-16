@@ -18,6 +18,7 @@ package com.pinterest.secor.common;
 
 import com.google.common.net.HostAndPort;
 import com.pinterest.secor.message.Message;
+import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
 import kafka.api.FetchRequestBuilder;
 import kafka.api.PartitionOffsetRequestInfo;
 import kafka.common.TopicAndPartition;
@@ -50,10 +51,12 @@ public class KafkaClient {
 
     private SecorConfig mConfig;
     private ZookeeperConnector mZookeeperConnector;
+    private KafkaMessageTimestampFactory mKafkaMessageTimestampFactory;
 
     public KafkaClient(SecorConfig config) {
         mConfig = config;
         mZookeeperConnector = new ZookeeperConnector(mConfig);
+        mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory(mConfig.getKafkaMessageTimestampClass());
     }
 
     private HostAndPort findLeader(TopicPartition topicPartition) {
@@ -141,10 +144,10 @@ public class KafkaClient {
             payloadBytes = new byte[payload.limit()];
             payload.get(payloadBytes);
         }
-        Long timestamp = null;
-        if (mConfig.useKafkaTimestamp()) {
-            timestamp = messageAndOffset.message().timestamp();
-        }
+        long timestamp = (mConfig.useKafkaTimestamp())
+                ? mKafkaMessageTimestampFactory.getKafkaMessageTimestamp().getTimestamp(messageAndOffset)
+                : 0l;
+
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
                 messageAndOffset.offset(), keyBytes, payloadBytes, timestamp);
     }

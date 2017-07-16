@@ -43,8 +43,8 @@ public class MessagePackSequenceFileReaderWriterFactoryTest {
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, null);
         KeyValue kv1 = (new KeyValue(23232, new byte[]{44, 55, 66, 77, 88}, new byte[]{23, 45, 40 ,10, 122}));
         KeyValue kv2 = (new KeyValue(23233, new byte[]{2, 3, 4, 5}));
-        KeyValue kv3 =  (new KeyValue(23234, new byte[]{44, 55, 66, 77, 88}, new byte[]{23, 45, 40 ,10, 122}, 1496318250));
-        KeyValue kv4 =  (new KeyValue(23235, null, new byte[]{23, 45, 40 ,10, 122}, 1496318250));
+        KeyValue kv3 =  (new KeyValue(23234, new byte[]{44, 55, 66, 77, 88}, new byte[]{23, 45, 40 ,10, 122}, 1496318250l));
+        KeyValue kv4 =  (new KeyValue(23235, null, new byte[]{23, 45, 40 ,10, 122}, 1496318250l));
 
         fileWriter.write(kv1);
         fileWriter.write(kv2);

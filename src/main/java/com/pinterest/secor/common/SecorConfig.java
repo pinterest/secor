@@ -135,6 +135,10 @@ public class SecorConfig {
         return getBoolean("kafka.useTimestamp", false);
     }
 
+    public String getKafkaMessageTimestampClass() {
+        return getString("kafka.message.timestamp.className");
+    }
+
     public int getGeneration() {
         return getInt("secor.generation");
     }
