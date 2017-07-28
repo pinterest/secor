@@ -31,6 +31,7 @@ import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.TopicMetadataResponse;
 import kafka.javaapi.consumer.SimpleConsumer;
 import kafka.message.MessageAndOffset;
+import org.apache.kafka.common.protocol.Errors;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,7 +132,7 @@ public class KafkaClient {
             consumer.close();
             int errorCode = response.errorCode(topicPartition.getTopic(), topicPartition.getPartition());
 
-            if (errorCode == 1) {
+            if (errorCode == Errors.OFFSET_OUT_OF_RANGE.code()) {
               throw new MessageDoesNotExistException();
             } else {
               throw new RuntimeException("Error fetching offset data. Reason: " + errorCode);
