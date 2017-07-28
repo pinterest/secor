@@ -59,6 +59,8 @@ public class KafkaClient {
         mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory(mConfig.getKafkaMessageTimestampClass());
     }
 
+    public class MessageDoesNotExistException extends RuntimeException {}
+
     private HostAndPort findLeader(TopicPartition topicPartition) {
         SimpleConsumer consumer = null;
         try {
@@ -127,8 +129,13 @@ public class KafkaClient {
         FetchResponse response = consumer.fetch(request);
         if (response.hasError()) {
             consumer.close();
-            throw new RuntimeException("Error fetching offset data. Reason: " +
-                    response.errorCode(topicPartition.getTopic(), topicPartition.getPartition()));
+            int errorCode = response.errorCode(topicPartition.getTopic(), topicPartition.getPartition());
+
+            if (errorCode == 1) {
+              throw new MessageDoesNotExistException();
+            } else {
+              throw new RuntimeException("Error fetching offset data. Reason: " + errorCode);
+            }
         }
         MessageAndOffset messageAndOffset = response.messageSet(
                 topicPartition.getTopic(), topicPartition.getPartition()).iterator().next();
@@ -212,6 +219,16 @@ public class KafkaClient {
             }
             consumer = createConsumer(topicPartition);
             return getMessage(topicPartition, committedOffset, consumer);
+        } catch (MessageDoesNotExistException e) {
+          // If a RuntimeEMessageDoesNotExistException exception is raised,
+          // the message at the last comitted offset does not exist in Kafka.
+          // This is usually due to the message being compacted away by the
+          // Kafka log compaction process.
+          //
+          // That is no an exceptional situation - in fact it can be normal if
+          // the topic being consumed by Secor has a low volume. So in that
+          // case, simply return null
+          return null;
         } finally {
             if (consumer != null) {
                 consumer.close();

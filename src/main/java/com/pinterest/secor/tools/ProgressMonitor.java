@@ -207,8 +207,14 @@ public class ProgressMonitor {
                     assert committedOffset <= lastOffset: Long.toString(committedOffset) + " <= " +
                         lastOffset;
 
-                    long offsetLag = lastOffset - committedOffset;
-                    long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
+                    long offsetLag = 0L;
+                    long timestampMillisLag = 0L;
+
+                    if (committedMessage != null) {
+                        offsetLag = lastOffset - committedOffset;
+                        timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
+                    }
+
                     Map<String, String> tags = ImmutableMap.of(
                             Stat.STAT_KEYS.TOPIC.getName(), topic,
                             Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition),
