@@ -229,6 +229,7 @@ public class KafkaClient {
           // That is no an exceptional situation - in fact it can be normal if
           // the topic being consumed by Secor has a low volume. So in that
           // case, simply return null
+          LOG.warn("no committed message for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
           return null;
         } finally {
             if (consumer != null) {
