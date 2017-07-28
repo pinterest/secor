@@ -26,17 +26,23 @@ import java.lang.String;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class Message {
+
+    private static final byte[] EMPTY_BYTES = new byte[0];
+
     private String mTopic;
     private int mKafkaPartition;
     private long mOffset;
+    private byte[] mKafkaKey;
     private byte[] mPayload;
+    private long mTimestamp;
 
     protected String fieldsToString() {
         return "topic='" + mTopic + '\'' +
                ", kafkaPartition=" + mKafkaPartition +
                ", offset=" + mOffset +
-               ", payload=" + new String(mPayload);
-
+               ", kafkaKey=" + new String(mKafkaKey) +
+               ", payload=" + new String(mPayload) +
+               ", timestamp=" + mTimestamp;
     }
 
     @Override
@@ -44,15 +50,22 @@ public class Message {
         return "Message{" + fieldsToString() + '}';
     }
 
-    public Message(String topic, int kafkaPartition, long offset, byte[] payload) {
+    public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload, long timestamp) {
         mTopic = topic;
         mKafkaPartition = kafkaPartition;
         mOffset = offset;
+        mKafkaKey = kafkaKey;
+        if (mKafkaKey == null) {
+            mKafkaKey = EMPTY_BYTES;
+        }
         mPayload = payload;
+        if (mPayload == null) {
+            mPayload = EMPTY_BYTES;
+        }
+        mTimestamp = timestamp;
     }
 
     public String getTopic() {
-
         return mTopic;
     }
 
@@ -64,8 +77,16 @@ public class Message {
         return mOffset;
     }
 
+    public byte[] getKafkaKey() {
+        return mKafkaKey;
+    }
+
     public byte[] getPayload() {
         return mPayload;
+    }
+
+    public long getTimestamp() {
+        return mTimestamp;
     }
 
     public void write(OutputStream output) throws IOException {

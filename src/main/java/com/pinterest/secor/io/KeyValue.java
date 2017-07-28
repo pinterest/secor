@@ -19,27 +19,62 @@ package com.pinterest.secor.io;
 /**
  * Generic Object used to read next message from various file reader
  * implementations
- * 
+ *
  * @author Praveen Murugesan (praveen@uber.com)
  *
  */
 public class KeyValue {
-	
-	private final long mKey;
+
+	private final long mOffset;
+	private final byte[] mKafkaKey;
 	private final byte[] mValue;
-	
-	//constructor
-	public KeyValue(long key, byte[] value) {
-		this.mKey = key;
+	private final long mTimestamp;
+
+	// constructor
+	public KeyValue(long offset, byte[] value) {
+		this.mOffset = offset;
+		this.mKafkaKey = new byte[0];
 		this.mValue = value;
+		this.mTimestamp = -1;
 	}
-	
-	public long getKey() {
-		return this.mKey;
+
+	// constructor
+	public KeyValue(long offset, byte[] kafkaKey, byte[] value) {
+		this.mOffset = offset;
+		this.mKafkaKey = kafkaKey;
+		this.mValue = value;
+		this.mTimestamp = -1;
 	}
-	
+
+	// constructor
+	public KeyValue(long offset, byte[] kafkaKey, byte[] value, long timestamp) {
+		this.mOffset = offset;
+		this.mKafkaKey = kafkaKey;
+		this.mValue = value;
+		this.mTimestamp = timestamp;
+	}
+
+	public long getOffset() {
+		return this.mOffset;
+	}
+
+	public byte[] getKafkaKey() {
+		return this.mKafkaKey;
+	}
+
 	public byte[] getValue() {
 		return this.mValue;
 	}
 
+	public long getTimestamp() {
+		return this.mTimestamp;
+	}
+
+	public boolean hasKafkaKey() {
+		return this.mKafkaKey != null && this.mKafkaKey.length != 0;
+	}
+
+	public boolean hasTimestamp(){
+		return this.mTimestamp != -1;
+	}
 }

@@ -18,6 +18,7 @@ package com.pinterest.secor.common;
 
 import com.google.common.net.HostAndPort;
 import com.pinterest.secor.message.Message;
+import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
 import kafka.api.FetchRequestBuilder;
 import kafka.api.PartitionOffsetRequestInfo;
 import kafka.common.TopicAndPartition;
@@ -50,16 +51,18 @@ public class KafkaClient {
 
     private SecorConfig mConfig;
     private ZookeeperConnector mZookeeperConnector;
+    private KafkaMessageTimestampFactory mKafkaMessageTimestampFactory;
 
     public KafkaClient(SecorConfig config) {
         mConfig = config;
         mZookeeperConnector = new ZookeeperConnector(mConfig);
+        mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory(mConfig.getKafkaMessageTimestampClass());
     }
 
     private HostAndPort findLeader(TopicPartition topicPartition) {
         SimpleConsumer consumer = null;
         try {
-            LOG.info("looking up leader for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
+            LOG.debug("looking up leader for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
             consumer = createConsumer(
                 mConfig.getKafkaSeedBrokerHost(),
                 mConfig.getKafkaSeedBrokerPort(),
@@ -113,7 +116,7 @@ public class KafkaClient {
 
     private Message getMessage(TopicPartition topicPartition, long offset,
                                SimpleConsumer consumer) {
-        LOG.info("fetching message topic {} partition {} offset ",
+        LOG.debug("fetching message topic {} partition {} offset {}",
                 topicPartition.getTopic(), topicPartition.getPartition(), offset);
         final int MAX_MESSAGE_SIZE_BYTES = mConfig.getMaxMessageSizeBytes();
         final String clientName = getClientName(topicPartition);
@@ -129,11 +132,24 @@ public class KafkaClient {
         }
         MessageAndOffset messageAndOffset = response.messageSet(
                 topicPartition.getTopic(), topicPartition.getPartition()).iterator().next();
-        ByteBuffer payload = messageAndOffset.message().payload();
-        byte[] payloadBytes = new byte[payload.limit()];
-        payload.get(payloadBytes);
+        byte[] keyBytes = null;
+        if (messageAndOffset.message().hasKey()) {
+            ByteBuffer key = messageAndOffset.message().key();
+            keyBytes = new byte[key.limit()];
+            key.get(keyBytes);
+        }
+        byte[] payloadBytes = null;
+        if (!messageAndOffset.message().isNull()) {
+            ByteBuffer payload = messageAndOffset.message().payload();
+            payloadBytes = new byte[payload.limit()];
+            payload.get(payloadBytes);
+        }
+        long timestamp = (mConfig.useKafkaTimestamp())
+                ? mKafkaMessageTimestampFactory.getKafkaMessageTimestamp().getTimestamp(messageAndOffset)
+                : 0l;
+
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
-                messageAndOffset.offset(), payloadBytes);
+                messageAndOffset.offset(), keyBytes, payloadBytes, timestamp);
     }
 
     private SimpleConsumer createConsumer(String host, int port, String clientName) {
@@ -142,7 +158,7 @@ public class KafkaClient {
 
     public SimpleConsumer createConsumer(TopicPartition topicPartition) {
         HostAndPort leader = findLeader(topicPartition);
-        LOG.info("leader for topic {} partition {} is {}", topicPartition.getTopic(), topicPartition.getPartition(), leader.toString());
+        LOG.debug("leader for topic {} partition {} is {}", topicPartition.getTopic(), topicPartition.getPartition(), leader.toString());
         final String clientName = getClientName(topicPartition);
         return createConsumer(leader.getHostText(), leader.getPort(), clientName);
     }

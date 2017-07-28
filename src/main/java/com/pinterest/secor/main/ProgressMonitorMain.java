@@ -40,23 +40,33 @@ import java.util.concurrent.Executors;
 public class ProgressMonitorMain {
     private static final Logger LOG = LoggerFactory.getLogger(ProgressMonitorMain.class);
 
+    private static void loop(ProgressMonitor progressMonitor, long interval) {
+	final ProgressMonitor monitor = progressMonitor;
+	Runnable runner = new Runnable() {
+		public void run() {
+		    try {
+			monitor.exportStats();
+		    } catch (Throwable t) {
+			LOG.error("Progress monitor failed", t);
+		    }
+		}
+	    };
+
+	ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	scheduler.scheduleAtFixedRate(runner, 0, interval, TimeUnit.SECONDS);
+    }
+
     public static void main(String[] args) {
         try {
-            final SecorConfig config = SecorConfig.load();
-            final ProgressMonitor progressMonitor = new ProgressMonitor(config);
-            Runnable runner = new Runnable() {
-                    public void run() {
-                        try {
-                            progressMonitor.exportStats();
-                        } catch (Throwable t) {
-                            LOG.error("Progress monitor failed", t);
-                        }
-                    }
-                };
+            SecorConfig config = SecorConfig.load();
+            ProgressMonitor progressMonitor = new ProgressMonitor(config);
 
-            long interval = config.getMonitoringIntervalSeconds();
-            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-            scheduler.scheduleAtFixedRate(runner, 0, interval, TimeUnit.SECONDS);
+	    long interval = config.getMonitoringIntervalSeconds();
+	    if (interval > 0) {
+		loop(progressMonitor, interval);
+	    } else {
+		progressMonitor.exportStats();
+	    }
         } catch (Throwable t) {
             LOG.error("Progress monitor failed", t);
             System.exit(1);

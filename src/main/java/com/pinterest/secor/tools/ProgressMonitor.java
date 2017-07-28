@@ -135,7 +135,7 @@ public class ProgressMonitor {
 
     public void exportStats() throws Exception {
         List<Stat> stats = getStats();
-        System.out.println(JSONArray.toJSONString(stats));
+        LOG.info("Stats: {}", JSONArray.toJSONString(stats));
 
         // if there is a valid openTSDB port configured export to openTSDB
         if (mConfig.getTsdbHostport() != null && !mConfig.getTsdbHostport().isEmpty()) {
@@ -158,12 +158,18 @@ public class ProgressMonitor {
         for (Stat stat : stats) {
             @SuppressWarnings("unchecked")
             Map<String, String> tags = (Map<String, String>) stat.get(Stat.STAT_KEYS.TAGS.getName());
-            String aspect = new StringBuilder((String)stat.get(Stat.STAT_KEYS.METRIC.getName()))
-                    .append(PERIOD)
-                    .append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
-                    .append(PERIOD)
-                    .append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
-                    .toString();
+            StringBuilder builder = new StringBuilder();
+	    if (mConfig.getStatsDPrefixWithConsumerGroup()) {
+		builder.append(tags.get(Stat.STAT_KEYS.GROUP.getName()))
+		    .append(PERIOD);
+	    }
+	    String aspect = builder
+		.append((String)stat.get(Stat.STAT_KEYS.METRIC.getName()))
+		.append(PERIOD)
+		.append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
+		.append(PERIOD)
+		.append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
+		.toString();
             long value = Long.parseLong((String)stat.get(Stat.STAT_KEYS.VALUE.getName()));
             mStatsDClient.recordGaugeValue(aspect, value);
         }
@@ -205,7 +211,8 @@ public class ProgressMonitor {
                     long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
                     Map<String, String> tags = ImmutableMap.of(
                             Stat.STAT_KEYS.TOPIC.getName(), topic,
-                            Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition)
+                            Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition),
+                            Stat.STAT_KEYS.GROUP.getName(), mConfig.getKafkaGroup()
                     );
 
                     long timestamp = System.currentTimeMillis() / 1000;
@@ -228,7 +235,7 @@ public class ProgressMonitor {
 
     private long getTimestamp(Message message) throws Exception {
         if (mMessageParser instanceof TimestampedMessageParser) {
-            return ((TimestampedMessageParser)mMessageParser).extractTimestampMillis(message);
+            return ((TimestampedMessageParser)mMessageParser).getTimestampMillis(message);
         } else {
             return -1;
         }
@@ -248,7 +255,8 @@ public class ProgressMonitor {
             VALUE("value"),
             TIMESTAMP("timestamp"),
             TOPIC("topic"),
-            PARTITION("partition");
+            PARTITION("partition"),
+            GROUP("group");
 
             STAT_KEYS(String name) {
                 this.mName = name;

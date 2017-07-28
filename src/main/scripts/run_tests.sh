@@ -25,7 +25,8 @@
 #     mvn package
 #     mkdir /tmp/test
 #     cd /tmp/test
-#     tar -zxvf ~/git/optimus/secor/target/secor-0.1-SNAPSHOT-bin.tar.gz
+#     tar -zxvf ~/git/optimus/secor/target/secor-0.2-SNAPSHOT-bin.tar.gz
+#
 #     # copy Hadoop native libs to lib/, or change HADOOP_NATIVE_LIB_PATH to point to them
 #     ./scripts/run_tests.sh
 #
@@ -38,6 +39,9 @@ PARENT_DIR=/tmp/secor_dev
 LOGS_DIR=${PARENT_DIR}/logs
 BUCKET=${SECOR_BUCKET:-test-bucket}
 S3_LOGS_DIR=s3://${BUCKET}/secor_dev
+SWIFT_CONTAINER=logsContainer
+# Should match the secor.swift.containers.for.each.topic value
+CONTAINER_PER_TOPIC=false
 MESSAGES=100
 MESSAGE_TYPE=binary
 # For the compression tests to work, set this to the path of the Hadoop native libs.
@@ -52,11 +56,19 @@ declare -A READER_WRITERS
 READER_WRITERS[json]=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFactory
 READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory
 
-# The minimum wait time is one minute plus delta.  Secor is configured to upload files older than
-# one minute and we need to make sure that everything ends up on s3 before starting verification.
-WAIT_TIME=${SECOR_WAIT_TIME:-120}
+# Hadoop supports multiple implementations of the s3 filesystem
+S3_FILESYSTEMS=${S3_FILESYSTEMS:-s3n}
+
+# The minimum wait time is 10 seconds plus delta.  Secor is configured to upload files older than
+# 10 seconds and we need to make sure that everything ends up on s3 before starting verification.
+WAIT_TIME=${SECOR_WAIT_TIME:-40}
 BASE_DIR=$(dirname $0)
 CONF_DIR=${BASE_DIR}/..
+
+cloudService="s3"
+if [ "$#" != "0" ]; then
+   cloudService=${1}
+fi
 
 source ${BASE_DIR}/run_common.sh
 
@@ -75,12 +87,22 @@ check_for_native_libs() {
 
 recreate_dirs() {
     run_command "rm -r -f ${PARENT_DIR}"
-    if [ -n "${SECOR_LOCAL_S3}" ]; then
-        run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR} | awk '{ print \$4 }' | xargs -L 1 s3cmd -c ${CONF_DIR}/test.s3cfg del"
-        run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR}"
+    if [ ${cloudService} = "swift" ]; then
+	if ${CONTAINER_PER_TOPIC}; then
+	   run_command "swift delete test"
+        else
+           run_command "swift delete ${SWIFT_CONTAINER}"
+           sleep 3
+           run_command "swift post ${SWIFT_CONTAINER}"
+        fi
     else
-        run_command "s3cmd del --recursive ${S3_LOGS_DIR}"
-        run_command "s3cmd ls -r ${S3_LOGS_DIR}"
+        if [ -n "${SECOR_LOCAL_S3}" ]; then
+            run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR} | awk '{ print \$4 }' | xargs -L 1 s3cmd -c ${CONF_DIR}/test.s3cfg del"
+            run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR}"
+        else
+            run_command "s3cmd del --recursive ${S3_LOGS_DIR}"
+            run_command "s3cmd ls -r ${S3_LOGS_DIR}"
+        fi
     fi
     # create logs directory
     if [ ! -d ${LOGS_DIR} ]; then
@@ -200,10 +222,14 @@ verify() {
       fi
 
       # Verify SUCCESS file
-      if [ -n "${SECOR_LOCAL_S3}" ]; then
-          run_command "s3cmd ls -c ${CONF_DIR}/test.s3cfg -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+      if [ ${cloudService} = "swift" ]; then
+        run_command "swift list ${SWIFT_CONTAINER} |  grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
       else
-          run_command "s3cmd ls -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+        if [ -n "${SECOR_LOCAL_S3}" ]; then
+            run_command "s3cmd ls -c ${CONF_DIR}/test.s3cfg -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+        else
+            run_command "s3cmd ls -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+        fi
       fi
       count=$(</tmp/secor_tests_output.txt)
       count="${count//[[:space:]]/}"
@@ -361,8 +387,9 @@ move_offset_back_test() {
     set_offsets_in_zookeeper 2
     post_messages $((${MESSAGES}*9/10)) 0
 
-    echo "Waiting $((${WAIT_TIME}*2)) sec for Secor to upload logs to s3"
-    sleep $((${WAIT_TIME}*2))
+    # file.age increased to 30 from 10, so multiply wait time by 3.
+    echo "Waiting $((${WAIT_TIME}*3)) sec for Secor to upload logs to s3"
+    sleep $((${WAIT_TIME}*3))
     # 4 because we skipped 2 messages per topic partition and there are 2 partitions per topic.
     verify $((${MESSAGES}-4)) 0
 
@@ -397,29 +424,36 @@ post_and_verify_compressed_test() {
 }
 
 check_for_native_libs
-stop_s3
-start_s3
+if [ ${cloudService} = "s3" ]; then
+    stop_s3
+    start_s3
+fi
 
-for key in ${!READER_WRITERS[@]}; do
-   MESSAGE_TYPE=${key}
-   ADDITIONAL_OPTS=-Dsecor.file.reader.writer.factory=${READER_WRITERS[${key}]}
-   echo "********************************************************"
-   echo "Running tests for Message Type: ${MESSAGE_TYPE} and ReaderWriter: ${READER_WRITERS[${key}]}"
-   post_and_verify_test
-   if [ ${MESSAGE_TYPE} = "binary" ]; then
-       # Testing finalizer in partition mode
-       post_and_finalizer_verify_test hr
-       post_and_finalizer_verify_test dt
-   fi
-   start_from_non_zero_offset_test
-   move_offset_back_test
-   if [ ${MESSAGE_TYPE} = "json" ]; then
-       post_and_verify_compressed_test
-   elif [ -z ${SKIP_COMPRESSED_BINARY} ]; then
-       post_and_verify_compressed_test
-   else
-       echo "Skipping compressed tests for ${MESSAGE_TYPE}"
-   fi
+for fkey in ${S3_FILESYSTEMS}; do
+    FILESYSTEM_TYPE=${fkey}
+    for key in ${!READER_WRITERS[@]}; do
+        MESSAGE_TYPE=${key}
+        ADDITIONAL_OPTS="-Dsecor.s3.filesystem=${FILESYSTEM_TYPE} -Dsecor.file.reader.writer.factory=${READER_WRITERS[${key}]}"
+        echo "********************************************************"
+        echo "Running tests for Message Type: ${MESSAGE_TYPE} and  ReaderWriter:${READER_WRITERS[${key}]} using filesystem: ${FILESYSTEM_TYPE}"
+        post_and_verify_test
+        if [ ${MESSAGE_TYPE} = "binary" ]; then
+            # Testing finalizer in partition mode
+            post_and_finalizer_verify_test hr
+            post_and_finalizer_verify_test dt
+        fi
+        start_from_non_zero_offset_test
+        move_offset_back_test
+        if [ ${MESSAGE_TYPE} = "json" ]; then
+            post_and_verify_compressed_test
+        elif [ -z ${SKIP_COMPRESSED_BINARY} ]; then
+            post_and_verify_compressed_test
+        else
+            echo "Skipping compressed tests for ${MESSAGE_TYPE}"
+        fi
+    done
 done
 
-stop_s3
+if [ ${cloudService} = "s3" ]; then
+    stop_s3
+fi

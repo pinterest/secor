@@ -24,13 +24,11 @@ This document assumes familiarity with [Apache Kafka].
 
 * **zero downtime upgrades:** it should be possible to upgrade the system to a new version in a way transparent to the downstream data clients,
 
-* **dependence on public APIs:** the system should reply on public [Kafka] APIs only. Furthermore, it should be compatible with the most recent [Kafka] version (0.8) which offers significant improvements over 0.7, and it comes with Go language bindings (required by other pieces of the Ads infra).
+* **dependence on public APIs:** the system should rely on public [Kafka] APIs only. Furthermore, it should be compatible with [Kafka] version 0.8.
 
 No-goals:
 
 * **minimized resource footprint:** this may become an important objective at some point but currently we don’t optimize for machine or storage footprint.
-
-Secor will be initially used to persist Ads impression logs but in the future it may be considered as a replacement of the current logging pipeline.
 
 ## Related work
 
@@ -160,9 +158,46 @@ uploader.check_policy() {
 
 The output of consumers is stored on local (or EBS) disks first and eventually uploaded to s3. The local and s3 file name format follows the same pattern. Directory paths track topic and partition names. File basename contains the Kafka partition number and the Kafka offset of the first message in that file. Additionally, files are labeled with generation count. Generation is basically a version number of the Secor software that increments between non-compatible releases. Generations allow us to separate outputs of Secor versions during testing, rolling upgrades, etc. The consumer group is not included explicitly in the output path. We expect that the output of different consumer groups will go to different top-level directories.
 
-Putting this all together, a message with timestamp `<some_date:some_time>` written to topic `<some_topic>`, Kafka partition `<some_kafka_partition>` at offset `<some_offset>` by software with generation `<generation>` will end up in file `s3://logs/<some_topic>/<some_date>/<generation>_<some_kafka_parition>_<first_message_offset>.seq` where `<first_message_offset>` <= `<some_offset>`.
+Putting this all together, a message with timestamp `<some_date:some_time>` written to topic `<some_topic>`, Kafka partition `<some_kafka_partition>` at offset `<some_offset>` by software with generation `<generation>` will end up in file `s3://logs/<some_topic>/<some_date>/<generation>_<some_kafka_partition>_<first_message_offset>.seq` where `<first_message_offset>` <= `<some_offset>`.
 
 The nice property of the proposed file format is that given a list of output files and a Kafka message, we can tell which file contains the output for that message. In other words, we can track correspondence between the output files of different consumer groups. For instance, assume that a bug in the code resulted in logs for a given date being incorrectly processed. We now need to remove all output files produced by the partition group and regenerate them from the files written by the backup group. The composition of file paths guarantees that we can tell which backup files contain the relevant raw records from the names of the removed partition group output files.
+
+## Output file formats
+
+Secor supports two different output file formats with different capabilities.
+
+### Text File
+
+The Delimited Text File output format writes individual messages as raw bytes, separated by newline characters.  Thus,
+it is generally only appropriate for non binary messages that do not contain embedded newlines.  No other metadata
+about the message is recorded.
+
+### Hadoop SequenceFile
+
+The [SequenceFile](https://wiki.apache.org/hadoop/SequenceFile) format writes out the message body in the **value** 
+field of the SequenceFile record.  It supports two different modes for storing additional metadata in the **key**
+field of the SequenceFile. 
+
+#### Legacy
+
+In the default, legacy mode, the kafka partition offset is stored in the key field as an 8 byte long value in big 
+endian format.
+
+#### MessagePack
+
+In the optional, [MessagePack](http://msgpack.org/index.html) mode, the key is a binary structure encoded using the
+MessagePack specification.  MessagePack is a hierarchical map datastructure like JSON, but has a more compact, binary
+representation, and support for more types.  
+
+The MessagePack map stored in the SequenceFile key has its Secor keys stored using integer values, for compactness. 
+The currently defined Secor keys, their meanings, and their associated MessagePack value types are explained below.
+
+|     Key      |       Meaning          | MessagePack Value Type |
+| ------------ | ---------------------- | ---------------------- |
+|      1       | kafka partition offset | 64 bit Integer         |
+|      2       | kafka message key      | Raw Binary byte array  |
+
+Note that if the kafka message has no key, then the field will be omitted from the the MessagePack.
 
 ## New consumer code rollouts
 

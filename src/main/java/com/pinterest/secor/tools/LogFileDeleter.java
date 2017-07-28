@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.TimeZone;
 
 /**
  * Log file deleter removes message old log files stored locally.
@@ -44,7 +43,7 @@ public class LogFileDeleter {
         }
         String[] consumerDirs = FileUtil.list(mConfig.getLocalPath());
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        format.setTimeZone(mConfig.getTimeZone());
         for (String consumerDir : consumerDirs) {
             long modificationTime = FileUtil.getModificationTimeMsRecursive(consumerDir);
             String modificationTimeStr = format.format(modificationTime);
