@@ -193,6 +193,7 @@ public class ProgressMonitor {
                 long committedTimestampMillis = -1;
                 if (committedMessage == null) {
                     LOG.warn("no committed message found in topic {} partition {}", topic, partition);
+                    continue;
                 } else {
                     committedOffset = committedMessage.getOffset();
                     committedTimestampMillis = getTimestamp(committedMessage);
@@ -207,14 +208,8 @@ public class ProgressMonitor {
                     assert committedOffset <= lastOffset: Long.toString(committedOffset) + " <= " +
                         lastOffset;
 
-                    long offsetLag = 0L;
-                    long timestampMillisLag = 0L;
-
-                    if (committedMessage != null) {
-                        offsetLag = lastOffset - committedOffset;
-                        timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
-                    }
-
+                    long offsetLag = lastOffset - committedOffset;
+                    long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
                     Map<String, String> tags = ImmutableMap.of(
                             Stat.STAT_KEYS.TOPIC.getName(), topic,
                             Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition),
