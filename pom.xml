@@ -519,6 +519,12 @@
                 <version>2.4</version>
                 <executions>
                     <execution>
+                        <id>default-jar</id>
+                        <configuration>
+                            <finalName>secor</finalName>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
