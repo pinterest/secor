@@ -4,7 +4,7 @@
 Triggered by changes to develop branch.</description>
   <logRotator class="hudson.tasks.LogRotator">
     <daysToKeep>-1</daysToKeep>
-    <numToKeep>25</numToKeep>
+    <numToKeep>100</numToKeep>
     <artifactDaysToKeep>-1</artifactDaysToKeep>
     <artifactNumToKeep>-1</artifactNumToKeep>
   </logRotator>
@@ -89,13 +89,13 @@ Triggered by changes to develop branch.</description>
       <spec/>
     </com.cloudbees.jenkins.GitHubPushTrigger>
     <org.jenkinsci.plugins.ghprb.GhprbTrigger plugin="ghprb@1.33.1">
-      <spec>H/5 * * * *</spec>
+      <spec>*/1 * * * *</spec>
       <latestVersion>3</latestVersion>
       <configVersion>3</configVersion>
       <adminlist/>
       <allowMembersOfWhitelistedOrgsAsAdmin>false</allowMembersOfWhitelistedOrgsAsAdmin>
       <orgslist>Unified</orgslist>
-      <cron>H/5 * * * *</cron>
+      <cron>*/1 * * * *</cron>
       <buildDescTemplate/>
       <onlyTriggerPhrase>false</onlyTriggerPhrase>
       <useGitHubHooks>false</useGitHubHooks>
@@ -138,10 +138,6 @@ Triggered by changes to develop branch.</description>
         </org.jenkinsci.plugins.ghprb.extensions.comments.GhprbBuildStatus>
       </extensions>
     </org.jenkinsci.plugins.ghprb.GhprbTrigger>
-    <hudson.triggers.SCMTrigger>
-      <spec>H/5 * * * *</spec>
-      <ignorePostCommitHooks>false</ignorePostCommitHooks>
-    </hudson.triggers.SCMTrigger>
   </triggers>
   <concurrentBuild>false</concurrentBuild>
   <rootModule>
