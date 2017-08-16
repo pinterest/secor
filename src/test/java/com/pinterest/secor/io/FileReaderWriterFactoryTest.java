@@ -30,6 +30,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.compress.CompressionInputStream;
 import org.apache.hadoop.io.compress.CompressionOutputStream;
+import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.GzipCodec;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -116,6 +117,8 @@ public class FileReaderWriterFactoryTest extends TestCase {
 
         Mockito.when(codec.createOutputStream(Mockito.any(OutputStream.class)))
                 .thenReturn(outputStream);
+        Mockito.when(codec.createOutputStream(Mockito.any(OutputStream.class), Mockito.any(Compressor.class)))
+               .thenReturn(outputStream);
     }
 
     private void mockSequenceFileWriter(boolean isCompressed)
