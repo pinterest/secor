@@ -98,6 +98,11 @@
             <version>3.1.0</version>
         </dependency>
         <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.7</version>
+        </dependency>
+        <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>1.10.68</version>
@@ -316,6 +321,30 @@
             <artifactId>json-path</artifactId>
             <version>2.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.unified</groupId>
+            <artifactId>utils</artifactId>
+            <version>0.0.233-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.unified.platform</groupId>
+            <artifactId>data-transformation</artifactId>
+            <version>0.0.35</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.unified.platform</groupId>
+                    <artifactId>collection-engine</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
     </dependencies>
 
     <build>

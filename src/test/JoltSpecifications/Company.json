@@ -1,0 +1,50 @@
+[
+  {
+    "metadata": {
+      "name": "Unified Companies",
+      "sort_keys": [
+        "company_id",
+        "created_timestamp",
+        "modified_timestamp"
+      ],
+      "table": "pmn_company",
+      "tags": [
+        "pmn-company"
+      ],
+      "unique_keys": [
+        "company_id"
+      ],
+      "columns": {
+        "company_id": "idType",
+        "company_name": "VARCHAR(256)",
+        "company_type": "VARCHAR(25)",
+        "company_foreign_id": "VARCHAR(256)",
+        "logo": "VARCHAR(256)",
+        "is_customer": "BOOLEAN",
+        "is_disabled": "BOOLEAN",
+        "modified_timestamp": "TIMESTAMP",
+        "created_timestamp": "TIMESTAMP"
+      }
+    },
+    "operation": "shift",
+    "spec": {
+      "payload": {
+        "dateCreated": "REDSHIFT_TIME_FORMAT_created_timestamp",
+        "disabled": "is_disabled",
+        "foreignID": "company_foreign_id",
+        "id": "company_id",
+        "isCustomer": "is_customer",
+        "logo": "logo",
+        "dateModified": "REDSHIFT_TIME_FORMAT_modified_timestamp",
+        "name": "company_name",
+        "type": "company_type"
+      }
+    }
+  },
+  {
+    "operation": "com.unified.platform.transformation.transform.JoltTimeTransformer",
+    "spec": {
+      "output_format": "yyyy-MM-dd' 'HH:mm:ss"
+    }
+  }
+]

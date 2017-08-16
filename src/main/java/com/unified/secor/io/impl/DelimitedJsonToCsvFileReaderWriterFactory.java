@@ -32,6 +32,7 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.Decompressor;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.CountingOutputStream;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.FileReader;
@@ -39,14 +40,14 @@ import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.FileUtil;
+import com.unified.utils.csv.CSV;
+import com.unified.utils.csv.CSVWriter;
 
-/**
- * Delimited Text File Reader Writer with Compression
- *
- * @author Praveen Murugesan (praveen@uber.com)
- */
 public class DelimitedJsonToCsvFileReaderWriterFactory implements FileReaderWriterFactory {
-    private static final byte DELIMITER = '\n';
+    private static final byte   DELIMITER = '\n';
+    private static final String LINE_END  = Byte.toString(DELIMITER);
+
+    private static TagToColumns TAG_TO_COLUMNS;
 
     @Override
     public FileReader BuildFileReader(LogFilePath logFilePath, CompressionCodec codec)
@@ -56,6 +57,9 @@ public class DelimitedJsonToCsvFileReaderWriterFactory implements FileReaderWrit
 
     @Override
     public FileWriter BuildFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
+        if (TAG_TO_COLUMNS == null ) {
+            TAG_TO_COLUMNS = TagToColumns.getInstance();
+        }
         return new DelimitedTextFileWriter(logFilePath, codec);
     }
 
@@ -102,9 +106,14 @@ public class DelimitedJsonToCsvFileReaderWriterFactory implements FileReaderWrit
     }
 
     protected class DelimitedTextFileWriter implements FileWriter {
+        private static final char   SEPARATOR = '\t';
+        private static final char   QUOTE     = '\u0000';
+        private static final char   ESCAPE    = '\\';
+
         private final CountingOutputStream mCountingStream;
         private final BufferedOutputStream mWriter;
         private Compressor mCompressor = null;
+        private final CSVWriter mCsvWriter;
 
         public DelimitedTextFileWriter(LogFilePath path, CompressionCodec codec) throws IOException {
             Path fsPath = new Path(path.getLogFilePath());
@@ -114,6 +123,7 @@ public class DelimitedJsonToCsvFileReaderWriterFactory implements FileReaderWrit
                     this.mCountingStream) : new BufferedOutputStream(
                     codec.createOutputStream(this.mCountingStream,
                                              mCompressor = CodecPool.getCompressor(codec)));
+            this.mCsvWriter = CSV.createCSVWriter(mWriter, Charsets.UTF_8.name(), SEPARATOR, QUOTE, ESCAPE, LINE_END);
         }
 
         @Override
@@ -125,8 +135,9 @@ public class DelimitedJsonToCsvFileReaderWriterFactory implements FileReaderWrit
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            this.mWriter.write(keyValue.getValue());
-            this.mWriter.write(DELIMITER);
+            String message = new String(keyValue.getValue(), Charsets.UTF_8);
+            JsonToCsvUtil.convertToTsv(message, mCsvWriter, TAG_TO_COLUMNS.tagToColumnMap);
+            this.mCsvWriter.flush();
         }
 
         @Override
@@ -134,6 +145,8 @@ public class DelimitedJsonToCsvFileReaderWriterFactory implements FileReaderWrit
             this.mWriter.close();
             CodecPool.returnCompressor(mCompressor);
             mCompressor = null;
+            this.mCsvWriter.flush();
+            this.mCsvWriter.close();
         }
     }
 }
