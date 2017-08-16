@@ -324,7 +324,7 @@
         <dependency>
             <groupId>com.unified</groupId>
             <artifactId>utils</artifactId>
-            <version>0.0.233-SNAPSHOT</version>
+            <version>0.0.234</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.gson</groupId>
