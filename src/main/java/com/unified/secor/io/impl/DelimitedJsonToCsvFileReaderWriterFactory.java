@@ -40,12 +40,13 @@ import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.FileUtil;
+import com.unified.secor.io.CSVKeyValue;
 import com.unified.utils.csv.CSV;
 import com.unified.utils.csv.CSVWriter;
 
 public class DelimitedJsonToCsvFileReaderWriterFactory implements FileReaderWriterFactory {
     private static final byte   DELIMITER = '\n';
-    private static final String LINE_END  = Byte.toString(DELIMITER);
+    private static final String LINE_END  = Character.toString((char)DELIMITER);
 
     private static TagToColumns TAG_TO_COLUMNS;
 
@@ -94,7 +95,7 @@ public class DelimitedJsonToCsvFileReaderWriterFactory implements FileReaderWrit
                 }
                 messageBuffer.write(nextByte);
             }
-            return new KeyValue(this.mOffset++, messageBuffer.toByteArray());
+            return new CSVKeyValue(this.mOffset++, messageBuffer.toByteArray());
         }
 
         @Override
@@ -133,11 +134,24 @@ public class DelimitedJsonToCsvFileReaderWriterFactory implements FileReaderWrit
             return this.mCountingStream.getCount();
         }
 
+        /**
+         * Secor first persists the kafka data to disk. When the data is scheduled for upload it gets written to
+         * a new file. That file is then upload to the cloud via {@code Uploader}
+         *
+         * @param keyValue the keyValue to write out. It can either be the raw Kafka Message or the transformed csv
+         *                 version of the messsage
+         */
         @Override
-        public void write(KeyValue keyValue) throws IOException {
-            String message = new String(keyValue.getValue(), Charsets.UTF_8);
-            JsonToCsvUtil.convertToTsv(message, mCsvWriter, TAG_TO_COLUMNS.tagToColumnMap);
-            this.mCsvWriter.flush();
+        public void write (KeyValue keyValue) throws IOException {
+            if ( keyValue instanceof CSVKeyValue ) {
+                this.mWriter.write(keyValue.getValue());
+                this.mWriter.write(DELIMITER);
+            }
+            else {
+                String message = new String(keyValue.getValue(), Charsets.UTF_8);
+                JsonToCsvUtil.convertToTsv(message, mCsvWriter, TAG_TO_COLUMNS.tagToColumnMap);
+                this.mCsvWriter.flush();
+            }
         }
 
         @Override

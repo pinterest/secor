@@ -49,6 +49,11 @@ public class JsonToCsvUtil {
 
         List<String> columns = tagToColumns.get(tag);
 
+        if ( columns == null || columns.isEmpty() ) {
+            LOG.error("No specification found for tag:{}", tag);
+            return;
+        }
+
         for (String column : columns) {
             JsonElement element = jsonObject.get(column);
 

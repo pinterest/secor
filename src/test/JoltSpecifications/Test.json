@@ -1,0 +1,36 @@
+[
+  {
+    "metadata": {
+      "name": "Test Spec",
+      "sort_keys": [
+        "id_1",
+        "id_2"
+      ],
+      "table": "test_table",
+      "tags": [
+        "test"
+      ],
+      "unique_keys": [
+        "ad_id"
+      ],
+      "columns": {
+        "field1": "idType",
+        "field2": "VARCHAR(100)"
+      }
+    },
+    "operation": "shift",
+    "spec": {
+      "payload": {
+        "field1": "field_1",
+        "field2": "field_2"
+      }
+    }
+  },
+  {
+    "operation": "com.unified.platform.transformation.transform.JoltTimeTransformer",
+    "spec" :{
+      "input_format": "yyyy-MM-dd'T'HH:mm:ss'Z'",
+      "output_format": "yyyy-MM-dd' 'HH:mm:ss"
+    }
+  }
+]
