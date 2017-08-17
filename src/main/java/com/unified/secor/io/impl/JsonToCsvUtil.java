@@ -54,31 +54,39 @@ public class JsonToCsvUtil {
             return;
         }
 
+        String [] csvColumns = new String[columns.size()];
+        int i = 0;
         for (String column : columns) {
             JsonElement element = jsonObject.get(column);
 
+            if (element == null) {
+                LOG.error("Dropping message due to missing column:[{}]. Message:{}", column, jsonString);
+                return;
+            }
             if ( element.isJsonPrimitive() ) {
-                writer.write(element.getAsString());
+                csvColumns[i] = element.getAsString();
             }
             else if ( element.isJsonObject() ) {
-                writer.write(element.toString());
+                csvColumns[i] = element.toString();
             }
             else if ( element.isJsonArray() ) {
                 JsonArray array = element.getAsJsonArray();
                 if ( array.size() == 1 ) {
-                    writer.write(array.get(0).toString());
+                    csvColumns[i] = array.get(0).getAsString();
                 }
                 else {
-                    writer.write(element.toString());
+                    csvColumns[i] = element.toString();
                 }
             }
             else if ( element.isJsonNull() ) {
-                writer.write(element.toString());
+                csvColumns[i] = element.toString();
             }
             else {
-                throw new IllegalStateException("Unknown Json type (" + element + ").");
+                LOG.error("Unknown Json type ({}). jsonString: {}", element, jsonString);
+                return;
             }
+            ++i;
         }
-        writer.writeln();
+        writer.writeln(csvColumns);
     }
 }
