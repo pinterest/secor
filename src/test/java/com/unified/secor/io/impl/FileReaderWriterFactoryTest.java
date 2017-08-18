@@ -165,7 +165,11 @@ public class FileReaderWriterFactoryTest extends TestCase {
             "\"payload\":{" +
                 "\"field1\":\"test_job_instance\"," +
                 "\"field2\":1457737744599," +
-                "\"field3\":false" +
+                "\"field3\":[\"abc\",\"def\"]," +
+                "\"field4\":{\"level1\":\"foo\"}," +
+                "\"field5\":null," +
+                "\"field6\":[\"bar\"]," +
+                "\"extra\":\"unused\"" +
             "}," +
             "\"metaData\":" +
                 "{\"dataMap\":{\"checksum\":\"660812462\"}}," +
@@ -179,7 +183,19 @@ public class FileReaderWriterFactoryTest extends TestCase {
         writer.write(new KeyValue(1L, jsonMessage.getBytes("UTF-8")));
         writer.close();
 
-        Mockito.verify(csvWriter).writeln("test_job_instance", "1457737744599");
+        // Write empty json msg and it should not cause any additional csv writes or errors
+        writer.write(new KeyValue(2L, "{}".getBytes("UTF-8")));
+
+        Mockito
+            .verify(csvWriter)
+            .writeln(
+                "test_job_instance",
+                "1457737744599",
+                "[\"abc\",\"def\"]",
+                "{\"level1\":\"foo\"}",
+                "null",
+                "bar"
+            );
         Mockito.verify(csvWriter, Mockito.atLeast(1)).flush();
         Mockito.verify(csvWriter).close();
     }

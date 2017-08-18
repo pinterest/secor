@@ -15,7 +15,11 @@
       ],
       "columns": {
         "field1": "idType",
-        "field2": "VARCHAR(100)"
+        "field2": "VARCHAR(100)",
+        "field3": "VARCHAR(100)",
+        "field4": "VARCHAR(100)",
+        "field5": "VARCHAR(100)",
+        "field6": "VARCHAR(100)"
       }
     },
     "operation": "shift",
