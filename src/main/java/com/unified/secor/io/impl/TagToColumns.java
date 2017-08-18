@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
+import com.pinterest.secor.common.SecorConfig;
 import net.minidev.json.JSONArray;
 
 public class TagToColumns {
@@ -48,8 +50,13 @@ public class TagToColumns {
     public final Map<String, List<String>> tagToColumnMap;
 
     private TagToColumns () {
-        String specificationDir = System.getProperty(SPECIFICATION_OVERRIDE_DIRECTORY, SPECIFICATIONS_DIRECTORY);
-        this.tagToColumnMap = loadTagToTransformerMap(specificationDir);
+        try {
+            String specificationDir = SecorConfig.load().getString(
+                SPECIFICATION_OVERRIDE_DIRECTORY, SPECIFICATIONS_DIRECTORY);
+            this.tagToColumnMap = loadTagToTransformerMap(specificationDir);
+        } catch (ConfigurationException e) {
+            throw new RuntimeException("Error loading secor configuration");
+        }
     }
 
     private static class TagToColumnsHolder {
