@@ -39,12 +39,19 @@ public class JsonToCsvUtil {
     public static void convertToTsv (String jsonString, CSVWriter writer, Map<String, List<String>> tagToColumns)
         throws IOException {
         JsonObject  jsonObject = JSON_PARSER.parseAsJsonObject(jsonString);
+        JsonObject  payload    = jsonObject.getAsJsonObject("payload");
         JsonElement jsonTag    = jsonObject.get(TAG);
         String      tag;
         if ( jsonTag == null || ! jsonTag.isJsonPrimitive() ) {
             LOG.error("Message:[{}] is missing tag.", jsonString);
             return;
         }
+
+        if ( payload == null ) {
+            LOG.error("Message:[{}] is missing payload.", jsonString);
+            return;
+        }
+
         tag = jsonTag.getAsString();
 
         List<String> columns = tagToColumns.get(tag);
@@ -57,7 +64,7 @@ public class JsonToCsvUtil {
         String [] csvColumns = new String[columns.size()];
         int i = 0;
         for (String column : columns) {
-            JsonElement element = jsonObject.get(column);
+            JsonElement element = payload.get(column);
 
             if (element == null) {
                 LOG.error("Dropping message due to missing column:[{}]. Message:{}", column, jsonString);

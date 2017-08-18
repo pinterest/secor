@@ -39,8 +39,9 @@ import com.pinterest.secor.common.SecorConfig;
 import net.minidev.json.JSONArray;
 
 public class TagToColumns {
+    public static final String SPECIFICATION_OVERRIDE_DIRECTORY = "jolt.spec.override";
+
     private static final Logger LOG = LoggerFactory.getLogger(TagToColumns.class);
-    private static final String SPECIFICATION_OVERRIDE_DIRECTORY = "jolt.spec.override";
     private static final String SPECIFICATIONS_DIRECTORY = "JoltSpecifications";
     private static final Configuration JSON_PATH_CONFIG = Configuration
         .defaultConfiguration()

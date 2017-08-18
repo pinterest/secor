@@ -1,5 +1,6 @@
 package com.unified.secor.io.impl;
 
+import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -25,7 +26,11 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.ReflectionUtil;
+import com.unified.secor.io.CSVKeyValue;
+import com.unified.utils.csv.CSV;
+import com.unified.utils.csv.CSVWriter;
 import junit.framework.TestCase;
 
 /**
@@ -34,7 +39,7 @@ import junit.framework.TestCase;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({FileSystem.class, DelimitedJsonToCsvFileReaderWriterFactory.class, GzipCodec.class,
-        FileInputStream.class, FileOutputStream.class})
+        FileInputStream.class, FileOutputStream.class, SecorConfig.class, CSV.class})
 public class FileReaderWriterFactoryTest extends TestCase {
 
     private static final String DIR = "/some_parent_dir/some_topic/some_partition/some_other_partition";
@@ -45,6 +50,7 @@ public class FileReaderWriterFactoryTest extends TestCase {
     private LogFilePath mLogFilePath;
     private LogFilePath mLogFilePathGz;
     private SecorConfig mConfig;
+    private BufferedOutputStream bufferedOutputStream;
 
     @Override
     public void setUp() throws Exception {
@@ -58,10 +64,11 @@ public class FileReaderWriterFactoryTest extends TestCase {
         PropertiesConfiguration properties = new PropertiesConfiguration();
         properties.addProperty("secor.file.reader.writer.factory",
                 "com.unified.secor.io.impl.DelimitedJsonToCsvFileReaderWriterFactory");
+        properties.addProperty(TagToColumns.SPECIFICATION_OVERRIDE_DIRECTORY, "src/test/joltSpecifications");
         mConfig = new SecorConfig(properties);
     }
 
-    private void mockDelimitedTextFileWriter(boolean isCompressed) throws Exception {
+    private void mockDelimitedTextFileWriter (boolean isCompressed) throws Exception {
         PowerMockito.mockStatic(FileSystem.class);
         FileSystem fs = Mockito.mock(FileSystem.class);
         Mockito.when(
@@ -89,27 +96,92 @@ public class FileReaderWriterFactoryTest extends TestCase {
         Mockito.when(codec.createInputStream(Mockito.any(InputStream.class)))
                 .thenReturn(inputStream);
 
+        bufferedOutputStream = PowerMockito.mock(BufferedOutputStream.class);
+        PowerMockito.whenNew(BufferedOutputStream.class)
+                    .withAnyArguments()
+                    .thenReturn(bufferedOutputStream);
+
         Mockito.when(codec.createOutputStream(Mockito.any(OutputStream.class)))
                 .thenReturn(outputStream);
         Mockito.when(codec.createOutputStream(Mockito.any(OutputStream.class), Mockito.any(Compressor.class)))
                .thenReturn(outputStream);
+
+        PowerMockito.mockStatic(SecorConfig.class);
+        Mockito.when(SecorConfig.load()).thenReturn(mConfig);
     }
 
     public void testDelimitedTextFileWriter() throws Exception {
         setupDelimitedTextFileWriterConfig();
         mockDelimitedTextFileWriter(false);
-        FileWriter writer = (FileWriter) ReflectionUtil
-                    .createFileWriter(mConfig.getFileReaderWriterFactory(),
-                        mLogFilePath, null, mConfig
-                );
+        FileWriter writer = ReflectionUtil
+            .createFileWriter(mConfig.getFileReaderWriterFactory(), mLogFilePath, null, mConfig);
         assert writer.getLength() == 0L;
 
         mockDelimitedTextFileWriter(true);
-        writer = (FileWriter) ReflectionUtil
-                .createFileWriter(mConfig.getFileReaderWriterFactory(),
-                        mLogFilePathGz, new GzipCodec(), mConfig
-                );
+        writer = ReflectionUtil
+            .createFileWriter(mConfig.getFileReaderWriterFactory(), mLogFilePathGz, new GzipCodec(), mConfig);
         assert writer.getLength() == 0L;
+    }
+
+    public void testDelimitedTextFileWriter_WriteCsv() throws Exception {
+        setupDelimitedTextFileWriterConfig();
+        mockDelimitedTextFileWriter(false);
+        FileWriter writer = ReflectionUtil
+            .createFileWriter(mConfig.getFileReaderWriterFactory(), mLogFilePath, null, mConfig);
+
+        byte[] csv = "field1\tfield2".getBytes();
+        writer.write(new CSVKeyValue(1L, csv));
+        writer.close();
+
+        Mockito.verify(this.bufferedOutputStream).write(csv);
+        Mockito.verify(this.bufferedOutputStream).write('\n');
+    }
+
+    public void testDelimitedTextFileWriter_WriteCsvToJson() throws Exception {
+        setupDelimitedTextFileWriterConfig();
+        mockDelimitedTextFileWriter(false);
+        PowerMockito.mockStatic(CSV.class);
+        CSVWriter csvWriter = Mockito.mock(CSVWriter.class);
+        Mockito.when(
+            CSV.createCSVWriter(Mockito.any(OutputStream.class),
+                                Mockito.anyString(),
+                                Mockito.anyChar(),
+                                Mockito.anyChar(),
+                                Mockito.anyChar(),
+                                Mockito.anyString()))
+               .thenReturn(csvWriter);
+
+        FileWriter writer = ReflectionUtil
+            .createFileWriter(mConfig.getFileReaderWriterFactory(), mLogFilePath, null, mConfig);
+
+        String jsonMessage =
+            "{" +
+            "\"messageType\":\"CompanyCollector\"," +
+            "\"network\":\"unified\"," +
+            "\"jobInstanceId\":\"test_job_instance\"," +
+            "\"tag\":\"test\"," +
+            "\"tagField\":\"tag\"," +
+            "\"path\":\"/companies\"," +
+            "\"payload\":{" +
+                "\"field1\":\"test_job_instance\"," +
+                "\"field2\":1457737744599," +
+                "\"field3\":false" +
+            "}," +
+            "\"metaData\":" +
+                "{\"dataMap\":{\"checksum\":\"660812462\"}}," +
+            "\"collectionTimestamp\":1503067517568," +
+            "\"collectionDate\":\"2017/08/18 10:45:17 568 -0400\"," +
+            "\"collectorVersion\":\"UNSPECIFIED\"," +
+            "\"apiVersion\":\"UNSPECIFIED\"," +
+            "\"eventTimestamp\":1420070400000," +
+            "\"eventDate\":\"2014/12/31 19:00:00 000 -0500\"" +
+            "}";
+        writer.write(new KeyValue(1L, jsonMessage.getBytes("UTF-8")));
+        writer.close();
+
+        Mockito.verify(csvWriter).writeln("test_job_instance", "1457737744599");
+        Mockito.verify(csvWriter, Mockito.atLeast(1)).flush();
+        Mockito.verify(csvWriter).close();
     }
 
     public void testDelimitedTextFileReader() throws Exception {
