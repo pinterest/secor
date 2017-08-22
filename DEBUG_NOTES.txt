@@ -39,8 +39,8 @@ It shows that some partitions are tied to broker 1, 2, or 3, which is not correc
 
 ========================================================================================
 
-To build in jenkins, selected "gradlew" and set switches to "-x generateProto -x compileTestJava" to bypass protoc, which is not installed
-on jenkins.
+To build in jenkins, in "Configurations", jump to the "Build" section. Selected "Use Gradle Wrapper", "Make gradlew executable", and "From Root Build Script Dir". and set switches to "-x generateProto -x compileTestJava" to bypass protoc, which is not installed on jenkins.
+Also select "Force GRADLE_USER_HOME to use workspace"
 
 for stable : use task "jacocoTestCoverageVerification" instead of "jacoco"
 
