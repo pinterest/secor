@@ -42,13 +42,13 @@ import java.io.IOException;
 public class MessageWriter {
     private static final Logger LOG = LoggerFactory.getLogger(MessageWriter.class);
 
-    private SecorConfig mConfig;
-    private OffsetTracker mOffsetTracker;
-    private FileRegistry mFileRegistry;
-    private String mFileExtension;
-    private CompressionCodec mCodec;
-    private String mLocalPrefix;
-    private final int mGeneration;
+    protected SecorConfig mConfig;
+    protected OffsetTracker mOffsetTracker;
+    protected FileRegistry mFileRegistry;
+    protected String mFileExtension;
+    protected CompressionCodec mCodec;
+    protected String mLocalPrefix;
+    protected final int mGeneration;
 
     public MessageWriter(SecorConfig config, OffsetTracker offsetTracker,
                          FileRegistry fileRegistry) throws Exception {
@@ -92,7 +92,7 @@ public class MessageWriter {
         LogFilePath path = new LogFilePath(mLocalPrefix, mGeneration, offset, message,
         		mFileExtension);
         FileWriter writer = mFileRegistry.getOrCreateWriter(path, mCodec);
-        writer.write(new KeyValue(message.getOffset(), message.getKafkaKey(), message.getPayload()));
+        writer.write(new KeyValue(message.getOffset(), message.getKafkaKey(), message.getPayload(), message.getTimestamp()));
         LOG.debug("appended message {} to file {}.  File length {}",
                   message, path, writer.getLength());
     }

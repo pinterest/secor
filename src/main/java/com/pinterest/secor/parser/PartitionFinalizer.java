@@ -171,7 +171,7 @@ public class PartitionFinalizer {
                             LOG.warn("HivePrefix is not defined.  Skip hive registration");
                         }
                     }
-                    if (hiveTableName != null) {
+                    if (hiveTableName != null && mConfig.getQuboleEnabled()) {
                         mQuboleClient.addPartition(hiveTableName, sb.toString());
                     }
                 } catch (Exception e) {
@@ -195,7 +195,6 @@ public class PartitionFinalizer {
             LOG.info("touching file {}", successFilePath);
             FileUtil.touch(successFilePath);
         }
-
     }
 
     public void finalizePartitions() throws Exception {

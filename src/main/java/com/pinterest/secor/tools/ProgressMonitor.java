@@ -63,6 +63,7 @@ public class ProgressMonitor {
     private KafkaClient mKafkaClient;
     private MessageParser mMessageParser;
     private String mPrefix;
+    private NonBlockingStatsDClient mStatsDClient;
 
     public ProgressMonitor(SecorConfig config)
             throws Exception
@@ -76,6 +77,11 @@ public class ProgressMonitor {
         mPrefix = mConfig.getMonitoringPrefix();
         if (Strings.isNullOrEmpty(mPrefix)) {
             mPrefix = "secor";
+        }
+
+        if (mConfig.getStatsDHostPort() != null && !mConfig.getStatsDHostPort().isEmpty()) {
+            HostAndPort hostPort = HostAndPort.fromString(mConfig.getStatsDHostPort());
+            mStatsDClient = new NonBlockingStatsDClient(null, hostPort.getHostText(), hostPort.getPort());
         }
     }
 
@@ -139,7 +145,7 @@ public class ProgressMonitor {
         }
 
         // if there is a valid statsD port configured export to statsD
-        if (mConfig.getStatsDHostPort() != null && !mConfig.getStatsDHostPort().isEmpty()) {
+        if (mStatsDClient != null) {
             exportToStatsD(stats);
         }
     }
@@ -148,22 +154,24 @@ public class ProgressMonitor {
      * Helper to publish stats to statsD client
      */
     private void exportToStatsD(List<Stat> stats) {
-        HostAndPort hostPort = HostAndPort.fromString(mConfig.getStatsDHostPort());
-
         // group stats by kafka group
-        NonBlockingStatsDClient client = new NonBlockingStatsDClient(mConfig.getKafkaGroup(),
-                hostPort.getHostText(), hostPort.getPort());
-
         for (Stat stat : stats) {
             @SuppressWarnings("unchecked")
             Map<String, String> tags = (Map<String, String>) stat.get(Stat.STAT_KEYS.TAGS.getName());
-            String aspect = new StringBuilder((String)stat.get(Stat.STAT_KEYS.METRIC.getName()))
-                    .append(PERIOD)
-                    .append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
-                    .append(PERIOD)
-                    .append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
-                    .toString();
-            client.recordGaugeValue(aspect, Long.parseLong((String)stat.get(Stat.STAT_KEYS.VALUE.getName())));
+            StringBuilder builder = new StringBuilder();
+	    if (mConfig.getStatsDPrefixWithConsumerGroup()) {
+		builder.append(tags.get(Stat.STAT_KEYS.GROUP.getName()))
+		    .append(PERIOD);
+	    }
+	    String aspect = builder
+		.append((String)stat.get(Stat.STAT_KEYS.METRIC.getName()))
+		.append(PERIOD)
+		.append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
+		.append(PERIOD)
+		.append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
+		.toString();
+            long value = Long.parseLong((String)stat.get(Stat.STAT_KEYS.VALUE.getName()));
+            mStatsDClient.recordGaugeValue(aspect, value);
         }
     }
 
@@ -185,6 +193,7 @@ public class ProgressMonitor {
                 long committedTimestampMillis = -1;
                 if (committedMessage == null) {
                     LOG.warn("no committed message found in topic {} partition {}", topic, partition);
+                    continue;
                 } else {
                     committedOffset = committedMessage.getOffset();
                     committedTimestampMillis = getTimestamp(committedMessage);
@@ -227,7 +236,7 @@ public class ProgressMonitor {
 
     private long getTimestamp(Message message) throws Exception {
         if (mMessageParser instanceof TimestampedMessageParser) {
-            return ((TimestampedMessageParser)mMessageParser).extractTimestampMillis(message);
+            return ((TimestampedMessageParser)mMessageParser).getTimestampMillis(message);
         } else {
             return -1;
         }

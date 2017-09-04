@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,17 +16,19 @@
  */
 package com.pinterest.secor.util;
 
-import org.apache.hadoop.io.compress.CompressionCodec;
-
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.monitoring.MetricCollector;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.uploader.Uploader;
+import com.pinterest.secor.util.orc.schema.ORCScehmaProvider;
+
+import org.apache.hadoop.io.compress.CompressionCodec;
 
 /**
  * ReflectionUtil implements utility methods to construct objects of classes
@@ -118,7 +120,7 @@ public class ReflectionUtil {
      * @throws Exception
      */
     private static FileReaderWriterFactory createFileReaderWriterFactory(String className,
-            SecorConfig config) throws Exception {
+                                                                         SecorConfig config) throws Exception {
         Class<?> clazz = Class.forName(className);
         if (!FileReaderWriterFactory.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
@@ -168,7 +170,7 @@ public class ReflectionUtil {
             throws Exception {
         return createFileReaderWriterFactory(className, config).BuildFileReader(logFilePath, codec);
     }
-    
+
     /**
      * Create a MessageTransformer from it's fully qualified class name. The
      * class passed in by name must be assignable to MessageTransformers and have
@@ -177,7 +179,7 @@ public class ReflectionUtil {
      * config.
      *
      * See the secor.message.transformer.class config option.
-     * 
+     *
      * @param className
      * @param config
      * @return
@@ -192,6 +194,59 @@ public class ReflectionUtil {
                     MessageTransformer.class.getName()));
         }
         return (MessageTransformer) clazz.getConstructor(SecorConfig.class)
+                .newInstance(config);
+    }
+
+    /**
+     * Create an MetricCollector from its fully qualified class name.
+     * <p>
+     * The class passed in by name must be assignable to MetricCollector.
+     * See the secor.monitoring.metrics.collector.class config option.
+     *
+     * @param className The class name of a subclass of MetricCollector
+     * @return a MetricCollector with the runtime type of the class passed by name
+     * @throws ClassNotFoundException if class with the {@code className} is not found in classpath
+     * @throws IllegalAccessException if the class or its nullary
+     *                                constructor is not accessible.
+     * @throws InstantiationException if this {@code Class} represents an abstract class,
+     *                                an interface, an array class, a primitive type, or void;
+     *                                or if the class has no nullary constructor;
+     *                                or if the instantiation fails for some other reason.
+     */
+    public static MetricCollector createMetricCollector(String className)
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        Class<?> clazz = Class.forName(className);
+        if (!MetricCollector.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(String.format("The class '%s' is not assignable to '%s'.",
+                    className, MetricCollector.class.getName()));
+        }
+
+        return (MetricCollector) clazz.newInstance();
+    }
+    
+    /**
+     * Create a ORCScehmaProvider from it's fully qualified class name. The
+     * class passed in by name must be assignable to ORCScehmaProvider and have
+     * 1-parameter constructor accepting a SecorConfig. Allows the ORCScehmaProvider
+     * to be pluggable by providing the class name of a desired ORCScehmaProvider in
+     * config.
+     *
+     * See the secor.orc.schema.provider config option.
+     *
+     * @param className
+     * @param config
+     * @return
+     * @throws Exception
+     */
+    public static ORCScehmaProvider createORCSchemaProvider(
+            String className, SecorConfig config) throws Exception {
+        Class<?> clazz = Class.forName(className);
+        if (!ORCScehmaProvider.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException(String.format(
+                    "The class '%s' is not assignable to '%s'.", className,
+                    ORCScehmaProvider.class.getName()));
+        }
+        return (ORCScehmaProvider) clazz.getConstructor(SecorConfig.class)
                 .newInstance(config);
     }
 }

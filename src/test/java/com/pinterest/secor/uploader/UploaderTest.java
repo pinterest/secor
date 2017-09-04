@@ -20,14 +20,18 @@ import com.pinterest.secor.common.*;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.monitoring.MetricCollector;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
 
 import junit.framework.TestCase;
 
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.joda.time.DateTime;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.internal.exceptions.ExceptionIncludingMockitoWarnings;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
@@ -43,7 +47,7 @@ import java.util.HashSet;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ FileUtil.class, IdUtil.class })
+@PrepareForTest({ FileUtil.class, IdUtil.class , DateTime.class})
 public class UploaderTest extends TestCase {
     private static class TestUploader extends Uploader {
         private FileReader mReader;
@@ -52,7 +56,7 @@ public class UploaderTest extends TestCase {
                             FileRegistry fileRegistry,
                             UploadManager uploadManager,
                             ZookeeperConnector zookeeperConnector) {
-            init(config, offsetTracker, fileRegistry, uploadManager, zookeeperConnector);
+            init(config, offsetTracker, fileRegistry, uploadManager, zookeeperConnector, Mockito.mock(MetricCollector.class));
             mReader = Mockito.mock(FileReader.class);
         }
 
@@ -110,6 +114,44 @@ public class UploaderTest extends TestCase {
                 mZookeeperConnector);
     }
 
+    public void testUploadAtTime() throws Exception {
+        final int minuteUploadMark = 1;
+
+        PowerMockito.mockStatic(DateTime.class);
+        PowerMockito.when(DateTime.now()).thenReturn(new DateTime(2016,7,27,0,minuteUploadMark,0));
+        Mockito.when(mConfig.getUploadMinuteMark()).thenReturn(minuteUploadMark);
+        Mockito.when(mConfig.getKafkaTopicFilter()).thenReturn("some_topic");
+
+        Mockito.when(mConfig.getCloudService()).thenReturn("S3");
+        Mockito.when(mConfig.getS3Bucket()).thenReturn("some_bucket");
+        Mockito.when(mConfig.getS3Path()).thenReturn("some_s3_parent_dir");
+
+        HashSet<LogFilePath> logFilePaths = new HashSet<LogFilePath>();
+        logFilePaths.add(mLogFilePath);
+        Mockito.when(mFileRegistry.getPaths(mTopicPartition)).thenReturn(
+                logFilePaths);
+
+        PowerMockito.mockStatic(FileUtil.class);
+        Mockito.when(FileUtil.getPrefix("some_topic", mConfig)).
+                thenReturn("s3a://some_bucket/some_s3_parent_dir");
+        mUploader.applyPolicy();
+
+        final String lockPath = "/secor/locks/some_topic/0";
+        Mockito.verify(mZookeeperConnector).lock(lockPath);
+        PowerMockito.verifyStatic();
+        FileUtil.moveToCloud(
+                "/some_parent_dir/some_topic/some_partition/some_other_partition/"
+                        + "10_0_00000000000000000010",
+                "s3a://some_bucket/some_s3_parent_dir/some_topic/some_partition/"
+                        + "some_other_partition/10_0_00000000000000000010");
+        Mockito.verify(mFileRegistry).deleteTopicPartition(mTopicPartition);
+        Mockito.verify(mZookeeperConnector).setCommittedOffsetCount(
+                mTopicPartition, 1L);
+        Mockito.verify(mOffsetTracker).setCommittedOffsetCount(mTopicPartition,
+                1L);
+        Mockito.verify(mZookeeperConnector).unlock(lockPath);
+    }
+
     public void testUploadFiles() throws Exception {
         Mockito.when(
                 mZookeeperConnector.getCommittedOffsetCount(mTopicPartition))
@@ -125,6 +167,7 @@ public class UploaderTest extends TestCase {
         Mockito.when(
                 mOffsetTracker.getTrueCommittedOffsetCount(mTopicPartition))
                 .thenReturn(11L);
+
 
         Mockito.when(mConfig.getCloudService()).thenReturn("S3");
         Mockito.when(mConfig.getS3Bucket()).thenReturn("some_bucket");

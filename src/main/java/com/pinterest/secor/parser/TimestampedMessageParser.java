@@ -38,39 +38,60 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
      * SimpleDateFormat are NOT thread-safe.
      * Each parser needs to have their own local SimpleDateFormat or it'll cause race condition.
      */
-    private final SimpleDateFormat mDtFormatter;
-    private final SimpleDateFormat mHrFormatter;
-    private final SimpleDateFormat mDtHrFormatter;
-    private final int mFinalizerDelaySeconds;
-    private final SimpleDateFormat mDtHrMinFormatter;
-    private final SimpleDateFormat mMinFormatter;
+    protected final SimpleDateFormat mDtFormatter;
+    protected final SimpleDateFormat mHrFormatter;
+    protected final SimpleDateFormat mDtHrFormatter;
+    protected final int mFinalizerDelaySeconds;
+    protected final SimpleDateFormat mDtHrMinFormatter;
+    protected final SimpleDateFormat mMinFormatter;
 
-    private final boolean mUsingHourly;
-    private final boolean mUsingMinutely;
+    protected final String mDtFormat;
+    protected final String mHrFormat;
+    protected final String mMinFormat;
+
+    protected final String mDtPrefix;
+    protected final String mHrPrefix;
+    protected final String mMinPrefix;
+
+    protected final boolean mUsingHourly;
+    protected final boolean mUsingMinutely;
+
+    protected final boolean mUseKafkaTimestamp;
 
 
     public TimestampedMessageParser(SecorConfig config) {
         super(config);
+
         mUsingHourly = usingHourly(config);
         mUsingMinutely = usingMinutely(config);
+        mUseKafkaTimestamp = useKafkaTimestamp(config);
+        mDtFormat = usingDateFormat(config);
+        mHrFormat = usingHourFormat(config);
+        mMinFormat = usingMinuteFormat(config);
+
+        mDtPrefix = usingDatePrefix(config);
+        mHrPrefix = usingHourPrefix(config);
+        mMinPrefix = usingMinutePrefix(config);
+
         LOG.info("UsingHourly: {}", mUsingHourly);
         LOG.info("UsingMin: {}", mUsingMinutely);
         mFinalizerDelaySeconds = config.getFinalizerDelaySeconds();
         LOG.info("FinalizerDelaySeconds: {}", mFinalizerDelaySeconds);
 
-        mDtFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        mDtFormatter = new SimpleDateFormat(mDtFormat);
         mDtFormatter.setTimeZone(config.getTimeZone());
 
-        mHrFormatter = new SimpleDateFormat("HH");
+        mHrFormatter = new SimpleDateFormat(mHrFormat);
         mHrFormatter.setTimeZone(config.getTimeZone());
 
-        mDtHrFormatter = new SimpleDateFormat("yyyy-MM-dd-HH");
+        mMinFormatter = new SimpleDateFormat(mMinFormat);
+        mMinFormatter.setTimeZone(config.getTimeZone());
+
+        mDtHrFormatter = new SimpleDateFormat(mDtFormat+ "-" + mHrFormat);
         mDtHrFormatter.setTimeZone(config.getTimeZone());
 
-        mDtHrMinFormatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
+        mDtHrMinFormatter = new SimpleDateFormat(mDtFormat+ "-" + mHrFormat + "-" + mMinFormat);
         mDtHrMinFormatter.setTimeZone(config.getTimeZone());
-        mMinFormatter = new SimpleDateFormat("mm");
-        mMinFormatter.setTimeZone(config.getTimeZone());
     }
 
     static boolean usingHourly(SecorConfig config) {
@@ -81,12 +102,43 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         return config.getBoolean("partitioner.granularity.minute", false);
     }
 
+    static String usingDateFormat(SecorConfig config) {
+        return config.getString("partitioner.granularity.date.format", "yyyy-MM-dd");
+    }
+
+    static String usingHourFormat(SecorConfig config) {
+        return config.getString("partitioner.granularity.hour.format", "HH");
+    }
+
+    static String usingMinuteFormat(SecorConfig config) {
+        return config.getString("partitioner.granularity.min.format", "mm");
+    }
+
+    static String usingDatePrefix(SecorConfig config) {
+        return config.getString("partitioner.granularity.date.prefix", "dt=");
+    }
+
+    static String usingHourPrefix(SecorConfig config) {
+        return config.getString("partitioner.granularity.hour.prefix", "hr=");
+    }
+
+    static String usingMinutePrefix(SecorConfig config) {
+        return config.getString("partitioner.granularity.minute.prefix", "min=");
+    }
+
+    static boolean useKafkaTimestamp(SecorConfig config) {
+        return config.useKafkaTimestamp();
+    }
+
     protected static long toMillis(final long timestamp) {
         final long nanosecondDivider = (long) Math.pow(10, 9 + 9);
+        final long microsecondDivider = (long) Math.pow(10, 9 + 6);
         final long millisecondDivider = (long) Math.pow(10, 9 + 3);
         long timestampMillis;
         if (timestamp / nanosecondDivider > 0L) {
             timestampMillis = timestamp / (long) Math.pow(10, 6);
+        } else if (timestamp / microsecondDivider > 0L) {
+            timestampMillis = timestamp / (long) Math.pow(10, 3);
         } else if (timestamp / millisecondDivider > 0L) {
             timestampMillis = timestamp;
         } else {  // assume seconds
@@ -97,12 +149,16 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
 
     public abstract long extractTimestampMillis(final Message message) throws Exception;
 
+    public long getTimestampMillis(Message message) throws Exception {
+        return (mUseKafkaTimestamp) ? toMillis(message.getTimestamp()) : extractTimestampMillis(message);
+    }
+
     protected String[] generatePartitions(long timestampMillis, boolean usingHourly, boolean usingMinutely)
             throws Exception {
         Date date = new Date(timestampMillis);
-        String dt = "dt=" + mDtFormatter.format(date);
-        String hr = "hr=" + mHrFormatter.format(date);
-        String min = "min=" + mMinFormatter.format(date);
+        String dt = mDtPrefix + mDtFormatter.format(date);
+        String hr = mHrPrefix + mHrFormatter.format(date);
+        String min = mMinPrefix + mMinFormatter.format(date);
         if (usingMinutely) {
             return new String[]{dt, hr, min};
         } else if (usingHourly) {
@@ -124,14 +180,14 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     @Override
     public String[] extractPartitions(Message message) throws Exception {
         // Date constructor takes milliseconds since epoch.
-        long timestampMillis = extractTimestampMillis(message);
+        long timestampMillis = getTimestampMillis(message);
         return generatePartitions(timestampMillis, mUsingHourly, mUsingMinutely);
     }
 
     private long getFinalizedTimestampMillis(Message lastMessage,
                                              Message committedMessage) throws Exception {
-        long lastTimestamp = extractTimestampMillis(lastMessage);
-        long committedTimestamp = extractTimestampMillis(committedMessage);
+        long lastTimestamp = getTimestampMillis(lastMessage);
+        long committedTimestamp = getTimestampMillis(committedMessage);
         long now = System.currentTimeMillis();
         if (lastTimestamp == committedTimestamp &&
                 (now - lastTimestamp) > mFinalizerDelaySeconds * 1000) {
@@ -168,8 +224,8 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         minMillis -= mFinalizerDelaySeconds * 1000L;
         LOG.info("adjusted millis {}", minMillis);
         return generatePartitions(minMillis, mUsingHourly, mUsingMinutely);
-
     }
+
     @Override
     public String[] getPreviousPartitions(String[] partitions) throws Exception {
         long millis = parsePartitions(partitions);
@@ -221,4 +277,4 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         }
         return generatePartitions(millis, usingHourly, usingMinutely);
     }
-    }
+}

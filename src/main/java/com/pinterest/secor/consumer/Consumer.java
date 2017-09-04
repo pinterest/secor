@@ -21,21 +21,19 @@ import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
+import com.pinterest.secor.monitoring.MetricCollector;
 import com.pinterest.secor.parser.MessageParser;
-import com.pinterest.secor.transformer.MessageTransformer;
-import com.pinterest.secor.uploader.Uploader;
-import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.reader.MessageReader;
+import com.pinterest.secor.transformer.MessageTransformer;
+import com.pinterest.secor.uploader.UploadManager;
+import com.pinterest.secor.uploader.Uploader;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.writer.MessageWriter;
-
 import kafka.consumer.ConsumerTimeoutException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.Thread;
 
 /**
  * Consumer is a top-level component coordinating reading, writing, and uploading Kafka log
@@ -50,16 +48,17 @@ import java.lang.Thread;
 public class Consumer extends Thread {
     private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);
 
-    private SecorConfig mConfig;
+    protected SecorConfig mConfig;
+    protected MetricCollector mMetricCollector;
 
-    private MessageReader mMessageReader;
-    private MessageWriter mMessageWriter;
-    private MessageParser mMessageParser;
-    private OffsetTracker mOffsetTracker;
-    private MessageTransformer mMessageTransformer;
-    private Uploader mUploader;
+    protected MessageReader mMessageReader;
+    protected MessageWriter mMessageWriter;
+    protected MessageParser mMessageParser;
+    protected OffsetTracker mOffsetTracker;
+    protected MessageTransformer mMessageTransformer;
+    protected Uploader mUploader;
     // TODO(pawel): we should keep a count per topic partition.
-    private double mUnparsableMessages;
+    protected double mUnparsableMessages;
 
     public Consumer(SecorConfig config) {
         mConfig = config;
@@ -68,14 +67,16 @@ public class Consumer extends Thread {
     private void init() throws Exception {
         mOffsetTracker = new OffsetTracker();
         mMessageReader = new MessageReader(mConfig, mOffsetTracker);
+        mMetricCollector = ReflectionUtil.createMetricCollector(mConfig.getMetricsCollectorClass());
+
         FileRegistry fileRegistry = new FileRegistry(mConfig);
         UploadManager uploadManager = ReflectionUtil.createUploadManager(mConfig.getUploadManagerClass(), mConfig);
 
         mUploader = ReflectionUtil.createUploader(mConfig.getUploaderClass());
-        mUploader.init(mConfig, mOffsetTracker, fileRegistry, uploadManager);
+        mUploader.init(mConfig, mOffsetTracker, fileRegistry, uploadManager, mMetricCollector);
         mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry);
         mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
-        mMessageTransformer =  ReflectionUtil.createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);
+        mMessageTransformer = ReflectionUtil.createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);
         mUnparsableMessages = 0.;
     }
 
@@ -109,7 +110,7 @@ public class Consumer extends Thread {
         checkUploadPolicy();
     }
 
-    private void checkUploadPolicy() {
+    protected void checkUploadPolicy() {
         try {
             mUploader.applyPolicy();
         } catch (Exception e) {
@@ -118,7 +119,7 @@ public class Consumer extends Thread {
     }
 
     // @return whether there are more messages left to consume
-    private boolean consumeNextMessage() {
+    protected boolean consumeNextMessage() {
         Message rawMessage = null;
         try {
             boolean hasNext = mMessageReader.hasNext();
@@ -145,6 +146,8 @@ public class Consumer extends Thread {
                 final double DECAY = 0.999;
                 mUnparsableMessages *= DECAY;
             } catch (Throwable e) {
+                mMetricCollector.increment("consumer.message_errors.count", rawMessage.getTopic());
+
                 mUnparsableMessages++;
                 final double MAX_UNPARSABLE_MESSAGES = 1000.;
                 if (mUnparsableMessages > MAX_UNPARSABLE_MESSAGES) {
@@ -156,6 +159,9 @@ public class Consumer extends Thread {
             if (parsedMessage != null) {
                 try {
                     mMessageWriter.write(parsedMessage);
+
+                    mMetricCollector.metric("consumer.message_size_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
+                    mMetricCollector.increment("consumer.throughput_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to write message " + parsedMessage, e);
                 }
@@ -166,7 +172,7 @@ public class Consumer extends Thread {
 
     /**
      * Helper to get the offset tracker (used in tests)
-     * 
+     *
      * @return the offset tracker
      */
     public OffsetTracker getOffsetTracker() {

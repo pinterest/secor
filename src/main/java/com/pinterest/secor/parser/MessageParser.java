@@ -19,10 +19,10 @@ package com.pinterest.secor.parser;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
+import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.minidev.json.JSONObject;
-import net.minidev.json.JSONValue;
+
 import java.util.regex.Pattern;
 
 // TODO(pawel): should we offer a multi-message parser capable of parsing multiple types of
@@ -37,10 +37,12 @@ import java.util.regex.Pattern;
 public abstract class MessageParser {
     protected SecorConfig mConfig;
     protected String[] mNestedFields;
+    protected final String offsetPrefix;
     private static final Logger LOG = LoggerFactory.getLogger(MessageParser.class);
 
     public MessageParser(SecorConfig config) {
         mConfig = config;
+        offsetPrefix = usingOffsetPrefix(mConfig);
         if (mConfig.getMessageTimestampName() != null &&
             !mConfig.getMessageTimestampName().isEmpty() &&
             mConfig.getMessageTimestampNameSeparator() != null &&
@@ -50,19 +52,23 @@ public abstract class MessageParser {
         }
     }
 
+    static String usingOffsetPrefix(SecorConfig config) {
+        return config.getString("secor.offsets.prefix");
+    }
+
     public ParsedMessage parse(Message message) throws Exception {
         String[] partitions = extractPartitions(message);
         return new ParsedMessage(message.getTopic(), message.getKafkaPartition(),
                                  message.getOffset(), message.getKafkaKey(),
-                                 message.getPayload(), partitions);
+                                 message.getPayload(), partitions, message.getTimestamp());
     }
 
     public abstract String[] extractPartitions(Message payload) throws Exception;
-    
+
     public Object getJsonFieldValue(JSONObject jsonObject) {
         Object fieldValue = null;
         if (mNestedFields != null) {
-            Object finalValue = null;            
+            Object finalValue = null;
             for (int i=0; i < mNestedFields.length; i++) {
                 if (!jsonObject.containsKey(mNestedFields[i])) {
                     LOG.warn("Could not find key {} in message", mConfig.getMessageTimestampName());
