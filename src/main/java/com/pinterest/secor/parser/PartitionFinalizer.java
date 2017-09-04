@@ -18,6 +18,7 @@ package com.pinterest.secor.parser;
 
 import com.pinterest.secor.common.*;
 import com.pinterest.secor.message.Message;
+import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
@@ -42,6 +43,7 @@ public class PartitionFinalizer {
     private final SecorConfig mConfig;
     private final ZookeeperConnector mZookeeperConnector;
     private final TimestampedMessageParser mMessageParser;
+    private final MessageTransformer mTransformer;
     private final KafkaClient mKafkaClient;
     private final QuboleClient mQuboleClient;
     private final String mFileExtension;
@@ -53,6 +55,7 @@ public class PartitionFinalizer {
         mZookeeperConnector = new ZookeeperConnector(mConfig);
         mMessageParser = (TimestampedMessageParser) ReflectionUtil.createMessageParser(
           mConfig.getMessageParserClass(), mConfig);
+        mTransformer = ReflectionUtil.createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);
         mQuboleClient = new QuboleClient(mConfig);
         if (mConfig.getFileExtension() != null && !mConfig.getFileExtension().isEmpty()) {
             mFileExtension = mConfig.getFileExtension();
@@ -81,8 +84,8 @@ public class PartitionFinalizer {
                     lastMessage, committedMessage);
                 continue;
             }
-            lastMessages.add(lastMessage);
-            committedMessages.add(committedMessage);
+            lastMessages.add(mTransformer.transform(lastMessage));
+            committedMessages.add(mTransformer.transform(committedMessage));
         }
         return mMessageParser.getFinalizedUptoPartitions(lastMessages, committedMessages);
     }

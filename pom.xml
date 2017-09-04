@@ -92,6 +92,11 @@
             <version>2.6.1</version>
         </dependency>
         <dependency>
+            <groupId>com.github.os72</groupId>
+            <artifactId>protobuf-dynamic</artifactId>
+            <version>0.9.3</version>
+        </dependency>
+        <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>1.10.68</version>
@@ -222,6 +227,12 @@
             <version>1.8.1</version>
         </dependency>
 
+		<!-- orc file dependecies -->
+	    <dependency>
+    	    <groupId>org.apache.orc</groupId>
+    	    <artifactId>orc-core</artifactId>
+    	    <version>1.1.2</version>
+	    </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
             <artifactId>libthrift</artifactId>

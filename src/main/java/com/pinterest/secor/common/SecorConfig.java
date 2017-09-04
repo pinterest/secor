@@ -217,6 +217,10 @@ public class SecorConfig {
         return getString("secor.upload.class", "com.pinterest.secor.uploader.Uploader");
     }
 
+    public String getUploaderRetries() {
+        return getString("secor.upload.retries", "5");
+    }
+
     public String getUploadManagerClass() {
         return getString("secor.upload.manager.class");
     }
@@ -442,14 +446,28 @@ public class SecorConfig {
     
     public Map<String, String> getProtobufMessageClassPerTopic() {
         String prefix = "secor.protobuf.message.class";
+        return getKeyValueFromPrefix(prefix);
+    }
+    
+    private Map<String, String> getKeyValueFromPrefix(String prefix) {
         Iterator<String> keys = mProperties.getKeys(prefix);
-        Map<String, String> protobufClasses = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<String, String>();
         while (keys.hasNext()) {
             String key = keys.next();
             String className = mProperties.getString(key);
-            protobufClasses.put(key.substring(prefix.length() + 1), className);
+            map.put(key.substring(prefix.length() + 1), className);
         }
-        return protobufClasses;
+        return map;
+    }
+    
+    public String getOrcSchemaMapFile() {
+    	String prefix = "secor.orc.schema.mapfile";
+    	return getString(prefix);
+    }
+    
+    public Map<String, String> getOrcSchemaMapping() {
+    	String prefix = "secor.orc.schema.mapfile.topic";
+    	return getKeyValueFromPrefix(prefix);
     }
     
     public TimeZone getTimeZone() {

@@ -16,6 +16,7 @@
  */
 package com.pinterest.secor.uploader;
 
+import com.google.common.base.Throwables;
 import com.pinterest.secor.common.*;
 import com.pinterest.secor.util.FileUtil;
 
@@ -60,12 +61,23 @@ public class HadoopS3UploadManager extends UploadManager {
         LOG.info("uploading file {} to {}", localLogFilename, logFileName);
 
         final Future<?> f = executor.submit(new Runnable() {
+        	final int totalRetries = Integer.parseInt(mConfig.getUploaderRetries());
             @Override
             public void run() {
+            	int retriesLeft = totalRetries;
+            	boolean success = false;
+            	while (retriesLeft > 0 && !success) {
                 try {
                     FileUtil.moveToCloud(localLogFilename, logFileName);
+            			success = true;
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+            			success = false;
+            			retriesLeft--;
+            			if (retriesLeft > 0)
+            				LOG.warn("Error uploading files to s3. Will retry {} times. Exception {}", retriesLeft, e);
+            			else 
+            				Throwables.propagate(e);
+            		}
                 }
             }
         });
