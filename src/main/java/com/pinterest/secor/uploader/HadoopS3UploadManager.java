@@ -51,8 +51,8 @@ public class HadoopS3UploadManager extends UploadManager {
         final String logFileName;
 
         if (FileUtil.s3PathPrefixIsAltered(path.getLogFilePath(), mConfig)) {
-           logFileName = localPath.withPrefix(FileUtil.getS3AlternativePrefix(mConfig)).getLogFilePath();
-           LOG.info("Will upload file to alternative s3 prefix path {}", logFileName);
+            logFileName = localPath.withPrefix(FileUtil.getS3AlternativePrefix(mConfig)).getLogFilePath();
+            LOG.info("Will upload file to alternative s3 prefix path {}", logFileName);
         }
         else {
             logFileName = path.getLogFilePath();
@@ -61,23 +61,33 @@ public class HadoopS3UploadManager extends UploadManager {
         LOG.info("uploading file {} to {}", localLogFilename, logFileName);
 
         final Future<?> f = executor.submit(new Runnable() {
-        	final int totalRetries = Integer.parseInt(mConfig.getUploaderRetries());
+            final int totalRetries = Integer.parseInt(mConfig.getUploaderRetries());
+            final long backoffMillis = Long.parseLong(mConfig.getUploaderRetryBackoffMillis());
             @Override
             public void run() {
-            	int retriesLeft = totalRetries;
-            	boolean success = false;
-            	while (retriesLeft > 0 && !success) {
-                try {
-                    FileUtil.moveToCloud(localLogFilename, logFileName);
-            			success = true;
-                } catch (IOException e) {
-            			success = false;
-            			retriesLeft--;
-            			if (retriesLeft > 0)
-            				LOG.warn("Error uploading files to s3. Will retry {} times. Exception {}", retriesLeft, e);
-            			else 
-            				Throwables.propagate(e);
-            		}
+                int retriesLeft = totalRetries;
+                boolean success = false;
+                while (retriesLeft > 0 && !success) {
+                    try {
+                        FileUtil.moveToCloud(localLogFilename, logFileName);
+                        success = true;
+                    } catch (IOException e) {
+                        success = false;
+                        retriesLeft--;
+                        if (retriesLeft < 0)
+                            throw new RuntimeException(e);
+                        else { 
+                            LOG.warn("Error uploading files to s3. Will retry {} times. Exception {}", retriesLeft, e);
+                            try {
+                                long millisToSleep = (long)(backoffMillis*Math.pow(2, totalRetries-retriesLeft-1));
+                                LOG.info("Sleeping {} millis, will retry upload after sleep", millisToSleep);
+                                Thread.sleep(millisToSleep);
+                            } catch(InterruptedException ie) {
+                                // Do nothing here.
+                            }
+
+                        }
+                    }
                 }
             }
         });

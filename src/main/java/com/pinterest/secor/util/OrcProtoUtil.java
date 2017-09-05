@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.os72.protobuf.dynamic.DynamicSchema;
 import com.github.os72.protobuf.dynamic.MessageDefinition;
+import com.github.os72.protobuf.dynamic.MessageDefinition.Builder;
 import com.google.common.base.Throwables;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -92,7 +93,7 @@ public class OrcProtoUtil {
 		DynamicSchema.Builder schemaBuilder = DynamicSchema.newBuilder();
 		topic = StringUtils.capitalize(topic.replaceAll("-", " ")).replaceAll("\\s+", "");
 		schemaBuilder.setName("SecorBuilder" + topic + ".proto");
-		com.github.os72.protobuf.dynamic.MessageDefinition.Builder builder = MessageDefinition.newBuilder(topic);
+		Builder builder = MessageDefinition.newBuilder(topic);
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(new File(filename)));
 			String line;

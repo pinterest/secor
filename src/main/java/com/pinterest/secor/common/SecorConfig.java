@@ -238,7 +238,11 @@ public class SecorConfig {
     }
 
     public String getUploaderRetries() {
-        return getString("secor.upload.retries", "5");
+        return getString("secor.upload.retries");
+    }
+    
+    public String getUploaderRetryBackoffMillis() {
+        return getString("secor.upload.retry.backoff");
     }
 
     public String getUploadManagerClass() {
@@ -505,8 +509,7 @@ public class SecorConfig {
     public String getAzurePath() { return getString("secor.azure.path"); }
 
     public Map<String, String> getProtobufMessageClassPerTopic() {
-        String prefix = "secor.protobuf.message.class";
-        return getKeyValueFromPrefix(prefix);
+        return getKeyValueFromPrefix("secor.protobuf.message.class");
     }
     
     private Map<String, String> getKeyValueFromPrefix(String prefix) {
@@ -521,13 +524,11 @@ public class SecorConfig {
     }
     
     public String getOrcSchemaMapFile() {
-    	String prefix = "secor.orc.schema.mapfile";
-    	return getString(prefix);
+    	return getString("secor.orc.schema.mapfile");
     }
     
     public Map<String, String> getOrcSchemaMapping() {
-    	String prefix = "secor.orc.schema.mapfile.topic";
-    	return getKeyValueFromPrefix(prefix);
+    	return getKeyValueFromPrefix("secor.orc.schema.mapfile.topic");
     }
 
     public Map<String, String> getThriftMessageClassPerTopic() {

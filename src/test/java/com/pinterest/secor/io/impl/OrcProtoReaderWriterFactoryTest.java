@@ -35,7 +35,7 @@ import com.sun.tools.javac.util.Pair;
 @RunWith(PowerMockRunner.class)
 public class OrcProtoReaderWriterFactoryTest extends TestCase {
 
-	private SecorConfig config;
+    private SecorConfig config;
 	private String[] types = {"bool", "string", "int32", "float", "double", "int64"};
 	private File tempFile;
 	@Rule
@@ -54,7 +54,7 @@ public class OrcProtoReaderWriterFactoryTest extends TestCase {
     	Map<String, String> filePerTopic = new HashMap<String, String>();
     	filePerTopic.put("test-orc-topic", tempFile.getAbsolutePath());
         Mockito.when(config.getFileReaderWriterFactory())
-                .thenReturn(OrcProtoReaderWriterFactory.class.getName());
+            .thenReturn(OrcProtoReaderWriterFactory.class.getName());
         Mockito.when(config.getProtobufMessageClassPerTopic()).thenReturn(classPerTopic);
         Mockito.when(config.getOrcSchemaMapping()).thenReturn(filePerTopic);
         StringBuilder builder = new StringBuilder();
