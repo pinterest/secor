@@ -242,7 +242,7 @@ public class SecorConfig {
     }
     
     public String getUploaderRetryBackoffMillis() {
-        return getString("secor.upload.retry.backoff");
+        return getString("secor.upload.retry.backoff.ms");
     }
 
     public String getUploadManagerClass() {

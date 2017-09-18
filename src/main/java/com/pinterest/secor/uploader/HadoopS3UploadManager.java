@@ -16,19 +16,17 @@
  */
 package com.pinterest.secor.uploader;
 
-import com.google.common.base.Throwables;
-import com.pinterest.secor.common.*;
-import com.pinterest.secor.util.FileUtil;
-
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.Future;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.util.FileUtil;
 
 /**
  * Manages uploads to S3 using the Hadoop API.
@@ -65,33 +63,32 @@ public class HadoopS3UploadManager extends UploadManager {
             final long backoffMillis = Long.parseLong(mConfig.getUploaderRetryBackoffMillis());
             @Override
             public void run() {
+                IOException uploadException = null;
+                long millisToSleep = backoffMillis;
                 int retriesLeft = totalRetries;
                 boolean success = false;
-                while (retriesLeft > 0 && !success) {
+                while (retriesLeft >= 0 && !success) {
                     try {
                         FileUtil.moveToCloud(localLogFilename, logFileName);
                         success = true;
                     } catch (IOException e) {
                         success = false;
                         retriesLeft--;
-                        if (retriesLeft < 0)
-                            throw new RuntimeException(e);
-                        else { 
-                            LOG.warn("Error uploading files to s3. Will retry {} times. Exception {}", retriesLeft, e);
-                            try {
-                                long millisToSleep = (long)(backoffMillis*Math.pow(2, totalRetries-retriesLeft-1));
-                                LOG.info("Sleeping {} millis, will retry upload after sleep", millisToSleep);
-                                Thread.sleep(millisToSleep);
-                            } catch(InterruptedException ie) {
-                                // Do nothing here.
-                            }
-
+                        uploadException = e;
+                        LOG.warn("Error uploading files to s3. Will retry {} times. Exception {}", retriesLeft, e);
+                        try {
+                            LOG.info("Sleeping {} millis, will retry upload after sleep", millisToSleep);
+                            Thread.sleep(millisToSleep);
+                            millisToSleep = millisToSleep*2;
+                        } catch(InterruptedException ie) {
+                            LOG.info("Interrupted when sleeping for retry.");
                         }
                     }
                 }
+                if (!success)
+                    throw new RuntimeException(uploadException);
             }
         });
-
         return new FutureHandle(f);
     }
 }
