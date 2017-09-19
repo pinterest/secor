@@ -74,14 +74,21 @@ public class TimestampJsonPathParser extends MessageParser {
         if (jsonObject == null) {
             throw new RuntimeException("Failed to parse message as Json object");
         }
-
-        mFieldPrefixToJsonPathMap.putAll(getTimeBasedPartitions(message));
-        String[] partitions = new String[mFieldPrefixToJsonPathMap.size()];
+        LinkedHashMap<String, String> timePartitons = getTimeBasedPartitions(message);
+        String[] partitions = new String[mFieldPrefixToJsonPathMap.size() + timePartitons.size()];
         int i = 0;
         for (Map.Entry<String, String> entry : mFieldPrefixToJsonPathMap.entrySet()) {
             Object parsedJson = JsonPath.using(JSON_PATH_CONFIG).parse(jsonObject).read(entry.getValue());
             if (parsedJson != null) {
                 partitions[i++] = entry.getKey() + parsedJson.toString();
+            } else {
+                throw new RuntimeException(
+                    "Failed to extract jsonPath: [" + entry.getValue() + "] from the message" + message);
+            }
+        }
+        for (Map.Entry<String, String> entry : timePartitons.entrySet()) {
+            if (entry.getValue() != null) {
+                partitions[i++] = entry.getKey() + "=" + entry.getValue();
             } else {
                 throw new RuntimeException(
                     "Failed to extract jsonPath: [" + entry.getValue() + "] from the message" + message);
