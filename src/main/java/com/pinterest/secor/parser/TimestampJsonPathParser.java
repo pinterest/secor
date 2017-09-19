@@ -40,6 +40,7 @@ import org.joda.time.DateTime;
 public class TimestampJsonPathParser extends MessageParser {
 
     private final boolean                       m_timestampRequired;
+    private final String                        m_timestampName;
     protected LinkedHashMap<String, String> mFieldPrefixToJsonPathMap;
 
     private static final Configuration JSON_PATH_CONFIG = Configuration
@@ -52,30 +53,25 @@ public class TimestampJsonPathParser extends MessageParser {
     public TimestampJsonPathParser(SecorConfig config) {
         super(config);
         m_timestampRequired = config.isMessageTimestampRequired();
+        m_timestampName = config.getMessageTimestampName();
         mFieldPrefixToJsonPathMap = mConfig.getMessagePartitionFieldPrefixToJsonPathMap();
-    }
-
-    private long extractTimestamp (final Message message) {
-        JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
-        if (jsonObject != null) {
-            Object fieldValue = getJsonFieldValue(jsonObject);
-            if (fieldValue != null) {
-                return toMillis(Double.valueOf(fieldValue.toString()).longValue());
-            }
-        } else if (m_timestampRequired) {
-            throw new RuntimeException("Missing timestamp field for message: " + message);
-        }
-        return 0;
     }
 
     @Override
     public String[] extractPartitions (final Message message) throws Exception {
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
+        long recordTimestamp = System.currentTimeMillis();
         if (jsonObject == null) {
             throw new RuntimeException("Failed to parse message as Json object");
+        } else {
+            if (m_timestampName != null) {
+                Object timestampValue = jsonObject.get(m_timestampName);
+                recordTimestamp = toMillis(Double.valueOf(timestampValue.toString()).longValue());
+            }
         }
-        LinkedHashMap<String, String> timePartitons = getTimeBasedPartitions(message);
-        String[] partitions = new String[mFieldPrefixToJsonPathMap.size() + timePartitons.size()];
+        DateTime dt = new DateTime(recordTimestamp);
+
+        String[] partitions = new String[mFieldPrefixToJsonPathMap.size() + 4];
         int i = 0;
         for (Map.Entry<String, String> entry : mFieldPrefixToJsonPathMap.entrySet()) {
             Object parsedJson = JsonPath.using(JSON_PATH_CONFIG).parse(jsonObject).read(entry.getValue());
@@ -86,26 +82,11 @@ public class TimestampJsonPathParser extends MessageParser {
                     "Failed to extract jsonPath: [" + entry.getValue() + "] from the message" + message);
             }
         }
-        for (Map.Entry<String, String> entry : timePartitons.entrySet()) {
-            if (entry.getValue() != null) {
-                partitions[i++] = entry.getKey() + "=" + entry.getValue();
-            } else {
-                throw new RuntimeException(
-                    "Failed to extract jsonPath: [" + entry.getValue() + "] from the message" + message);
-            }
-        }
+        partitions[i++] = "year=".concat(dt.toString(DateTimeFormat.forPattern("yyyy")));
+        partitions[i++] = "month=".concat(dt.toString(DateTimeFormat.forPattern("MM")));
+        partitions[i++] = "day=".concat(dt.toString(DateTimeFormat.forPattern("dd")));
+        partitions[i++] = "hour=".concat(dt.toString(DateTimeFormat.forPattern("HH")));
         return partitions;
-    }
-
-    private LinkedHashMap<String, String> getTimeBasedPartitions (final Message message) {
-        long recordTimestamp = extractTimestamp(message);
-        DateTime dt = new DateTime(recordTimestamp);
-        LinkedHashMap<String, String> timePartitons = new LinkedHashMap<String, String>();
-        timePartitons.put("year", dt.toString(DateTimeFormat.forPattern("yyyy")));
-        timePartitons.put("month", dt.toString(DateTimeFormat.forPattern("MM")));
-        timePartitons.put("day", dt.toString(DateTimeFormat.forPattern("dd")));
-        timePartitons.put("hour",  dt.toString(DateTimeFormat.forPattern("HH")));
-        return timePartitons;
     }
 
     protected static long toMillis(final long timestamp) {

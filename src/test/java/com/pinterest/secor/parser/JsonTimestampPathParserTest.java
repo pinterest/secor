@@ -43,6 +43,7 @@ public class JsonTimestampPathParserTest extends TestCase {
     @Override
     public void setUp () throws Exception {
         mConfig = Mockito.mock(SecorConfig.class);
+        Mockito.when(mConfig.isMessageTimestampRequired()).thenReturn(true);
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
 
         String encoding = "UTF-8";
