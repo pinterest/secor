@@ -17,7 +17,7 @@
 
 # Author: Pawel Garbacki (pawel@pinterest.com)
 
-mkdir -p /mnt/secor_data/logs
+mkdir -p /tmp/secor_data/logs
 
 CURR_DIR=`dirname $0`
 source ${CURR_DIR}/run_common.sh
@@ -25,9 +25,9 @@ source ${CURR_DIR}/run_common.sh
 echo "starting backup group"
 nohup ${JAVA} -ea -Dsecor_group=backup -Dlog4j.configuration=log4j.prod.properties \
     -Dconfig=secor.prod.backup.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" \
-    com.pinterest.secor.main.ConsumerMain > /mnt/secor_data/logs/run_consumer_backup.log 2>&1 &
+    com.pinterest.secor.main.ConsumerMain > /tmp/secor_data/logs/run_consumer_backup.log 2>&1 &
 
 echo "starting partition group"
 nohup ${JAVA} -ea -Dsecor_group=partition -Dlog4j.configuration=log4j.prod.properties \
     -Dconfig=secor.prod.partition.properties -cp "secor-0.1-SNAPSHOT.jar:lib/*" \
-    com.pinterest.secor.main.ConsumerMain > /mnt/secor_data/logs/run_secor_partition.log 2>&1 &
+    com.pinterest.secor.main.ConsumerMain > /tmp/secor_data/logs/run_secor_partition.log 2>&1 &
