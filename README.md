@@ -1,3 +1,10 @@
+# Giosg Secor
+Modified version of pinteres/secor.
+
+Main changes are how log files are printed when using LogFilePrinter and some config changes.
+
+
+
 # Pinterest Secor
 
 [![Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/pinterest/secor)
@@ -79,7 +86,7 @@ One of the convenience features of Secor is the ability to group messages and sa
           partitioner.granularity.date.format=yyyy-MM-dd
           partitioner.granularity.hour.format=HH
           partitioner.granularity.minute.format=mm
-          
+
 
 If none of the parsers available out-of-the-box is suitable for your use case, note that it is very easy to implement a custom parser. All you have to do is to extend [MessageParser](src/main/java/com/pinterest/secor/parser/MessageParser.java) and tell Secor to use your parser by setting ```secor.message.parser.class``` in the properties file.
 
