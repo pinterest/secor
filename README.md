@@ -3,7 +3,12 @@ Modified version of pinteres/secor.
 
 Main changes are how log files are printed when using LogFilePrinter and some config changes.
 
-
+## Building this version
+```
+brew install maven
+mvn package
+```
+Resulting build will be in `target/secor-<VERSION>-SNAPSHOT-bin.tar.gz`.
 
 # Pinterest Secor
 
