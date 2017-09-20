@@ -45,15 +45,10 @@ public class LogFilePrinter {
                 new Configuration());
         LongWritable key = (LongWritable) reader.getKeyClass().newInstance();
         BytesWritable value = (BytesWritable) reader.getValueClass().newInstance();
-        System.out.println("reading file " + path);
         while (reader.next(key, value)) {
-            if (mPrintOffsetsOnly) {
-                System.out.println(Long.toString(key.get()));
-            } else {
-                byte[] nonPaddedBytes = new byte[value.getLength()];
-                System.arraycopy(value.getBytes(), 0, nonPaddedBytes, 0, value.getLength());
-                System.out.println(Long.toString(key.get()) + ": " + new String(nonPaddedBytes)); 
-            }
+            byte[] nonPaddedBytes = new byte[value.getLength()];
+            System.arraycopy(value.getBytes(), 0, nonPaddedBytes, 0, value.getLength());
+            System.out.println(new String(nonPaddedBytes));
         }
     }
 }
