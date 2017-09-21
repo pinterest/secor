@@ -10,6 +10,26 @@ mvn package
 ```
 Resulting build will be in `target/secor-<VERSION>-SNAPSHOT-bin.tar.gz`.
 
+## Recovering backups
+**Steps to recover data from S3**
+- Download files from S3 to local server
+- Convert files to correct format
+- Put files to HDFS
+- Do some magic in zeppelin
+- Enjoy the **super**easy restore process!
+
+#### Download files from S3 to local server
+The script **s3download.sh** is a helper to fetch the data for multiple dates. Modify the script with correct dates and run. The script requires s3cmd tool so install if needed. If there are no AWS key set on the server, run **s3cmd --configure** to set them up.
+
+#### Convert files to correct format
+Use the **decompress_secor_files.sh** script to convert the files to correct format
+
+#### Put files to HDFS
+
+#### Do some magic in zeppelin
+
+#### Enjoy the **super**easy restore process!
+
 # Pinterest Secor
 
 [![Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/pinterest/secor)
