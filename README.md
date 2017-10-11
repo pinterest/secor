@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/pinterest/secor)
 
-Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage] and [Openstack Swift].
+Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage], [Microsoft Azure Blob Storage] and [Openstack Swift].
 
 ## Key features ##
   - **strong consistency**: as long as [Kafka] is not dropping messages (e.g., due to aggressive cleanup policy) before Secor is able to read them, it is guaranteed that each message will be saved in exactly one [S3] file. This property is not compromised by the notorious temporal inconsistency of [S3] caused by the [eventual consistency] model,
@@ -186,6 +186,7 @@ If you have any questions or comments, you can reach us at [secor-users@googlegr
 
 [Kafka]:http://kafka.apache.org/
 [Amazon S3]:http://aws.amazon.com/s3/
+[Microsoft Azure Blob Storage]:https://azure.microsoft.com/en-us/services/storage/blobs/
 [S3]:http://aws.amazon.com/s3/
 [Google Cloud Storage]:https://cloud.google.com/storage/
 [eventual consistency]:http://docs.aws.amazon.com/AmazonS3/latest/dev/Introduction.html#ConsistencyMode
