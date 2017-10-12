@@ -1,4 +1,4 @@
-FROM java:8
+FROM openjdk:8
 
 RUN mkdir -p /opt/secor
 ADD target/secor-*-bin.tar.gz /opt/secor/
