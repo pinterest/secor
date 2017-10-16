@@ -218,7 +218,7 @@ public class VectorColumnFiller {
             JsonElement field = data.get(fieldNames.get(c));
             if (field == null) {
                 batch.cols[c].noNulls = false;
-                batch.cols[c].isNull[batch.size] = true;
+                batch.cols[c].isNull[0] = true;
             } else {
                 converters[c].convert(field, batch.cols[c], rowIndex);
             }
