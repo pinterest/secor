@@ -21,6 +21,8 @@ import static org.junit.Assert.assertArrayEquals;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.parquet.hadoop.ParquetWriter;
+
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TCompactProtocol;
@@ -36,6 +38,7 @@ import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.thrift.UnitTestMessage;
+import com.pinterest.secor.util.ParquetUtil;
 import com.pinterest.secor.util.ReflectionUtil;
 
 import junit.framework.TestCase;
@@ -58,7 +61,16 @@ public class ThriftParquetFileReaderWriterFactoryTest extends TestCase {
         Mockito.when(config.getFileReaderWriterFactory())
                 .thenReturn(ThriftParquetFileReaderWriterFactory.class.getName());
         Mockito.when(config.getThriftProtocolClass())
-        .thenReturn(TCompactProtocol.class.getName());        
+        .thenReturn(TCompactProtocol.class.getName());
+        Mockito.when(ParquetUtil.getParquetBlockSize(config))
+                .thenReturn(ParquetWriter.DEFAULT_BLOCK_SIZE);
+        Mockito.when(ParquetUtil.getParquetPageSize(config))
+                .thenReturn(ParquetWriter.DEFAULT_PAGE_SIZE);
+        Mockito.when(ParquetUtil.getParquetEnableDictionary(config))
+                .thenReturn(ParquetWriter.DEFAULT_IS_DICTIONARY_ENABLED);
+        Mockito.when(ParquetUtil.getParquetValidation(config))
+                .thenReturn(ParquetWriter.DEFAULT_IS_VALIDATING_ENABLED);
+
 
         LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-pb-topic",
                 new String[] { "part-1" }, 0, 1, 23232, ".log");

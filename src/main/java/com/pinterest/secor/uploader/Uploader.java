@@ -114,7 +114,7 @@ public class Uploader {
                 mZookeeperConnector.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
                 mOffsetTracker.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
 
-                mMetricCollector.increment("uploader.file_uploads.count", paths.size(), "topic:" + topicPartition.getTopic());
+                mMetricCollector.increment("uploader.file_uploads.count", paths.size(), topicPartition.getTopic());
             }
         } finally {
             mZookeeperConnector.unlock(lockPath);

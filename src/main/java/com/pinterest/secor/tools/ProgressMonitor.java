@@ -193,6 +193,7 @@ public class ProgressMonitor {
                 long committedTimestampMillis = -1;
                 if (committedMessage == null) {
                     LOG.warn("no committed message found in topic {} partition {}", topic, partition);
+                    continue;
                 } else {
                     committedOffset = committedMessage.getOffset();
                     committedTimestampMillis = getTimestamp(committedMessage);
@@ -235,7 +236,7 @@ public class ProgressMonitor {
 
     private long getTimestamp(Message message) throws Exception {
         if (mMessageParser instanceof TimestampedMessageParser) {
-            return ((TimestampedMessageParser)mMessageParser).extractTimestampMillis(message);
+            return ((TimestampedMessageParser)mMessageParser).getTimestampMillis(message);
         } else {
             return -1;
         }
