@@ -4,22 +4,22 @@ import com.twitter.ostrich.stats.Stats;
 
 public class OstrichMetricCollector implements MetricCollector {
     @Override
-    public void increment(String label, String... tags) {
+    public void increment(String label, String topic) {
         Stats.incr(label);
     }
 
     @Override
-    public void increment(String label, int delta, String... tags) {
+    public void increment(String label, int delta, String topic) {
         Stats.incr(label, delta);
     }
 
     @Override
-    public void metric(String label, double value, String... tags) {
+    public void metric(String label, double value, String topic) {
         Stats.addMetric(label, (int) value);
     }
 
     @Override
-    public void gauge(String label, double value, String... tags) {
+    public void gauge(String label, double value, String topic) {
         Stats.setGauge(label, value);
     }
 }

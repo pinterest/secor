@@ -192,7 +192,6 @@ public class PartitionFinalizer {
             LOG.info("touching file {}", successFilePath);
             FileUtil.touch(successFilePath);
         }
-
     }
 
     public void finalizePartitions() throws Exception {

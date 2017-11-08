@@ -5,7 +5,6 @@ import java.io.IOException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.parquet.hadoop.ParquetReader;
-import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.proto.ProtoParquetReader;
 import org.apache.parquet.proto.ProtoParquetWriter;
@@ -19,6 +18,7 @@ import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.ParquetUtil;
 import com.pinterest.secor.util.ProtobufUtil;
 
 /**
@@ -30,8 +30,18 @@ public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterF
 
     private ProtobufUtil protobufUtil;
 
+    protected final int blockSize;
+    protected final int pageSize;
+    protected final boolean enableDictionary;
+    protected final boolean validating;
+
     public ProtobufParquetFileReaderWriterFactory(SecorConfig config) {
         protobufUtil = new ProtobufUtil(config);
+
+        blockSize = ParquetUtil.getParquetBlockSize(config);
+        pageSize = ParquetUtil.getParquetPageSize(config);
+        enableDictionary = ParquetUtil.getParquetEnableDictionary(config);
+        validating = ParquetUtil.getParquetValidation(config);
     }
 
     @Override
@@ -81,7 +91,7 @@ public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterF
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
             writer = new ProtoParquetWriter<Message>(path, protobufUtil.getMessageClass(topic), codecName,
-                    ParquetWriter.DEFAULT_BLOCK_SIZE, ParquetWriter.DEFAULT_PAGE_SIZE);
+                    blockSize, pageSize, enableDictionary, validating);
         }
 
         @Override

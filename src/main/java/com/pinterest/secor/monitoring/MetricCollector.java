@@ -7,21 +7,22 @@ package com.pinterest.secor.monitoring;
  */
 public interface MetricCollector {
     /**
-     * Convenience method equivalent to {@link #increment(String, int, String...)}.
+     * Increments the specified counter by one.
+     * Convenience method equivalent to {@link #increment(String, int, String)}.
      *
      * @param label metric name
-     * @param tags array of tags to be added to the data
+     * @param topic a tag which describes which topic this data is collected for
      */
-    void increment(String label, String... tags);
+    void increment(String label, String topic);
 
     /**
      * Adjusts the specified counter by a given delta
      *
      * @param label metric name
      * @param delta the amount to adjust the counter by
-     * @param tags array of tags to be added to the data
+     * @param topic a tag which describes which topic this data is collected for
      */
-    void increment(String label, int delta, String... tags);
+    void increment(String label, int delta, String topic);
 
     /**
      * Used to track the statistical distribution of a set of values.
@@ -31,16 +32,16 @@ public interface MetricCollector {
      *
      * @param label metric name
      * @param value the value to be incorporated in the distribution
-     * @param tags  array of tags to be added to the data
+     * @param topic a tag which describes which topic this data is collected for
      */
-    void metric(String label, double value, String... tags);
+    void metric(String label, double value, String topic);
 
     /**
      * Records the latest fixed value for the specified named gauge.
      *
      * @param label gauge name
      * @param value the new reading of the gauge
-     * @param tags  array of tags to be added to the data
+     * @param topic a tag which describes which topic this data is collected for
      */
-    void gauge(String label, double value, String... tags);
+    void gauge(String label, double value, String topic);
 }

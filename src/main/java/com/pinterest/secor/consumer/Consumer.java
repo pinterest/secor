@@ -146,7 +146,7 @@ public class Consumer extends Thread {
                 final double DECAY = 0.999;
                 mUnparsableMessages *= DECAY;
             } catch (Throwable e) {
-                mMetricCollector.increment("consumer.message_errors.count", "topic:" + rawMessage.getTopic());
+                mMetricCollector.increment("consumer.message_errors.count", rawMessage.getTopic());
 
                 mUnparsableMessages++;
                 final double MAX_UNPARSABLE_MESSAGES = 1000.;
@@ -160,8 +160,8 @@ public class Consumer extends Thread {
                 try {
                     mMessageWriter.write(parsedMessage);
 
-                    mMetricCollector.metric("consumer.message_size_bytes", rawMessage.getPayload().length, "topic:" + rawMessage.getTopic());
-                    mMetricCollector.increment("consumer.throughput_bytes", rawMessage.getPayload().length, "topic:" + rawMessage.getTopic());
+                    mMetricCollector.metric("consumer.message_size_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
+                    mMetricCollector.increment("consumer.throughput_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to write message " + parsedMessage, e);
                 }

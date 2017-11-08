@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.smartling</groupId>
+    <groupId>com.pinterest</groupId>
     <artifactId>secor</artifactId>
-    <version>0.23-SNAPSHOT</version>
+    <version>0.26-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>secor</name>
     <description>Kafka to s3/gs/swift logs exporter</description>
-    <url>https://github.com/Smartling/secor</url>
+    <url>https://github.com/pinterest/secor</url>
 
     <licenses>
         <license>
@@ -41,9 +41,9 @@
     </developers>
 
     <scm>
-        <connection>https://github.com/Smartling/secor.git</connection>
-        <developerConnection>https://github.com/Smartling/secor.git</developerConnection>
-        <url>https://github.com/Smartling/secor</url>
+        <connection>https://github.com/pinterest/secor.git</connection>
+        <developerConnection>https://github.com/pinterest/secor.git</developerConnection>
+        <url>https://github.com/pinterest/secor</url>
     </scm>
 
     <properties>
@@ -51,7 +51,7 @@
         <maven.compiler.target>1.6</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <parquet.version>1.8.1</parquet.version>
+        <parquet.version>1.9.0</parquet.version>
     </properties>
 
     <distributionManagement>
@@ -100,12 +100,12 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.10.68</version>
+            <version>1.11.160</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-sts</artifactId>
-            <version>1.10.68</version>
+            <version>1.11.160</version>
         </dependency>
         <dependency>
             <groupId>net.java.dev.jets3t</groupId>
@@ -115,7 +115,7 @@
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <version>1.2.15</version>
+            <version>1.2.17</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.sun.jmx</groupId>
@@ -309,6 +309,11 @@
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure-storage</artifactId>
             <version>4.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.orc</groupId>
+            <artifactId>orc-core</artifactId>
+            <version>1.3.3</version>
         </dependency>
     </dependencies>
 
@@ -531,6 +536,14 @@
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -585,7 +598,7 @@
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
                     <artifactId>kafka_2.10</artifactId>
-                    <version>0.8.2.1</version>
+                    <version>0.10.2.0</version>
                     <exclusions>
                         <exclusion>
                             <groupId>org.slf4j</groupId>
@@ -597,6 +610,20 @@
         </profile>
         <profile>
             <id>kafka-0.8-dev</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/pinterest/secor/timestamp/Kafka10MessageTimestamp.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
@@ -620,7 +647,7 @@
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
                     <artifactId>kafka_2.10</artifactId>
-                    <version>0.10.0.1</version>
+                    <version>0.10.2.0</version>
                     <exclusions>
                         <exclusion>
                             <groupId>org.slf4j</groupId>

@@ -46,5 +46,4 @@ public class JsonMessageParser extends TimestampedMessageParser {
         }
         return 0;
     }
-
 }

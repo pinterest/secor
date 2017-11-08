@@ -18,6 +18,7 @@ package com.pinterest.secor.common;
 
 import com.google.common.net.HostAndPort;
 import com.pinterest.secor.message.Message;
+import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
 import kafka.api.FetchRequestBuilder;
 import kafka.api.PartitionOffsetRequestInfo;
 import kafka.common.TopicAndPartition;
@@ -30,6 +31,7 @@ import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.TopicMetadataResponse;
 import kafka.javaapi.consumer.SimpleConsumer;
 import kafka.message.MessageAndOffset;
+import org.apache.kafka.common.protocol.Errors;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,11 +52,15 @@ public class KafkaClient {
 
     private SecorConfig mConfig;
     private ZookeeperConnector mZookeeperConnector;
+    private KafkaMessageTimestampFactory mKafkaMessageTimestampFactory;
 
     public KafkaClient(SecorConfig config) {
         mConfig = config;
         mZookeeperConnector = new ZookeeperConnector(mConfig);
+        mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory(mConfig.getKafkaMessageTimestampClass());
     }
+
+    public class MessageDoesNotExistException extends RuntimeException {}
 
     private HostAndPort findLeader(TopicPartition topicPartition) {
         SimpleConsumer consumer = null;
@@ -124,8 +130,13 @@ public class KafkaClient {
         FetchResponse response = consumer.fetch(request);
         if (response.hasError()) {
             consumer.close();
-            throw new RuntimeException("Error fetching offset data. Reason: " +
-                    response.errorCode(topicPartition.getTopic(), topicPartition.getPartition()));
+            int errorCode = response.errorCode(topicPartition.getTopic(), topicPartition.getPartition());
+
+            if (errorCode == Errors.OFFSET_OUT_OF_RANGE.code()) {
+              throw new MessageDoesNotExistException();
+            } else {
+              throw new RuntimeException("Error fetching offset data. Reason: " + errorCode);
+            }
         }
         MessageAndOffset messageAndOffset = response.messageSet(
                 topicPartition.getTopic(), topicPartition.getPartition()).iterator().next();
@@ -141,8 +152,12 @@ public class KafkaClient {
             payloadBytes = new byte[payload.limit()];
             payload.get(payloadBytes);
         }
+        long timestamp = (mConfig.useKafkaTimestamp())
+                ? mKafkaMessageTimestampFactory.getKafkaMessageTimestamp().getTimestamp(messageAndOffset)
+                : 0l;
+
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
-                messageAndOffset.offset(), keyBytes, payloadBytes);
+                messageAndOffset.offset(), keyBytes, payloadBytes, timestamp);
     }
 
     private SimpleConsumer createConsumer(String host, int port, String clientName) {
@@ -205,6 +220,17 @@ public class KafkaClient {
             }
             consumer = createConsumer(topicPartition);
             return getMessage(topicPartition, committedOffset, consumer);
+        } catch (MessageDoesNotExistException e) {
+          // If a RuntimeEMessageDoesNotExistException exception is raised,
+          // the message at the last comitted offset does not exist in Kafka.
+          // This is usually due to the message being compacted away by the
+          // Kafka log compaction process.
+          //
+          // That is no an exceptional situation - in fact it can be normal if
+          // the topic being consumed by Secor has a low volume. So in that
+          // case, simply return null
+          LOG.warn("no committed message for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
+          return null;
         } finally {
             if (consumer != null) {
                 consumer.close();

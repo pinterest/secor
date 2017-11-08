@@ -19,10 +19,10 @@ package com.pinterest.secor.parser;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
+import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.minidev.json.JSONObject;
-import net.minidev.json.JSONValue;
+
 import java.util.regex.Pattern;
 
 // TODO(pawel): should we offer a multi-message parser capable of parsing multiple types of
@@ -60,7 +60,7 @@ public abstract class MessageParser {
         String[] partitions = extractPartitions(message);
         return new ParsedMessage(message.getTopic(), message.getKafkaPartition(),
                                  message.getOffset(), message.getKafkaKey(),
-                                 message.getPayload(), partitions);
+                                 message.getPayload(), partitions, message.getTimestamp());
     }
 
     public abstract String[] extractPartitions(Message payload) throws Exception;
