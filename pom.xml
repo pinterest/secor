@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.pinterest</groupId>
+    <groupId>com.smartling</groupId>
     <artifactId>secor</artifactId>
     <version>0.26-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>secor</name>
     <description>Kafka to s3/gs/swift logs exporter</description>
-    <url>https://github.com/pinterest/secor</url>
+    <url>https://github.com/smartling/secor</url>
 
     <licenses>
         <license>
@@ -41,9 +41,9 @@
     </developers>
 
     <scm>
-        <connection>https://github.com/pinterest/secor.git</connection>
-        <developerConnection>https://github.com/pinterest/secor.git</developerConnection>
-        <url>https://github.com/pinterest/secor</url>
+        <connection>https://github.com/smartling/secor.git</connection>
+        <developerConnection>https://github.com/smartling/secor.git</developerConnection>
+        <url>https://github.com/smartling/secor</url>
     </scm>
 
     <properties>
