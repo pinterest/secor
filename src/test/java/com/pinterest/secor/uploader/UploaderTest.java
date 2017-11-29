@@ -197,6 +197,54 @@ public class UploaderTest extends TestCase {
                 21L);
         Mockito.verify(mZookeeperConnector).unlock(lockPath);
     }
+    
+    public void testUploadFilesCustomTopicName() throws Exception{
+    	Mockito.when(
+                mZookeeperConnector.getCommittedOffsetCount(mTopicPartition))
+                .thenReturn(11L);
+        Mockito.when(
+                mOffsetTracker.setCommittedOffsetCount(mTopicPartition, 11L))
+                .thenReturn(11L);
+        Mockito.when(
+                mOffsetTracker.setCommittedOffsetCount(mTopicPartition, 21L))
+                .thenReturn(11L);
+        Mockito.when(mOffsetTracker.getLastSeenOffset(mTopicPartition))
+                .thenReturn(20L);
+        Mockito.when(
+                mOffsetTracker.getTrueCommittedOffsetCount(mTopicPartition))
+                .thenReturn(11L);
+
+
+        Mockito.when(mConfig.getCloudService()).thenReturn("S3");
+        Mockito.when(mConfig.getS3Bucket()).thenReturn("some_bucket");
+        Mockito.when(mConfig.getS3Path()).thenReturn("some_s3_parent_dir");
+        Mockito.when(mConfig.getCustomTopicsNames()).thenReturn("some_topic:some_topic_test;");
+
+        HashSet<LogFilePath> logFilePaths = new HashSet<LogFilePath>();
+        logFilePaths.add(mLogFilePath);
+        Mockito.when(mFileRegistry.getPaths(mTopicPartition)).thenReturn(
+                logFilePaths);
+
+        PowerMockito.mockStatic(FileUtil.class);
+        Mockito.when(FileUtil.getPrefix("some_topic", mConfig)).
+                thenReturn("s3a://some_bucket/some_s3_parent_dir");
+        mUploader.applyPolicy();
+
+        final String lockPath = "/secor/locks/some_topic/0";
+        Mockito.verify(mZookeeperConnector).lock(lockPath);
+        PowerMockito.verifyStatic();
+        FileUtil.moveToCloud(
+                "/some_parent_dir/some_topic/some_partition/some_other_partition/"
+                        + "10_0_00000000000000000010",
+                "s3a://some_bucket/some_s3_parent_dir/some_topic_test/some_partition/"
+                        + "some_other_partition/10_0_00000000000000000010");
+        Mockito.verify(mFileRegistry).deleteTopicPartition(mTopicPartition);
+        Mockito.verify(mZookeeperConnector).setCommittedOffsetCount(
+                mTopicPartition, 21L);
+        Mockito.verify(mOffsetTracker).setCommittedOffsetCount(mTopicPartition,
+                21L);
+        Mockito.verify(mZookeeperConnector).unlock(lockPath);
+    }
 
     public void testDeleteTopicPartition() throws Exception {
         Mockito.when(

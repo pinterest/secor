@@ -42,12 +42,31 @@ public class HadoopS3UploadManager extends UploadManager {
     public HadoopS3UploadManager(SecorConfig config) {
         super(config);
     }
+    
+    private Map<String,String> getCustomTopicsNamesMap(SecorConfig mConfig)  {
+    	Map<String,String> customTopicsNamesMap = null;
+    	if(mConfig.getCustomTopicsNames() != null) {
+	    	String customTopicsNamesField = mConfig.getCustomTopicsNames();
+	    	if (customTopicsNamesField.length() != 0 && customTopicsNamesField.contains(";")) {
+	        	String[] customTopicsNames = customTopicsNamesField.split(";");
+	        	customTopicsNamesMap = new HashMap<String,String>();
+	        	for (String topicNames: customTopicsNames) {
+	        		if (topicNames.matches("[A-Za-z0-9_]+:[A-Za-z0-9_]+")) {
+	            		customTopicsNamesMap.put(topicNames.split(":")[0], topicNames.split(":")[1]);
+	        		}
+	            }
+	    	}
+    	}
+    	return customTopicsNamesMap;
+	}
 
     public Handle<?> upload(LogFilePath localPath) throws Exception {
         String prefix = FileUtil.getPrefix(localPath.getTopic(), mConfig);
         LogFilePath path = localPath.withPrefix(prefix);
         final String localLogFilename = localPath.getLogFilePath();
         final String logFileName;
+        final String topicName = localPath.getTopic();
+        final Map<String,String> customTopicsNamesMap = getCustomTopicsNamesMap(mConfig);
 
         if (FileUtil.s3PathPrefixIsAltered(path.getLogFilePath(), mConfig)) {
            logFileName = localPath.withPrefix(FileUtil.getS3AlternativePrefix(mConfig)).getLogFilePath();
@@ -63,7 +82,14 @@ public class HadoopS3UploadManager extends UploadManager {
             @Override
             public void run() {
                 try {
-                    FileUtil.moveToCloud(localLogFilename, logFileName);
+                    if (customTopicsNamesMap != null) {
+                    	String logFileNameCustomTopicName = logFileName;
+                    	logFileNameCustomTopicName = logFileNameCustomTopicName.replace(topicName,
+                    			customTopicsNamesMap.get(topicName));
+                    	FileUtil.moveToCloud(localLogFilename, logFileNameCustomTopicName);
+                    }else {
+                    	FileUtil.moveToCloud(localLogFilename, logFileName);
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
