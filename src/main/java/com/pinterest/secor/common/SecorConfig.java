@@ -582,8 +582,8 @@ public class SecorConfig {
         return getString("secor.monitoring.metrics.collector.class");
     }
     
-    public String getCustomTopicsNames() {
-    	return getString("secor.kafka.customtopicsnames");
+    public Map<String, String> getCustomTopicsNames() {
+    	return getPropertyMapForPrefix("secor.kafka.customtopicname");
     }
     
     /**
