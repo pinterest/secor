@@ -39,7 +39,9 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * UploaderTest tests the log file uploader logic.
@@ -218,7 +220,9 @@ public class UploaderTest extends TestCase {
         Mockito.when(mConfig.getCloudService()).thenReturn("S3");
         Mockito.when(mConfig.getS3Bucket()).thenReturn("some_bucket");
         Mockito.when(mConfig.getS3Path()).thenReturn("some_s3_parent_dir");
-        Mockito.when(mConfig.getCustomTopicsNames()).thenReturn("some_topic:some_topic_test;");
+        Map<String,String> customTopicsNamesMap = new HashMap<String,String>();
+        customTopicsNamesMap.put("some_topic", "some_topic_test");
+        Mockito.when(mConfig.getCustomTopicsNames()).thenReturn(customTopicsNamesMap);
 
         HashSet<LogFilePath> logFilePaths = new HashSet<LogFilePath>();
         logFilePaths.add(mLogFilePath);
