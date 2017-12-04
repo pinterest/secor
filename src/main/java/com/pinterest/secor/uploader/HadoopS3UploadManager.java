@@ -87,7 +87,7 @@ public class HadoopS3UploadManager extends UploadManager {
                     	logFileNameCustomTopicName = logFileNameCustomTopicName.replace(topicName,
                     			customTopicsNamesMap.get(topicName));
                     	FileUtil.moveToCloud(localLogFilename, logFileNameCustomTopicName);
-                    }else {
+                    } else {
                     	FileUtil.moveToCloud(localLogFilename, logFileName);
                     }
                 } catch (IOException e) {
