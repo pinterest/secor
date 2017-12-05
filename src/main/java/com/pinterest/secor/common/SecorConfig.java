@@ -582,6 +582,10 @@ public class SecorConfig {
         return getString("secor.monitoring.metrics.collector.class");
     }
     
+    public Map<String, String> getCustomTopicsNames() {
+    	return getPropertyMapForPrefix("secor.kafka.customtopicname");
+    }
+    
     /**
      * This method is used for fetching all the properties which start with the given prefix.
      * It returns a Map of all those key-val.

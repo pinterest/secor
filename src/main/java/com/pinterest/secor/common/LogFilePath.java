@@ -25,6 +25,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * LogFilePath represents path of a log file.  It contains convenience method for building and
@@ -53,6 +54,7 @@ public class LogFilePath {
     private final int[] mKafkaPartitions;
     private final long[] mOffsets;
     private final String mExtension;
+    private Map<String,String> customTopicsNames;
     private MessageDigest messageDigest;
 
 
@@ -145,16 +147,22 @@ public class LogFilePath {
     }
 
     public String getLogFileParentDir() {
-        ArrayList<String> elements = new ArrayList<String>();
+    	ArrayList<String> elements = new ArrayList<String>();
         if (mPrefix != null && mPrefix.length() > 0) {
             elements.add(mPrefix);
         }
         if (mTopic != null && mTopic.length() > 0) {
-            elements.add(mTopic);
+        	if (getCustomTopicsNames() != null &&
+        			getCustomTopicsNames().isEmpty() == false  &&
+        			getCustomTopicsNames().get(mTopic).length() > 0) {
+        		elements.add(getCustomTopicsNames().get(mTopic));
+			} else {
+				elements.add(mTopic);
+			}
         }
         return StringUtils.join(elements, "/");
     }
-
+    
     public String getLogFileDir() {
         ArrayList<String> elements = new ArrayList<String>();
         elements.add(getLogFileParentDir());
@@ -189,7 +197,7 @@ public class LogFilePath {
         }
         return StringUtils.join(basenameElements, "_");
     }
-
+    
     public String getLogFilePath() {
         String basename = getLogFileBasename();
 
@@ -243,6 +251,14 @@ public class LogFilePath {
     public String getExtension() {
         return mExtension;
     }
+    
+    public Map<String,String> getCustomTopicsNames() {
+		return customTopicsNames;
+	}
+
+	public void setCustomTopicsNames(Map<String,String> customTopicsNames) {
+		this.customTopicsNames = customTopicsNames;
+	}
 
     @Override
     public boolean equals(Object o) {
