@@ -208,16 +208,6 @@ public class LogFilePath {
         return StringUtils.join(pathElements, "/") + mExtension;
     }
 
-    public String getLogFilePath(Map<String,String> customTopicsNamesMap) {
-        String basename = getLogFileBasename();
-        setCustomTopicsNames(customTopicsNamesMap);
-        ArrayList<String> pathElements = new ArrayList<String>();
-        pathElements.add(getLogFileDir());
-        pathElements.add(basename);
-
-        return StringUtils.join(pathElements, "/") + mExtension;
-    }
-
     public String getLogFileCrcPath() {
         String basename = "." + getLogFileBasename() + ".crc";
 
@@ -262,11 +252,11 @@ public class LogFilePath {
         return mExtension;
     }
     
-    private Map<String,String> getCustomTopicsNames() {
+    public Map<String,String> getCustomTopicsNames() {
 		return customTopicsNames;
 	}
 
-	private void setCustomTopicsNames(Map<String,String> customTopicsNames) {
+	public void setCustomTopicsNames(Map<String,String> customTopicsNames) {
 		this.customTopicsNames = customTopicsNames;
 	}
 
