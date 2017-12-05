@@ -53,6 +53,9 @@ fi
 if [[ ! -z "$AWS_SECRET_KEY" ]]; then
 	SECOR_CONFIG="$SECOR_CONFIG -Daws.secret.key=$AWS_SECRET_KEY"
 fi
+if [[ ! -z "$AWS_SESSION_TOKEN" ]]; then
+	SECOR_CONFIG="$SECOR_CONFIG -Daws.session.token=$AWS_SESSION_TOKEN"
+fi
 if [[ ! -z "$SECOR_S3_BUCKET" ]]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.s3.bucket=$SECOR_S3_BUCKET"
     echo "secor.s3.bucket=$SECOR_S3_BUCKET"

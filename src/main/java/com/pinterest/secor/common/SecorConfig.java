@@ -273,6 +273,10 @@ public class SecorConfig {
         return getString("aws.secret.key");
     }
 
+    public String getAwsSessionToken() {
+        return getString("aws.session.token");
+    }
+
     public String getAwsEndpoint() {
         return getString("aws.endpoint");
     }
