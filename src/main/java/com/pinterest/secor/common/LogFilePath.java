@@ -154,6 +154,7 @@ public class LogFilePath {
         if (mTopic != null && mTopic.length() > 0) {
         	if (getCustomTopicsNames() != null &&
         			getCustomTopicsNames().isEmpty() == false  &&
+        			tomTopicsNames().isEmpty() == false  &&
         			getCustomTopicsNames().get(mTopic).length() > 0) {
         		elements.add(getCustomTopicsNames().get(mTopic));
 			} else {
