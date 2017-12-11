@@ -138,6 +138,11 @@ public class Uploader {
         if (startOffset == srcPath.getOffset()) {
             return;
         }
+
+        if (System.getProperty("exitOnTrim") != null)
+            // trim works incorrectly, so I exit the app to restart container and start everything from scratch
+            System.exit(43);
+
         FileReader reader = null;
         FileWriter writer = null;
         LogFilePath dstPath = null;
@@ -233,6 +238,7 @@ public class Uploader {
                 LOG.debug("previous committed offset count {} is lower than committed offset {} is lower than or equal to last seen offset {}. " +
                                 "Trimming files in topic {} partition {}",
                         oldOffsetCount, newOffsetCount, lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
+
                 // There was a rebalancing event and someone committed an offset lower than that
                 // of the current message.  We need to trim local files.
                 trimFiles(topicPartition, newOffsetCount);
