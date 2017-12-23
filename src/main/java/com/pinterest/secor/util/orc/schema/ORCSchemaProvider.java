@@ -10,7 +10,7 @@ import com.pinterest.secor.common.LogFilePath;
  * @author Ashish (ashu.impetus@gmail.com)
  *
  */
-public interface ORCScehmaProvider {
+public interface ORCSchemaProvider {
 
     /**
      * This implementation should take a kafka topic name and returns ORC

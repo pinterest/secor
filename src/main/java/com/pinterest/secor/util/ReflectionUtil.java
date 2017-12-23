@@ -26,7 +26,7 @@ import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.uploader.Uploader;
-import com.pinterest.secor.util.orc.schema.ORCScehmaProvider;
+import com.pinterest.secor.util.orc.schema.ORCSchemaProvider;
 
 import org.apache.hadoop.io.compress.CompressionCodec;
 
@@ -225,10 +225,10 @@ public class ReflectionUtil {
     }
     
     /**
-     * Create a ORCScehmaProvider from it's fully qualified class name. The
-     * class passed in by name must be assignable to ORCScehmaProvider and have
-     * 1-parameter constructor accepting a SecorConfig. Allows the ORCScehmaProvider
-     * to be pluggable by providing the class name of a desired ORCScehmaProvider in
+     * Create a ORCSchemaProvider from it's fully qualified class name. The
+     * class passed in by name must be assignable to ORCSchemaProvider and have
+     * 1-parameter constructor accepting a SecorConfig. Allows the ORCSchemaProvider
+     * to be pluggable by providing the class name of a desired ORCSchemaProvider in
      * config.
      *
      * See the secor.orc.schema.provider config option.
@@ -238,15 +238,15 @@ public class ReflectionUtil {
      * @return
      * @throws Exception
      */
-    public static ORCScehmaProvider createORCSchemaProvider(
+    public static ORCSchemaProvider createORCSchemaProvider(
             String className, SecorConfig config) throws Exception {
         Class<?> clazz = Class.forName(className);
-        if (!ORCScehmaProvider.class.isAssignableFrom(clazz)) {
+        if (!ORCSchemaProvider.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException(String.format(
                     "The class '%s' is not assignable to '%s'.", className,
-                    ORCScehmaProvider.class.getName()));
+                    ORCSchemaProvider.class.getName()));
         }
-        return (ORCScehmaProvider) clazz.getConstructor(SecorConfig.class)
+        return (ORCSchemaProvider) clazz.getConstructor(SecorConfig.class)
                 .newInstance(config);
     }
 }

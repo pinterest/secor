@@ -35,7 +35,7 @@ import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.util.orc.JsonFieldFiller;
 import com.pinterest.secor.util.orc.VectorColumnFiller;
 import com.pinterest.secor.util.orc.VectorColumnFiller.JsonConverter;
-import com.pinterest.secor.util.orc.schema.ORCScehmaProvider;
+import com.pinterest.secor.util.orc.schema.ORCSchemaProvider;
 
 /**
  * ORC reader/writer implementation
@@ -46,7 +46,7 @@ import com.pinterest.secor.util.orc.schema.ORCScehmaProvider;
 public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileRegistry.class);
-    private ORCScehmaProvider schemaProvider;
+    private ORCSchemaProvider schemaProvider;
 
     public JsonORCFileReaderWriterFactory(SecorConfig config) throws Exception {
         schemaProvider = ReflectionUtil.createORCSchemaProvider(
