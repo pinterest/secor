@@ -16,8 +16,6 @@
  */
 package com.pinterest.secor.message;
 
-import org.apache.avro.Schema;
-
 import java.lang.String;
 import java.util.Arrays;
 
