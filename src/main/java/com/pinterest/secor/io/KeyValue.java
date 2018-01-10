@@ -77,5 +77,4 @@ public class KeyValue {
 	public boolean hasTimestamp(){
 		return this.mTimestamp != -1;
 	}
-
 }
