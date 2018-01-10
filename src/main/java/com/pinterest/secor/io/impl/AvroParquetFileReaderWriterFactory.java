@@ -100,7 +100,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         public AvroParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
-            LOG.info("Creating Brand new Writer for path {}", path);
+            LOG.debug("Creating Brand new Writer for path {}", path);
             CompressionCodecName codecName = CompressionCodecName
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
