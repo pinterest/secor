@@ -28,8 +28,6 @@ import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.ParquetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.tools.nsc.backend.icode.analysis.TypeFlowAnalysis;
-
 
 public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFactory {
 
