@@ -1,9 +1,16 @@
 package com.pinterest.secor.io.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
+import com.google.protobuf.Message;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.parquet.avro.AvroParquetReader;
@@ -58,21 +65,31 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
     protected class AvroParquetFileReader implements FileReader {
 
-        private ParquetReader reader;
+        private ParquetReader<GenericRecord> reader;
+        private SpecificDatumWriter<GenericRecord> writer;
         private long offset;
 
         public AvroParquetFileReader(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
-            reader = AvroParquetReader.builder(path).build();
+            String topic = logFilePath.getTopic();
+            Schema schema = schemaRegistryClient.getSchema(topic);
+            reader = AvroParquetReader.<GenericRecord>builder(path).build();
+            writer = new SpecificDatumWriter(schema);
             offset = logFilePath.getOffset();
         }
 
         @Override
         public KeyValue next() throws IOException {
-//            Builder messageBuilder = (Builder) reader.read();
-//            if (messageBuilder != null) {
-//                return new KeyValue(offset++, messageBuilder.build().toByteArray());
-//            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
+            GenericRecord record = reader.read();
+            if (record != null) {
+                writer.write(record, encoder);
+                encoder.flush();
+                ByteBuffer serialized = ByteBuffer.allocate(out.toByteArray().length);
+                serialized.put(out.toByteArray());
+                return new KeyValue(offset++, serialized.array());
+            }
             return null;
         }
 
