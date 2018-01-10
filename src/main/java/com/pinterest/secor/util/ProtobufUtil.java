@@ -178,7 +178,7 @@ public class ProtobufUtil {
     private boolean shouldDecodeFromJsonMessage(String topic){
         if (StringUtils.isNotEmpty(messageFormatForAll) && StringUtils.equalsIgnoreCase(messageFormatForAll, JSON)) {
             return true;
-        } else if (StringUtils.equalsIgnoreCase(messageFormatByTopic.getOrDefault(topic, ""), JSON) {
+        } else if (StringUtils.equalsIgnoreCase(messageFormatByTopic.getOrDefault(topic, ""), JSON)) {
             return true;
         }
         return false;
