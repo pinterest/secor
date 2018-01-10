@@ -276,7 +276,7 @@ public class SecorConfig {
     }
 
     public String getAwsSessionToken() {
-        return getString("aws.session.token");
+        return getString("aws.session.token", "");
     }
 
     public String getAwsEndpoint() {
