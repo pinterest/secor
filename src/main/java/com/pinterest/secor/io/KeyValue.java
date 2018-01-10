@@ -32,8 +32,6 @@ public class KeyValue {
 	private final byte[] mValue;
 	private final long mTimestamp;
 
-	private Schema schema = null;
-
 	// constructor
 	public KeyValue(long offset, byte[] value) {
 		this.mOffset = offset;
@@ -82,11 +80,4 @@ public class KeyValue {
 		return this.mTimestamp != -1;
 	}
 
-	public Schema getSchema() {
-		return schema;
-	}
-
-	public void setSchema(Schema schema) {
-		this.schema = schema;
-	}
 }
