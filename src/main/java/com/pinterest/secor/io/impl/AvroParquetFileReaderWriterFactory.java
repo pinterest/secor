@@ -30,11 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-/**
- * Implementation for reading/writing avro messages to/from Parquet files.
- *
- * @author Michael Spector (spektom@gmail.com)
- */
 public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(AvroParquetFileReaderWriterFactory.class);
