@@ -28,6 +28,7 @@ import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.ParquetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.tools.nsc.backend.icode.analysis.TypeFlowAnalysis;
 
 
 public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFactory {
@@ -37,7 +38,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     protected final int pageSize;
     protected final boolean enableDictionary;
     protected final boolean validating;
-    protected final SecorSchemaRegistryClient schemaRegistryClient;
+    protected SecorSchemaRegistryClient schemaRegistryClient;
 
     public AvroParquetFileReaderWriterFactory(SecorConfig config) {
         blockSize = ParquetUtil.getParquetBlockSize(config);
@@ -57,6 +58,16 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         return new AvroParquetFileWriter(logFilePath, codec);
     }
 
+    protected static byte[] serializeAvroRecord(SpecificDatumWriter<GenericRecord> writer, GenericRecord record) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
+        writer.write(record, encoder);
+        encoder.flush();
+        ByteBuffer serialized = ByteBuffer.allocate(out.toByteArray().length);
+        serialized.put(out.toByteArray());
+        return serialized.array();
+    }
+
     protected class AvroParquetFileReader implements FileReader {
 
         private ParquetReader<GenericRecord> reader;
@@ -74,15 +85,9 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         @Override
         public KeyValue next() throws IOException {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
             GenericRecord record = reader.read();
             if (record != null) {
-                writer.write(record, encoder);
-                encoder.flush();
-                ByteBuffer serialized = ByteBuffer.allocate(out.toByteArray().length);
-                serialized.put(out.toByteArray());
-                return new KeyValue(offset++, serialized.array());
+                return new KeyValue(offset++, serializeAvroRecord(writer, record));
             }
             return null;
         }
@@ -91,6 +96,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         public void close() throws IOException {
             reader.close();
         }
+
     }
 
     protected class AvroParquetFileWriter implements FileWriter {
