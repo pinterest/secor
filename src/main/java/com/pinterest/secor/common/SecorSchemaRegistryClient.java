@@ -16,16 +16,14 @@ public class SecorSchemaRegistryClient {
     private static final Logger LOG = LoggerFactory.getLogger(SecorSchemaRegistryClient.class);
 
     private KafkaAvroDecoder decoder;
-    private static Map<String, Schema> schemas;
+    private final static Map<String, Schema> schemas = new ConcurrentHashMap<>();
 
     public SecorSchemaRegistryClient(SecorConfig config) {
         try {
-            LOG.info("Initializing schema registry {}",  config.getSchemaRegistryUrl());
             Properties props = new Properties();
             props.put("schema.registry.url", config.getSchemaRegistryUrl());
             CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient(config.getSchemaRegistryUrl(), 30);
             decoder = new KafkaAvroDecoder(schemaRegistryClient);
-            schemas = new ConcurrentHashMap<>();
         } catch (Exception e){
             LOG.error("Error initalizing schema registry", e);
             throw new RuntimeException(e);
