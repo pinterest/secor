@@ -15,11 +15,8 @@ public class SecorSchemaRegistryClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecorSchemaRegistryClient.class);
 
-    private static Object mutex = new Object();
     private KafkaAvroDecoder decoder;
     private static Map<String, Schema> schemas;
-
-    private static volatile SecorSchemaRegistryClient instance = null;
 
     public SecorSchemaRegistryClient(SecorConfig config) {
         try {
@@ -49,11 +46,5 @@ public class SecorSchemaRegistryClient {
             throw new RuntimeException(e);
         }
     }
-
-    //    public static GenericRecord decodeMessage(Message message) {
-//        GenericRecord record = (GenericRecord) decoder.fromBytes(message.getPayload());
-//        schemas.put(message.getTopic(), record.getSchema());
-//        return record;
-//    }
-
+    
 }
