@@ -2,10 +2,14 @@ package com.pinterest.secor.util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
+import org.apache.commons.io.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +38,7 @@ public class ProtobufUtil {
     private Map<String, Class<? extends Message>> messageClassByTopic = new HashMap<String, Class<? extends Message>>();
     private Map<String, Method> messageParseMethodByTopic = new HashMap<String, Method>();
     private Class<? extends Message> messageClassForAll;
+    private String messageFormatForAll = "json";
     private Method messageParseMethodForAll;
 
     /**
@@ -96,6 +101,21 @@ public class ProtobufUtil {
         return allTopics ? messageClassForAll : messageClassByTopic.get(topic);
     }
 
+    public Message decodeJsonMessage(String topic, byte[] payload){
+        try {
+            Method builderGetter = allTopics ? messageClassForAll.getDeclaredMethod("newBuilder") : messageClassByTopic.get(topic).getDeclaredMethod("newBuilder") ;
+            com.google.protobuf.GeneratedMessageV3.Builder builder = (com.google.protobuf.GeneratedMessageV3.Builder) builderGetter.invoke(null);
+            JsonFormat.parser().ignoringUnknownFields().merge(new String(payload, Charsets.UTF_8), builder);
+            return builder.build();
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Error parsing protobuf message", e);
+        } catch (InvalidProtocolBufferException e) {
+            LOG.error("Error parsing protobuf message", e);
+            LOG.info("Message that barfed: {}", new String(payload, Charsets.UTF_8));
+            return null;
+        }
+    }
+
     /**
      * Decodes protobuf message
      * 
@@ -109,6 +129,9 @@ public class ProtobufUtil {
      */
     public Message decodeMessage(String topic, byte[] payload) {
         try {
+            if (messageFormatForAll.equals("json")) {
+                return decodeJsonMessage(topic, payload);
+            }
             Method parseMethod = allTopics ? messageParseMethodForAll : messageParseMethodByTopic.get(topic);
             return (Message) parseMethod.invoke(null, payload);
         } catch (IllegalArgumentException e) {

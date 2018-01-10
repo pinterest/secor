@@ -16,6 +16,8 @@
  */
 package com.pinterest.secor.io;
 
+import org.apache.avro.Schema;
+
 /**
  * Generic Object used to read next message from various file reader
  * implementations
@@ -29,6 +31,8 @@ public class KeyValue {
 	private final byte[] mKafkaKey;
 	private final byte[] mValue;
 	private final long mTimestamp;
+
+	private Schema schema = null;
 
 	// constructor
 	public KeyValue(long offset, byte[] value) {
@@ -76,5 +80,13 @@ public class KeyValue {
 
 	public boolean hasTimestamp(){
 		return this.mTimestamp != -1;
+	}
+
+	public Schema getSchema() {
+		return schema;
+	}
+
+	public void setSchema(Schema schema) {
+		this.schema = schema;
 	}
 }

@@ -16,6 +16,8 @@
  */
 package com.pinterest.secor.message;
 
+import org.apache.avro.Schema;
+
 import java.lang.String;
 import java.util.Arrays;
 
@@ -27,6 +29,7 @@ import java.util.Arrays;
  */
 public class ParsedMessage extends Message {
     private String[] mPartitions;
+    private Schema schema;
 
     @Override
     public String toString() {
@@ -38,6 +41,14 @@ public class ParsedMessage extends Message {
                          String[] mPartitions, long timestamp) {
         super(topic, kafkaPartition, offset, kafkaKey, payload, timestamp);
         this.mPartitions = mPartitions;
+    }
+
+    public Schema getSchema(){
+        return schema;
+    }
+
+    public void setSchema(Schema schema){
+        this.schema = schema;
     }
 
     public String[] getPartitions() {

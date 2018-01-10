@@ -16,7 +16,6 @@
  */
 package com.pinterest.secor.uploader;
 
-import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
@@ -82,7 +81,6 @@ public class S3UploadManager extends UploadManager {
 
         final String accessKey = mConfig.getAwsAccessKey();
         final String secretKey = mConfig.getAwsSecretKey();
-        final String sessionToken = mConfig.getAwsSessionToken();
         final String endpoint = mConfig.getAwsEndpoint();
         final String region = mConfig.getAwsRegion();
         final String awsRole = mConfig.getAwsRole();
@@ -109,11 +107,7 @@ public class S3UploadManager extends UploadManager {
         } else {
             provider = new AWSCredentialsProvider() {
                 public AWSCredentials getCredentials() {
-                    if (sessionToken.isEmpty()) {
-                        return new BasicAWSCredentials(accessKey, secretKey);
-                    } else {
-                        return new BasicSessionCredentials(accessKey, secretKey, sessionToken);
-                    }
+                    return new BasicAWSCredentials(accessKey, secretKey);
                 }
                 public void refresh() {}
             };
