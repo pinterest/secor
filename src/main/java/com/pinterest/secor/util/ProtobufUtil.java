@@ -35,8 +35,6 @@ public class ProtobufUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProtobufUtil.class);
     private static String JSON = "json";
-//    private static String PROTOBUF = "protobuf";
-
     private boolean allTopics;
     private Map<String, Class<? extends Message>> messageClassByTopic = new HashMap<String, Class<? extends Message>>();
     private Map<String, String> messageFormatByTopic;

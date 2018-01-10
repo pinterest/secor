@@ -35,6 +35,8 @@ public class AvroMessageParser extends TimestampedMessageParser {
                 if (fieldValue != null) {
                     return toMillis(Double.valueOf(fieldValue.toString()).longValue());
                 }
+            } else if (m_timestampRequired) {
+                throw new RuntimeException("Missing timestamp field for message: " + message);
             }
         } catch (SerializationException e) {
             LOG.error("Failed to parse record", e);
