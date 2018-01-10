@@ -23,10 +23,10 @@ public class SecorSchemaRegistryClient {
 
     public SecorSchemaRegistryClient(SecorConfig config) {
         try {
-            LOG.info("Initializing schema registry {}",  config.getString("schema.registry.url"));
+            LOG.info("Initializing schema registry {}",  config.getSchemaRegistryUrl());
             Properties props = new Properties();
-            props.put("schema.registry.url", config.getString("schema.registry.url"));
-            CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient(config.getString("schema.registry.url"), 30);
+            props.put("schema.registry.url", config.getSchemaRegistryUrl());
+            CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient(config.getSchemaRegistryUrl(), 30);
             decoder = new KafkaAvroDecoder(schemaRegistryClient);
             schemas = new ConcurrentHashMap<>();
         } catch (Exception e){

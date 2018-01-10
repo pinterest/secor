@@ -16,8 +16,6 @@
  */
 package com.pinterest.secor.io;
 
-import org.apache.avro.Schema;
-
 /**
  * Generic Object used to read next message from various file reader
  * implementations
