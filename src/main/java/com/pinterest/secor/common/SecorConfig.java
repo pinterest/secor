@@ -524,8 +524,8 @@ public class SecorConfig {
         Map<String, String> topicMessageFormats = new HashMap<String, String>();
         while (keys.hasNext()) {
             String key = keys.next();
-            String className = mProperties.getString(key);
-            topicMessageFormats.put(key.substring(prefix.length() + 1), className);
+            String topic = mProperties.getString(key);
+            topicMessageFormats.put(key.substring(prefix.length() + 1), topic);
         }
         return topicMessageFormats;
     }

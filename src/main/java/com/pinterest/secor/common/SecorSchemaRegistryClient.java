@@ -40,11 +40,11 @@ public class SecorSchemaRegistryClient {
     }
 
     public Schema getSchema(String topic) {
-        try {
-            return schemas.get(topic);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        Schema schema = schemas.get(topic);
+        if (schema == null) {
+            throw new IllegalStateException("Avro schema not found for topic " + topic);
         }
+        return schema;
     }
     
 }
