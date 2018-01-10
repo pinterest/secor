@@ -22,8 +22,7 @@ public class AvroMessageParser extends TimestampedMessageParser {
 
     public AvroMessageParser(SecorConfig config) {
         super(config);
-        schemaRegistryClient = SecorSchemaRegistryClient.getInstance();
-        schemaRegistryClient.init(config);
+        schemaRegistryClient = new SecorSchemaRegistryClient(config);
         m_timestampRequired = config.isMessageTimestampRequired();
     }
 

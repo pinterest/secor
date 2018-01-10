@@ -49,8 +49,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         pageSize = ParquetUtil.getParquetPageSize(config);
         enableDictionary = ParquetUtil.getParquetEnableDictionary(config);
         validating = ParquetUtil.getParquetValidation(config);
-        schemaRegistryClient = SecorSchemaRegistryClient.getInstance();
-        schemaRegistryClient.init(config);
+        schemaRegistryClient = new SecorSchemaRegistryClient(config);
     }
 
     @Override

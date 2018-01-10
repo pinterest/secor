@@ -17,49 +17,28 @@ public class SecorSchemaRegistryClient {
 
     private static Object mutex = new Object();
     private KafkaAvroDecoder decoder;
-    private Map<String, Schema> schemas;
+    private static Map<String, Schema> schemas;
 
     private static volatile SecorSchemaRegistryClient instance = null;
 
-    protected SecorSchemaRegistryClient() {
-    }
-
-    public static SecorSchemaRegistryClient getInstance() {
-        //the "result" variable improves performance by preventing excessive volatile reads
-        SecorSchemaRegistryClient result = instance;
-        if( result == null ) {
-            synchronized (mutex) {
-                instance = result = new SecorSchemaRegistryClient();
-            }
-        }
-        return result;
-    }
-
-    public void init(SecorConfig config) {
-        if( instance != null ) {
-            return;
-        }
-        synchronized (mutex) {
-            try {
-                LOG.info("Initializing schema registry {}",  config.getString("schema.registry.url"));
-                Properties props = new Properties();
-                props.put("schema.registry.url", config.getString("schema.registry.url"));
-                CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient(config.getString("schema.registry.url"), 30);
-                decoder = new KafkaAvroDecoder(schemaRegistryClient);
-                schemas = new ConcurrentHashMap<>();
-            } catch (Exception e){
-                LOG.error("Error initalizing schema registry", e);
-                throw new RuntimeException(e);
-            }
+    public SecorSchemaRegistryClient(SecorConfig config) {
+        try {
+            LOG.info("Initializing schema registry {}",  config.getString("schema.registry.url"));
+            Properties props = new Properties();
+            props.put("schema.registry.url", config.getString("schema.registry.url"));
+            CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient(config.getString("schema.registry.url"), 30);
+            decoder = new KafkaAvroDecoder(schemaRegistryClient);
+            schemas = new ConcurrentHashMap<>();
+        } catch (Exception e){
+            LOG.error("Error initalizing schema registry", e);
+            throw new RuntimeException(e);
         }
     }
 
     public GenericRecord decodeMessage(String topic, byte[] message) {
         GenericRecord record = (GenericRecord) decoder.fromBytes(message);
         Schema schema = record.getSchema();
-        if(!schemas.containsKey(topic)){
-            schemas.put(topic, schema);
-        }
+        schemas.putIfAbsent(topic, schema);
         return record;
     }
 
