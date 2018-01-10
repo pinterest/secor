@@ -44,5 +44,4 @@ public class SecorSchemaRegistryClient {
         }
         return schema;
     }
-    
 }

@@ -96,6 +96,4 @@ public class AvroParquetFileReaderWriterFactoryTest extends TestCase {
         assertArrayEquals(kv2.getValue(), kvout.getValue());
         assertEquals(msg2, secorSchemaRegistryClient.decodeMessage("test-avro-topic", kvout.getValue()));
     }
-
-
 }
