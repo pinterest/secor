@@ -57,11 +57,10 @@ public class ProtobufUtil {
         Map<String, String> messageClassPerTopic = config.getProtobufMessageClassPerTopic();
 
         messageFormatByTopic = config.getMessageFormatPerTopic();
-        for (Entry<String, String> entry : messageClassPerTopic.entrySet()) {
+        for (Entry<String, String> entry : messageFormatByTopic.entrySet()) {
             String topic = entry.getKey();
             String format = entry.getValue();
-            allTopics = "*".equals(topic);
-            if(allTopics) {
+            if("*".equals(topic)) {
                 messageFormatForAll = format;
                 LOG.info("Assuming the format: {} for all Kafka topics", format);
                 break;
