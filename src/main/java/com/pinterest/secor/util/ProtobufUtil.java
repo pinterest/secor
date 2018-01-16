@@ -1,5 +1,8 @@
 package com.pinterest.secor.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
@@ -130,16 +133,20 @@ public class ProtobufUtil {
      * @throws RuntimeException
      *             when there's problem decoding protobuf message
      */
+    private static final JsonFormat.Parser jsonParser = JsonFormat.parser().ignoringUnknownFields();
     public Message decodeJsonMessage(String topic, byte[] payload){
         try {
             Method builderGetter = allTopics ? messageClassForAll.getDeclaredMethod("newBuilder") : messageClassByTopic.get(topic).getDeclaredMethod("newBuilder");
             com.google.protobuf.GeneratedMessageV3.Builder builder = (com.google.protobuf.GeneratedMessageV3.Builder) builderGetter.invoke(null);
-            JsonFormat.parser().ignoringUnknownFields().merge(new String(payload, Charsets.UTF_8), builder);
+            jsonParser.merge(new InputStreamReader(new ByteArrayInputStream(payload)), builder);
             return builder.build();
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException("Error parsing protobuf message", e);
         } catch (InvalidProtocolBufferException e) {
-            throw new RuntimeException("Error parsing protobuf message", e);
+            LOG.info("Message that barfed: {}", new String(payload, Charsets.UTF_8));
+            return null;
+        } catch (IOException e) {
+            throw new RuntimeException("Error creating read stream for protobuf message", e);
         }
     }
 
