@@ -134,7 +134,7 @@ public class ProtobufUtil {
      *             when there's problem decoding protobuf message
      */
     private static final JsonFormat.Parser jsonParser = JsonFormat.parser().ignoringUnknownFields();
-    public Message decodeJsonMessage(String topic, byte[] payload){
+    public Message decodeJsonMessage(String topic, byte[] payload) throws InvalidProtocolBufferException {
         try {
             Method builderGetter = allTopics ? messageClassForAll.getDeclaredMethod("newBuilder") : messageClassByTopic.get(topic).getDeclaredMethod("newBuilder");
             com.google.protobuf.GeneratedMessageV3.Builder builder = (com.google.protobuf.GeneratedMessageV3.Builder) builderGetter.invoke(null);
@@ -144,7 +144,7 @@ public class ProtobufUtil {
             throw new RuntimeException("Error parsing protobuf message", e);
         } catch (InvalidProtocolBufferException e) {
             LOG.info("Message that barfed: {}", new String(payload, Charsets.UTF_8));
-            return null;
+            throw e;
         } catch (IOException e) {
             throw new RuntimeException("Error creating read stream for protobuf message", e);
         }
@@ -164,7 +164,11 @@ public class ProtobufUtil {
     public Message decodeMessage(String topic, byte[] payload) {
         try {
             if (shouldDecodeFromJsonMessage(topic)) {
-                return decodeJsonMessage(topic, payload);
+                try {
+                    return decodeJsonMessage(topic, payload);
+                } catch (InvalidProtocolBufferException e) {
+                    LOG.info("Trying to write protobuf message");
+                }
             }
             Method parseMethod = allTopics ? messageParseMethodForAll : messageParseMethodByTopic.get(topic);
             return (Message) parseMethod.invoke(null, payload);
