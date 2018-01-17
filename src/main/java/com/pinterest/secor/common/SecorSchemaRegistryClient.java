@@ -1,6 +1,7 @@
 package com.pinterest.secor.common;
 
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.serializers.KafkaAvroDecoder;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -15,25 +16,31 @@ public class SecorSchemaRegistryClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecorSchemaRegistryClient.class);
 
-    private KafkaAvroDecoder decoder;
+    protected KafkaAvroDecoder decoder;
     private final static Map<String, Schema> schemas = new ConcurrentHashMap<>();
+    protected SchemaRegistryClient schemaRegistryClient;
 
     public SecorSchemaRegistryClient(SecorConfig config) {
         try {
             Properties props = new Properties();
             props.put("schema.registry.url", config.getSchemaRegistryUrl());
-            CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient(config.getSchemaRegistryUrl(), 30);
-            decoder = new KafkaAvroDecoder(schemaRegistryClient);
+            schemaRegistryClient = new CachedSchemaRegistryClient(config.getSchemaRegistryUrl(), 30);
+            init(config);
         } catch (Exception e){
             LOG.error("Error initalizing schema registry", e);
             throw new RuntimeException(e);
         }
     }
 
+    //Allows the SchemaRegistryClient to be mocked in unit tests
+    protected void init(SecorConfig config) {
+        decoder = new KafkaAvroDecoder(schemaRegistryClient);
+    }
+
     public GenericRecord decodeMessage(String topic, byte[] message) {
         GenericRecord record = (GenericRecord) decoder.fromBytes(message);
         Schema schema = record.getSchema();
-        schemas.putIfAbsent(topic, schema);
+        schemas.put(topic, schema);
         return record;
     }
 

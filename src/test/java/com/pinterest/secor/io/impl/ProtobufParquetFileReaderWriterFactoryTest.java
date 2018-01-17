@@ -20,9 +20,10 @@ import static org.junit.Assert.assertArrayEquals;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.parquet.hadoop.ParquetWriter;
 
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -95,5 +96,65 @@ public class ProtobufParquetFileReaderWriterFactoryTest extends TestCase {
         assertEquals(kv2.getOffset(), kvout.getOffset());
         assertArrayEquals(kv2.getValue(), kvout.getValue());
         assertEquals(msg2.getData(), UnitTestMessage3.parseFrom(kvout.getValue()).getData());
+    }
+
+    @Test
+    public void testJsonParquetReadWriteRoundTrip() throws Exception {
+        Map<String, String> classPerTopic = new HashMap<String, String>();
+        classPerTopic.put("test-pb-topic", UnitTestMessage3.class.getName());
+        Map<String, String> formatForAll = new HashMap<String, String>();
+        formatForAll.put("*", "JSON");
+
+        Mockito.when(config.getProtobufMessageClassPerTopic()).thenReturn(classPerTopic);
+        Mockito.when(config.getMessageFormatPerTopic()).thenReturn(formatForAll);
+
+        Mockito.when(config.getFileReaderWriterFactory())
+                .thenReturn(ProtobufParquetFileReaderWriterFactory.class.getName());
+        Mockito.when(ParquetUtil.getParquetBlockSize(config))
+                .thenReturn(ParquetWriter.DEFAULT_BLOCK_SIZE);
+        Mockito.when(ParquetUtil.getParquetPageSize(config))
+                .thenReturn(ParquetWriter.DEFAULT_PAGE_SIZE);
+        Mockito.when(ParquetUtil.getParquetEnableDictionary(config))
+                .thenReturn(ParquetWriter.DEFAULT_IS_DICTIONARY_ENABLED);
+        Mockito.when(ParquetUtil.getParquetValidation(config))
+                .thenReturn(ParquetWriter.DEFAULT_IS_VALIDATING_ENABLED);
+
+
+        LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-pb-topic",
+                new String[] { "part-1" }, 0, 1, 23232, ".log");
+
+        FileWriter fileWriter = ReflectionUtil.createFileWriter(config.getFileReaderWriterFactory(), tempLogFilePath,
+                null, config);
+
+        UnitTestMessage3 protomsg1 = UnitTestMessage3.newBuilder().setData("abc").setTimestamp(1467176315L).build();
+        UnitTestMessage3 protomsg2 = UnitTestMessage3.newBuilder().setData("XYZ").setTimestamp(1467176344L).build();
+
+        Map jsonValues = new HashMap();
+        jsonValues.put("data", "abc");
+        jsonValues.put("timestamp", 1467176315L);
+        JSONObject json = new JSONObject();
+        json.putAll(jsonValues);
+        String msg1 = json.toJSONString();
+        jsonValues.put("data", "XYZ");
+        jsonValues.put("timestamp", 1467176344L);
+        json.putAll(jsonValues);
+        String msg2 = json.toJSONString();
+
+        KeyValue kv1 = (new KeyValue(23232, msg1.getBytes()));
+        KeyValue kv2 = (new KeyValue(23233, msg2.getBytes()));
+        fileWriter.write(kv1);
+        fileWriter.write(kv2);
+        fileWriter.close();
+
+        FileReader fileReader = ReflectionUtil.createFileReader(config.getFileReaderWriterFactory(), tempLogFilePath,
+                null, config);
+
+        KeyValue kvout = fileReader.next();
+        assertEquals(kv1.getOffset(), kvout.getOffset());
+        assertEquals(protomsg1.getData(), UnitTestMessage3.parseFrom(kvout.getValue()).getData());
+
+        kvout = fileReader.next();
+        assertEquals(kv2.getOffset(), kvout.getOffset());
+        assertEquals(protomsg2.getData(), UnitTestMessage3.parseFrom(kvout.getValue()).getData());
     }
 }
