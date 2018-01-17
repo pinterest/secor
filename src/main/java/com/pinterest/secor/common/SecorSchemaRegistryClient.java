@@ -32,7 +32,7 @@ public class SecorSchemaRegistryClient {
         }
     }
 
-    //for unit testing
+    //Allows the SchemaRegistryClient to be mocked in unit tests
     protected void init(SecorConfig config) {
         decoder = new KafkaAvroDecoder(schemaRegistryClient);
     }

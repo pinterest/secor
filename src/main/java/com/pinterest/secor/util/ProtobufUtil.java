@@ -123,7 +123,7 @@ public class ProtobufUtil {
     }
 
     /**
-     * Converts JSON message into a protobuf message
+     * Decodes protobuf message
      *
      * @param topic
      *            Kafka topic name
@@ -149,6 +149,17 @@ public class ProtobufUtil {
         }
     }
 
+    /**
+     * Decodes protobuf message
+     *
+     * @param topic
+     *            Kafka topic name
+     * @param payload
+     *            Byte array containing encoded protobuf
+     * @return protobuf message instance
+     * @throws RuntimeException
+     *             when there's problem decoding protobuf
+     */
     public Message decodeProtobufMessage(String topic, byte[] payload){
         Method parseMethod = allTopics ? messageParseMethodForAll : messageParseMethodByTopic.get(topic);
         try {
@@ -170,10 +181,10 @@ public class ProtobufUtil {
      * @param topic
      *            Kafka topic name
      * @param payload
-     *            Byte array containing encoded protobuf message
+     *            Byte array containing encoded protobuf or JSON message
      * @return protobuf message instance
      * @throws RuntimeException
-     *             when there's problem decoding protobuf message
+     *             when there's problem decoding protobuf or JSON message
      */
     public Message decodeProtobufOrJsonMessage(String topic, byte[] payload) {
         try {
