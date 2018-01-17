@@ -177,6 +177,7 @@ public class ProtobufUtil {
 
     /**
      * Decodes protobuf message
+     * If the secor.topic.message.format property is set for "topic" assume "payload" is JSON
      *
      * @param topic
      *            Kafka topic name
