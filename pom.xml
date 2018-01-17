@@ -428,9 +428,6 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <descriptors>
-                                <descriptor>src/main/assembly/sailthru-secor.xml</descriptor>
-                            </descriptors>
                         </configuration>
                     </execution>
                 </executions>
