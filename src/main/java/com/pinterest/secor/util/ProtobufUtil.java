@@ -140,37 +140,18 @@ public class ProtobufUtil {
             com.google.protobuf.GeneratedMessageV3.Builder builder = (com.google.protobuf.GeneratedMessageV3.Builder) builderGetter.invoke(null);
             jsonParser.merge(new InputStreamReader(new ByteArrayInputStream(payload)), builder);
             return builder.build();
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException("Error parsing protobuf message", e);
-        } catch (InvalidProtocolBufferException e) {
-            LOG.info("Message that barfed: {}", new String(payload, Charsets.UTF_8));
+        } catch (InvalidProtocolBufferException e){
             throw e;
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Error parsing JSON message", e);
         } catch (IOException e) {
-            throw new RuntimeException("Error creating read stream for protobuf message", e);
+            throw new RuntimeException("Error creating read stream for JSON message", e);
         }
     }
 
-    /**
-     * Decodes protobuf message
-     * 
-     * @param topic
-     *            Kafka topic name
-     * @param payload
-     *            Byte array containing encoded protobuf message
-     * @return protobuf message instance
-     * @throws RuntimeException
-     *             when there's problem decoding protobuf message
-     */
-    public Message decodeMessage(String topic, byte[] payload) {
+    public Message decodeProtobufMessage(String topic, byte[] payload){
+        Method parseMethod = allTopics ? messageParseMethodForAll : messageParseMethodByTopic.get(topic);
         try {
-            if (shouldDecodeFromJsonMessage(topic)) {
-                try {
-                    return decodeJsonMessage(topic, payload);
-                } catch (InvalidProtocolBufferException e) {
-                    LOG.info("Trying to write protobuf message");
-                }
-            }
-            Method parseMethod = allTopics ? messageParseMethodForAll : messageParseMethodByTopic.get(topic);
             return (Message) parseMethod.invoke(null, payload);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Can't parse protobuf message, since parseMethod() is not callable. "
@@ -181,6 +162,29 @@ public class ProtobufUtil {
         } catch (InvocationTargetException e) {
             throw new RuntimeException("Error parsing protobuf message", e);
         }
+    }
+
+    /**
+     * Decodes protobuf message
+     *
+     * @param topic
+     *            Kafka topic name
+     * @param payload
+     *            Byte array containing encoded protobuf message
+     * @return protobuf message instance
+     * @throws RuntimeException
+     *             when there's problem decoding protobuf message
+     */
+    public Message decodeProtobufOrJsonMessage(String topic, byte[] payload) {
+        try {
+            if (shouldDecodeFromJsonMessage(topic)) {
+                return decodeJsonMessage(topic, payload);
+            }
+        } catch (InvalidProtocolBufferException e) {
+            //When trimming files, the Uploader will read and then decode messages in protobuf format
+            LOG.debug("Unable to translate JSON string {} to protobuf message", new String(payload, Charsets.UTF_8));
+        }
+        return decodeProtobufMessage(topic, payload);
     }
 
     private boolean shouldDecodeFromJsonMessage(String topic){

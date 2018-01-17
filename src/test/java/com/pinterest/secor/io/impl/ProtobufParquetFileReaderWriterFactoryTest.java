@@ -151,12 +151,10 @@ public class ProtobufParquetFileReaderWriterFactoryTest extends TestCase {
 
         KeyValue kvout = fileReader.next();
         assertEquals(kv1.getOffset(), kvout.getOffset());
-//        assertArrayEquals(kv1.getValue(), kvout.getValue());
         assertEquals(protomsg1.getData(), UnitTestMessage3.parseFrom(kvout.getValue()).getData());
 
         kvout = fileReader.next();
         assertEquals(kv2.getOffset(), kvout.getOffset());
-//        assertArrayEquals(kv2.getValue(), kvout.getValue());
         assertEquals(protomsg2.getData(), UnitTestMessage3.parseFrom(kvout.getValue()).getData());
     }
 }
