@@ -1,10 +1,7 @@
 package com.pinterest.secor.common;
 
-import com.pinterest.secor.io.impl.AvroParquetFileReaderWriterFactory;
-import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
-import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import io.confluent.kafka.serializers.KafkaAvroDecoder;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
@@ -14,20 +11,14 @@ import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.util.Utf8;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.when;
-
-import static org.junit.Assert.*;
 
 @RunWith(PowerMockRunner.class)
 public class SecorSchemaRegistryClientTest extends TestCase {
@@ -80,10 +71,15 @@ public class SecorSchemaRegistryClientTest extends TestCase {
                 .set("data_field_2", "hello")
                 .set("timestamp", 1467176316L)
                 .build();
-        secorSchemaRegistryClient.decodeMessage("test-avr-topic", avroSerializer.serialize("test-avr-topic", record1));
+        GenericRecord output = secorSchemaRegistryClient.decodeMessage("test-avr-topic", avroSerializer.serialize("test-avr-topic", record1));
         assertEquals(secorSchemaRegistryClient.getSchema("test-avr-topic"), schemaV1);
+        assertEquals(output.get("data_field_1"), 1);
+        assertEquals(output.get("timestamp"), 1467176315L);
 
-        secorSchemaRegistryClient.decodeMessage("test-avr-topic", avroSerializer.serialize("test-avr-topic", record2));
+        output = secorSchemaRegistryClient.decodeMessage("test-avr-topic", avroSerializer.serialize("test-avr-topic", record2));
         assertEquals(secorSchemaRegistryClient.getSchema("test-avr-topic"), schemaV2);
+        assertEquals(output.get("data_field_1"), 1);
+        assertTrue(StringUtils.equals((output.get("data_field_2")).toString(), "hello"));
+        assertEquals(output.get("timestamp"), 1467176316L);
     }
 }
