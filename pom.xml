@@ -425,9 +425,9 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
+                            <descriptors>
+                                <descriptor>src/main/assembly/secor.xml</descriptor>
+                            </descriptors>
                         </configuration>
                     </execution>
                 </executions>
