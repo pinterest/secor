@@ -64,6 +64,10 @@ if [[ ! -z "$S3_PATH" ]]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.s3.path=$S3_PATH"
     echo "secor.s3.path=$S3_PATH"
 fi
+if [[ ! -z "$SECOR_SCHEMA_REGISTRY" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dschema.registry.url=$SECOR_SCHEMA_REGISTRY"
+    echo "secor.s3.path=$S3_PATH"
+fi
 
 
 

@@ -101,7 +101,7 @@ public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterF
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            Message message = protobufUtil.decodeMessage(topic, keyValue.getValue());
+            Message message = protobufUtil.decodeProtobufOrJsonMessage(topic, keyValue.getValue());
             writer.write(message);
         }
 

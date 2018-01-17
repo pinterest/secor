@@ -229,6 +229,8 @@ public class SecorConfig {
         return getInt("zookeeper.sync.time.ms");
     }
 
+    public String getSchemaRegistryUrl(){ return getString("schema.registry.url"); }
+
     public String getMessageParserClass() {
         return getString("secor.message.parser.class");
     }
@@ -274,7 +276,7 @@ public class SecorConfig {
     }
 
     public String getAwsSessionToken() {
-        return getString("aws.session.token");
+        return getString("aws.session.token", "");
     }
 
     public String getAwsEndpoint() {
@@ -514,6 +516,18 @@ public class SecorConfig {
             protobufClasses.put(key.substring(prefix.length() + 1), className);
         }
         return protobufClasses;
+    }
+
+    public Map<String, String> getMessageFormatPerTopic() {
+        String prefix = "secor.topic.message.format";
+        Iterator<String> keys = mProperties.getKeys(prefix);
+        Map<String, String> topicMessageFormats = new HashMap<String, String>();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String topic = mProperties.getString(key);
+            topicMessageFormats.put(key.substring(prefix.length() + 1), topic);
+        }
+        return topicMessageFormats;
     }
 
     public Map<String, String> getThriftMessageClassPerTopic() {
