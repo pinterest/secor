@@ -72,7 +72,7 @@ public class ProtobufMessageParser extends TimestampedMessageParser {
 
     public long extractTimestampMillis(String topic, final byte[] bytes) throws IOException {
         if (timestampFieldPath != null) {
-            com.google.protobuf.Message decodedMessage = protobufUtil.decodeMessage(topic,
+            com.google.protobuf.Message decodedMessage = protobufUtil.decodeProtobufOrJsonMessage(topic,
                     bytes);
             int i = 0;
             for (; i < timestampFieldPath.length - 1; ++i) {
