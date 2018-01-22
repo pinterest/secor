@@ -186,6 +186,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Wego](https://www.wego.com)
   * [GO-JEK](http://gojekengineering.com/)
   * [Branch](http://branch.io)
+  * [Viacom](http://www.viacom.com)
 
 ## Help
 
