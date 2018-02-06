@@ -323,6 +323,10 @@ public class SecorConfig {
         return getString("swift.tenant");
     }
 
+    public String getSwiftRegion() {
+        return getString("swift.region");
+    }
+
     public String getSwiftUsername() {
         return getString("swift.username");
     }
