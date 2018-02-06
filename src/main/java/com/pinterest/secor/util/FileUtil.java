@@ -60,6 +60,7 @@ public class FileUtil {
                 mConf.set("fs.swift.service.GENERICPROJECT.auth.url", config.getSwiftAuthUrl());
                 mConf.set("fs.swift.service.GENERICPROJECT.username", config.getSwiftUsername());
                 mConf.set("fs.swift.service.GENERICPROJECT.tenant", config.getSwiftTenant());
+                mConf.set("fs.swift.service.GENERICPROJECT.region", config.getSwiftRegion());
                 mConf.set("fs.swift.service.GENERICPROJECT.http.port", config.getSwiftPort());
                 mConf.set("fs.swift.service.GENERICPROJECT.use.get.auth", config.getSwiftGetAuth());
                 mConf.set("fs.swift.service.GENERICPROJECT.public", config.getSwiftPublic());
