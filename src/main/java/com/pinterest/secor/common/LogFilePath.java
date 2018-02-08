@@ -56,6 +56,7 @@ public class LogFilePath {
     private final String mExtension;
     private Map<String,String> customTopicsNames;
     private MessageDigest messageDigest;
+    private ArrayList<String> elements;
 
 
     public LogFilePath(String prefix, String topic, String[] partitions, int generation,
@@ -147,15 +148,16 @@ public class LogFilePath {
     }
 
     public String getLogFileParentDir() {
-    	ArrayList<String> elements = new ArrayList<String>();
+        elements = new ArrayList<String>();
         if (mPrefix != null && mPrefix.length() > 0) {
             elements.add(mPrefix);
         }
         if (mTopic != null && mTopic.length() > 0) {
         	if (getCustomTopicsNames() != null &&
-        			getCustomTopicsNames().isEmpty() == false  &&
-        			getCustomTopicsNames().get(mTopic) != null && 
-                    getCustomTopicsNames().get(mTopic).length() > 0) {
+        		!getCustomTopicsNames().isEmpty() &&
+        		getCustomTopicsNames().get(mTopic) != null && 
+                getCustomTopicsNames().get(mTopic).length() > 0) {
+        		
         		elements.add(getCustomTopicsNames().get(mTopic));
 			} else {
 				elements.add(mTopic);
@@ -165,7 +167,7 @@ public class LogFilePath {
     }
     
     public String getLogFileDir() {
-        ArrayList<String> elements = new ArrayList<String>();
+        elements = new ArrayList<String>();
         elements.add(getLogFileParentDir());
         for (String partition : mPartitions) {
             elements.add(partition);
