@@ -154,10 +154,10 @@ public class LogFilePath {
         }
         if (mTopic != null && mTopic.length() > 0) {
         	if (getCustomTopicsNames() != null &&
-        		!getCustomTopicsNames().isEmpty() &&
-        		getCustomTopicsNames().get(mTopic) != null && 
+                !getCustomTopicsNames().isEmpty() &&
+                getCustomTopicsNames().get(mTopic) != null &&
                 getCustomTopicsNames().get(mTopic).length() > 0) {
-        		
+
         		elements.add(getCustomTopicsNames().get(mTopic));
 			} else {
 				elements.add(mTopic);
