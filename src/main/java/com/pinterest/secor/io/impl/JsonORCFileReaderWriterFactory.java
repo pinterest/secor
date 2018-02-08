@@ -10,13 +10,13 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.Lz4Codec;
 import org.apache.hadoop.io.compress.SnappyCodec;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.apache.orc.impl.ZlibCodec;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONWriter;
 import org.slf4j.Logger;
@@ -181,7 +181,10 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
             return CompressionKind.LZ4;
         else if (codec instanceof SnappyCodec)
             return CompressionKind.SNAPPY;
-        else if (codec instanceof ZlibCodec)
+        // although GZip and ZLIB are not same thing
+        // there is no better named codec for this case,
+        // use hadoop Gzip codec to enable ORC ZLIB compression
+        else if (codec instanceof GzipCodec)
             return CompressionKind.ZLIB;
         else
             return CompressionKind.NONE;
