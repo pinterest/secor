@@ -47,7 +47,7 @@ public class SecorConfig {
             try {
                 properties = new PropertiesConfiguration(configProperty);
             } catch (ConfigurationException e) {
-                throw new RuntimeException("Error loading configuration from " + configProperty);
+                throw new RuntimeException("Error loading configuration from " + configProperty, e);
             }
 
             for (final Map.Entry<Object, Object> entry : systemProperties.entrySet()) {
