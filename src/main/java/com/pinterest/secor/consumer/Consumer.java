@@ -142,6 +142,10 @@ public class Consumer extends Thread {
             ParsedMessage parsedMessage = null;
             try {
                 Message transformedMessage = mMessageTransformer.transform(rawMessage);
+                if (transformedMessage == null) {
+                    return true;
+                }
+
                 parsedMessage = mMessageParser.parse(transformedMessage);
                 final double DECAY = 0.999;
                 mUnparsableMessages *= DECAY;
