@@ -7,6 +7,8 @@ import java.nio.ByteBuffer;
 
 import com.google.protobuf.Message;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
+import com.pinterest.secor.util.FileUtil;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
@@ -18,6 +20,7 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
@@ -39,7 +42,7 @@ import org.slf4j.LoggerFactory;
 
 public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AvroParquetFileReaderWriterFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AvroFileReaderWriterFactory.class);
     protected final int blockSize;
     protected final int pageSize;
     protected final boolean enableDictionary;
@@ -79,14 +82,17 @@ public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
         private DataFileReader<GenericRecord> reader;
         private SpecificDatumWriter<GenericRecord> writer;
         private long offset;
+        private File file;
 
         public AvroFileReader(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
+            file = new File(logFilePath.getLogFilePath() + ".avro");
+            file.getParentFile().mkdirs();
             String topic = logFilePath.getTopic();
             Schema schema = schemaRegistryClient.getSchema(topic);
 
             DatumReader datumReader = new SpecificDatumReader(schema);
             try {
-                reader = new DataFileReader(new File(logFilePath.getLogFilePath()), datumReader);
+                reader = new DataFileReader(file, datumReader);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -120,15 +126,25 @@ public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
 
         public AvroFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             file = new File(logFilePath.getLogFilePath());
+            file.getParentFile().mkdirs();
             LOG.debug("Creating Brand new Writer for path {}", logFilePath.getLogFilePath());
-            CompressionCodecName codecName = CompressionCodecName
-                    .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
             Schema schema = schemaRegistryClient.getSchema(topic);
             SpecificDatumWriter specificDatumWriter= new SpecificDatumWriter(schema);
             writer = new DataFileWriter(specificDatumWriter);
-            writer.setCodec(CodecFactory.fromString(codecName.name()));
+            writer.setCodec(getCodecFactory(codec));
             writer.create(schema, file);
+        }
+
+        private CodecFactory getCodecFactory(CompressionCodec codec) {
+            CompressionCodecName codecName = CompressionCodecName
+                    .fromCompressionCodec(codec != null ? codec.getClass() : null);
+            try {
+                return CodecFactory.fromString(codecName.name().toLowerCase());
+            } catch (AvroRuntimeException e) {
+                LOG.error("Error creating codec factory", e);
+            }
+            return CodecFactory.fromString("null");
         }
 
         @Override
