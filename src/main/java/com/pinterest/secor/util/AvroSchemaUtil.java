@@ -9,6 +9,6 @@ public class AvroSchemaUtil {
     }
 
     public static String getAvroSubjectOverride(SecorConfig config) {
-        return config.getString("avro.schema.subject.override", "");
+        return config.getString("avro.schema.subject.override");
     }
 }
