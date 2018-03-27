@@ -77,18 +77,12 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     }
 
     protected Schema getSchema(String topic) {
-        Schema schema;
         if (schemaSubjectOverride != null && !schemaSubjectOverride.isEmpty()) {
-            schema = schemaRegistryClient.getSchema(schemaSubjectOverride);
-        } else {
-            try {
-                schema = schemaRegistryClient.getSchema(topic);
-            } catch (IllegalStateException exc) {
-                topic += schemaSubjectSuffix;
-                schema = schemaRegistryClient.getSchema(topic);
-            }
+            topic = schemaSubjectOverride;
+        } else if (schemaSubjectSuffix != null && !schemaSubjectSuffix.isEmpty()) {
+            topic += schemaSubjectSuffix;
         }
-        return schema;
+        return schemaRegistryClient.getSchema(topic);
     }
 
     protected class AvroParquetFileReader implements FileReader {
