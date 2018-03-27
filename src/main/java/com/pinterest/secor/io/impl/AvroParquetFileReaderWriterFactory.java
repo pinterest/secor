@@ -6,11 +6,10 @@ import java.nio.ByteBuffer;
 
 import com.google.protobuf.Message;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
-import com.pinterest.secor.util.AvroSchemaUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.*;
+import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
@@ -22,10 +21,11 @@ import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;
+import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.AvroSchemaUtil;
 import com.pinterest.secor.util.ParquetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +37,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     protected final int pageSize;
     protected final boolean enableDictionary;
     protected final boolean validating;
-    protected final String schemaSuffix;
-    protected final String schemaOverride;
+    protected final String schemaSubjectSuffix;
+    protected final String schemaSubjectOverride;
     protected SecorSchemaRegistryClient schemaRegistryClient;
 
     public AvroParquetFileReaderWriterFactory(SecorConfig config) {
@@ -46,8 +46,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         pageSize = ParquetUtil.getParquetPageSize(config);
         enableDictionary = ParquetUtil.getParquetEnableDictionary(config);
         validating = ParquetUtil.getParquetValidation(config);
-        schemaSuffix = AvroSchemaUtil.getAvroSubjectSuffix(config);
-        schemaOverride = AvroSchemaUtil.getAvroSubjectOverride(config);
+        schemaSubjectSuffix = AvroSchemaUtil.getAvroSubjectSuffix(config);
+        schemaSubjectOverride = AvroSchemaUtil.getAvroSubjectOverride(config);
         schemaRegistryClient = new SecorSchemaRegistryClient(config);
     }
 
@@ -71,6 +71,21 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         return serialized.array();
     }
 
+    protected Schema getSchema(String topic) {
+        Schema schema;
+        if (schemaSubjectOverride != null && !schemaSubjectOverride.isEmpty()) {
+            schema = schemaRegistryClient.getSchema(schemaSubjectOverride);
+        } else {
+            try {
+                schema = schemaRegistryClient.getSchema(topic);
+            } catch (IllegalStateException exc) {
+                topic += schemaSubjectSuffix;
+                schema = schemaRegistryClient.getSchema(topic);
+            }
+        }
+        return schema;
+    }
+
     protected class AvroParquetFileReader implements FileReader {
 
         private ParquetReader<GenericRecord> reader;
@@ -80,19 +95,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         public AvroParquetFileReader(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
             String topic = logFilePath.getTopic();
-            Schema schema;
-            if (!schemaOverride.isEmpty()) {
-                schema = schemaRegistryClient.getSchema(schemaOverride);
-            } else {
-                try {
-                    schema = schemaRegistryClient.getSchema(topic);
-                } catch (IllegalStateException exc) {
-                    topic += schemaSuffix;
-                    schema = schemaRegistryClient.getSchema(topic);
-                }
-            }
             reader = AvroParquetReader.<GenericRecord>builder(path).build();
-            writer = new SpecificDatumWriter(schema);
+            writer = new SpecificDatumWriter(getSchema(topic));
             offset = logFilePath.getOffset();
         }
 
@@ -116,6 +120,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         private ParquetWriter writer;
         private String topic;
+        private Schema schema;
 
         public AvroParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
@@ -123,18 +128,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
             CompressionCodecName codecName = CompressionCodecName
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
+            schema = getSchema(topic);
 
-            Schema schema;
-            if (!schemaOverride.isEmpty()) {
-                schema = schemaRegistryClient.getSchema(schemaOverride);
-            } else {
-                try {
-                    schema = schemaRegistryClient.getSchema(topic);
-                } catch (IllegalStateException exc) {
-                    topic += schemaSuffix;
-                    schema = schemaRegistryClient.getSchema(topic);
-                }
-            }
             // Not setting blockSize, pageSize, enableDictionary, and validating
             writer = AvroParquetWriter.builder(path)
                     .withSchema(schema)
@@ -149,7 +144,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            GenericRecord record = schemaRegistryClient.decodeMessage(topic, keyValue.getValue());
+            GenericRecord record = decodeMessage(keyValue);
             LOG.trace("Writing record {}", record);
             if (record != null){
                 writer.write(record);
@@ -159,6 +154,16 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         @Override
         public void close() throws IOException {
             writer.close();
+        }
+
+        protected GenericRecord decodeMessage(KeyValue keyValue) throws IOException {
+            byte[] value = keyValue.getValue();
+            if (value.length > 1 && value[0] == 0) {
+                return schemaRegistryClient.decodeMessage(topic, value);
+            }
+            DatumReader<GenericRecord> datumReader = new SpecificDatumReader<>(schema);
+            BinaryDecoder binaryDecoder = new DecoderFactory().binaryDecoder(value, null);
+            return datumReader.read(null, binaryDecoder);
         }
     }
 }
