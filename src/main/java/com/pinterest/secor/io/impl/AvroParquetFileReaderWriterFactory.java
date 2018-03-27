@@ -80,7 +80,17 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         public AvroParquetFileReader(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
             String topic = logFilePath.getTopic();
-            Schema schema = schemaRegistryClient.getSchema(topic);
+            Schema schema;
+            if (!schemaOverride.isEmpty()) {
+                schema = schemaRegistryClient.getSchema(schemaOverride);
+            } else {
+                try {
+                    schema = schemaRegistryClient.getSchema(topic);
+                } catch (IllegalStateException exc) {
+                    topic += schemaSuffix;
+                    schema = schemaRegistryClient.getSchema(topic);
+                }
+            }
             reader = AvroParquetReader.<GenericRecord>builder(path).build();
             writer = new SpecificDatumWriter(schema);
             offset = logFilePath.getOffset();
