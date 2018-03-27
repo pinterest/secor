@@ -55,7 +55,7 @@ public class AvroParquetFileReaderWriterFactoryTest extends TestCase {
         msg1 = builder.set("data", "foo").set("timestamp", 1467176315L).build();
         msg2 = builder.set("data", "bar").set("timestamp", 1467176344L).build();
 
-        writer = new SpecificDatumWriter(schema);
+        writer = new SpecificDatumWriter<>(schema);
 
         config = Mockito.mock(SecorConfig.class);
         when(config.getSchemaRegistryUrl()).thenReturn("");
