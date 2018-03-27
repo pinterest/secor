@@ -71,6 +71,11 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         return serialized.array();
     }
 
+    protected static GenericRecord deserializeAvroRecord(SpecificDatumReader<GenericRecord> reader, byte[] value) throws IOException {
+        BinaryDecoder binaryDecoder = new DecoderFactory().binaryDecoder(value, null);
+        return reader.read(null, binaryDecoder);
+    }
+
     protected Schema getSchema(String topic) {
         Schema schema;
         if (schemaSubjectOverride != null && !schemaSubjectOverride.isEmpty()) {
@@ -96,7 +101,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
             Path path = new Path(logFilePath.getLogFilePath());
             String topic = logFilePath.getTopic();
             reader = AvroParquetReader.<GenericRecord>builder(path).build();
-            writer = new SpecificDatumWriter(getSchema(topic));
+            writer = new SpecificDatumWriter<>(getSchema(topic));
             offset = logFilePath.getOffset();
         }
 
@@ -119,6 +124,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     protected class AvroParquetFileWriter implements FileWriter {
 
         private ParquetWriter writer;
+        private SpecificDatumReader<GenericRecord> datumReader;
         private String topic;
         private Schema schema;
 
@@ -129,6 +135,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
             schema = getSchema(topic);
+            datumReader = new SpecificDatumReader<>(schema);
 
             // Not setting blockSize, pageSize, enableDictionary, and validating
             writer = AvroParquetWriter.builder(path)
@@ -161,9 +168,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
             if (value.length > 1 && value[0] == 0) {
                 return schemaRegistryClient.decodeMessage(topic, value);
             }
-            DatumReader<GenericRecord> datumReader = new SpecificDatumReader<>(schema);
-            BinaryDecoder binaryDecoder = new DecoderFactory().binaryDecoder(value, null);
-            return datumReader.read(null, binaryDecoder);
+            return deserializeAvroRecord(datumReader, value);
         }
     }
 }
