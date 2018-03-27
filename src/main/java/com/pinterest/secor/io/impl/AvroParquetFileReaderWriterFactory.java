@@ -76,6 +76,14 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         return reader.read(null, binaryDecoder);
     }
 
+    protected GenericRecord decodeMessage(byte[] value, String topic, SpecificDatumReader<GenericRecord> reader) throws IOException {
+        if (value.length > 1 && value[0] == 0) {
+            return schemaRegistryClient.decodeMessage(topic, value);
+        } else {
+            return deserializeAvroRecord(reader, value);
+        }
+    }
+
     protected Schema getSchema(String topic) {
         if (schemaSubjectOverride != null && !schemaSubjectOverride.isEmpty()) {
             topic = schemaSubjectOverride;
@@ -145,7 +153,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            GenericRecord record = decodeMessage(keyValue);
+            GenericRecord record = decodeMessage(keyValue.getValue(), topic, datumReader);
             LOG.trace("Writing record {}", record);
             if (record != null){
                 writer.write(record);
@@ -155,14 +163,6 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         @Override
         public void close() throws IOException {
             writer.close();
-        }
-
-        protected GenericRecord decodeMessage(KeyValue keyValue) throws IOException {
-            byte[] value = keyValue.getValue();
-            if (value.length > 1 && value[0] == 0) {
-                return schemaRegistryClient.decodeMessage(topic, value);
-            }
-            return deserializeAvroRecord(datumReader, value);
         }
     }
 }
