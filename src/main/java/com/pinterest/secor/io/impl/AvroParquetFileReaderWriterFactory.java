@@ -87,9 +87,9 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     }
 
     protected Schema getSchema(String topic) {
-        if (schemaSubjectOverride != null && !schemaSubjectOverride.isEmpty()) {
+        if (!schemaSubjectOverride.isEmpty()) {
             topic = schemaSubjectOverride;
-        } else if (schemaSubjectSuffix != null && !schemaSubjectSuffix.isEmpty()) {
+        } else if (!schemaSubjectSuffix.isEmpty()) {
             topic += schemaSubjectSuffix;
         }
         return schemaRegistryClient.getSchema(topic);
