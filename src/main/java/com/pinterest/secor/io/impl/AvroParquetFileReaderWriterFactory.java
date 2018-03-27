@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 
 import com.google.protobuf.Message;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
+import com.pinterest.secor.util.AvroSchemaUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.Encoder;
@@ -36,6 +37,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     protected final int pageSize;
     protected final boolean enableDictionary;
     protected final boolean validating;
+    protected final String schemaSuffix;
+    protected final String schemaOverride;
     protected SecorSchemaRegistryClient schemaRegistryClient;
 
     public AvroParquetFileReaderWriterFactory(SecorConfig config) {
@@ -43,6 +46,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         pageSize = ParquetUtil.getParquetPageSize(config);
         enableDictionary = ParquetUtil.getParquetEnableDictionary(config);
         validating = ParquetUtil.getParquetValidation(config);
+        schemaSuffix = AvroSchemaUtil.getAvroSubjectSuffix(config);
+        schemaOverride = AvroSchemaUtil.getAvroSubjectOverride(config);
         schemaRegistryClient = new SecorSchemaRegistryClient(config);
     }
 
@@ -110,11 +115,15 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
             topic = logFilePath.getTopic();
 
             Schema schema;
-            try {
-                schema = schemaRegistryClient.getSchema(topic);
-            } catch (IllegalStateException exc) {
-                topic += "-value";
-                schema = schemaRegistryClient.getSchema(topic);
+            if (!schemaOverride.isEmpty()) {
+                schema = schemaRegistryClient.getSchema(schemaOverride);
+            } else {
+                try {
+                    schema = schemaRegistryClient.getSchema(topic);
+                } catch (IllegalStateException exc) {
+                    topic += schemaSuffix;
+                    schema = schemaRegistryClient.getSchema(topic);
+                }
             }
             // Not setting blockSize, pageSize, enableDictionary, and validating
             writer = AvroParquetWriter.builder(path)

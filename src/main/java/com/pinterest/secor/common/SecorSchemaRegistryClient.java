@@ -1,7 +1,6 @@
 package com.pinterest.secor.common;
 
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
-import io.confluent.kafka.schemaregistry.client.SchemaMetadata;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import io.confluent.kafka.serializers.KafkaAvroDecoder;
@@ -60,8 +59,9 @@ public class SecorSchemaRegistryClient {
     }
 
     private Schema lookupSchema(String topic) throws IOException, RestClientException {
-        SchemaMetadata metadata = schemaRegistryClient.getLatestSchemaMetadata(topic);
-        String schema_string = metadata.getSchema();
-        return (new Schema.Parser()).parse(schema_string);
+        String schema_string = schemaRegistryClient.getLatestSchemaMetadata(topic).getSchema();
+        Schema schema = (new Schema.Parser()).parse(schema_string);
+        schemas.put(topic, schema);
+        return schema;
     }
 }
