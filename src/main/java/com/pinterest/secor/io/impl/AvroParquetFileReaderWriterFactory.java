@@ -43,7 +43,6 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     protected final String schemaSubjectSuffix;
     protected final String schemaSubjectOverride;
     protected SecorSchemaRegistryClient schemaRegistryClient;
-    protected DecoderFactory decoderFactory;
 
     public AvroParquetFileReaderWriterFactory(SecorConfig config) {
         blockSize = ParquetUtil.getParquetBlockSize(config);
@@ -53,7 +52,6 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         schemaSubjectSuffix = AvroSchemaUtil.getAvroSubjectSuffix(config);
         schemaSubjectOverride = AvroSchemaUtil.getAvroSubjectOverride(config);
         schemaRegistryClient = new SecorSchemaRegistryClient(config);
-        decoderFactory = new DecoderFactory();
     }
 
     @Override
@@ -76,9 +74,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         return serialized.array();
     }
 
-    protected static GenericRecord deserializeAvroRecord(DecoderFactory decoderFactory, SpecificDatumReader<GenericRecord> reader,
-                                                         byte[] value) throws IOException {
-        BinaryDecoder binaryDecoder = decoderFactory.binaryDecoder(value, null);
+    protected static GenericRecord deserializeAvroRecord(SpecificDatumReader<GenericRecord> reader, byte[] value) throws IOException {
+        BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(value, null);
         return reader.read(null, binaryDecoder);
     }
 
@@ -88,7 +85,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         if (value.length > 5 && value[0] == 0) {
             return schemaRegistryClient.decodeMessage(topic, value);
         } else {
-            return deserializeAvroRecord(decoderFactory, reader, value);
+            return deserializeAvroRecord(reader, value);
         }
     }
 
