@@ -84,6 +84,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
     protected GenericRecord decodeMessage(byte[] value, String topic, SpecificDatumReader<GenericRecord> reader) throws IOException {
         // Avro schema registry header format is a "Magic Byte" that equals 0 followed by a 4-byte int
+        // https://docs.confluent.io/current/schema-registry/docs/serializer-formatter.html#wire-format
         if (value.length > 5 && value[0] == 0) {
             return schemaRegistryClient.decodeMessage(topic, value);
         } else {
