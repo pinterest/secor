@@ -14,7 +14,7 @@ public class IdentityMessageTransformer implements MessageTransformer {
     /**
      * Constructor
      * 
-     * @param config
+     * @param config secor config
      */
     public IdentityMessageTransformer(SecorConfig config) {
         mConfig = config;

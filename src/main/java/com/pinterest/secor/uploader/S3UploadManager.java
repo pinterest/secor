@@ -56,11 +56,11 @@ import com.pinterest.secor.util.FileUtil;
  * encryption to use. Supported options are:
  * <code>S3</code>, <code>KMS</code> and <code>customer</code>. See AWS
  * documentation for Server-Side Encryption (SSE) for details on these
- * options.<br/>
- * Leave blank to use unencrypted uploads.<br/>
+ * options.<br>
+ * Leave blank to use unencrypted uploads.<br>
  * If set to <code>KMS</code>, the <code>aws.sse.kms.key</code> property
  * specifies the id of the key to use. Leave unset to use the default AWS
- * key.<br/>
+ * key.<br>
  * If set to <code>customer</code>, the <code>aws.sse.customer.key</code>
  * property must be set to the base64 encoded customer key to use.
  * </p>

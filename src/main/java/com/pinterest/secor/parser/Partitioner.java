@@ -81,7 +81,8 @@ public interface Partitioner {
      * @param lastMessages  the last message at the tail of the queue
      * @param committedMessages  the message secor consumed and committed
      *
-     * @return  a String array to represent a file folder partition to finalize up to
+     * @return a String array to represent a file folder partition to finalize up to
+     * @throws Exception on error
      */
     String[] getFinalizedUptoPartitions(List<Message> lastMessages,
                                         List<Message> committedMessages) throws Exception;
@@ -93,12 +94,13 @@ public interface Partitioner {
      * Note that the implementation might return the previous sequence in daily/mixed forms, e.g.
      * [dt=2015-07-07, hr=01]
      * [dt=2015-07-07, hr=00]
-     * [dt=2015-07-07]        <-- dt folder in between
+     * [dt=2015-07-07]        -- dt folder in between
      * [dt=2015-07-06, hr=23]
      * [dt=2015-07-07, hr=22]
      *
-     * @param partition
-     * @return
+     * @param partition partitions
+     * @return the previous partition out of the incoming partition.
+     * @throws Exception on error
      */
     String[] getPreviousPartitions(String[] partition) throws Exception;
 }

@@ -123,7 +123,10 @@ public class Uploader {
 
     /**
      * This method is intended to be overwritten in tests.
-     * @throws Exception
+     * @param srcPath source Path
+     * @param codec compression codec
+     * @return FileReader created file reader
+     * @throws Exception on error
      */
     protected FileReader createReader(LogFilePath srcPath, CompressionCodec codec) throws Exception {
         return ReflectionUtil.createFileReader(

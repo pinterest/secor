@@ -33,7 +33,7 @@ import net.minidev.json.JSONValue;
  * DateMessageParser extracts the timestamp field (specified by 'message.timestamp.name')
  *  and the date pattern (specified by 'message.timestamp.input.pattern')
  *
- * @see http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html
+ * @see java.text.SimpleDateFormat
  *
  * @author Lucas Zago (lucaszago@gmail.com)
  *

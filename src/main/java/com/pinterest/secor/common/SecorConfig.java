@@ -65,7 +65,7 @@ public class SecorConfig {
     /**
      * Exposed for testability
      *
-     * @param properties
+     * @param properties properties config
      */
     public SecorConfig(PropertiesConfiguration properties) {
         mProperties = properties;
@@ -623,9 +623,9 @@ public class SecorConfig {
      * a.b.e=val3
      * 
      * If prefix is a.b then,
-     * These will be fetched as a map {c => val1, d => val2, e => val3}
+     * These will be fetched as a map {c = val1, d = val2, e = val3}
      * 
-     * @param prefix
+     * @param prefix property prefix
      * @return
      */
     public Map<String, String> getPropertyMapForPrefix(String prefix) {

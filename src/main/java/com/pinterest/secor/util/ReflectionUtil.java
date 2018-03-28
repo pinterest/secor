@@ -49,7 +49,7 @@ public class ReflectionUtil {
      * @param className The class name of a subclass of UploadManager
      * @param config The SecorCondig to initialize the UploadManager with
      * @return an UploadManager instance with the runtime type of the class passed by name
-     * @throws Exception
+     * @throws Exception on error
      */
     public static UploadManager createUploadManager(String className,
                                                     SecorConfig config) throws Exception {
@@ -71,7 +71,7 @@ public class ReflectionUtil {
      *
      * @param className     The class name of a subclass of Uploader
      * @return an UploadManager instance with the runtime type of the class passed by name
-     * @throws Exception
+     * @throws Exception on error
      */
     public static Uploader createUploader(String className) throws Exception {
         Class<?> clazz = Class.forName(className);
@@ -93,7 +93,7 @@ public class ReflectionUtil {
      * @param className The class name of a subclass of MessageParser
      * @param config The SecorCondig to initialize the MessageParser with
      * @return a MessageParser instance with the runtime type of the class passed by name
-     * @throws Exception
+     * @throws Exception on error
      */
     public static MessageParser createMessageParser(String className,
                                                     SecorConfig config) throws Exception {
@@ -145,7 +145,7 @@ public class ReflectionUtil {
      * @param codec an instance CompressionCodec to compress the file written with, or null for no compression
      * @param config The SecorCondig to initialize the FileWriter with
      * @return a FileWriter specialised to write the type of files supported by the FileReaderWriterFactory
-     * @throws Exception
+     * @throws Exception on error
      */
     public static FileWriter createFileWriter(String className, LogFilePath logFilePath,
                                               CompressionCodec codec,
@@ -162,7 +162,7 @@ public class ReflectionUtil {
      * @param codec an instance CompressionCodec to decompress the file being read, or null for no compression
      * @param config The SecorCondig to initialize the FileReader with
      * @return a FileReader specialised to read the type of files supported by the FileReaderWriterFactory
-     * @throws Exception
+     * @throws Exception on error
      */
     public static FileReader createFileReader(String className, LogFilePath logFilePath,
                                               CompressionCodec codec,
@@ -180,10 +180,10 @@ public class ReflectionUtil {
      *
      * See the secor.message.transformer.class config option.
      *
-     * @param className
-     * @param config
-     * @return
-     * @throws Exception
+     * @param className class name
+     * @param config secor config
+     * @return MessageTransformer
+     * @throws Exception on error
      */
     public static MessageTransformer createMessageTransformer(
             String className, SecorConfig config) throws Exception {
@@ -233,10 +233,10 @@ public class ReflectionUtil {
      *
      * See the secor.orc.schema.provider config option.
      *
-     * @param className
-     * @param config
-     * @return
-     * @throws Exception
+     * @param className class name
+     * @param config secor config
+     * @return ORCSchemaProvider
+     * @throws Exception on error
      */
     public static ORCScehmaProvider createORCSchemaProvider(
             String className, SecorConfig config) throws Exception {
