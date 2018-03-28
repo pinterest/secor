@@ -8,7 +8,7 @@ import com.google.protobuf.Message;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -75,8 +75,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     }
 
     protected static GenericRecord deserializeAvroRecord(SpecificDatumReader<GenericRecord> reader, byte[] value) throws IOException {
-        BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(value, null);
-        return reader.read(null, binaryDecoder);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(value, null);
+        return reader.read(null, decoder);
     }
 
     protected GenericRecord decodeMessage(byte[] value, String topic, SpecificDatumReader<GenericRecord> reader) throws IOException {
