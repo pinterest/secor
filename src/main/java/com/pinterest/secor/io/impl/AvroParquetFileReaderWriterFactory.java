@@ -8,7 +8,10 @@ import com.google.protobuf.Message;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.*;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.Encoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.hadoop.fs.Path;
@@ -73,13 +76,15 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         return serialized.array();
     }
 
-    protected static GenericRecord deserializeAvroRecord(DecoderFactory decoderFactory, SpecificDatumReader<GenericRecord> reader, byte[] value) throws IOException {
+    protected static GenericRecord deserializeAvroRecord(DecoderFactory decoderFactory, SpecificDatumReader<GenericRecord> reader,
+                                                         byte[] value) throws IOException {
         BinaryDecoder binaryDecoder = decoderFactory.binaryDecoder(value, null);
         return reader.read(null, binaryDecoder);
     }
 
     protected GenericRecord decodeMessage(byte[] value, String topic, SpecificDatumReader<GenericRecord> reader) throws IOException {
-        if (value.length > 1 && value[0] == 0) {
+        // Avro schema registry header format is a "Magic Byte" that equals 0 followed by a 4-byte int
+        if (value.length > 5 && value[0] == 0) {
             return schemaRegistryClient.decodeMessage(topic, value);
         } else {
             return deserializeAvroRecord(decoderFactory, reader, value);
