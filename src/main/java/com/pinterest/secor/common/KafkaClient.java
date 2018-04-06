@@ -166,10 +166,11 @@ public class KafkaClient {
 
     private SimpleConsumer createConsumer(TopicPartition topicPartition) {
         HostAndPort leader = findLeader(topicPartition);
-        LOG.debug("leader for topic {} partition {} is {}", topicPartition.getTopic(), topicPartition.getPartition(), leader);
         if (leader == null) {
+            LOG.warn("no leader for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
             return null;
         }
+        LOG.debug("leader for topic {} partition {} is {}", topicPartition.getTopic(), topicPartition.getPartition(), leader);
         final String clientName = getClientName(topicPartition);
         return createConsumer(leader.getHostText(), leader.getPort(), clientName);
     }
