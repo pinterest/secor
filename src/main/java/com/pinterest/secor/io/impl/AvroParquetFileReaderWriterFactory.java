@@ -92,14 +92,16 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         }
     }
 
+    protected String getSchemaSubjectOverride(String topic) {
+        String subjectOverride = schemaSubjectOverrideTopics.get(topic);
+        return (null != subjectOverride) ? subjectOverride : schemaSubjectOverrideGlobal;
+    }
+
     protected Schema getSchema(String topic) {
-        if (!schemaSubjectOverrideGlobal.isEmpty()) {
-            topic = schemaSubjectOverrideGlobal;
-        }
-        else if (!schemaSubjectOverrideTopics.getOrDefault(topic, "").isEmpty()) {
-            topic = schemaSubjectOverrideTopics.get(topic);
-        }
-        else if (!schemaSubjectSuffix.isEmpty()) {
+        String subjectOverride = getSchemaSubjectOverride(topic);
+        if (!subjectOverride.isEmpty()) {
+            topic = subjectOverride;
+        } else if (!schemaSubjectSuffix.isEmpty()) {
             topic += schemaSubjectSuffix;
         }
         return schemaRegistryClient.getSchema(topic);
