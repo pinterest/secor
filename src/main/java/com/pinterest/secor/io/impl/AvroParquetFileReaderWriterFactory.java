@@ -3,6 +3,7 @@ package com.pinterest.secor.io.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Map;
 
 import com.google.protobuf.Message;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
@@ -41,7 +42,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     protected final boolean enableDictionary;
     protected final boolean validating;
     protected final String schemaSubjectSuffix;
-    protected final String schemaSubjectGlobalOverride;
+    protected final String schemaSubjectOverrideGlobal;
+    protected final Map<String, String> schemaSubjectOverrideTopics;
     protected SecorSchemaRegistryClient schemaRegistryClient;
 
     public AvroParquetFileReaderWriterFactory(SecorConfig config) {
@@ -50,7 +52,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         enableDictionary = ParquetUtil.getParquetEnableDictionary(config);
         validating = ParquetUtil.getParquetValidation(config);
         schemaSubjectSuffix = AvroSchemaUtil.getAvroSubjectSuffix(config);
-        schemaSubjectGlobalOverride = AvroSchemaUtil.getAvroSubjectGlobalOverride(config);
+        schemaSubjectOverrideGlobal = AvroSchemaUtil.getAvroSubjectOverrideGlobal(config);
+        schemaSubjectOverrideTopics = AvroSchemaUtil.getAvroSubjectOverrideTopics(config);
         schemaRegistryClient = new SecorSchemaRegistryClient(config);
     }
 
@@ -90,9 +93,13 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     }
 
     protected Schema getSchema(String topic) {
-        if (!schemaSubjectGlobalOverride.isEmpty()) {
-            topic = schemaSubjectGlobalOverride;
-        } else if (!schemaSubjectSuffix.isEmpty()) {
+        if (!schemaSubjectOverrideGlobal.isEmpty()) {
+            topic = schemaSubjectOverrideGlobal;
+        }
+        else if (!schemaSubjectOverrideTopics.getOrDefault(topic, "").isEmpty()) {
+            topic = schemaSubjectOverrideTopics.get(topic);
+        }
+        else if (!schemaSubjectSuffix.isEmpty()) {
             topic += schemaSubjectSuffix;
         }
         return schemaRegistryClient.getSchema(topic);
