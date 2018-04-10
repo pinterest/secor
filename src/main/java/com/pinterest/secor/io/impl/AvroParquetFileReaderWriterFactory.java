@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import com.google.protobuf.Message;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -41,7 +40,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     protected final boolean enableDictionary;
     protected final boolean validating;
     protected final String schemaSubjectSuffix;
-    protected final String schemaSubjectOverride;
+    protected final String schemaSubjectGlobalOverride;
     protected SecorSchemaRegistryClient schemaRegistryClient;
 
     public AvroParquetFileReaderWriterFactory(SecorConfig config) {
@@ -50,7 +49,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         enableDictionary = ParquetUtil.getParquetEnableDictionary(config);
         validating = ParquetUtil.getParquetValidation(config);
         schemaSubjectSuffix = AvroSchemaUtil.getAvroSubjectSuffix(config);
-        schemaSubjectOverride = AvroSchemaUtil.getAvroSubjectOverride(config);
+        schemaSubjectGlobalOverride = AvroSchemaUtil.getAvroSubjectGlobalOverride(config);
         schemaRegistryClient = new SecorSchemaRegistryClient(config);
     }
 
@@ -90,8 +89,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     }
 
     protected Schema getSchema(String topic) {
-        if (!schemaSubjectOverride.isEmpty()) {
-            topic = schemaSubjectOverride;
+        if (!schemaSubjectGlobalOverride.isEmpty()) {
+            topic = schemaSubjectGlobalOverride;
         } else if (!schemaSubjectSuffix.isEmpty()) {
             topic += schemaSubjectSuffix;
         }
@@ -107,8 +106,9 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         public AvroParquetFileReader(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
             String topic = logFilePath.getTopic();
+            Schema schema = getSchema(topic);
             reader = AvroParquetReader.<GenericRecord>builder(path).build();
-            writer = new SpecificDatumWriter<>(getSchema(topic));
+            writer = new SpecificDatumWriter(schema);
             offset = logFilePath.getOffset();
         }
 
@@ -132,7 +132,6 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         private ParquetWriter writer;
         private String topic;
-        private Schema schema;
         private SpecificDatumReader<GenericRecord> datumReader;
 
         public AvroParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
@@ -141,7 +140,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
             CompressionCodecName codecName = CompressionCodecName
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
-            schema = getSchema(topic);
+            Schema schema = getSchema(topic);
             datumReader = new SpecificDatumReader<>(schema);
 
             // Not setting blockSize, pageSize, enableDictionary, and validating

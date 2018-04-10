@@ -8,7 +8,7 @@ public class AvroSchemaUtil {
         return config.getString("avro.schema.subject.suffix", "");
     }
 
-    public static String getAvroSubjectOverride(SecorConfig config) {
-        return config.getString("avro.schema.subject.override", "");
+    public static String getAvroSubjectGlobalOverride(SecorConfig config) {
+        return config.getString("avro.schema.subject.global.override", "");
     }
 }
