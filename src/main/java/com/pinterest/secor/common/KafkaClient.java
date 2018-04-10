@@ -164,9 +164,13 @@ public class KafkaClient {
         return new SimpleConsumer(host, port, 100000, 64 * 1024, clientName);
     }
 
-    public SimpleConsumer createConsumer(TopicPartition topicPartition) {
+    private SimpleConsumer createConsumer(TopicPartition topicPartition) {
         HostAndPort leader = findLeader(topicPartition);
-        LOG.debug("leader for topic {} partition {} is {}", topicPartition.getTopic(), topicPartition.getPartition(), leader.toString());
+        if (leader == null) {
+            LOG.warn("no leader for topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
+            return null;
+        }
+        LOG.debug("leader for topic {} partition {} is {}", topicPartition.getTopic(), topicPartition.getPartition(), leader);
         final String clientName = getClientName(topicPartition);
         return createConsumer(leader.getHostText(), leader.getPort(), clientName);
     }
@@ -199,6 +203,9 @@ public class KafkaClient {
         SimpleConsumer consumer = null;
         try {
             consumer = createConsumer(topicPartition);
+            if (consumer == null) {
+                return null;
+            }
             long lastOffset = findLastOffset(topicPartition, consumer);
             if (lastOffset < 1) {
                 return null;
@@ -219,6 +226,9 @@ public class KafkaClient {
                 return null;
             }
             consumer = createConsumer(topicPartition);
+            if (consumer == null) {
+                return null;
+            }
             return getMessage(topicPartition, committedOffset, consumer);
         } catch (MessageDoesNotExistException e) {
           // If a RuntimeEMessageDoesNotExistException exception is raised,
