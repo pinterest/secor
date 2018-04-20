@@ -54,6 +54,9 @@ java -ea -Dsecor_group=secor_backup \
   com.pinterest.secor.main.ConsumerMain
 ```
 
+Please take note that Secor **requires** JRE8 for it's runtime as source code uses JRE8 language features.
+JRE9 and JRE10 is *untested*.
+
 ## Output grouping
 
 One of the convenience features of Secor is the ability to group messages and save them under common file prefixes. The partitioning is controlled by a message parser. Secor comes with the following parsers:
