@@ -125,6 +125,13 @@ public class GsUploadManager extends UploadManager {
                 throw new RuntimeException("Failed to load Google credentials : " + credentialsPath, e);
             }
 
+            // Depending on the environment that provides the default credentials (e.g. Compute Engine, App
+            // Engine), the credentials may require us to specify the scopes we need explicitly.
+            // Check for this case, and inject the scope if required.
+            if (credential.createScopedRequired()) {
+                credential = credential.createScoped(StorageScopes.all());
+            }
+
             mStorageService = new Storage.Builder(httpTransport, JSON_FACTORY,
                     setHttpBackoffTimeout(credential, connectTimeoutMs, readTimeoutMs))
                     .setApplicationName("com.pinterest.secor")
