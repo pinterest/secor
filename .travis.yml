@@ -3,7 +3,7 @@ addons:
   hosts:
     - test-bucket.localhost
 env:
-  - PATH=$PATH:$HOME/.s3cmd SECOR_LOCAL_S3=true S3CMD=1.0.1
+  - PATH=$PATH:$HOME/.s3cmd SECOR_LOCAL_S3=true S3CMD=2.0.1
 jdk:
   - openjdk7
   - oraclejdk8
