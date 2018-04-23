@@ -1,6 +1,6 @@
 # Pinterest Secor
 
-Upstream: [![Upstream: Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/pinterest/secor) / Zedge: [![Zedge: Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/zedge/secor)
+Upstream: [![Upstream: Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/pinterest/secor) / Zedge: [![Zedge: Build Status](https://travis-ci.org/zedge/secor.svg?branch=zedge)](https://travis-ci.org/zedge/secor)
 
 Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage], [Microsoft Azure Blob Storage] and [Openstack Swift].
 
