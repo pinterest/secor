@@ -12,31 +12,39 @@ gcloud beta iam service-accounts keys create --iam-account "secor-service@zedge-
 
 # Log bucket
 
+```bash
 gsutil mb gs://zedge-logs-secor-norangshol
+```
 
 ## Grant access
 
+```bash
 gcloud projects add-iam-policy-binding zedge-dev --member serviceAccount:secor-service@zedge-dev.iam.gserviceaccount.com --role roles/storage.objectAdmin
+```
 
-
-
+```bash
 gsutil iam ch serviceAccount:secor-service@zedge-dev.iam.gserviceaccount.com:objectViewer gs://zedge-logs-secor-norangshol
 gsutil iam ch serviceAccount:secor-service@zedge-dev.iam.gserviceaccount.com:objectCreator gs://zedge-logs-secor-norangshol
-
-
+```
 
 You can view ACL by issuing:
 
+```bash
 gsutil iam get gs://zedge-logs-secor-norangshol
+```
 
 # Secrets
 
+```bash
 kubectl create secret generic secor-service-account --from-file="service-account.json=./secor.key.json" 
-
+```
 
 # Config maps
 
-kubectl create configmap config --from-file=src/main/config/ --dry-run -o yaml | kubectl apply -f -
+For zedge this is maintained in https://github.com/zedge/secor-config , but this is as simple as:
 
+```bash
+kubectl create configmap config --from-file=src/main/config/ --dry-run -o yaml | kubectl apply -f -
+```
 
 
