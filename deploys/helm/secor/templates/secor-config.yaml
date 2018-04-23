@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "secor.fullname" . }}-config
+  labels:
+    app: {{ template "secor.fullname" . }}-config
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+{{ (.Files.Glob "config/*.properties").AsConfig | indent 2 }}

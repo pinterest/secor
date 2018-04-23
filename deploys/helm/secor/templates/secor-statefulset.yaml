@@ -1,0 +1,105 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: {{ template "secor.fullname" . }}
+  labels:
+    app: {{ template "secor.fullname" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  serviceName: {{ template "secor.fullname" . }}
+  updateStrategy:
+    type: RollingUpdate
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ template "secor.fullname" . }}
+        release: {{ .Release.Name }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9102"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: secor
+          image: {{ .Values.image.prefix }}{{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          env:
+            - name: "CONFIG_FILE"
+              value: "{{ .Values.secor.partition.configFile }}"
+            - name: "LOG4J_CONFIGURATION"
+              value: "config/log4j.docker.properties"
+            - name: "GOOGLE_APPLICATION_CREDENTIALS"
+              value: "/var/run/secret/cloud.google.com/service-account.json"
+            - name: "ZOOKEEPER_QUORUM"
+              value: "{{ .Values.secor.zookeeper.quorum }}"
+            - name: "ZOOKEEPER_PATH"
+              value: "{{ .Values.secor.zookeeper.path }}"
+
+          volumeMounts:
+           - mountPath: /opt/secor/config
+             name: config
+           - name: "service-account"
+             mountPath: "/var/run/secret/cloud.google.com"
+           - name: "local-var"
+             mountPath: "/mnt/secor_data/message_logs/partition"
+
+
+        - name: monitor
+          image: {{ .Values.image.prefix }}{{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: "CONFIG_FILE"
+              value: "{{ .Values.secor.partition.configFile }}"
+            - name: "LOG4J_CONFIGURATION"
+              value: "config/log4j.docker.properties"
+            - name: "SECOR_MAIN_CLASS"
+              value: "com.pinterest.secor.main.ProgressMonitorMain"
+            - name: "GOOGLE_APPLICATION_CREDENTIALS"
+              value: "/var/run/secret/cloud.google.com/service-account.json"
+            - name: "ZOOKEEPER_QUORUM"
+              value: "{{ .Values.secor.zookeeper.quorum }}"
+            - name: "ZOOKEEPER_PATH"
+              value: "{{ .Values.secor.zookeeper.path }}"
+
+          volumeMounts:
+            - mountPath: /opt/secor/config
+              name: config
+            - name: "service-account"
+              mountPath: "/var/run/secret/cloud.google.com"
+            - name: "local-var"
+              mountPath: "/mnt/secor_data/message_logs/partition"
+
+        - name: statsd
+          image: {{ .Values.exporter.image.repository }}:{{ .Values.exporter.image.tag }}
+          imagePullPolicy: {{ .Values.exporter.image.pullPolicy }}
+          ports:
+            - containerPort: 9102
+            - containerPort: 9125
+              protocol: UDP
+
+      volumes:
+       - configMap:
+           name: secor-config
+         name: config
+
+       - name: "service-account"
+         secret:
+           secretName: "secor-service-account"
+
+  volumeClaimTemplates:
+    - metadata:
+        name: local-var
+        labels:
+          app: secor
+        annotations:
+          volume.beta.kubernetes.io/storage-class: standard
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 20Gi

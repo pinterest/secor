@@ -1,0 +1,7 @@
+secor:
+  zookeeper:
+    quorum: "kafka-zookeeper.default:2181"
+  backup:
+    configFile: /opt/secor/config/secor.kubernetes-test.backup.properties
+  partition:
+    configFile: /opt/secor/config/secor.kubernetes-test.partition.properties
