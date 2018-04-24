@@ -2,12 +2,14 @@ package com.pinterest.secor.common;
 
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import io.confluent.kafka.serializers.KafkaAvroDecoder;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,8 +49,19 @@ public class SecorSchemaRegistryClient {
     public Schema getSchema(String topic) {
         Schema schema = schemas.get(topic);
         if (schema == null) {
-            throw new IllegalStateException("Avro schema not found for topic " + topic);
+            try {
+                schema = lookupSchema(topic);
+            } catch (IOException|RestClientException exc) {
+                throw new IllegalStateException("Avro schema not found for topic " + topic);
+            }
         }
+        return schema;
+    }
+
+    private Schema lookupSchema(String topic) throws IOException, RestClientException {
+        String schema_string = schemaRegistryClient.getLatestSchemaMetadata(topic).getSchema();
+        Schema schema = (new Schema.Parser()).parse(schema_string);
+        schemas.put(topic, schema);
         return schema;
     }
 }
