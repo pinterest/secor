@@ -1,0 +1,116 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envvars-common
+data:
+  ZOOKEEPER_QUORUM: "kafka-zookeeper.default:2181"
+  ZOOKEEPER_PATH: "/"
+  KAFKA_SEED_BROKER_HOST: "kafka-kafka.default"
+  KAFKA_SEED_BROKER_PORT: "9092"
+  SECOR_GROUP: "hr-partition"
+  CONFIG_FILE: "/opt/secor/config/secor.zedge-prod.partition.properties"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envvars-partition
+data:
+  LOG4J_CONFIGURATION: "config/log4j.docker.properties"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envvars-monitor
+data:
+  LOG4J_CONFIGURATION: "config/log4j.docker-warn.properties"
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: secor
+spec:
+  serviceName: secor
+  updateStrategy:
+    type: RollingUpdate
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: secor
+    spec:
+       containers:
+         - image: us.gcr.io/zedge-dev/secor
+           imagePullPolicy: Always
+           name: secor
+           envFrom:
+             - configMapRef:
+                 name: envvars-common
+             - configMapRef:
+                 name: envvars-partition
+           env:
+             - name: "GOOGLE_APPLICATION_CREDENTIALS"
+               value: "/var/run/secret/cloud.google.com/service-account.json"
+
+           volumeMounts:
+           - mountPath: /opt/secor/config
+             name: config
+           - name: "service-account"
+             mountPath: "/var/run/secret/cloud.google.com"
+           - name: "local-var"
+             mountPath: "/mnt/secor_data/message_logs/partition"
+
+
+         -  image: us.gcr.io/zedge-dev/secor
+            imagePullPolicy: Always
+            name: monitor
+            envFrom:
+              - configMapRef:
+                  name: envvars-common
+              - configMapRef:
+                  name: envvars-monitor
+            env:
+              - name: "SECOR_MAIN_CLASS"
+                value: "com.pinterest.secor.main.ProgressMonitorMain"
+              - name: "GOOGLE_APPLICATION_CREDENTIALS"
+                value: "/var/run/secret/cloud.google.com/service-account.json"
+
+            volumeMounts:
+            - mountPath: /opt/secor/config
+              name: config
+            - name: "service-account"
+              mountPath: "/var/run/secret/cloud.google.com"
+            - name: "local-var"
+              mountPath: "/mnt/secor_data/message_logs/partition"
+
+
+         - image: prom/statsd-exporter
+           imagePullPolicy: IfNotPresent
+           name: statsd
+           ports:
+             - containerPort: 9102
+             - containerPort: 9125
+               protocol: UDP
+
+       volumes:
+       - configMap:
+           name: config
+         name: config
+
+       - name: "service-account"
+         secret:
+           secretName: "secor-service-account"
+
+  volumeClaimTemplates:
+    - metadata:
+        name: local-var
+        labels:
+          app: secor
+        annotations:
+          volume.beta.kubernetes.io/storage-class: standard
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 20Gi
