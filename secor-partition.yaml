@@ -114,3 +114,20 @@ spec:
         resources:
           requests:
             storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: secor-prometheus-metrics
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /metrics
+    prometheus.io/port: "9102"
+spec:
+  selector:
+    app: secor
+  ports:
+  - protocol: TCP
+    name: "http-prometheus"
+    port: 9102
+    targetPort: 9102
