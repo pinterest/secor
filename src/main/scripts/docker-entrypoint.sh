@@ -69,7 +69,30 @@ if [[ ! -z "$SECOR_SCHEMA_REGISTRY" ]]; then
     echo "secor.s3.path=$S3_PATH"
 fi
 
-
+if [[ ! -z "$CLOUD_SERVICE" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dcloud.service=$CLOUD_SERVICE"
+    echo "cloud.service=$CLOUD_SERVICE"
+fi
+if [[ ! -z "$MESSAGE_TIMESTAMP_NAME" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dmessage.timestamp.name=$MESSAGE_TIMESTAMP_NAME"
+    echo "message.timestamp.name=$MESSAGE_TIMESTAMP_NAME"
+fi
+if [[ ! -z "$MESSAGE_TIMESTAMP_SEPARATOR" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dmessage.timestamp.separator=$MESSAGE_TIMESTAMP_SEPARATOR"
+    echo "message.timestamp.separator=$MESSAGE_TIMESTAMP_SEPARATOR"
+fi
+if [[ ! -z "$SECOR_PARSER_TIMEZONE" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dsecor.parser.timezone=$SECOR_PARSER_TIMEZONE"
+    echo "secor.parser.timezone=$SECOR_PARSER_TIMEZONE"
+fi
+if [[ ! -z "$SECOR_GS_BUCKET" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dsecor.gs.bucket=$SECOR_GS_BUCKET"
+    echo "secor.gs.bucket=$SECOR_GS_BUCKET.
+fi
+if [[ ! -z "$SECOR_GS_PATH" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dsecor.gs.path=$SECOR_GS_PATH"
+    echo "secor.gs.path=$SECOR_GS_PATH"
+fi
 
 if [[ ! -z "$SECOR_MAX_FILE_BYTES" ]]; then
 	SECOR_CONFIG="$SECOR_CONFIG -Dsecor.max.file.size.bytes=$SECOR_MAX_FILE_BYTES"
@@ -88,6 +111,10 @@ fi
 if [[ ! -z "$SECOR_WRITER_FACTORY" ]]; then
 	SECOR_CONFIG="$SECOR_CONFIG -Dsecor.file.reader.writer.factory=$SECOR_WRITER_FACTORY"
     echo "secor.file.reader.writer.factory=$SECOR_WRITER_FACTORY"
+fi
+if [[ ! -z "$SECOR_UPLOAD_MANAGER_CLASS" ]]; then
+	SECOR_CONFIG="$SECOR_CONFIG -Dsecor.upload.manager.class=$SECOR_UPLOAD_MANAGER_CLASS"
+    echo "secor.upload.manager.class=$SECOR_UPLOAD_MANAGER_CLASS"
 fi
 if [[ ! -z "$SECOR_MESSAGE_PARSER" ]]; then
 	SECOR_CONFIG="$SECOR_CONFIG -Dsecor.message.parser.class=$SECOR_MESSAGE_PARSER"
