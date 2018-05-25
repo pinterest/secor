@@ -47,45 +47,9 @@ gsutil iam get gs://logs-secor-demo
 kubectl create secret generic secor-service-account --from-file="service-account.json=./secor.key.json" 
 ```
 
-# Plain kubernetes manifests
-
-## Config maps
-
-```bash
-kubectl create configmap secor-config --from-file=src/main/config/ --dry-run -o yaml | kubectl apply -f -
-
-# OR
-
-kubectl create configmap secor-config --from-file=deploys/helm/secor/config/ --dry-run -o yaml | kubectl apply -f -
-
-```
-
-In the end you will have the following config maps in your namespace:
-
-
-* secor-config
-* secorns-envvars-backup-common
-* secorns-envvars-backup-log4j
-* secorns-envvars-backup-monitor-log4j
-* secorns-envvars-partition-common
-* secorns-envvars-partition-log4j
-* secorns-envvars-partition-monitor-log4j
-
-The `-common` config file specify the required `ZOOKEEPR_QUORUM` and `ZOOKEEPER_PATH` as required by `docker-entrypoint.sh` and selects a `CONFIG_FILE` that should be populated by the `secor-config` which is a ConfigMap volume mount.
-
-The `-partition-*-log4j` config map holds the `LOG4J_CONFIGURATION` environment variable to change which log4j configuration file you want to be used by the secor partition consumer. This should be populated by the `secor-config` which is a ConfigMap volume mount.
-
-The `-backup-*-log4j` config map holds the `LOG4J_CONFIGURATION` environment variable to change which log4j configuration file you want to be used by the secor backup consumer. This should be populated by the `secor-config` which is a ConfigMap volume mount.
-
-`secor-config` is volume mounted under `/opt/secor/config` inside the pod.
-
-
-# Helm notes
-
-
 ## Config 
 
-Different from plain manifests here is that there is only one config map which is volume mounted in
+It uses one config map which is volume mounted in
 /opt/secor/config and charts sets environment variables directly via helm
 values.
 
@@ -104,9 +68,6 @@ gcloud container clusters get-credentials --project demo --zone us-central1-b te
 kubectl config set-context env:test --cluster gke_demo_us-central1-b_test-cluster --user gke_demo_us-central1-b_test-cluster --namespace default
 helm --kube-context env:test upgrade secor secor -i --namespace default --set image.prefix=us.gcr.io/demo/,ingress.domain=demo.example.net --values values-secor.yaml --set nameOverride=secor,image.tag=latest,exporter.image.tag=v0.6.0
 ```
-
-
-# Shared notes
 
 
 ## secor.local.path
