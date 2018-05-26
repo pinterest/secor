@@ -1,0 +1,28 @@
+image:
+  prefix: us.gcr.io/demo/
+  repository: secor
+  tag: latest
+  pullPolicy: Always
+
+secor:
+  zookeeper:
+    quorum: "zookeeper:2181"
+    path: "/"
+  backup:
+    configFile: /opt/secor/config/secor.kubernetes-dev.backup.properties
+    logConfigFile: /opt/secor/config/log4j.docker.properties
+    monitor:
+      logConfigFile: /opt/secor/config/log4j.docker-warn.properties
+    storage:
+      class: standard
+      size: 20Gi
+  partition:
+    configFile: /opt/secor/config/secor.kubernetes-dev.partition.properties
+    logConfigFile: /opt/secor/config/log4j.docker.properties
+
+
+exporter:
+  image:
+    repository: prom/statsd-exporter
+    tag: latest
+    pullPolicy: IfNotPresent
