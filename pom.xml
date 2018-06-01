@@ -64,6 +64,26 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
+    <dependencyManagement>
+        <dependencies>
+            <!-- Azure pulls in 2.6 while kafka-2.11 pulls in 2.9.1 -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>2.9.5</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.9.5</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>2.9.5</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <repositories>
         <repository>
@@ -258,11 +278,6 @@
             <version>0.10.0</version>
         </dependency>
         <dependency>
-            <groupId>com.twitter</groupId>
-            <artifactId>ostrich_2.10</artifactId>
-            <version>9.2.1</version>
-        </dependency>
-        <dependency>
             <groupId>com.twitter.common.zookeeper</groupId>
             <artifactId>lock</artifactId>
             <version>0.0.7</version>
@@ -323,17 +338,12 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>1.14.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.auth</groupId>
-            <artifactId>google-auth-library-appengine</artifactId>
-            <version>0.9.0</version>
+            <version>1.31.0</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure-storage</artifactId>
-            <version>4.0.0</version>
+            <version>7.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.orc</groupId>
@@ -619,6 +629,15 @@
                     </plugin>
                 </plugins>
             </build>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.fasterxml.jackson.module</groupId>
+                        <artifactId>jackson-module-scala_2.10</artifactId>
+                        <version>2.9.5</version>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
@@ -630,6 +649,11 @@
                             <artifactId>slf4j-simple</artifactId>
                         </exclusion>
                     </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>com.twitter</groupId>
+                    <artifactId>ostrich_2.10</artifactId>
+                    <version>9.2.1</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -661,32 +685,48 @@
                         </exclusion>
                     </exclusions>
                 </dependency>
+                <dependency>
+                    <groupId>com.twitter</groupId>
+                    <artifactId>ostrich_2.10</artifactId>
+                    <version>9.2.1</version>
+                 </dependency>
             </dependencies>
         </profile>
         <profile>
-            <id>kafka-0.10-dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+            <id>kafka-0.11-1.0.0</id>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.fasterxml.jackson.module</groupId>
+                        <artifactId>jackson-module-scala_2.11</artifactId>
+                        <version>2.9.5</version>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
-                    <artifactId>kafka_2.10</artifactId>
-                    <version>0.10.2.0</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-simple</artifactId>
-                        </exclusion>
-                    </exclusions>
+                    <artifactId>kafka_2.11</artifactId>
+                    <version>1.0.0</version>
                 </dependency>
+                <dependency>
+                    <groupId>com.twitter</groupId>
+                    <artifactId>ostrich_2.11</artifactId>
+                    <version>9.27.0</version>
+              </dependency>
             </dependencies>
         </profile>
         <profile>
             <id>kafka-0.10.0.1</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.fasterxml.jackson.module</groupId>
+                        <artifactId>jackson-module-scala_2.10</artifactId>
+                        <version>2.9.5</version>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
@@ -698,6 +738,11 @@
                             <artifactId>slf4j-simple</artifactId>
                         </exclusion>
                     </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>com.twitter</groupId>
+                    <artifactId>ostrich_2.10</artifactId>
+                    <version>9.2.1</version>
                 </dependency>
             </dependencies>
         </profile>
