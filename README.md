@@ -29,8 +29,8 @@ Edit `src/main/config/*.properties` files to specify parameters describing the e
 
 ##### Create and install jars
 ```sh
-# By default this will install the "release" (Kafka 0.10 profile)
-mvn package
+# See pom.xml and select from valid profiles listed for your environment!
+mvn package -P <kafka_profile and matching scal version>
 mkdir ${SECOR_INSTALL_DIR} # directory to place Secor binaries in.
 tar -zxvf target/secor-0.1-SNAPSHOT-bin.tar.gz -C ${SECOR_INSTALL_DIR}
 
@@ -41,7 +41,7 @@ mvn -Pkafka-0.8-dev package
 ##### Run tests (optional)
 ```sh
 cd ${SECOR_INSTALL_DIR}
-./scripts/run_tests.sh
+MVN_PROFILE=<profile> ./scripts/run_tests.sh
 ```
 
 ##### Run Secor
