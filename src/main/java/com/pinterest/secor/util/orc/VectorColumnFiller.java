@@ -1,9 +1,8 @@
 package com.pinterest.secor.util.orc;
 
-import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
-import java.util.List;
-
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -16,9 +15,9 @@ import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * 
@@ -105,11 +104,21 @@ public class VectorColumnFiller {
                 vect.noNulls = false;
                 vect.isNull[row] = true;
             } else {
-                TimestampColumnVector vector = (TimestampColumnVector) vect;
-                vector.set(
-                        row,
-                        Timestamp.valueOf(value.getAsString().replaceAll(
-                                "[TZ]", " ")));
+                if (value.getAsJsonPrimitive().isString()) {
+                    TimestampColumnVector vector = (TimestampColumnVector) vect;
+                    vector.set(
+                            row,
+                            Timestamp.valueOf(value.getAsString().replaceAll(
+                                    "[TZ]", " ")));
+                } else if (value.getAsJsonPrimitive().isNumber()) {
+                    TimestampColumnVector vector = (TimestampColumnVector) vect;
+                    vector.set(
+                            row,
+                            new Timestamp(value.getAsLong()));
+                } else {
+                    vect.noNulls = false;
+                    vect.isNull[row] = true;
+                }
             }
         }
     }
