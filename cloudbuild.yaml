@@ -1,0 +1,61 @@
+steps:
+  - name: 'gcr.io/cloud-builders/gsutil'
+    entrypoint: bash
+    args: ['ci/cloudbuild/gcp-dependencies']
+    volumes:
+      - path: /root/.m2/repository
+        name: m2_cache
+    env:
+      - 'REPO_NAME=$REPO_NAME'
+      - 'BRANCH_NAME=$BRANCH_NAME'
+      - '_CACHE_BUCKET=${_CACHE_BUCKET}'
+      - '_M2_LOCAL_REPOSITORY=${_M2_LOCAL_REPOSITORY}'
+    waitFor: ['-']
+
+  - name: maven:3-jdk-8
+    volumes:
+      - path: /root/.m2/repository
+        name: m2_cache
+    args: [
+      "mvn",
+      "org.apache.maven.plugins:maven-dependency-plugin:3.1.1:go-offline",
+      "org.apache.maven.plugins:maven-dependency-plugin:3.1.1:resolve-plugins"
+    ]
+
+  - name: maven:3-jdk-8
+    volumes:
+      - path: /root/.m2/repository
+        name: m2_cache
+    args: [
+      "mvn",
+      "--batch-mode",
+      "package",
+      "-P", "kafka-0.11-1.0.0"
+    ]
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - "build"
+      - "--cache-from"
+      - "us.gcr.io/${PROJECT_ID}/secor:latest"
+      - "-t"
+      - "us.gcr.io/${PROJECT_ID}/secor:${COMMIT_SHA}"
+      - "-t"
+      - "us.gcr.io/${PROJECT_ID}/secor:latest"
+      - "."
+
+  - name: 'gcr.io/cloud-builders/gsutil'
+    entrypoint: bash
+    args: ['ci/cloudbuild/gcp-save-dependencies']
+    volumes:
+      - path: /root/.m2/repository
+        name: m2_cache
+    env:
+      - 'REPO_NAME=$REPO_NAME'
+      - 'BRANCH_NAME=$BRANCH_NAME'
+      - '_CACHE_BUCKET=${_CACHE_BUCKET}'
+      - '_M2_LOCAL_REPOSITORY=${_M2_LOCAL_REPOSITORY}'
+ 
+timeout: 1200s
+images:
+  - "us.gcr.io/${PROJECT_ID}/secor"

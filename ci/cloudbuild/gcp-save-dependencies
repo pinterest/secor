@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# _CACHE_BUCKET bucket to save data to
+# _M2_LOCAL_REPOSITORY (defaults to /usr/share/maven/ref/repository 
+# _REPO_NAME  (used for fallback for non-triggered GCP builds)
+# _BRANCH_NAME  (used for fallback for non-triggered GCP builds)
+#
+# Usage as step:
+#
+#  - name: 'gcr.io/cloud-builders/gsutil'
+#    entrypoint: bash
+#    args: ['ci/cloudbuild/gcp-save-dependencies']
+#    volumes:
+#      - path: /root/.m2/repository
+#        name: m2_cache
+#    env:
+#      - 'REPO_NAME=$REPO_NAME'
+#      - 'BRANCH_NAME=$BRANCH_NAME'
+#      - '_CACHE_BUCKET=${_CACHE_BUCKET}'
+#      - '_M2_LOCAL_REPOSITORY=${_M2_LOCAL_REPOSITORY}'
+
+set -ex
+
+REPO_NAME=${REPO_NAME:-${_REPO_NAME:-unknown}}
+BRANCH_NAME=${BRANCH_NAME:-${_BRANCH_NAME:-unknown}}
+M2_LOCAL_REPOSITORY=${_M2_LOCAL_REPOSITORY:-/usr/share/maven/ref/repository}
+
+
+cd "${M2_LOCAL_REPOSITORY}" || exit 1
+
+tar -cf /tmp/new_m2.tar .
+gsutil cp /tmp/new_m2.tar "gs://${_CACHE_BUCKET}/${REPO_NAME}/${BRANCH_NAME}/m2.tar"
