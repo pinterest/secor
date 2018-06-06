@@ -73,9 +73,9 @@ if [[ ! -z "$MESSAGE_TIMESTAMP_NAME" ]]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dmessage.timestamp.name=$MESSAGE_TIMESTAMP_NAME"
     echo "message.timestamp.name=$MESSAGE_TIMESTAMP_NAME"
 fi
-if [[ ! -z "$MESSAGE_TIMESTAMP_SEPARATOR" ]]; then
-    SECOR_CONFIG="$SECOR_CONFIG -Dmessage.timestamp.separator=$MESSAGE_TIMESTAMP_SEPARATOR"
-    echo "message.timestamp.separator=$MESSAGE_TIMESTAMP_SEPARATOR"
+if [[ ! -z "$MESSAGE_TIMESTAMP_NAME_SEPARATOR" ]]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dmessage.timestamp.name.separator=$MESSAGE_TIMESTAMP_NAME_SEPARATOR"
+    echo "message.timestamp.name.separator=$MESSAGE_TIMESTAMP_NAME_SEPARATOR"
 fi
 if [[ ! -z "$SECOR_PARSER_TIMEZONE" ]]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.parser.timezone=$SECOR_PARSER_TIMEZONE"
