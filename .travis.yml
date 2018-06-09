@@ -23,6 +23,7 @@ before_install:
 # Also dependencies gets installed by other targets anyway.
 install: true  
 script:
+  - make dependency_tree
   - make unit
   - make integration
 
