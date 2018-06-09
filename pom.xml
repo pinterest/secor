@@ -693,6 +693,9 @@
             </dependencies>
         </profile>
         <profile>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <id>kafka-0.11-1.0.0</id>
             <dependencyManagement>
                 <dependencies>

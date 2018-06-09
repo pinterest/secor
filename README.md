@@ -29,18 +29,20 @@ Edit `src/main/config/*.properties` files to specify parameters describing the e
 
 ##### Create and install jars
 ```sh
-# See pom.xml and select from valid profiles listed for your environment!
-mvn package -P <kafka_profile and matching scal version>
+# By default this will install the "kafka-0.11-1.0.0" (kafka 1.0.0, scala 2.11)
+mvn package
 mkdir ${SECOR_INSTALL_DIR} # directory to place Secor binaries in.
 tar -zxvf target/secor-0.1-SNAPSHOT-bin.tar.gz -C ${SECOR_INSTALL_DIR}
 
-# To use the Kafka 0.8 client you should use the kafka-0.8-dev profile
-mvn -Pkafka-0.8-dev package
+# To use the Kafka 0.10.2.0 kafka libraries with scala 2.10 , use the release profile
+mvn -Prelease
 ```
 
 ##### Run tests (optional)
 ```sh
 cd ${SECOR_INSTALL_DIR}
+./scripts/run_tests.sh
+# OR:
 MVN_PROFILE=<profile> ./scripts/run_tests.sh
 ```
 
