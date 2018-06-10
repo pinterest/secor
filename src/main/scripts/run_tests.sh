@@ -57,7 +57,7 @@ READER_WRITERS[json]=com.pinterest.secor.io.impl.DelimitedTextFileReaderWriterFa
 READER_WRITERS[binary]=com.pinterest.secor.io.impl.SequenceFileReaderWriterFactory
 
 # Hadoop supports multiple implementations of the s3 filesystem
-S3_FILESYSTEMS=${S3_FILESYSTEMS:-s3n}
+S3_FILESYSTEMS=${S3_FILESYSTEMS:-s3a}
 
 # The minimum wait time is 10 seconds plus delta.  Secor is configured to upload files older than
 # 10 seconds and we need to make sure that everything ends up on s3 before starting verification.
