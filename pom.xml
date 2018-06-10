@@ -585,6 +585,7 @@
     <profiles>
         <profile>
             <id>release</id>
+            <!-- Matches kafka-0.10.2.0 , just this one includes gpg signing, javadoc etc -->
             <build>
                 <plugins>
                     <plugin>
@@ -658,7 +659,7 @@
             </dependencies>
         </profile>
         <profile>
-            <id>kafka-0.8-dev</id>
+            <id>kafka-0.8.2.1</id>
             <build>
                 <plugins>
                     <plugin>
@@ -693,10 +694,7 @@
             </dependencies>
         </profile>
         <profile>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <id>kafka-0.11-1.0.0</id>
+            <id>kafka-1.0.0</id>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
@@ -717,6 +715,39 @@
                     <artifactId>ostrich_2.11</artifactId>
                     <version>9.27.0</version>
               </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>kafka-0.10.2.0</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.fasterxml.jackson.module</groupId>
+                        <artifactId>jackson-module-scala_2.10</artifactId>
+                        <version>2.9.5</version>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.kafka</groupId>
+                    <artifactId>kafka_2.10</artifactId>
+                    <version>0.10.2.0</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.slf4j</groupId>
+                            <artifactId>slf4j-simple</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>com.twitter</groupId>
+                    <artifactId>ostrich_2.10</artifactId>
+                    <version>9.2.1</version>
+                </dependency>
             </dependencies>
         </profile>
         <profile>

@@ -29,13 +29,13 @@ Edit `src/main/config/*.properties` files to specify parameters describing the e
 
 ##### Create and install jars
 ```sh
-# By default this will install the "kafka-0.11-1.0.0" (kafka 1.0.0, scala 2.11)
+# By default this will install the "kafka-0.10.2.0" profile
 mvn package
 mkdir ${SECOR_INSTALL_DIR} # directory to place Secor binaries in.
 tar -zxvf target/secor-0.1-SNAPSHOT-bin.tar.gz -C ${SECOR_INSTALL_DIR}
 
-# To use the Kafka 0.10.2.0 kafka libraries with scala 2.10 , use the release profile
-mvn -Prelease
+# To use the Kafka 1.0.0 kafka libraries with scala 2.11
+mvn -Pkafka-1.0.0
 ```
 
 ##### Run tests (optional)
