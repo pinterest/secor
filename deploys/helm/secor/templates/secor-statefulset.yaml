@@ -31,13 +31,15 @@ spec:
             - name: "CONFIG_FILE"
               value: "{{ .Values.secor.partition.configFile }}"
             - name: "LOG4J_CONFIGURATION"
-              value: "config/log4j.docker.properties"
+              value: "{{ .Values.secor.partition.logConfigFile }}"
             - name: "GOOGLE_APPLICATION_CREDENTIALS"
               value: "/var/run/secret/cloud.google.com/service-account.json"
             - name: "ZOOKEEPER_QUORUM"
               value: "{{ .Values.secor.zookeeper.quorum }}"
             - name: "ZOOKEEPER_PATH"
               value: "{{ .Values.secor.zookeeper.path }}"
+            - name: "JVM_MEMORY"
+              value: "{{ .Values.secor.partition.jvm.memory }}"
 
           volumeMounts:
            - mountPath: /opt/secor/config
@@ -46,7 +48,8 @@ spec:
              mountPath: "/var/run/secret/cloud.google.com"
            - name: "local-var"
              mountPath: "/mnt/secor_data/message_logs/partition"
-
+          resources:
+{{ toYaml .Values.secor.partition.resources | indent 12 }}
 
         - name: monitor
           image: {{ .Values.image.prefix }}{{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -55,7 +58,7 @@ spec:
             - name: "CONFIG_FILE"
               value: "{{ .Values.secor.partition.configFile }}"
             - name: "LOG4J_CONFIGURATION"
-              value: "config/log4j.docker.properties"
+              value: "{{ .Values.secor.partition.monitor.logConfigFile }}"
             - name: "SECOR_MAIN_CLASS"
               value: "com.pinterest.secor.main.ProgressMonitorMain"
             - name: "GOOGLE_APPLICATION_CREDENTIALS"
@@ -94,12 +97,12 @@ spec:
     - metadata:
         name: local-var
         labels:
-          app: secor
+          app: {{ template "secor.fullname" . }}
         annotations:
-          volume.beta.kubernetes.io/storage-class: standard
+          volume.beta.kubernetes.io/storage-class: "{{ .Values.secor.partition.storage.class }}"
       spec:
         accessModes:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 20Gi
+            storage: "{{ .Values.secor.partition.storage.size }}"

@@ -42,6 +42,8 @@ spec:
               value: "{{ .Values.secor.zookeeper.quorum }}"
             - name: "ZOOKEEPER_PATH"
               value: "/"
+            - name: "JVM_MEMORY"
+              value: "{{ .Values.secor.backup.jvm.memory }}"
 
           volumeMounts:
             - mountPath: "/opt/secor/config"
@@ -50,7 +52,8 @@ spec:
               mountPath: "/var/run/secret/cloud.google.com"
             - name: "local-var"
               mountPath: "/mnt/secor_data/message_logs/backup"
-
+          resources:
+{{ toYaml .Values.secor.backup.resources | indent 12 }}
 
         - name: monitor
           image: {{ .Values.image.prefix }}{{ .Values.image.repository }}:{{ .Values.image.tag }}
