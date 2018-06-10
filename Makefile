@@ -2,7 +2,7 @@ CONFIG=src/main/config
 TEST_HOME=/tmp/secor_test
 TEST_CONFIG=src/test/config
 JAR_FILE=target/secor-*-SNAPSHOT-bin.tar.gz
-MVN_PROFILE?=kafka-0.11-1.0.0
+MVN_PROFILE?=kafka-0.10.2.0
 MVN_OPTS=-DskipTests=true -Dmaven.javadoc.skip=true -P $(MVN_PROFILE)
 CONTAINERS=$(shell ls containers)
 
