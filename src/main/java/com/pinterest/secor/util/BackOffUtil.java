@@ -99,9 +99,12 @@ public class BackOffUtil {
         public long nextBackOffMillis() {
             if (interval < max) {
                 interval += inc;
+                if (interval < 0) {
+                    interval = max;
+                }
                 return interval;
             } else {
-                return STOP;
+                return max;
             }
         }
     }
