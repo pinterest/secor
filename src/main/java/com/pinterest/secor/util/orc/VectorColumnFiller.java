@@ -3,6 +3,7 @@ package com.pinterest.secor.util.orc;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.pinterest.secor.util.BackOffUtil;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -14,6 +15,8 @@ import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
@@ -25,6 +28,7 @@ import java.util.List;
  *
  */
 public class VectorColumnFiller {
+    private static final Logger LOG = LoggerFactory.getLogger(VectorColumnFiller.class);
 
     public interface JsonConverter {
         void convert(JsonElement value, ColumnVector vect, int row);
@@ -99,6 +103,8 @@ public class VectorColumnFiller {
     }
 
     static class TimestampColumnConverter implements JsonConverter {
+        BackOffUtil back = new BackOffUtil(true);
+
         public void convert(JsonElement value, ColumnVector vect, int row) {
             if (value == null || value.isJsonNull()) {
                 vect.noNulls = false;
@@ -116,6 +122,9 @@ public class VectorColumnFiller {
                             row,
                             new Timestamp(value.getAsLong()));
                 } else {
+                    if (!back.isBackOff()) {
+                        LOG.warn("Timestamp format is neither String nor Number");
+                    }
                     vect.noNulls = false;
                     vect.isNull[row] = true;
                 }
