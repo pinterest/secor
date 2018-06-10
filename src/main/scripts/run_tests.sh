@@ -149,8 +149,8 @@ stop_kafka_server() {
 }
 
 start_secor() {
-    if [ "$MVN_PROFILE" = "kafka-0.8-dev" ];then
-      echo "Detected kafka 0,8 profile, need to run with Kafka8 timestamp class.."
+    if [[ "$MVN_PROFILE" == kafka-0.8* ]];then
+      echo "Detected kafka 0.8 profile, need to run with Kafka8 timestamp class.."
       ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.message.timestamp.className=com.pinterest.secor.timestamp.Kafka8MessageTimestamp"
     fi
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
