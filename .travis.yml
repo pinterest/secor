@@ -11,7 +11,6 @@ env:
     - MVN_PROFILE=kafka-0.8.2.1
 jdk:
   - openjdk8
-  - oraclejdk8
 before_install:
   - wget https://github.com/s3tools/s3cmd/archive/v$S3CMD.tar.gz -O /tmp/s3cmd.tar.gz
   - tar -xzf /tmp/s3cmd.tar.gz -C $HOME
