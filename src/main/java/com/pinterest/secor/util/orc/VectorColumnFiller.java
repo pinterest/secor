@@ -123,7 +123,7 @@ public class VectorColumnFiller {
                             new Timestamp(value.getAsLong()));
                 } else {
                     if (!back.isBackOff()) {
-                        LOG.warn(String.format("Timestamp format is neither String nor Number: %s", value.toString()));
+                        LOG.warn("Timestamp is neither string nor number: {}", value);
                     }
                     vect.noNulls = false;
                     vect.isNull[row] = true;
