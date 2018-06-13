@@ -22,7 +22,7 @@
 #
 # To run the test:
 #     cd ${OPTIMUS}/secor
-#     mvn package
+#     mvn package -P <kafka-profile with matching scala versions>
 #     mkdir /tmp/test
 #     cd /tmp/test
 #     tar -zxvf ~/git/optimus/secor/target/secor-0.2-SNAPSHOT-bin.tar.gz
@@ -149,6 +149,10 @@ stop_kafka_server() {
 }
 
 start_secor() {
+    if [[ "$MVN_PROFILE" == kafka-0.8* ]];then
+      echo "Detected kafka 0.8 profile, need to run with Kafka8 timestamp class.."
+      ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.message.timestamp.className=com.pinterest.secor.timestamp.Kafka8MessageTimestamp"
+    fi
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.test.backup.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
