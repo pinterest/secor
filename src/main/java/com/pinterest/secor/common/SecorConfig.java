@@ -480,6 +480,15 @@ public class SecorConfig {
         return getString("secor.gs.path");
     }
 
+    public double getGsRateLimit() {
+        return getDouble("secor.gs.tasks.ratelimit.pr.second", 10.0);
+    }
+
+    public int getGsThreadPoolSize() {
+        return getInt("secor.gs.threadpool.fixed.size", 256);
+
+    }
+
     public int getGsConnectTimeoutInMs() {
         return getInt("secor.gs.connect.timeout.ms", 3 * 60000);
     }
@@ -582,6 +591,10 @@ public class SecorConfig {
 
     public int getInt(String name, int defaultValue) {
         return mProperties.getInt(name, defaultValue);
+    }
+
+    public double getDouble(String name, double defaultValue) {
+        return mProperties.getDouble(name, defaultValue);
     }
 
     public long getLong(String name) {
