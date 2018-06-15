@@ -85,7 +85,7 @@ public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
         private File file;
 
         public AvroFileReader(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
-            file = new File(logFilePath.getLogFilePath() + ".avro");
+            file = new File(logFilePath.getLogFilePath());
             file.getParentFile().mkdirs();
             String topic = logFilePath.getTopic();
             Schema schema = schemaRegistryClient.getSchema(topic);

@@ -73,7 +73,7 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
                 .thenReturn(AvroFileReaderWriterFactory.class.getName());
 
         LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-avro-topic",
-                new String[] { "part-1" }, 0, 1, 23232, ".log");
+                new String[] { "part-1" }, 0, 1, 23232, ".parquet");
 
         FileWriter fileWriter = mFactory.BuildFileWriter(tempLogFilePath, null);
 
