@@ -16,6 +16,7 @@ import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -73,7 +74,7 @@ public class AvroParquetFileReaderWriterFactoryTest extends TestCase {
                 .thenReturn(AvroParquetFileReaderWriterFactory.class.getName());
 
         LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-avro-topic",
-                new String[] { "part-1" }, 0, 1, 23232, ".log");
+                new String[] { "part-1" }, 0, 1, 23232, ".avro");
 
         FileWriter fileWriter = mFactory.BuildFileWriter(tempLogFilePath, null);
 
