@@ -430,18 +430,6 @@
                             </descriptors>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>create-jar-with-deps</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                        </configuration>
-                    </execution>
                 </executions>
 		    </plugin>
 			<!-- Protobuf source generator plug-in -->
