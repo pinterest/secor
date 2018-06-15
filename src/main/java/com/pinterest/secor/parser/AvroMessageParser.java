@@ -9,6 +9,7 @@ import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.regex.Pattern;
 
 /**
  * AvroMessageParser extracts timestamp field (specified by 'message.timestamp.name')
@@ -31,7 +32,23 @@ public class AvroMessageParser extends TimestampedMessageParser {
         try {
             GenericRecord record = schemaRegistryClient.decodeMessage(message.getTopic(), message.getPayload());
             if (record != null) {
-                Object fieldValue = record.get(mConfig.getMessageTimestampName());
+                String delimiter = mConfig.getMessageTimestampNameSeparator();
+                String timestampName = mConfig.getMessageTimestampName();
+                Object fieldValue;
+                
+                if (delimiter != null && !delimiter.isEmpty()) {
+                  String separatorPattern = Pattern.quote(delimiter);
+                  String[] fieldArray = timestampName.split(separatorPattern);
+                  int nameArrayLength = fieldArray.length - 1;
+
+                  for(int i = 0; i < nameArrayLength; i++) {
+                    record = (GenericRecord) record.get(fieldArray[i]);
+                  }
+                  timestampName = fieldArray[nameArrayLength];
+                }
+
+                fieldValue = record.get(timestampName);   
+
                 if (fieldValue != null) {
                     return toMillis(Double.valueOf(fieldValue.toString()).longValue());
                 }
