@@ -16,22 +16,24 @@
  */
 package com.pinterest.secor.uploader;
 
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.FileRegistry;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.OffsetTracker;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.monitoring.MetricCollector;
+import com.pinterest.secor.reader.MessageReader;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
-
 import junit.framework.TestCase;
-
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.joda.time.DateTime;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.internal.exceptions.ExceptionIncludingMockitoWarnings;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
@@ -55,8 +57,9 @@ public class UploaderTest extends TestCase {
         public TestUploader(SecorConfig config, OffsetTracker offsetTracker,
                             FileRegistry fileRegistry,
                             UploadManager uploadManager,
+                            MessageReader messageReader,
                             ZookeeperConnector zookeeperConnector) {
-            init(config, offsetTracker, fileRegistry, uploadManager, zookeeperConnector, Mockito.mock(MetricCollector.class));
+            init(config, offsetTracker, fileRegistry, uploadManager, messageReader, zookeeperConnector, Mockito.mock(MetricCollector.class));
             mReader = Mockito.mock(FileReader.class);
         }
 
@@ -80,6 +83,7 @@ public class UploaderTest extends TestCase {
     private FileRegistry mFileRegistry;
     private ZookeeperConnector mZookeeperConnector;
     private UploadManager mUploadManager;
+    private MessageReader messageReader;
 
     private TestUploader mUploader;
 
@@ -109,7 +113,7 @@ public class UploaderTest extends TestCase {
         mUploadManager = new HadoopS3UploadManager(mConfig);
 
         mZookeeperConnector = Mockito.mock(ZookeeperConnector.class);
-        mUploader = new TestUploader(mConfig, mOffsetTracker, mFileRegistry, mUploadManager,
+        mUploader = new TestUploader(mConfig, mOffsetTracker, mFileRegistry, mUploadManager, messageReader,
                 mZookeeperConnector);
     }
 
