@@ -128,6 +128,7 @@ public class UploaderTest extends TestCase {
         Mockito.when(mConfig.getCloudService()).thenReturn("S3");
         Mockito.when(mConfig.getS3Bucket()).thenReturn("some_bucket");
         Mockito.when(mConfig.getS3Path()).thenReturn("some_s3_parent_dir");
+        Mockito.when(mConfig.getOffsetsStorage()).thenReturn("zookeeper");
 
         HashSet<LogFilePath> logFilePaths = new HashSet<LogFilePath>();
         logFilePaths.add(mLogFilePath);
@@ -175,6 +176,7 @@ public class UploaderTest extends TestCase {
         Mockito.when(mConfig.getCloudService()).thenReturn("S3");
         Mockito.when(mConfig.getS3Bucket()).thenReturn("some_bucket");
         Mockito.when(mConfig.getS3Path()).thenReturn("some_s3_parent_dir");
+        Mockito.when(mConfig.getOffsetsStorage()).thenReturn("zookeeper");
 
         HashSet<LogFilePath> logFilePaths = new HashSet<LogFilePath>();
         logFilePaths.add(mLogFilePath);
