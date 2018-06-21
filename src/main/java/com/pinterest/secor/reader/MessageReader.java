@@ -24,13 +24,13 @@ import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.RateLimitUtil;
 import com.pinterest.secor.util.StatsUtil;
+import kafka.consumer.Blacklist;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import kafka.consumer.TopicFilter;
 import kafka.consumer.Whitelist;
-import kafka.consumer.Blacklist;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import org.slf4j.Logger;
@@ -185,5 +185,9 @@ public class MessageReader {
             return null;
         }
         return message;
+    }
+
+    public void commit() {
+        mConsumerConnector.commitOffsets();
     }
 }

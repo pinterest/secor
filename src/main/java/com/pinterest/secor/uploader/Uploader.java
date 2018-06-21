@@ -17,22 +17,30 @@
 package com.pinterest.secor.uploader;
 
 import com.google.common.base.Joiner;
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.FileRegistry;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.OffsetTracker;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.SecorConstants;
+import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.monitoring.MetricCollector;
+import com.pinterest.secor.reader.MessageReader;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.ReflectionUtil;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Uploader applies a set of policies to determine if any of the locally stored files should be
@@ -49,7 +57,10 @@ public class Uploader {
     protected FileRegistry mFileRegistry;
     protected ZookeeperConnector mZookeeperConnector;
     protected UploadManager mUploadManager;
+    protected MessageReader mMessageReader;
     protected String mTopicFilter;
+
+    private boolean isOffsetsStorageKafka = false;
 
 
     /**
@@ -62,22 +73,26 @@ public class Uploader {
      * @param metricCollector component that ingest metrics into monitoring system
      */
     public void init(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
-                     UploadManager uploadManager, MetricCollector metricCollector) {
-        init(config, offsetTracker, fileRegistry, uploadManager,
+                     UploadManager uploadManager, MessageReader messageReader, MetricCollector metricCollector) {
+        init(config, offsetTracker, fileRegistry, uploadManager, messageReader,
                 new ZookeeperConnector(config), metricCollector);
     }
 
     // For testing use only.
     public void init(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
-                     UploadManager uploadManager,
+                     UploadManager uploadManager, MessageReader messageReader,
                      ZookeeperConnector zookeeperConnector, MetricCollector metricCollector) {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
         mUploadManager = uploadManager;
+        mMessageReader = messageReader;
         mZookeeperConnector = zookeeperConnector;
         mTopicFilter = mConfig.getKafkaTopicUploadAtMinuteMarkFilter();
         mMetricCollector = metricCollector;
+        if (mConfig.getOffsetsStorage().equals(SecorConstants.KAFKA_OFFSETS_STORAGE_KAFKA)) {
+            isOffsetsStorageKafka = true;
+        }
     }
 
     protected void uploadFiles(TopicPartition topicPartition) throws Exception {
@@ -113,7 +128,9 @@ public class Uploader {
                 mFileRegistry.deleteTopicPartition(topicPartition);
                 mZookeeperConnector.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
                 mOffsetTracker.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
-
+                if (isOffsetsStorageKafka) {
+                    mMessageReader.commit();
+                }
                 mMetricCollector.increment("uploader.file_uploads.count", paths.size(), topicPartition.getTopic());
             }
         } finally {
