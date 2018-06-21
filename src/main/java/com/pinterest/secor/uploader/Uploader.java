@@ -21,6 +21,7 @@ import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.SecorConstants;
 import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.io.FileReader;
@@ -59,6 +60,8 @@ public class Uploader {
     protected MessageReader mMessageReader;
     protected String mTopicFilter;
 
+    private boolean isOffsetsStorageKafka = false;
+
 
     /**
      * Init the Uploader with its dependent objects.
@@ -87,6 +90,9 @@ public class Uploader {
         mZookeeperConnector = zookeeperConnector;
         mTopicFilter = mConfig.getKafkaTopicUploadAtMinuteMarkFilter();
         mMetricCollector = metricCollector;
+        if (mConfig.getOffsetsStorage().equals(SecorConstants.KAFKA_OFFSETS_STORAGE_KAFKA)) {
+            isOffsetsStorageKafka = true;
+        }
     }
 
     protected void uploadFiles(TopicPartition topicPartition) throws Exception {
@@ -122,7 +128,7 @@ public class Uploader {
                 mFileRegistry.deleteTopicPartition(topicPartition);
                 mZookeeperConnector.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
                 mOffsetTracker.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
-                if (mConfig.getOffsetsStorage().equals("kafka")) {
+                if (isOffsetsStorageKafka) {
                     mMessageReader.commit();
                 }
                 mMetricCollector.increment("uploader.file_uploads.count", paths.size(), topicPartition.getTopic());
