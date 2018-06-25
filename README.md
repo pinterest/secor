@@ -172,6 +172,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Ahsan Nabi Dar](https://github.com/ahsandar)
   * [Ashish Kumar](https://github.com/ashubhumca)
   * [Ashwin Sinha](https://github.com/tygrash)
+  * [Avi Chad-Friedman](https://github.com/achad4)
 
 
 ## Companies who use Secor
