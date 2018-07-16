@@ -30,15 +30,15 @@ public interface FileReader {
     /**
      * Get the next key/value from the file
      *
-     * @return
-     * @throws IOException
+     * @return KeyValue
+     * @throws IOException on IO error
      */
     public KeyValue next() throws IOException;
 
     /**
      * Close the file
      *
-     * @throws IOException
+     * @throws IOException on IO error
      */
     public void close() throws IOException;
 }

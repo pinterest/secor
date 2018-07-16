@@ -3,17 +3,26 @@ addons:
   hosts:
     - test-bucket.localhost
 env:
-  - PATH=$PATH:$HOME/.s3cmd SECOR_LOCAL_S3=true S3CMD=2.0.1
+  global:
+    - PATH=$PATH:$HOME/.s3cmd SECOR_LOCAL_S3=true S3CMD=2.0.1
+  matrix:
+    - MVN_PROFILE=kafka-1.0.0
+    - MVN_PROFILE=kafka-0.10.2.0
+    - MVN_PROFILE=kafka-0.8.2.1
 jdk:
   - openjdk8
-  - oraclejdk8
 before_install:
   - wget https://github.com/s3tools/s3cmd/archive/v$S3CMD.tar.gz -O /tmp/s3cmd.tar.gz
   - tar -xzf /tmp/s3cmd.tar.gz -C $HOME
   - mv $HOME/s3cmd-$S3CMD $HOME/.s3cmd
   - cd $HOME/.s3cmd && python setup.py install --user && cd -
   - gem install fakes3 -v 1.2.1
+# Skip install
+## As we require to explicit set a kafka/library profile to build with, and travis just does mvn install -DskipTests=true -Dmaven.javadoc.skiop0true -B -V without using MVN_OPTS
+# Also dependencies gets installed by other targets anyway.
+install: true  
 script:
+  - make dependency_tree
   - make unit
   - make integration
 

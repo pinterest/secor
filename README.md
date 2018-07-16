@@ -29,19 +29,21 @@ Edit `src/main/config/*.properties` files to specify parameters describing the e
 
 ##### Create and install jars
 ```sh
-# By default this will install the "release" (Kafka 0.10 profile)
+# By default this will install the "kafka-0.10.2.0" profile
 mvn package
 mkdir ${SECOR_INSTALL_DIR} # directory to place Secor binaries in.
 tar -zxvf target/secor-0.1-SNAPSHOT-bin.tar.gz -C ${SECOR_INSTALL_DIR}
 
-# To use the Kafka 0.8 client you should use the kafka-0.8-dev profile
-mvn -Pkafka-0.8-dev package
+# To use the Kafka 1.0.0 kafka libraries with scala 2.11
+mvn -Pkafka-1.0.0
 ```
 
 ##### Run tests (optional)
 ```sh
 cd ${SECOR_INSTALL_DIR}
 ./scripts/run_tests.sh
+# OR:
+MVN_PROFILE=<profile> ./scripts/run_tests.sh
 ```
 
 ##### Run Secor
@@ -170,6 +172,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Ahsan Nabi Dar](https://github.com/ahsandar)
   * [Ashish Kumar](https://github.com/ashubhumca)
   * [Ashwin Sinha](https://github.com/tygrash)
+  * [Avi Chad-Friedman](https://github.com/achad4)
 
 
 ## Companies who use Secor

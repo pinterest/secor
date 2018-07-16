@@ -1,5 +1,5 @@
 image:
-  prefix: us.gcr.io/demo/
+  prefix: us.gcr.io/secor-demo/
   repository: secor
   tag: latest
   pullPolicy: Always
@@ -16,10 +16,27 @@ secor:
     storage:
       class: standard
       size: 20Gi
+    jvm:
+      memory: 512m
+    resources:
+      requests:
+        cpu: 800m
+        memory: 768Mi
   partition:
     configFile: /opt/secor/config/secor.kubernetes-dev.partition.properties
     logConfigFile: /opt/secor/config/log4j.docker.properties
-
+    monitor:
+      logConfigFile: /opt/secor/config/log4j.docker-warn.properties
+    storage:
+      class: standard
+      size: 20Gi
+    jvm:
+      memory: 512m
+    resources:
+      requests:
+        cpu: 800m
+        memory: 768Mi
+ 
 
 exporter:
   image:

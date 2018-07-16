@@ -65,7 +65,7 @@ public class SecorConfig {
     /**
      * Exposed for testability
      *
-     * @param properties
+     * @param properties properties config
      */
     public SecorConfig(PropertiesConfiguration properties) {
         mProperties = properties;
@@ -480,6 +480,15 @@ public class SecorConfig {
         return getString("secor.gs.path");
     }
 
+    public double getGsRateLimit() {
+        return getDouble("secor.gs.tasks.ratelimit.pr.second", 10.0);
+    }
+
+    public int getGsThreadPoolSize() {
+        return getInt("secor.gs.threadpool.fixed.size", 256);
+
+    }
+
     public int getGsConnectTimeoutInMs() {
         return getInt("secor.gs.connect.timeout.ms", 3 * 60000);
     }
@@ -584,6 +593,10 @@ public class SecorConfig {
         return mProperties.getInt(name, defaultValue);
     }
 
+    public double getDouble(String name, double defaultValue) {
+        return mProperties.getDouble(name, defaultValue);
+    }
+
     public long getLong(String name) {
         return mProperties.getLong(name);
     }
@@ -610,9 +623,9 @@ public class SecorConfig {
      * a.b.e=val3
      * 
      * If prefix is a.b then,
-     * These will be fetched as a map {c => val1, d => val2, e => val3}
+     * These will be fetched as a map {c = val1, d = val2, e = val3}
      * 
-     * @param prefix
+     * @param prefix property prefix
      * @return
      */
     public Map<String, String> getPropertyMapForPrefix(String prefix) {

@@ -59,7 +59,7 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
         long timestampMillis = extractTimestampMillis(jsonObject);
 
         String[] timestampPartitions = generatePartitions(timestampMillis, mUsingHourly, mUsingMinutely);
-        return ArrayUtils.addAll(new String[]{eventType}, timestampPartitions);
+        return (String[]) ArrayUtils.addAll(new String[]{eventType}, timestampPartitions);
     }
 
     @Override

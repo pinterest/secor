@@ -1,34 +1,32 @@
 package com.pinterest.secor.uploader;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.googleapis.media.MediaHttpUploader;
-import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener;
-import com.google.api.client.http.FileContent;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
-import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.storage.Storage;
+import com.google.api.gax.retrying.RetrySettings;
 import com.google.api.services.storage.StorageScopes;
-import com.google.api.services.storage.model.StorageObject;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.WriteChannel;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
+import com.google.common.util.concurrent.RateLimiter;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.threeten.bp.Duration;
 
 /**
  * Manages uploads to Google Cloud Storage using the Storage class from the Google API SDK.
@@ -47,7 +45,9 @@ public class GsUploadManager extends UploadManager {
 
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
-    private static final ExecutorService executor = Executors.newFixedThreadPool(256);
+    private final ExecutorService executor;
+
+    protected RateLimiter rateLimiter;
 
     /**
      * Global instance of the Storage. The best practice is to make it a single
@@ -59,6 +59,8 @@ public class GsUploadManager extends UploadManager {
 
     public GsUploadManager(SecorConfig config) throws Exception {
         super(config);
+        executor = Executors.newFixedThreadPool(mConfig.getGsThreadPoolSize());
+        rateLimiter = RateLimiter.create(mConfig.getGsRateLimit());
 
         mClient = getService(mConfig.getGsCredentialsPath(),
                 mConfig.getGsConnectTimeoutInMs(), mConfig.getGsReadTimeoutInMs());
@@ -73,28 +75,39 @@ public class GsUploadManager extends UploadManager {
 
         LOG.info("uploading file {} to gs://{}/{}", localFile, gsBucket, gsKey);
 
-        final StorageObject storageObject = new StorageObject().setName(gsKey);
-        final FileContent storageContent = new FileContent(Files.probeContentType(localFile.toPath()), localFile);
+        final BlobInfo sourceBlob = BlobInfo
+            .newBuilder(BlobId.of(gsBucket, gsKey))
+            .setContentType(Files.probeContentType(localFile.toPath()))
+            .build();
+
+        rateLimiter.acquire();
 
         final Future<?> f = executor.submit(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Storage.Objects.Insert request = mClient.objects().insert(gsBucket, storageObject, storageContent);
-
                     if (directUpload) {
-                        request.getMediaHttpUploader().setDirectUploadEnabled(true);
-                    }
+                        byte[] content = Files.readAllBytes(localFile.toPath());
+                        Blob result = mClient.create(sourceBlob, content);
+                        LOG.debug("Upload file {} to gs://{}/{}", localFile, gsBucket, gsKey);
+                        LOG.trace("Upload file {}, Blob: {}", result);
+                    } else {
+                        long startTime = System.nanoTime();
+                        try (WriteChannel out = mClient.writer(sourceBlob);
+                            FileChannel in = new FileInputStream(localFile).getChannel();
+                            ) {
+                            ByteBuffer buffer = ByteBuffer.allocateDirect(1024 * 1024 * 5); // 5 MiB buffer (remember this is pr. thread)
 
-                    request.getMediaHttpUploader().setProgressListener(new MediaHttpUploaderProgressListener() {
-                        @Override
-                        public void progressChanged(MediaHttpUploader uploader) throws IOException {
-                            LOG.debug("[{} %] upload file {} to gs://{}/{}",
-                                    (int) uploader.getProgress() * 100, localFile, gsBucket, gsKey);
+                            int bytesRead;
+                            while ((bytesRead = in.read(buffer)) > 0) {
+                                buffer.flip();
+                                out.write(buffer);
+                                buffer.clear();
+                            }
                         }
-                    });
-
-                    request.execute();
+                        long elapsedTime = System.nanoTime() - startTime;
+                        LOG.debug("Upload file {} to gs://{}/{} in {} msec", localFile, gsBucket, gsKey, (elapsedTime / 1000000.0));
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -106,55 +119,48 @@ public class GsUploadManager extends UploadManager {
 
     private static Storage getService(String credentialsPath, int connectTimeoutMs, int readTimeoutMs) throws Exception {
         if (mStorageService == null) {
-            HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 
-            GoogleCredential credential;
-            try {
-                // Lookup if configured path from the properties; otherwise fallback to Google Application default
-                if (credentialsPath != null && !credentialsPath.isEmpty()) {
-                    credential = GoogleCredential
-                            .fromStream(new FileInputStream(credentialsPath), httpTransport, JSON_FACTORY)
-                            .createScoped(Collections.singleton(StorageScopes.CLOUD_PLATFORM));
-                } else {
-                    credential = GoogleCredential.getApplicationDefault(httpTransport, JSON_FACTORY);
+            StorageOptions.Builder builder;
+            if (credentialsPath != null && !credentialsPath.isEmpty()) {
+
+                try (FileInputStream fis = new FileInputStream(credentialsPath)) {
+                    GoogleCredentials credential = GoogleCredentials
+                        .fromStream(new FileInputStream(credentialsPath))
+                        .createScoped(Collections.singleton(StorageScopes.CLOUD_PLATFORM));
+
+                    // Depending on the environment that provides the default credentials (e.g. Compute Engine, App
+                    // Engine), the credentials may require us to specify the scopes we need explicitly.
+                    // Check for this case, and inject the scope if required.
+                    if (credential.createScopedRequired()) {
+                        credential = credential.createScoped(StorageScopes.all());
+                    }
+                    builder = StorageOptions.newBuilder().setCredentials(credential);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to load Google credentials : " + credentialsPath, e);
                 }
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to load Google credentials : " + credentialsPath, e);
+            } else {
+                builder = StorageOptions.getDefaultInstance().toBuilder();
             }
 
-            // Depending on the environment that provides the default credentials (e.g. Compute Engine, App
-            // Engine), the credentials may require us to specify the scopes we need explicitly.
-            // Check for this case, and inject the scope if required.
-            if (credential.createScopedRequired()) {
-                credential = credential.createScoped(StorageScopes.all());
-            }
+            // These retrySettings are copied from default com.google.cloud.ServiceOptions#getDefaultRetrySettingsBuilder
+            // and changed initial retry delay to 5 seconds from 1 seconds.
+            // Changed max attempts from 6 to 12.
+            builder.setRetrySettings(RetrySettings.newBuilder()
+                .setMaxAttempts(12)
+                .setInitialRetryDelay(Duration.ofMillis(5000L))
+                .setMaxRetryDelay(Duration.ofMillis(32_000L))
+                .setRetryDelayMultiplier(2.0)
+                .setTotalTimeout(Duration.ofMillis(50_000L))
+                .setInitialRpcTimeout(Duration.ofMillis(50_000L))
+                .setRpcTimeoutMultiplier(1.0)
+                .setMaxRpcTimeout(Duration.ofMillis(50_000L))
+                .build());
 
-            mStorageService = new Storage.Builder(httpTransport, JSON_FACTORY,
-                    setHttpBackoffTimeout(credential, connectTimeoutMs, readTimeoutMs))
-                    .setApplicationName("com.pinterest.secor")
-                    .build();
+            mStorageService = builder
+                .build()
+                .getService();
         }
+
         return mStorageService;
     }
-
-    private static HttpRequestInitializer setHttpBackoffTimeout(final HttpRequestInitializer requestInitializer,
-                                                                final int connectTimeoutMs, final int readTimeoutMs) {
-        return new HttpRequestInitializer() {
-            @Override
-            public void initialize(HttpRequest httpRequest) throws IOException {
-                requestInitializer.initialize(httpRequest);
-
-                // Configure exponential backoff on error
-                // https://developers.google.com/api-client-library/java/google-http-java-client/backoff
-                ExponentialBackOff backoff = new ExponentialBackOff();
-                HttpUnsuccessfulResponseHandler backoffHandler = new HttpBackOffUnsuccessfulResponseHandler(backoff)
-                        .setBackOffRequired(HttpBackOffUnsuccessfulResponseHandler.BackOffRequired.ALWAYS);
-                httpRequest.setUnsuccessfulResponseHandler(backoffHandler);
-
-                httpRequest.setConnectTimeout(connectTimeoutMs);
-                httpRequest.setReadTimeout(readTimeoutMs);
-            }
-        };
-    }
-
 }

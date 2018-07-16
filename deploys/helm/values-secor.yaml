@@ -1,7 +1,31 @@
+# Example of production values
 secor:
   zookeeper:
-    quorum: "kafka-zookeeper.default:2181"
+    quorum: "kafka-zookeeper:2181"
   backup:
-    configFile: /opt/secor/config/secor.kubernetes-test.backup.properties
+    configFile: /opt/secor/config/secor.kubernetes-prod.backup.properties
+    logConfigFile: /opt/secor/config/log4j.kubernetes-prod.properties
+    storage:
+      class: standard
+      size: 100Gi
+    jvm:
+      memory: 6144m
+    resources:
+      requests:
+        #cpu: 8000m # If backfilling!
+        cpu: 1000m
+        memory: 5000Mi
+ 
   partition:
-    configFile: /opt/secor/config/secor.kubernetes-test.partition.properties
+    configFile: /opt/secor/config/secor.kubernetes-prod.partition.properties
+    logConfigFile: /opt/secor/config/log4j.kubernetes-prod.properties
+    storage:
+      class: standard
+      size: 100Gi
+    jvm:
+      memory: 6144m
+    resources:
+      requests:
+        #cpu: 8000m # If backfilling!
+        cpu: 1000m
+        memory: 5000Mi
