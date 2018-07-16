@@ -18,7 +18,7 @@ public interface ORCScehmaProvider {
      * 
      * @param topic kafka topic
      * @param logFilePath It may require to figure out the schema
-     * @return
+     * @return TypeDescription
      */
     public TypeDescription getSchema(String topic, LogFilePath logFilePath);
 

@@ -103,7 +103,7 @@ public class ProtobufUtil {
     }
 
     /**
-     * Returns whether there was a protobuf class configuration
+     * @return whether there was a protobuf class configuration
      */
     public boolean isConfigured() {
         return allTopics || !messageClassByTopic.isEmpty();

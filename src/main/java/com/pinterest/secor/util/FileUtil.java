@@ -239,9 +239,9 @@ public class FileUtil {
     }
     
     /** Generate MD5 hash of topic and partitions. And extract first 4 characters of the MD5 hash.
-     * @param topic
-     * @param partitions
-     * @return
+     * @param topic topic name
+     * @param partitions partitions
+     * @return md5 hash
      */
     public static String getMd5Hash(String topic, String[] partitions) {
       ArrayList<String> elements = new ArrayList<String>();

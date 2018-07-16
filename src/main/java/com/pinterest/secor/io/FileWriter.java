@@ -28,25 +28,23 @@ import java.io.IOException;
  */
 public interface FileWriter {
     /**
-     * Get length of data written up to now to the underlying file
-     *
-     * @return
-     * @throws java.io.IOException
+     * @return length of data written up to now to the underlying file
+     * @throws java.io.IOException on IO error
      */
     public long getLength() throws IOException;
 
     /**
      * Write the given key and value to the file
      *
-     * @param keyValue
-     * @throws java.io.IOException
+     * @param keyValue KeyValue
+     * @throws java.io.IOException on IO error
      */
     public void write(KeyValue keyValue) throws IOException;
 
     /**
      * Close the file
      *
-     * @throws java.io.IOException
+     * @throws java.io.IOException on IO error
      */
     public void close() throws IOException;
 }

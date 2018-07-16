@@ -99,6 +99,7 @@ public class FileRegistry {
      * Retrieve an existing writer for a given path.
      * @param path The path to retrieve writer for.
      * @return Writer for a given path or null if no writer has been created yet.
+     * @throws Exception on error
      */
     public FileWriter getWriter(LogFilePath path)
             throws Exception {
@@ -110,7 +111,7 @@ public class FileRegistry {
      * @param path The path to retrieve writer for.
      * @param codec Optional compression codec.
      * @return Writer for a given path.
-     * @throws Exception 
+     * @throws Exception on error
      */
     public FileWriter getOrCreateWriter(LogFilePath path, CompressionCodec codec)
             throws Exception {
@@ -145,7 +146,7 @@ public class FileRegistry {
     /**
      * Delete a given path, the underlying file, and the corresponding writer.
      * @param path The path to delete.
-     * @throws IOException
+     * @throws IOException on error
      */
     public void deletePath(LogFilePath path) throws IOException {
         TopicPartitionGroup topicPartition = new TopicPartitionGroup(path.getTopic(),
@@ -167,7 +168,7 @@ public class FileRegistry {
     /**
      * Delete all paths, files, and writers in a given topic partition.
      * @param topicPartition The topic partition to remove.
-     * @throws IOException
+     * @throws IOException on error
      */
     public void deleteTopicPartition(TopicPartition topicPartition) throws IOException {
         deleteTopicPartitionGroup((new TopicPartitionGroup(topicPartition)));
@@ -187,6 +188,7 @@ public class FileRegistry {
     /**
      * Delete writer for a given topic partition.  Underlying file is not removed.
      * @param path The path to remove the writer for.
+     * @throws IOException on error
      */
     public void deleteWriter(LogFilePath path) throws IOException {
         FileWriter writer = mWriters.get(path);
@@ -203,6 +205,7 @@ public class FileRegistry {
     /**
      * Delete all writers in a given topic partition.  Underlying files are not removed.
      * @param topicPartition The topic partition to remove the writers for.
+     * @throws IOException on error
      */
     public void deleteWriters(TopicPartition topicPartition) throws IOException {
         deleteWriters(new TopicPartitionGroup(topicPartition));
@@ -225,7 +228,7 @@ public class FileRegistry {
      * @param topicPartition The topic partition to get the size for.
      * @return Aggregated size of files in the topic partition or 0 if the topic partition does
      *     not contain any files.
-     * @throws IOException
+     * @throws IOException on error
      */
     public long getSize(TopicPartition topicPartition) throws IOException {
         return getSize(new TopicPartitionGroup(topicPartition));
@@ -250,7 +253,7 @@ public class FileRegistry {
      * @param topicPartition The topic partition to get the age of.
      * @return Age of the most recently created file in the topic partition or -1 if the partition
      *     does not contain any files.
-     * @throws IOException
+     * @throws IOException on error
      */
     public long getModificationAgeSec(TopicPartition topicPartition) throws IOException {
         return getModificationAgeSec(new TopicPartitionGroup(topicPartition));
