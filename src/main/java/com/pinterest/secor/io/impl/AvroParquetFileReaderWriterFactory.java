@@ -8,8 +8,11 @@ import com.google.protobuf.Message;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.Decoder; // transship magic byte
+import org.apache.avro.io.DecoderFactory; // transship magic byte
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificDatumReader; // transship magic byte
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
@@ -66,6 +69,26 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         return serialized.array();
     }
 
+
+    // transship magic byte issue
+    protected static GenericRecord deserializeAvroRecord(SpecificDatumReader<GenericRecord> reader, byte[] value) throws IOException {
+        Decoder decoder = DecoderFactory.get().binaryDecoder(value, null);
+        return reader.read(null, decoder);
+    }
+
+    protected GenericRecord decodeMessage(byte[] value, String topic, SpecificDatumReader<GenericRecord> reader, int partition, long offset) throws IOException {
+        // Avro schema registry header format is a "Magic Byte" that equals 0 followed by a 4-byte int
+        // https://docs.confluent.io/current/schema-registry/docs/serializer-formatter.html#wire-format
+        if (value.length > 5 && value[0] == 0) {
+            return schemaRegistryClient.decodeMessage(topic, value);
+        } else {
+            GenericRecord record = deserializeAvroRecord(reader, value);
+            LOG.warn("No magic byte found for record: {} in partition {} with offset {}", record, partition, offset);
+            return record;
+        }
+    }
+
+
     protected class AvroParquetFileReader implements FileReader {
 
         private ParquetReader<GenericRecord> reader;
@@ -101,6 +124,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         private ParquetWriter writer;
         private String topic;
+        private int partition;
+        private SpecificDatumReader<GenericRecord> datumReader;
 
         public AvroParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
@@ -108,9 +133,12 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
             CompressionCodecName codecName = CompressionCodecName
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
+            partition = logFilePath.getKafkaPartition();
+            Schema schema = schemaRegistryClient.getSchema(topic);
+            datumReader = new SpecificDatumReader<>(schema);
             // Not setting blockSize, pageSize, enableDictionary, and validating
             writer = AvroParquetWriter.builder(path)
-                    .withSchema(schemaRegistryClient.getSchema(topic))
+                    .withSchema(schema)
                     .withCompressionCodec(codecName)
                     .build();
         }
@@ -122,11 +150,11 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            GenericRecord record = schemaRegistryClient.decodeMessage(topic, keyValue.getValue());
-            LOG.trace("Writing record {}", record);
-            if (record != null){
-                writer.write(record);
-            }
+                GenericRecord record = decodeMessage(keyValue.getValue(), topic, datumReader, partition, keyValue.getOffset());
+                LOG.trace("Writing record {}", record);
+                if (record != null) {
+                    writer.write(record);
+                }
         }
 
         @Override
