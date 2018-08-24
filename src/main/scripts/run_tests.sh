@@ -130,22 +130,19 @@ stop_s3() {
 }
 
 start_zookeeper() {
-    run_command "${BASE_DIR}/run_kafka_class.sh \
-        org.apache.zookeeper.server.quorum.QuorumPeerMain ${CONF_DIR}/zookeeper.test.properties > \
-        ${LOGS_DIR}/zookeeper.log 2>&1 &"
+    run_command "docker-compose up -d zookeeper"
 }
 
 stop_zookeeper() {
-    run_command "pkill -f 'org.apache.zookeeper.server.quorum.QuorumPeerMain' || true"
+    run_command "docker-compose rm -sf zookeeper"
 }
 
 start_kafka_server () {
-    run_command "${BASE_DIR}/run_kafka_class.sh kafka.Kafka ${CONF_DIR}/kafka.test.properties > \
-        ${LOGS_DIR}/kafka_server.log 2>&1 &"
+    run_command "docker-compose up -d kafka"
 }
 
 stop_kafka_server() {
-    run_command "pkill -f 'kafka.Kafka' || true"
+    run_command "docker-compose rm -sf kafka"
 }
 
 start_secor() {
@@ -181,9 +178,7 @@ run_finalizer() {
 }
 
 create_topic() {
-    run_command "${BASE_DIR}/run_kafka_class.sh kafka.admin.TopicCommand --create --zookeeper \
-        localhost:2181 --replication-factor 1 --partitions 2 --topic test > \
-        ${LOGS_DIR}/create_topic.log 2>&1"
+    run_command "docker-compose exec kafka kafka-topics --zookeeper zookeeper:2181 --create --replication-factor 1 --partitions 2 --topic test"
 }
 
 # post messages
