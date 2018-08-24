@@ -139,6 +139,10 @@ public class SecorConfig {
         return getString("kafka.message.timestamp.className");
     }
 
+    public String getKafkaMessageIteratorClass() {
+        return getString("kafka.message.iterator.className");
+    }
+
     public int getGeneration() {
         return getInt("secor.generation");
     }
