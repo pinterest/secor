@@ -3,6 +3,7 @@ package com.pinterest.secor.common;
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.serializers.KafkaAvroDecoder;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import junit.framework.TestCase;
@@ -11,7 +12,6 @@ import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.avro.util.Utf8;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 @RunWith(PowerMockRunner.class)
 public class SecorSchemaRegistryClientTest extends TestCase {
 
-    private KafkaAvroDecoder kafkaAvroDecoder;
+    private KafkaAvroDeserializer kafkaAvroDeserializer;
     private SchemaRegistryClient schemaRegistryClient;
     private SecorSchemaRegistryClient secorSchemaRegistryClient;
     private SecorConfig secorConfig;
@@ -36,13 +36,13 @@ public class SecorSchemaRegistryClientTest extends TestCase {
         SecorConfig secorConfig = Mockito.mock(SecorConfig.class);
         when(secorConfig.getSchemaRegistryUrl()).thenReturn("schema-registry-url");
         secorSchemaRegistryClient = new SecorSchemaRegistryClient(secorConfig);
-        secorSchemaRegistryClient.decoder = kafkaAvroDecoder;
+        secorSchemaRegistryClient.deserializer = kafkaAvroDeserializer;
         secorSchemaRegistryClient.schemaRegistryClient = schemaRegistryClient;
     }
 
     private void initKafka() {
         schemaRegistryClient = new MockSchemaRegistryClient();
-        kafkaAvroDecoder = new KafkaAvroDecoder(schemaRegistryClient);
+        kafkaAvroDeserializer = new KafkaAvroDeserializer(schemaRegistryClient);
         Properties defaultConfig = new Properties();
         defaultConfig.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, "bogus");
         avroSerializer = new KafkaAvroSerializer(schemaRegistryClient);
