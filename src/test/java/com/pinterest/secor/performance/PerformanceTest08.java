@@ -29,7 +29,7 @@
 //
 //import com.google.common.collect.Lists;
 //import com.google.common.collect.Maps;
-//import com.pinterest.secor.common.KafkaClient;
+//import com.pinterest.secor.common.LegacyKafkaClient;
 //import com.pinterest.secor.common.OffsetTracker;
 //import com.pinterest.secor.common.OstrichAdminService;
 //import com.pinterest.secor.common.SecorConfig;
@@ -196,7 +196,7 @@
 //     */
 //    private static Map<TopicPartition, Long> getTopicMetadata(
 //            List<String> topics, int num_partitions, SecorConfig config) {
-//        KafkaClient mKafkaClient = new KafkaClient(config);
+//        LegacyKafkaClient mKafkaClient = new LegacyKafkaClient(config);
 //
 //        Map<TopicPartition, Long> lastOffsets = Maps.newHashMap();
 //        for (String topic : topics) {
