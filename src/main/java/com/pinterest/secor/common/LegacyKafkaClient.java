@@ -47,6 +47,7 @@ import java.util.Map;
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
+@Deprecated
 public class LegacyKafkaClient implements KafkaClient {
     private static final Logger LOG = LoggerFactory.getLogger(LegacyKafkaClient.class);
 
@@ -54,10 +55,7 @@ public class LegacyKafkaClient implements KafkaClient {
     private ZookeeperConnector mZookeeperConnector;
     private KafkaMessageTimestampFactory mKafkaMessageTimestampFactory;
 
-    public LegacyKafkaClient(SecorConfig config) {
-        mConfig = config;
-        mZookeeperConnector = new ZookeeperConnector(mConfig);
-        mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory(mConfig.getKafkaMessageTimestampClass());
+    public LegacyKafkaClient() {
     }
 
     public class MessageDoesNotExistException extends RuntimeException {}
@@ -249,5 +247,12 @@ public class LegacyKafkaClient implements KafkaClient {
                 consumer.close();
             }
         }
+    }
+
+    @Override
+    public void init(SecorConfig config) {
+        mConfig = config;
+        mZookeeperConnector = new ZookeeperConnector(mConfig);
+        mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory(mConfig.getKafkaMessageTimestampClass());
     }
 }

@@ -67,7 +67,13 @@ public class ProgressMonitor {
     {
         mConfig = config;
         mZookeeperConnector = new ZookeeperConnector(mConfig);
-        mKafkaClient = new LegacyKafkaClient(mConfig);
+        try {
+            Class timestampClass = Class.forName(mConfig.getKafkaClientClass());
+            this.mKafkaClient = (KafkaClient) timestampClass.newInstance();
+            this.mKafkaClient.init(config);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
         mMessageParser = (MessageParser) ReflectionUtil.createMessageParser(
                 mConfig.getMessageParserClass(), mConfig);
 
