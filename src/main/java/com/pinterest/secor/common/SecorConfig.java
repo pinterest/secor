@@ -119,6 +119,10 @@ public class SecorConfig {
         return getString("kafka.fetch.min.bytes");
     }
 
+    public String getFetchMaxBytes() {
+        return getString("kafka.fetch.max.bytes");
+    }
+
     public String getFetchWaitMaxMs() {
         return getString("kafka.fetch.wait.max.ms");
     }
