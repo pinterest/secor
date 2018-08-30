@@ -79,27 +79,28 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
 
             @Override
             public void onPartitionsAssigned(Collection<TopicPartition> collection) {
-                try {
-                    Map<TopicPartition, Long> committedOffsets = getCommittedOffsets(collection);
-                    committedOffsets.forEach(((topicPartition, offset) -> {
-                        LOG.debug("Seeking {} to offset {}", topicPartition, offset);
-                        mKafkaConsumer.seek(topicPartition, Math.max(0, offset));
-                    }));
-                } catch (Exception e) {
-                    LOG.trace("Unable to fetch committed offsets from zookeeper", e);
-                    throw new RuntimeException(e);
-                }
+                Map<TopicPartition, Long> committedOffsets = getCommittedOffsets(collection);
+                committedOffsets.forEach(((topicPartition, offset) -> {
+                    LOG.debug("Seeking {} to offset {}", topicPartition, offset);
+                    mKafkaConsumer.seek(topicPartition, Math.max(0, offset));
+                }));
+
             }
         });
     }
 
-    private Map<TopicPartition, Long> getCommittedOffsets(Collection<TopicPartition> assignment) throws Exception {
+    private Map<TopicPartition, Long> getCommittedOffsets(Collection<TopicPartition> assignment) {
         Map<TopicPartition, Long> committedOffsets = new HashMap<>();
 
         for (TopicPartition topicPartition : assignment) {
             com.pinterest.secor.common.TopicPartition secorTopicPartition = new com.pinterest.secor.common.TopicPartition(topicPartition.topic(), topicPartition.partition());
-            long committedOffset = mZookeeperConnector.getCommittedOffsetCount(secorTopicPartition);
-            committedOffsets.put(topicPartition, committedOffset);
+            try {
+                long committedOffset = mZookeeperConnector.getCommittedOffsetCount(secorTopicPartition);
+                committedOffsets.put(topicPartition, committedOffset);
+            } catch (Exception e) {
+                LOG.trace("Unable to fetch committed offsets from zookeeper", e);
+                throw new RuntimeException(e);
+            }
         }
 
         return committedOffsets;
