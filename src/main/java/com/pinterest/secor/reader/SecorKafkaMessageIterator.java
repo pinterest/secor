@@ -18,9 +18,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-// TODO: choose better name
-public class KafkaClientMessageIterator implements KafkaMessageIterator {
-    private static final Logger LOG = LoggerFactory.getLogger(KafkaClientMessageIterator.class);
+public class SecorKafkaMessageIterator implements KafkaMessageIterator {
+    private static final Logger LOG = LoggerFactory.getLogger(SecorKafkaMessageIterator.class);
     private KafkaConsumer<byte[], byte[]> mKafkaConsumer;
     private Deque<ConsumerRecord<byte[], byte[]>> mRecordsBatch;
     private ZookeeperConnector mZookeeperConnector;
