@@ -24,6 +24,7 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
     private KafkaConsumer<byte[], byte[]> mKafkaConsumer;
     private Deque<ConsumerRecord<byte[], byte[]>> mRecordsBatch;
     private ZookeeperConnector mZookeeperConnector;
+    private int mPollTimeout;
 
     @Override
     public boolean hasNext() {
@@ -33,7 +34,7 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
     @Override
     public Message next() {
         if (mRecordsBatch.isEmpty()) {
-            mKafkaConsumer.poll(Duration.ofMillis(1000)).forEach(mRecordsBatch::add);
+            mKafkaConsumer.poll(Duration.ofSeconds(mPollTimeout)).forEach(mRecordsBatch::add);
         }
 
         if (mRecordsBatch.isEmpty()) {
@@ -49,6 +50,8 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
     public void init(SecorConfig config) throws UnknownHostException {
         Properties props = new Properties();
         String offsetResetConfig = config.getNewConsumerAutoOffsetReset();
+        mPollTimeout = config.getNewConsumerPollTimeoutSeconds();
+
         props.put("bootstrap.servers", config.getKafkaSeedBrokerHost() + ":" + config.getKafkaSeedBrokerPort());
         props.put("group.id", config.getKafkaGroup());
         props.put("enable.auto.commit", false);
@@ -99,7 +102,8 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
         Map<TopicPartition, Long> committedOffsets = new HashMap<>();
 
         for (TopicPartition topicPartition : assignment) {
-            com.pinterest.secor.common.TopicPartition secorTopicPartition = new com.pinterest.secor.common.TopicPartition(topicPartition.topic(), topicPartition.partition());
+            com.pinterest.secor.common.TopicPartition secorTopicPartition =
+                    new com.pinterest.secor.common.TopicPartition(topicPartition.topic(), topicPartition.partition());
             try {
                 long committedOffset = mZookeeperConnector.getCommittedOffsetCount(secorTopicPartition);
                 committedOffsets.put(topicPartition, committedOffset);

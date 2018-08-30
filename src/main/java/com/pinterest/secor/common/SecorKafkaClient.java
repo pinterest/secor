@@ -1,7 +1,6 @@
 package com.pinterest.secor.common;
 
 import com.pinterest.secor.message.Message;
-import com.pinterest.secor.util.IdUtil;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.TopicDescription;
@@ -19,9 +18,10 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 public class SecorKafkaClient implements KafkaClient {
-    KafkaConsumer<byte[], byte[]> mKafkaConsumer;
-    AdminClient mKafkaAdminClient;
-    ZookeeperConnector mZookeeperConnector;
+    private KafkaConsumer<byte[], byte[]> mKafkaConsumer;
+    private AdminClient mKafkaAdminClient;
+    private ZookeeperConnector mZookeeperConnector;
+    private int mPollTimeout;
 
     @Override
     public int getNumPartitions(String topic) {
@@ -57,7 +57,7 @@ public class SecorKafkaClient implements KafkaClient {
     }
 
     private Message readSingleMessage(KafkaConsumer<byte[], byte[]> kafkaConsumer) {
-        Iterator<ConsumerRecord<byte[], byte[]>> records = kafkaConsumer.poll(Duration.ofMillis(10000)).iterator();
+        Iterator<ConsumerRecord<byte[], byte[]>> records = kafkaConsumer.poll(Duration.ofMillis(mPollTimeout)).iterator();
         Message message;
         if (records.hasNext()) {
             ConsumerRecord<byte[], byte[]> record = records.next();
@@ -71,6 +71,7 @@ public class SecorKafkaClient implements KafkaClient {
     @Override
     public void init(SecorConfig config) {
         mZookeeperConnector = new ZookeeperConnector(config);
+        mPollTimeout = config.getNewConsumerPollTimeoutSeconds();
         Properties props = new Properties();
         props.put("bootstrap.servers", config.getKafkaSeedBrokerHost() + ":" + config.getKafkaSeedBrokerPort());
         props.put("enable.auto.commit", false);
