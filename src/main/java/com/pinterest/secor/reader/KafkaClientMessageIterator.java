@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 public class KafkaClientMessageIterator implements KafkaMessageIterator {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaClientMessageIterator.class);
     private KafkaConsumer<byte[], byte[]> mKafkaConsumer;
-    private Queue<ConsumerRecord<byte[], byte[]>> mRecordsBatch;
+    private Deque<ConsumerRecord<byte[], byte[]>> mRecordsBatch;
     private ZookeeperConnector mZookeeperConnector;
 
     @Override
@@ -36,9 +36,13 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
             mKafkaConsumer.poll(Duration.ofMillis(1000)).forEach(mRecordsBatch::add);
         }
 
-        ConsumerRecord<byte[], byte[]> consumerRecord = mRecordsBatch.remove();
-        return new Message(consumerRecord.topic(), consumerRecord.partition(), consumerRecord.offset(),
-                consumerRecord.key(), consumerRecord.value(), consumerRecord.timestamp());
+        if (mRecordsBatch.isEmpty()) {
+            return null;
+        } else {
+            ConsumerRecord<byte[], byte[]> consumerRecord = mRecordsBatch.pop();
+            return new Message(consumerRecord.topic(), consumerRecord.partition(), consumerRecord.offset(),
+                    consumerRecord.key(), consumerRecord.value(), consumerRecord.timestamp());
+        }
     }
 
     @Override
@@ -62,7 +66,7 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
         optionalConfig(config.getFetchMaxBytes(), conf -> props.put("fetch.max.bytes", conf));
 
         mZookeeperConnector = new ZookeeperConnector(config);
-        mRecordsBatch = new LinkedList<>();
+        mRecordsBatch = new ArrayDeque<>();
         mKafkaConsumer = new KafkaConsumer<>(props);
         mKafkaConsumer.subscribe(Pattern.compile(config.getKafkaTopicFilter()), new ConsumerRebalanceListener() {
             @Override
