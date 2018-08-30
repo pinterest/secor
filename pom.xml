@@ -590,6 +590,17 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
+                                <exclude>com/pinterest/secor/reader/KafkaClientMessageIterator.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
                         <version>2.2.1</version>
                         <executions>
@@ -669,6 +680,8 @@
                         <configuration>
                             <excludes>
                                 <exclude>com/pinterest/secor/timestamp/Kafka10MessageTimestamp.java</exclude>
+                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
+                                <exclude>com/pinterest/secor/reader/KafkaClientMessageIterator.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -695,6 +708,21 @@
         </profile>
         <profile>
             <id>kafka-1.0.0</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
+                                <exclude>com/pinterest/secor/reader/KafkaClientMessageIterator.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
@@ -762,6 +790,21 @@
         </profile>
         <profile>
             <id>kafka-0.10.2.0</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
+                                <exclude>com/pinterest/secor/reader/KafkaClientMessageIterator.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -795,6 +838,21 @@
         </profile>
         <profile>
             <id>kafka-0.10.0.1</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
+                                <exclude>com/pinterest/secor/reader/KafkaClientMessageIterator.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
