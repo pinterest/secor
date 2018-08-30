@@ -48,11 +48,11 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
     @Override
     public void init(SecorConfig config) throws UnknownHostException {
         Properties props = new Properties();
+        String offsetResetConfig = config.getNewConsumerAutoOffsetReset();
         props.put("bootstrap.servers", config.getKafkaSeedBrokerHost() + ":" + config.getKafkaSeedBrokerPort());
         props.put("group.id", config.getKafkaGroup());
         props.put("enable.auto.commit", false);
-        // TODO: This does nothing for now
-        props.put("auto.offset.reset", "earliest");
+        props.put("auto.offset.reset", offsetResetConfig);
         // TODO: Check if old consumer.timeout.ms is equivalent as this
         props.put("request.timeout.ms", config.getConsumerTimeoutMs());
         props.put("client.id", IdUtil.getConsumerId());
@@ -81,8 +81,16 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
             public void onPartitionsAssigned(Collection<TopicPartition> collection) {
                 Map<TopicPartition, Long> committedOffsets = getCommittedOffsets(collection);
                 committedOffsets.forEach(((topicPartition, offset) -> {
-                    LOG.debug("Seeking {} to offset {}", topicPartition, offset);
-                    mKafkaConsumer.seek(topicPartition, Math.max(0, offset));
+                    if (offset == -1) {
+                        if (offsetResetConfig.equals("earliest")) {
+                            mKafkaConsumer.seekToBeginning(collection);
+                        } else if (offsetResetConfig.equals("latest")) {
+                            mKafkaConsumer.seekToEnd(collection);
+                        }
+                    } else {
+                        LOG.debug("Seeking {} to offset {}", topicPartition, Math.max(0, offset));
+                        mKafkaConsumer.seek(topicPartition, Math.max(0, offset));
+                    }
                 }));
 
             }

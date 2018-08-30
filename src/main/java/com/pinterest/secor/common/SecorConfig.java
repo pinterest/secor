@@ -95,6 +95,10 @@ public class SecorConfig {
         return getString("kafka.consumer.auto.offset.reset");
     }
 
+    public String getNewConsumerAutoOffsetReset() {
+        return getString("kafka.new.consumer.auto.offset.reset");
+    }
+
     public String getPartitionAssignmentStrategy() {
         return getString("kafka.partition.assignment.strategy");
     }
