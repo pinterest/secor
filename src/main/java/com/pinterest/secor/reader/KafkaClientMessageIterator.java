@@ -56,8 +56,6 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
         // TODO: Check if old consumer.timeout.ms is equivalent as this
         props.put("request.timeout.ms", config.getConsumerTimeoutMs());
         props.put("client.id", IdUtil.getConsumerId());
-        props.put("fetch.min.bytes", config.getFetchMinBytes());
-        props.put("fetch.max.bytes", config.getFetchMaxBytes());
         props.put("key.deserializer", ByteArrayDeserializer.class);
         props.put("value.deserializer", ByteArrayDeserializer.class);
 
@@ -120,6 +118,6 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
     }
 
     private void optionalConfig(String maybeConf, Consumer<String> configConsumer) {
-        Optional.ofNullable(maybeConf).filter(String::isEmpty).ifPresent(configConsumer);
+        Optional.ofNullable(maybeConf).filter(conf -> !conf.isEmpty()).ifPresent(configConsumer);
     }
 }
