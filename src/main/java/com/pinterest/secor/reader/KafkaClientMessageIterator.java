@@ -44,6 +44,7 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
     @Override
     public void init(SecorConfig config) throws UnknownHostException {
         Properties props = new Properties();
+        props.put("bootstrap.servers", config.getKafkaSeedBrokerHost() + ":" + config.getKafkaSeedBrokerPort());
         props.put("group.id", config.getKafkaGroup());
         props.put("enable.auto.commit", false);
         // TODO: This does nothing for now
