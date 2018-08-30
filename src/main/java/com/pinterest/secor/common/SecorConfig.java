@@ -103,6 +103,82 @@ public class SecorConfig {
         return getInt("kafka.new.consumer.poll.timeout.seconds");
     }
 
+    public String getSslKeyPassword() {
+        return getString("kafka.new.consumer.ssl.key.password");
+    }
+
+    public String getSslKeystoreLocation() {
+        return getString("kafka.new.consumer.ssl.keystore.location");
+    }
+
+    public String getSslKeystorePassword() {
+        return getString("kafka.new.consumer.ssl.keystore.password");
+    }
+
+    public String getSslTruststoreLocation() {
+        return getString("kafka.new.consumer.ssl.truststore.location");
+    }
+
+    public String getSslTruststorePassword() {
+        return getString("kafka.new.consumer.ssl.truststore.password");
+    }
+
+    public String getIsolationLevel() {
+        return getString("kafka.new.consumer.isolation.level");
+    }
+
+    public String getMaxPollRecords() {
+        return getString("kafka.new.consumer.max.poll.records");
+    }
+
+    public String getSaslClientCallbackHandlerClass() {
+        return getString("kafka.new.consumer.sasl.client.callback.handler.class");
+    }
+
+    public String getSaslJaasConfig() {
+        return getString("kafka.new.consumer.sasl.jaas.config");
+    }
+
+    public String getSaslKerberosServiceName() {
+        return getString("kafka.new.consumer.sasl.kerberos.service.name");
+    }
+
+    public String getSaslLoginCallbackHandlerClass() {
+        return getString("kafka.new.consumer.sasl.login.callback.handler.class");
+    }
+
+    public String getSaslLoginClass() {
+        return getString("kafka.new.consumer.sasl.login.class");
+    }
+
+    public String getSaslMechanism() {
+        return getString("kafka.new.consumer.sasl.mechanism");
+    }
+
+    public String getSecurityProtocol() {
+        return getString("kafka.new.consumer.security.protocol");
+    }
+
+    public String getSslEnabledProtocol() {
+        return getString("kafka.new.consumer.ssl.enabled.protocols");
+    }
+
+    public String getSslKeystoreType() {
+        return getString("kafka.new.consumer.ssl.keystore.type");
+    }
+
+    public String getSslProtocol() {
+        return getString("kafka.new.consumer.ssl.protocol");
+    }
+
+    public String getSslProvider() {
+        return getString("kafka.new.consumer.ssl.provider");
+    }
+
+    public String getSslTruststoreType() {
+        return getString("kafka.new.consumer.ssl.truststore.type");
+    }
+
     public String getPartitionAssignmentStrategy() {
         return getString("kafka.partition.assignment.strategy");
     }

@@ -65,6 +65,25 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
         optionalConfig(config.getSocketReceiveBufferBytes(), conf -> props.put("receive.buffer.bytes", conf));
         optionalConfig(config.getFetchMinBytes(), conf -> props.put("fetch.min.bytes", conf));
         optionalConfig(config.getFetchMaxBytes(), conf -> props.put("fetch.max.bytes", conf));
+        optionalConfig(config.getSslKeyPassword(), conf -> props.put("ssl.key.password", conf));
+        optionalConfig(config.getSslKeystoreLocation(), conf -> props.put("ssl.keystore.location", conf));
+        optionalConfig(config.getSslKeystorePassword(), conf -> props.put("ssl.keystore.password", conf));
+        optionalConfig(config.getSslTruststoreLocation(), conf -> props.put("ssl.truststore.location", conf));
+        optionalConfig(config.getSslTruststorePassword(), conf -> props.put("ssl.truststore.password", conf));
+        optionalConfig(config.getIsolationLevel(), conf -> props.put("isolation.level", conf));
+        optionalConfig(config.getMaxPollRecords(), conf -> props.put("max.poll.records", conf));
+        optionalConfig(config.getSaslClientCallbackHandlerClass(), conf -> props.put("sasl.client.callback.handler.class", conf));
+        optionalConfig(config.getSaslJaasConfig(), conf -> props.put("sasl.jaas.config", conf));
+        optionalConfig(config.getSaslKerberosServiceName(), conf -> props.put("sasl.kerberos.service.name", conf));
+        optionalConfig(config.getSaslLoginCallbackHandlerClass(), conf -> props.put("sasl.login.callback.handler.class", conf));
+        optionalConfig(config.getSaslLoginClass(), conf -> props.put("sasl.login.class", conf));
+        optionalConfig(config.getSaslMechanism(), conf -> props.put("sasl.mechanism", conf));
+        optionalConfig(config.getSecurityProtocol(), conf -> props.put("security.protocol", conf));
+        optionalConfig(config.getSslEnabledProtocol(), conf -> props.put("ssl.enabled.protocols", conf));
+        optionalConfig(config.getSslKeystoreType(), conf -> props.put("ssl.keystore.type", conf));
+        optionalConfig(config.getSslProtocol(), conf -> props.put("ssl.protocol", conf));
+        optionalConfig(config.getSslProvider(), conf -> props.put("ssl.provider", conf));
+        optionalConfig(config.getSslTruststoreType(), conf -> props.put("ssl.truststore.type", conf));
 
         mZookeeperConnector = new ZookeeperConnector(config);
         mRecordsBatch = new ArrayDeque<>();
