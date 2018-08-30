@@ -272,7 +272,7 @@ initialize() {
     start_zookeeper
     sleep 3
     start_kafka_server
-    sleep 3
+    sleep 10
     create_topic
     sleep 3
 }
