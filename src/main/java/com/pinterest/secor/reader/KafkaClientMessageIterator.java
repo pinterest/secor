@@ -78,7 +78,7 @@ public class KafkaClientMessageIterator implements KafkaMessageIterator {
                     Map<TopicPartition, Long> committedOffsets = getCommittedOffsets(collection);
                     committedOffsets.forEach(((topicPartition, offset) -> {
                         LOG.debug("Seeking {} to offset {}", topicPartition, offset);
-                        mKafkaConsumer.seek(topicPartition, offset);
+                        mKafkaConsumer.seek(topicPartition, Math.max(0, offset));
                     }));
                 } catch (Exception e) {
                     LOG.trace("Unable to fetch committed offsets from zookeeper", e);
