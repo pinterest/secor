@@ -150,6 +150,13 @@ start_secor() {
       echo "Detected kafka 0.8 profile, need to run with Kafka8 timestamp class.."
       ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.message.timestamp.className=com.pinterest.secor.timestamp.Kafka8MessageTimestamp"
     fi
+
+    if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
+      echo "Detected kafka 2.0 profile, setting new classes config"
+      ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.message.iterator.className=com.pinterest.secor.reader.SecorKafkaMessageIterator"
+      ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.client.className=com.pinterest.secor.common.SecorKafkaClient"
+    fi
+
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.test.backup.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
