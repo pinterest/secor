@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.Locale;
 import java.util.TimeZone;
 
 @RunWith(PowerMockRunner.class)
@@ -41,6 +42,7 @@ public class DateMessageParserTest extends TestCase {
 
     @Override
     public void setUp() throws Exception {
+        Locale.setDefault(Locale.US);
         mConfig = Mockito.mock(SecorConfig.class);
         Mockito.when(mConfig.getTimeZone()).thenReturn(TimeZone.getTimeZone("UTC"));
 
