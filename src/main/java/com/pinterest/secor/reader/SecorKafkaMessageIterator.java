@@ -55,12 +55,11 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         props.put("group.id", config.getKafkaGroup());
         props.put("enable.auto.commit", false);
         props.put("auto.offset.reset", offsetResetConfig);
-        // TODO: Check if old consumer.timeout.ms is equivalent as this
-        props.put("request.timeout.ms", config.getConsumerTimeoutMs());
         props.put("client.id", IdUtil.getConsumerId());
         props.put("key.deserializer", ByteArrayDeserializer.class);
         props.put("value.deserializer", ByteArrayDeserializer.class);
 
+        optionalConfig(config.getNewConsumerRequestTimeoutMs(), conf -> props.put("request.timeout.ms", conf));
         optionalConfig(config.getSocketReceiveBufferBytes(), conf -> props.put("receive.buffer.bytes", conf));
         optionalConfig(config.getFetchMinBytes(), conf -> props.put("fetch.min.bytes", conf));
         optionalConfig(config.getFetchMaxBytes(), conf -> props.put("fetch.max.bytes", conf));
@@ -111,7 +110,6 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
                         mKafkaConsumer.seek(topicPartition, Math.max(0, offset));
                     }
                 }));
-
             }
         });
     }

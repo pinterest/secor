@@ -103,6 +103,10 @@ public class SecorConfig {
         return getInt("kafka.new.consumer.poll.timeout.seconds");
     }
 
+    public String getNewConsumerRequestTimeoutMs() {
+        return getString("kafka.new.consumer.request.timeout.ms");
+    }
+
     public String getSslKeyPassword() {
         return getString("kafka.new.consumer.ssl.key.password");
     }
