@@ -172,6 +172,12 @@ stop_secor() {
 }
 
 run_finalizer() {
+    if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
+      echo "Detected kafka 2.0 profile, setting new classes config"
+      ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.message.iterator.className=com.pinterest.secor.reader.SecorKafkaMessageIterator"
+      ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.client.className=com.pinterest.secor.common.SecorKafkaClient"
+    fi
+
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.test.partition.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
         com.pinterest.secor.main.PartitionFinalizerMain > ${LOGS_DIR}/finalizer.log 2>&1 "
