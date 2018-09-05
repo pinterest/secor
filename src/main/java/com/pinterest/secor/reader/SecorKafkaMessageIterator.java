@@ -101,9 +101,9 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
                 committedOffsets.forEach(((topicPartition, offset) -> {
                     if (offset == -1) {
                         if (offsetResetConfig.equals("earliest")) {
-                            mKafkaConsumer.seekToBeginning(collection);
+                            mKafkaConsumer.seekToBeginning(Collections.singleton(topicPartition));
                         } else if (offsetResetConfig.equals("latest")) {
-                            mKafkaConsumer.seekToEnd(collection);
+                            mKafkaConsumer.seekToEnd(Collections.singleton(topicPartition));
                         }
                     } else {
                         LOG.debug("Seeking {} to offset {}", topicPartition, Math.max(0, offset));
