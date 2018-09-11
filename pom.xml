@@ -595,7 +595,7 @@
                         <configuration>
                             <excludes>
                                 <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
-                                <exclude>com/pinterest/secor/reader/KafkaClientMessageIterator.java</exclude>
+                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -681,7 +681,7 @@
                             <excludes>
                                 <exclude>com/pinterest/secor/timestamp/Kafka10MessageTimestamp.java</exclude>
                                 <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
-                                <exclude>com/pinterest/secor/reader/KafkaClientMessageIterator.java</exclude>
+                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -717,7 +717,7 @@
                         <configuration>
                             <excludes>
                                 <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
-                                <exclude>com/pinterest/secor/reader/KafkaClientMessageIterator.java</exclude>
+                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -799,7 +799,7 @@
                         <configuration>
                             <excludes>
                                 <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
-                                <exclude>com/pinterest/secor/reader/KafkaClientMessageIterator.java</exclude>
+                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -847,7 +847,7 @@
                         <configuration>
                             <excludes>
                                 <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
-                                <exclude>com/pinterest/secor/reader/KafkaClientMessageIterator.java</exclude>
+                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
