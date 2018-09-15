@@ -67,7 +67,7 @@ public class ZookeeperConnector {
             assert elements.length == 2: Integer.toString(elements.length) + " == 2";
             String host = elements[0];
             int port = Integer.parseInt(elements[1]);
-            result.add(new InetSocketAddress(host, port));
+            result.add(InetSocketAddress.createUnresolved(host, port));
         }
         return result;
     }
