@@ -1,5 +1,7 @@
 package com.pinterest.secor.reader;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
@@ -86,7 +88,7 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         mZookeeperConnector = new ZookeeperConnector(config);
         mRecordsBatch = new ArrayDeque<>();
         mKafkaConsumer = new KafkaConsumer<>(props);
-        mKafkaConsumer.subscribe(Pattern.compile(config.getKafkaTopicFilter()), new ConsumerRebalanceListener() {
+        ConsumerRebalanceListener reBalanceListener = new ConsumerRebalanceListener() {
             @Override
             public void onPartitionsRevoked(Collection<TopicPartition> collection) {
                 // TODO: Validate if secor needs something done here
@@ -111,7 +113,14 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
                     }
                 }));
             }
-        });
+        };
+
+        if (Strings.isNullOrEmpty(config.getKafkaTopicList())) {
+            mKafkaConsumer.subscribe(Pattern.compile(config.getKafkaTopicFilter()), reBalanceListener);
+        } else {
+            List<String> subscribeTopics = Arrays.asList(config.getKafkaTopicList().split(","));
+            mKafkaConsumer.subscribe(subscribeTopics, reBalanceListener);
+        }
     }
 
     private Map<TopicPartition, Long> getCommittedOffsets(Collection<TopicPartition> assignment) {
