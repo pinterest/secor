@@ -142,8 +142,8 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
     }
 
     @Override
-    public void commit() {
-        // TODO: Confirm that this will never work, since secor logic won't permit this commit after a rebalance
+    public void commit(com.pinterest.secor.common.TopicPartition topicPartition, long offset) {
+
     }
 
     private void optionalConfig(String maybeConf, Consumer<String> configConsumer) {

@@ -114,7 +114,7 @@ public class MessageReader {
         return message;
     }
 
-    public void commit() {
-        mKafkaMessageIterator.commit();
+    public void commit(TopicPartition topicPartition, long offset) {
+        mKafkaMessageIterator.commit(topicPartition, offset);
     }
 }
