@@ -1,14 +1,13 @@
 package com.pinterest.secor.reader;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.IdUtil;
-import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.slf4j.Logger;
@@ -85,6 +84,10 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         optionalConfig(config.getSslProvider(), conf -> props.put("ssl.provider", conf));
         optionalConfig(config.getSslTruststoreType(), conf -> props.put("ssl.truststore.type", conf));
 
+        String dualCommitEnabled = config.getDualCommitEnabled();
+        String offsetStorage = config.getOffsetsStorage();
+        final boolean skipZookeeperOffsetSeek = offsetStorage.equals("kafka") && dualCommitEnabled.equals("true");
+
         mZookeeperConnector = new ZookeeperConnector(config);
         mRecordsBatch = new ArrayDeque<>();
         mKafkaConsumer = new KafkaConsumer<>(props);
@@ -99,6 +102,10 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
 
             @Override
             public void onPartitionsAssigned(Collection<TopicPartition> collection) {
+                if (skipZookeeperOffsetSeek) {
+                    LOG.debug("offset storage set to kafka. Skipping reading offsets from zookeeper");
+                    return;
+                }
                 Map<TopicPartition, Long> committedOffsets = getCommittedOffsets(collection);
                 committedOffsets.forEach(((topicPartition, offset) -> {
                     if (offset == -1) {
@@ -143,7 +150,15 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
 
     @Override
     public void commit(com.pinterest.secor.common.TopicPartition topicPartition, long offset) {
+        TopicPartition kafkaTopicPartition = new TopicPartition(topicPartition.getTopic(), topicPartition.getPartition());
+        OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(offset);
 
+        try {
+            LOG.info("committing {} offset {} to kafka", topicPartition, offset);
+            mKafkaConsumer.commitSync(ImmutableMap.of(kafkaTopicPartition, offsetAndMetadata));
+        } catch (CommitFailedException e) {
+            LOG.trace("kafka commit failed due to group re-balance", e);
+        }
     }
 
     private void optionalConfig(String maybeConf, Consumer<String> configConsumer) {

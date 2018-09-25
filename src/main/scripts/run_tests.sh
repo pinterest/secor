@@ -332,6 +332,29 @@ post_and_verify_test() {
     echo -e "\e[1;42;97mpost_and_verify_test succeeded\e[0m"
 }
 
+post_and_verify_kafka_storage() {
+    echo "********************************************************"
+    echo "post_and_verify_kafka_storage"
+    initialize
+    ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.offsets.storage=kafka"
+    start_secor
+    sleep 3
+    post_messages ${MESSAGES} 0
+    echo "Waiting ${WAIT_TIME} sec for Secor to upload logs to s3"
+    sleep ${WAIT_TIME}
+    stop_secor
+    sleep 3
+    echo "Starting secor again"
+    start_secor
+    sleep 3
+    post_messages ${MESSAGES} 0
+    echo "Waiting ${WAIT_TIME} sec for Secor to upload logs to s3"
+    sleep ${WAIT_TIME}
+    verify $((${MESSAGES} * 2)) 0
+
+    stop_all
+    echo -e "\e[1;42;97mpost_and_verify_kafka_storage succeeded\e[0m"
+}
 # Post some messages and run the finalizer, count # of messages and success file
 # $1: hr or dt, decides whether it's hourly or daily folder finalization
 post_and_finalizer_verify_test() {
@@ -473,6 +496,7 @@ for fkey in ${S3_FILESYSTEMS}; do
         ADDITIONAL_OPTS="-Dsecor.s3.filesystem=${FILESYSTEM_TYPE} -Dsecor.file.reader.writer.factory=${READER_WRITERS[${key}]}"
         echo "********************************************************"
         echo "Running tests for Message Type: ${MESSAGE_TYPE} and  ReaderWriter:${READER_WRITERS[${key}]} using filesystem: ${FILESYSTEM_TYPE}"
+        post_and_verify_kafka_storage
         post_and_verify_test
         if [ ${MESSAGE_TYPE} = "binary" ]; then
             # Testing finalizer in partition mode
