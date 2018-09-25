@@ -88,6 +88,7 @@ public class MessageReader {
     }
 
     public Message read() {
+        assert hasNext();
         mNMessages = (mNMessages + 1) % mCheckMessagesPerSecond;
         if (mNMessages % mCheckMessagesPerSecond == 0) {
             RateLimitUtil.acquire(mCheckMessagesPerSecond);

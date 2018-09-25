@@ -29,18 +29,18 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
         try {
             return mIterator.hasNext();
         } catch (ConsumerTimeoutException e) {
-            // We wait for a new message with a timeout to periodically apply the upload policy
-            // even if no messages are delivered.
-            LOG.trace("Consumer timed out", e);
-            return false;
+            throw new LegacyConsumerTimeoutException(e);
         }
     }
 
     @Override
     public Message next() {
-        assert hasNext();
         MessageAndMetadata<byte[], byte[]> kafkaMessage;
-        kafkaMessage = mIterator.next();
+        try {
+            kafkaMessage = mIterator.next();
+        } catch (ConsumerTimeoutException e) {
+            throw new LegacyConsumerTimeoutException(e);
+        }
 
         long timestamp = 0L;
         if (mConfig.useKafkaTimestamp()) {

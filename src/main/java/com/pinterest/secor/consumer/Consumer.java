@@ -23,6 +23,7 @@ import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.monitoring.MetricCollector;
 import com.pinterest.secor.parser.MessageParser;
+import com.pinterest.secor.reader.LegacyConsumerTimeoutException;
 import com.pinterest.secor.reader.MessageReader;
 import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.UploadManager;
@@ -119,11 +120,18 @@ public class Consumer extends Thread {
 
     // @return whether there are more messages left to consume
     protected boolean consumeNextMessage() {
-        boolean hasNext = mMessageReader.hasNext();
-        if (!hasNext) {
-            return false;
+        Message rawMessage = null;
+        try {
+            boolean hasNext = mMessageReader.hasNext();
+            if (!hasNext) {
+                return false;
+            }
+            rawMessage = mMessageReader.read();
+        } catch (LegacyConsumerTimeoutException e) {
+            // We wait for a new message with a timeout to periodically apply the upload policy
+            // even if no messages are delivered.
+            LOG.trace("Consumer timed out", e);
         }
-        Message rawMessage = mMessageReader.read();
         if (rawMessage != null) {
             // Before parsing, update the offset and remove any redundant data
             try {
