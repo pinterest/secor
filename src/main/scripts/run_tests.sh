@@ -170,12 +170,6 @@ start_secor() {
       ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.message.timestamp.className=com.pinterest.secor.timestamp.Kafka8MessageTimestamp"
     fi
 
-    if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
-      echo "Detected kafka 2.0 profile, setting new classes config"
-      ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.message.iterator.className=com.pinterest.secor.reader.SecorKafkaMessageIterator"
-      ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.client.className=com.pinterest.secor.common.SecorKafkaClient"
-    fi
-
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.test.backup.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
         com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
@@ -191,12 +185,6 @@ stop_secor() {
 }
 
 run_finalizer() {
-    if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
-      echo "Detected kafka 2.0 profile, setting new classes config"
-      ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.message.iterator.className=com.pinterest.secor.reader.SecorKafkaMessageIterator"
-      ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.client.className=com.pinterest.secor.common.SecorKafkaClient"
-    fi
-
     run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.test.partition.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
         com.pinterest.secor.main.PartitionFinalizerMain > ${LOGS_DIR}/finalizer.log 2>&1 "
@@ -496,6 +484,12 @@ for fkey in ${S3_FILESYSTEMS}; do
     for key in ${!READER_WRITERS[@]}; do
         MESSAGE_TYPE=${key}
         ADDITIONAL_OPTS="-Dsecor.s3.filesystem=${FILESYSTEM_TYPE} -Dsecor.file.reader.writer.factory=${READER_WRITERS[${key}]}"
+        if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
+          echo "Detected kafka 2.0 profile, setting new classes config"
+          ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.message.iterator.className=com.pinterest.secor.reader.SecorKafkaMessageIterator"
+          ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.client.className=com.pinterest.secor.common.SecorKafkaClient"
+        fi
+
         echo "********************************************************"
         echo "Running tests for Message Type: ${MESSAGE_TYPE} and  ReaderWriter:${READER_WRITERS[${key}]} using filesystem: ${FILESYSTEM_TYPE}"
         post_and_verify_kafka_storage
