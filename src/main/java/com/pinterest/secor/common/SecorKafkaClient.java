@@ -18,6 +18,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 public class SecorKafkaClient implements KafkaClient {
+    public static final int MAX_READ_POLL_ATTEMPTS = 10;
     private KafkaConsumer<byte[], byte[]> mKafkaConsumer;
     private AdminClient mKafkaAdminClient;
     private ZookeeperConnector mZookeeperConnector;
@@ -57,13 +58,21 @@ public class SecorKafkaClient implements KafkaClient {
     }
 
     private Message readSingleMessage(KafkaConsumer<byte[], byte[]> kafkaConsumer) {
-        Iterator<ConsumerRecord<byte[], byte[]>> records = kafkaConsumer.poll(Duration.ofMillis(mPollTimeout)).iterator();
-        Message message;
-        if (records.hasNext()) {
-            ConsumerRecord<byte[], byte[]> record = records.next();
-            message = new Message(record.topic(), record.partition(), record.offset(), record.key(), record.value(), record.timestamp());
-        } else {
-            throw new RuntimeException("Unable to fetch message");
+        int pollAttempts = 0;
+        Message message = null;
+        while (pollAttempts < MAX_READ_POLL_ATTEMPTS) {
+            Iterator<ConsumerRecord<byte[], byte[]>> records = kafkaConsumer.poll(Duration.ofMillis(mPollTimeout)).iterator();
+            if (!records.hasNext()) {
+                pollAttempts++;
+            } else {
+                ConsumerRecord<byte[], byte[]> record = records.next();
+                message = new Message(record.topic(), record.partition(), record.offset(), record.key(), record.value(), record.timestamp());
+                break;
+            }
+        }
+
+        if (message == null) {
+            throw new RuntimeException("unable to fetch message after " + MAX_READ_POLL_ATTEMPTS + " Retries");
         }
         return message;
     }
