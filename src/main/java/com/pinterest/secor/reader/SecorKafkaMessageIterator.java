@@ -2,7 +2,6 @@ package com.pinterest.secor.reader;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
