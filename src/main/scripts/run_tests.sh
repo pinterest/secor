@@ -333,6 +333,7 @@ post_and_verify_test() {
 }
 
 post_and_verify_kafka_storage() {
+    OLD_ADDITIONAL_OPTS=${ADDITIONAL_OPTS}
     echo "********************************************************"
     echo "post_and_verify_kafka_storage"
     initialize
@@ -353,6 +354,7 @@ post_and_verify_kafka_storage() {
     verify $((${MESSAGES} * 2)) 0
 
     stop_all
+    ADDITIONAL_OPTS=${OLD_ADDITIONAL_OPTS}
     echo -e "\e[1;42;97mpost_and_verify_kafka_storage succeeded\e[0m"
 }
 # Post some messages and run the finalizer, count # of messages and success file
