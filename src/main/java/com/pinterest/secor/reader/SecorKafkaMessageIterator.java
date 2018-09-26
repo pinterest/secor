@@ -94,10 +94,9 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         mKafkaConsumer = new KafkaConsumer<>(props);
         ConsumerRebalanceListener reBalanceListener = new ConsumerRebalanceListener() {
             @Override
-            public void onPartitionsRevoked(Collection<TopicPartition> collection) {
-                // TODO: Validate if secor needs something done here
-                for (TopicPartition topicPartition : collection) {
-                    LOG.debug("Topic partition {} revoked from consumer", topicPartition);
+            public void onPartitionsRevoked(Collection<TopicPartition> assignedPartitions) {
+                for (TopicPartition topicPartition : assignedPartitions) {
+                    LOG.debug("re-balance will happen for assigned topic partition {}", topicPartition);
                 }
             }
 
