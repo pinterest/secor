@@ -45,7 +45,7 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
 
         long timestamp = 0L;
         if (mConfig.useKafkaTimestamp()) {
-            mKafkaMessageTimestampFactory.getKafkaMessageTimestamp().getTimestamp(kafkaMessage);
+            timestamp = mKafkaMessageTimestampFactory.getKafkaMessageTimestamp().getTimestamp(kafkaMessage);
         }
 
         return new Message(kafkaMessage.topic(), kafkaMessage.partition(),
