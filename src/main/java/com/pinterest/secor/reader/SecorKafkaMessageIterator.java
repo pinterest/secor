@@ -83,6 +83,7 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         optionalConfig(config.getSslProtocol(), conf -> props.put("ssl.protocol", conf));
         optionalConfig(config.getSslProvider(), conf -> props.put("ssl.provider", conf));
         optionalConfig(config.getSslTruststoreType(), conf -> props.put("ssl.truststore.type", conf));
+        optionalConfig(config.getNewConsumerPartitionAssignmentStrategyClass(), conf -> props.put("partition.assignment.strategy", conf));
 
         String dualCommitEnabled = config.getDualCommitEnabled();
         String offsetStorage = config.getOffsetsStorage();

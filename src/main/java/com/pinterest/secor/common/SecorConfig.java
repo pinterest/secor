@@ -187,6 +187,10 @@ public class SecorConfig {
         return getString("kafka.new.consumer.ssl.truststore.type");
     }
 
+    public String getNewConsumerPartitionAssignmentStrategyClass() {
+        return getString("kafka.new.consumer.partition.assignment.strategy.class");
+    }
+
     public String getPartitionAssignmentStrategy() {
         return getString("kafka.partition.assignment.strategy");
     }
