@@ -95,8 +95,8 @@ public class SecorConfig {
         return getString("kafka.consumer.auto.offset.reset");
     }
 
-    public String getKafkaTopicList() {
-        return getString("kafka.new.consumer.topic.list");
+    public String[] getKafkaTopicList() {
+        return getStringArray("kafka.new.consumer.topic.list");
     }
 
     public String getNewConsumerAutoOffsetReset() {

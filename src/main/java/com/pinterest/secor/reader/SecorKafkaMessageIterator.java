@@ -121,11 +121,11 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
             }
         };
 
-        if (Strings.isNullOrEmpty(config.getKafkaTopicList())) {
+        String[] subscribeList = config.getKafkaTopicList();
+        if (Strings.isNullOrEmpty(subscribeList[0])) {
             mKafkaConsumer.subscribe(Pattern.compile(config.getKafkaTopicFilter()), reBalanceListener);
         } else {
-            List<String> subscribeTopics = Arrays.asList(config.getKafkaTopicList().split(","));
-            mKafkaConsumer.subscribe(subscribeTopics, reBalanceListener);
+            mKafkaConsumer.subscribe(Arrays.asList(subscribeList), reBalanceListener);
         }
     }
 
