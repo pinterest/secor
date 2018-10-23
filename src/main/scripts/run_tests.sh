@@ -320,12 +320,15 @@ post_and_verify_test() {
     echo -e "\e[1;42;97mpost_and_verify_test succeeded\e[0m"
 }
 
-post_and_verify_kafka_storage() {
+# verify the messages
+# $1: offset storage kind, zookeeper or kafka
+# $2: dual commit enabled
+post_stop_and_verity_test() {
     OLD_ADDITIONAL_OPTS=${ADDITIONAL_OPTS}
     echo "********************************************************"
     echo "post_and_verify_kafka_storage"
     initialize
-    ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.offsets.storage=kafka"
+    ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.offsets.storage=$1 -Dkafka.dual.commit.enabled=$2"
     start_secor
     sleep 3
     post_messages ${MESSAGES} 0
@@ -492,7 +495,10 @@ for fkey in ${S3_FILESYSTEMS}; do
 
         echo "********************************************************"
         echo "Running tests for Message Type: ${MESSAGE_TYPE} and  ReaderWriter:${READER_WRITERS[${key}]} using filesystem: ${FILESYSTEM_TYPE}"
-        post_and_verify_kafka_storage
+        post_stop_and_verity_test "kafka" "true"
+        post_stop_and_verity_test "kafka" "false"
+        post_stop_and_verity_test "zookeeper" "true"
+        post_stop_and_verity_test "zookeeper" "false"
         post_and_verify_test
         if [ ${MESSAGE_TYPE} = "binary" ]; then
             # Testing finalizer in partition mode
