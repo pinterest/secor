@@ -335,7 +335,7 @@ post_stop_and_verity_test() {
     echo "Waiting ${WAIT_TIME} sec for Secor to upload logs to s3"
     sleep ${WAIT_TIME}
     stop_secor
-    sleep 3
+    sleep 10
     echo "Starting secor again"
     start_secor
     sleep 3
