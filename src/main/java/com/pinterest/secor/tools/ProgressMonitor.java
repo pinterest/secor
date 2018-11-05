@@ -21,10 +21,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
-import com.pinterest.secor.common.KafkaClient;
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.TopicPartition;
-import com.pinterest.secor.common.ZookeeperConnector;
+import com.pinterest.secor.common.*;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.parser.TimestampedMessageParser;
@@ -70,7 +67,13 @@ public class ProgressMonitor {
     {
         mConfig = config;
         mZookeeperConnector = new ZookeeperConnector(mConfig);
-        mKafkaClient = new KafkaClient(mConfig);
+        try {
+            Class timestampClass = Class.forName(mConfig.getKafkaClientClass());
+            this.mKafkaClient = (KafkaClient) timestampClass.newInstance();
+            this.mKafkaClient.init(config);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
         mMessageParser = (MessageParser) ReflectionUtil.createMessageParser(
                 mConfig.getMessageParserClass(), mConfig);
 

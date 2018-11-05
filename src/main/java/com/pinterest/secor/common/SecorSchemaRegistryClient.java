@@ -2,7 +2,7 @@ package com.pinterest.secor.common;
 
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
-import io.confluent.kafka.serializers.KafkaAvroDecoder;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
@@ -16,7 +16,7 @@ public class SecorSchemaRegistryClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecorSchemaRegistryClient.class);
 
-    protected KafkaAvroDecoder decoder;
+    protected KafkaAvroDeserializer deserializer;
     private final static Map<String, Schema> schemas = new ConcurrentHashMap<>();
     protected SchemaRegistryClient schemaRegistryClient;
 
@@ -34,11 +34,11 @@ public class SecorSchemaRegistryClient {
 
     //Allows the SchemaRegistryClient to be mocked in unit tests
     protected void init(SecorConfig config) {
-        decoder = new KafkaAvroDecoder(schemaRegistryClient);
+        deserializer = new KafkaAvroDeserializer(schemaRegistryClient);
     }
 
     public GenericRecord decodeMessage(String topic, byte[] message) {
-        GenericRecord record = (GenericRecord) decoder.fromBytes(message);
+        GenericRecord record = (GenericRecord) deserializer.deserialize(topic, message);
         Schema schema = record.getSchema();
         schemas.put(topic, schema);
         return record;

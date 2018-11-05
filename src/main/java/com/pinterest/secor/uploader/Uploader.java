@@ -129,7 +129,7 @@ public class Uploader {
                 mZookeeperConnector.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
                 mOffsetTracker.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
                 if (isOffsetsStorageKafka) {
-                    mMessageReader.commit();
+                    mMessageReader.commit(topicPartition, lastSeenOffset + 1);
                 }
                 mMetricCollector.increment("uploader.file_uploads.count", paths.size(), topicPartition.getTopic());
             }

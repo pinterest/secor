@@ -575,8 +575,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -588,6 +588,17 @@
             <!-- Matches kafka-0.10.2.0 , just this one includes gpg signing, javadoc etc -->
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
+                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
@@ -669,6 +680,8 @@
                         <configuration>
                             <excludes>
                                 <exclude>com/pinterest/secor/timestamp/Kafka10MessageTimestamp.java</exclude>
+                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
+                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -695,6 +708,21 @@
         </profile>
         <profile>
             <id>kafka-1.0.0</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
+                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
@@ -718,7 +746,65 @@
             </dependencies>
         </profile>
         <profile>
+            <id>kafka-2.0.0</id>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.fasterxml.jackson.module</groupId>
+                        <artifactId>jackson-module-scala_2.11</artifactId>
+                        <version>2.9.5</version>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/pinterest/secor/timestamp/*</exclude>
+                                <exclude>com/pinterest/secor/reader/LegacyKafkaMessageIterator.java</exclude>
+                                <exclude>com/pinterest/secor/common/LegacyKafkaClient.java</exclude>
+                            </excludes>
+                            <testExcludes>
+                                <exclude>com/pinterest/secor/timestamp/*</exclude>
+                            </testExcludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.kafka</groupId>
+                    <artifactId>kafka-clients</artifactId>
+                    <version>2.0.0</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.twitter</groupId>
+                    <artifactId>ostrich_2.11</artifactId>
+                    <version>9.27.0</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>kafka-0.10.2.0</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
+                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -752,6 +838,21 @@
         </profile>
         <profile>
             <id>kafka-0.10.0.1</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
+                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
             <dependencyManagement>
                 <dependencies>
                     <dependency>

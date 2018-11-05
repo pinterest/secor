@@ -23,13 +23,13 @@ import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.monitoring.MetricCollector;
 import com.pinterest.secor.parser.MessageParser;
+import com.pinterest.secor.reader.LegacyConsumerTimeoutException;
 import com.pinterest.secor.reader.MessageReader;
 import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.uploader.Uploader;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.writer.MessageWriter;
-import kafka.consumer.ConsumerTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,7 +127,7 @@ public class Consumer extends Thread {
                 return false;
             }
             rawMessage = mMessageReader.read();
-        } catch (ConsumerTimeoutException e) {
+        } catch (LegacyConsumerTimeoutException e) {
             // We wait for a new message with a timeout to periodically apply the upload policy
             // even if no messages are delivered.
             LOG.trace("Consumer timed out", e);

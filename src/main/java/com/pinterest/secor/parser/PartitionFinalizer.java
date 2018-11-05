@@ -49,7 +49,9 @@ public class PartitionFinalizer {
 
     public PartitionFinalizer(SecorConfig config) throws Exception {
         mConfig = config;
-        mKafkaClient = new KafkaClient(mConfig);
+        Class kafkaClientClass = Class.forName(mConfig.getKafkaClientClass());
+        this.mKafkaClient = (KafkaClient) kafkaClientClass.newInstance();
+        this.mKafkaClient.init(config);
         mZookeeperConnector = new ZookeeperConnector(mConfig);
         mMessageParser = (TimestampedMessageParser) ReflectionUtil.createMessageParser(
           mConfig.getMessageParserClass(), mConfig);
