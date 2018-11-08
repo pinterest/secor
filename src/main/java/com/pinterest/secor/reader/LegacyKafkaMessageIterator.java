@@ -1,18 +1,25 @@
 package com.pinterest.secor.reader;
 
+import com.google.common.collect.ImmutableMap;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
 import com.pinterest.secor.util.IdUtil;
+import kafka.common.OffsetAndMetadata;
+import kafka.common.OffsetMetadata;
+import kafka.common.TopicAndPartition;
 import kafka.consumer.*;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
+import org.apache.kafka.clients.consumer.CommitFailedException;
+import org.apache.kafka.common.requests.OffsetCommitRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
@@ -21,6 +28,7 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
     private ConsumerConnector mConsumerConnector;
     private ConsumerIterator mIterator;
     private KafkaMessageTimestampFactory mKafkaMessageTimestampFactory;
+    private ConsumerConnector mKafkaCommitter;
 
     public LegacyKafkaMessageIterator() {
     }
@@ -57,7 +65,8 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
     public void init(SecorConfig config) throws UnknownHostException {
         this.mConfig = config;
 
-        mConsumerConnector = Consumer.createJavaConsumerConnector(createConsumerConfig());
+        this.mConsumerConnector = createConsumerConnector(createConsumerConfig());
+        this.mKafkaCommitter = createConsumerConnector(createKafkaCommitterConfig());
 
         if (!mConfig.getKafkaTopicBlacklist().isEmpty() && !mConfig.getKafkaTopicFilter().isEmpty()) {
             throw new RuntimeException("Topic filter and blacklist cannot be both specified.");
@@ -74,10 +83,27 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
 
     @Override
     public void commit(TopicPartition topicPartition, long offset) {
+        // warn: commits all topics & partitions - the data may not have been written to output yet
         mConsumerConnector.commitOffsets();
     }
 
-    private ConsumerConfig createConsumerConfig() throws UnknownHostException {
+    @Override
+    public void commitToKafka(TopicPartition topicPartition, long offset) {
+        TopicAndPartition kafkaTopicPartition = new TopicAndPartition(
+                topicPartition.getTopic(), topicPartition.getPartition());
+        OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(new OffsetMetadata(offset, null),
+                // calling scala API from java requires passing these even though defined as defaults in scala code
+                OffsetCommitRequest.DEFAULT_TIMESTAMP, OffsetCommitRequest.DEFAULT_TIMESTAMP);
+        Map<TopicAndPartition, OffsetAndMetadata> offsets = ImmutableMap.of(kafkaTopicPartition, offsetAndMetadata);
+        try {
+            LOG.debug("committing {} offset {} to kafka", topicPartition, offset);
+            mKafkaCommitter.commitOffsets(offsets, true);
+        } catch (CommitFailedException e) {
+            LOG.trace("kafka commit failed due to group re-balance", e);
+        }
+    }
+
+    private Properties createConsumerConfig() throws UnknownHostException {
         Properties props = new Properties();
         props.put("zookeeper.connect", mConfig.getZookeeperQuorum() + mConfig.getKafkaZookeeperPath());
         props.put("group.id", mConfig.getKafkaGroup());
@@ -116,6 +142,17 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
             props.put("fetch.wait.max.ms", mConfig.getFetchWaitMaxMs());
         }
 
-        return new ConsumerConfig(props);
+        return props;
     }
+
+    private Properties createKafkaCommitterConfig() throws UnknownHostException {
+        Properties kafkaCommitterProps = createConsumerConfig();
+        kafkaCommitterProps.put("offsets.storage", "kafka");
+        return kafkaCommitterProps;
+    }
+
+    private ConsumerConnector createConsumerConnector(Properties consumerConfig) {
+        return Consumer.createJavaConsumerConnector(new ConsumerConfig(consumerConfig));
+    }
+
 }

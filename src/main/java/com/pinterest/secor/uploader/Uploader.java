@@ -61,7 +61,7 @@ public class Uploader {
     protected String mTopicFilter;
 
     private boolean isOffsetsStorageKafka = false;
-
+    private boolean isCommitAlsoToKafka = false;
 
     /**
      * Init the Uploader with its dependent objects.
@@ -92,6 +92,13 @@ public class Uploader {
         mMetricCollector = metricCollector;
         if (mConfig.getOffsetsStorage().equals(SecorConstants.KAFKA_OFFSETS_STORAGE_KAFKA)) {
             isOffsetsStorageKafka = true;
+        }
+        if (mConfig.getBoolean(SecorConstants.COMMIT_TO_KAFKA_OFFSET_STORAGE_FOR_REFERENCE, false)) {
+            if (isOffsetsStorageKafka) {
+                throw new IllegalArgumentException(SecorConstants.COMMIT_TO_KAFKA_OFFSET_STORAGE_FOR_REFERENCE +
+                        "=true is not allowed if kafka.offsets.storage=" + SecorConstants.KAFKA_OFFSETS_STORAGE_KAFKA);
+            }
+            isCommitAlsoToKafka = true;
         }
     }
 
@@ -130,6 +137,9 @@ public class Uploader {
                 mOffsetTracker.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
                 if (isOffsetsStorageKafka) {
                     mMessageReader.commit(topicPartition, lastSeenOffset + 1);
+                }
+                if (isCommitAlsoToKafka) {
+                    mMessageReader.commitToKafka(topicPartition, lastSeenOffset + 1);
                 }
                 mMetricCollector.increment("uploader.file_uploads.count", paths.size(), topicPartition.getTopic());
             }

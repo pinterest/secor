@@ -3,6 +3,7 @@ package com.pinterest.secor.reader;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.SecorConstants;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.IdUtil;
@@ -158,6 +159,13 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         } catch (CommitFailedException e) {
             LOG.trace("kafka commit failed due to group re-balance", e);
         }
+    }
+
+    @Override
+    public void commitToKafka(com.pinterest.secor.common.TopicPartition topicPartition, long offset) {
+        // TODO this can be implemented in the same way as in LegacyKafkaMessageIterator if needed
+        throw new UnsupportedOperationException(SecorConstants.COMMIT_TO_KAFKA_OFFSET_STORAGE_FOR_REFERENCE +
+                " is not implemented for " + this.getClass());
     }
 
     private void optionalConfig(String maybeConf, Consumer<String> configConsumer) {
