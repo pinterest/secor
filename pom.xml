@@ -370,6 +370,7 @@
                 <version>1.1</version>
                 <executions>
                     <execution>
+                        <id>create-build-properties</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>exec</goal>
@@ -382,6 +383,22 @@
                                 <argument>-n1</argument>
                             </arguments>
                             <outputFile>target/build.properties</outputFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>create-classes-build-properties</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>git</executable>
+                            <arguments>
+                                <argument>log</argument>
+                                <argument>--pretty=format:build_revision=%H</argument>
+                                <argument>-n1</argument>
+                            </arguments>
+                            <outputFile>target/classes/com/pinterest/secor/common/build.properties</outputFile>
                         </configuration>
                     </execution>
                 </executions>
@@ -397,28 +414,6 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.1</version>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>git</executable>
-                            <arguments>
-                                <argument>log</argument>
-                                <argument>--pretty=format:build_revision=%H</argument>
-                                <argument>-n1</argument>
-                            </arguments>
-                            <outputFile>target/classes/com/pinterest/secor/common/build.properties</outputFile>
                         </configuration>
                     </execution>
                 </executions>
