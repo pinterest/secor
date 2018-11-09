@@ -66,7 +66,7 @@ if [[ ! -z "$S3_PATH" ]]; then
 fi
 if [[ ! -z "$SECOR_SCHEMA_REGISTRY" ]]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dschema.registry.url=$SECOR_SCHEMA_REGISTRY"
-    echo "secor.s3.path=$S3_PATH"
+    echo "schema.registry.url=$SECOR_SCHEMA_REGISTRY"
 fi
 
 if [[ ! -z "$MESSAGE_TIMESTAMP_NAME" ]]; then
