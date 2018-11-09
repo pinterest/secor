@@ -52,6 +52,9 @@
         <encoding>UTF-8</encoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <parquet.version>1.9.0</parquet.version>
+
+        <!-- Name of the directory below src/main/config that contains kafka-version-specific settings -->
+        <kafka.properties>kafka-legacy</kafka.properties>
     </properties>
 
     <distributionManagement>
@@ -356,6 +359,11 @@
         <resources>
             <resource>
                 <directory>src/main/config</directory>
+                <!-- Exclude the variable parts, these are copied by the respective profiles -->
+                <excludes>
+                    <exclude>kafka-legacy/**</exclude>
+                    <exclude>kafka-2.0.0/**</exclude>
+                </excludes>
             </resource>
         </resources>
         <testResources>
@@ -574,6 +582,31 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-kafka-properties</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/config/${kafka.properties}</directory>
+                                    <includes>
+                                        <include>kafka.properties</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -742,6 +775,9 @@
         </profile>
         <profile>
             <id>kafka-2.0.0</id>
+            <properties>
+                <kafka.properties>kafka-2.0.0</kafka.properties>
+            </properties>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
