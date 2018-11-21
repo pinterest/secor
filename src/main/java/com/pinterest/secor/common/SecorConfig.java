@@ -18,8 +18,11 @@ package com.pinterest.secor.common;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.ConfigurationUtils;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,6 +36,8 @@ import java.util.TimeZone;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class SecorConfig {
+    private static final Logger LOG = LoggerFactory.getLogger(SecorConfig.class);
+
     private final PropertiesConfiguration mProperties;
 
     private static final ThreadLocal<SecorConfig> mSecorConfig = new ThreadLocal<SecorConfig>() {
@@ -54,6 +59,9 @@ public class SecorConfig {
                 properties.setProperty(entry.getKey().toString(), entry.getValue());
             }
 
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Configuration: {}", ConfigurationUtils.toString(properties));
+            }
             return new SecorConfig(properties);
         }
     };
