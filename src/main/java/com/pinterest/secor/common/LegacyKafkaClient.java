@@ -157,7 +157,7 @@ public class LegacyKafkaClient implements KafkaClient {
                 : 0l;
 
         return new Message(topicPartition.getTopic(), topicPartition.getPartition(),
-                messageAndOffset.offset(), keyBytes, payloadBytes, timestamp);
+                messageAndOffset.offset(), keyBytes, payloadBytes, timestamp, null);
     }
 
     private SimpleConsumer createConsumer(String host, int port, String clientName) {

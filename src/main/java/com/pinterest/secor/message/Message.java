@@ -27,6 +27,8 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Message represents a raw Kafka log message.
@@ -43,6 +45,7 @@ public class Message {
     private byte[] mKafkaKey;
     private byte[] mPayload;
     private long mTimestamp;
+    private List<MessageHeader> mHeaders;
 
     private static final int TRUNCATED_STRING_MAX_LEN = 1024;
     /**
@@ -79,7 +82,8 @@ public class Message {
                ", offset=" + mOffset +
                ", kafkaKey=" + bytesToString(mKafkaKey, truncate) +
                ", payload=" + bytesToString(mPayload, truncate) +
-               ", timestamp=" + mTimestamp;
+               ", timestamp=" + mTimestamp +
+               ", headers=" + mHeaders;
     }
 
     @Override
@@ -87,7 +91,7 @@ public class Message {
         return "Message{" + fieldsToString(false) + '}';
     }
 
-    public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload, long timestamp) {
+    public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload, long timestamp, List<MessageHeader> headers) {
         mTopic = topic;
         mKafkaPartition = kafkaPartition;
         mOffset = offset;
@@ -100,6 +104,10 @@ public class Message {
             mPayload = EMPTY_BYTES;
         }
         mTimestamp = timestamp;
+        mHeaders = headers;
+        if(mHeaders == null){
+            mHeaders = Collections.emptyList();
+        }
     }
 
     public String getTopic() {
@@ -124,6 +132,10 @@ public class Message {
 
     public long getTimestamp() {
         return mTimestamp;
+    }
+
+    public List<MessageHeader> getHeaders(){
+        return mHeaders;
     }
 
     public void write(OutputStream output) throws IOException {

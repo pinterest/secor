@@ -62,7 +62,8 @@ public abstract class MessageParser {
         String[] partitions = extractPartitions(message);
         return new ParsedMessage(message.getTopic(), message.getKafkaPartition(),
                                  message.getOffset(), message.getKafkaKey(),
-                                 message.getPayload(), partitions, message.getTimestamp());
+                                 message.getPayload(), partitions, message.getTimestamp(),
+                                 message.getHeaders());
     }
 
     public abstract String[] extractPartitions(Message payload) throws Exception;

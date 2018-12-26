@@ -19,6 +19,7 @@
 package com.pinterest.secor.common;
 
 import com.pinterest.secor.message.Message;
+import com.pinterest.secor.message.MessageHeader;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.TopicDescription;
@@ -29,8 +30,10 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.thrift.TException;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -84,7 +87,9 @@ public class SecorKafkaClient implements KafkaClient {
                 pollAttempts++;
             } else {
                 ConsumerRecord<byte[], byte[]> record = records.next();
-                message = new Message(record.topic(), record.partition(), record.offset(), record.key(), record.value(), record.timestamp());
+                List<MessageHeader> headers = new ArrayList<>();
+                record.headers().forEach(header -> headers.add(new MessageHeader(header.key(), header.value())));
+                message = new Message(record.topic(), record.partition(), record.offset(), record.key(), record.value(), record.timestamp(), headers);
                 break;
             }
         }

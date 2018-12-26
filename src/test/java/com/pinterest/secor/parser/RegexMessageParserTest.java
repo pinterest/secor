@@ -51,11 +51,11 @@ public class RegexMessageParserTest extends TestCase {
 
         byte messageWithMillisTimestamp[] =
             "?24.140.88.218 2015/09/22T22:19:00+0000 1442960340 GET http://api.com/test/?id=123 HTTP/1.1 s200 1017 0.384213448 pass - r685206763364 91ea566f - \"for iOS/5.4.2 (iPhone; 9.0)\"".getBytes("UTF-8");
-        mMessageWithMillisTimestamp = new Message("test", 0, 0, null, messageWithMillisTimestamp, timestamp);
+        mMessageWithMillisTimestamp = new Message("test", 0, 0, null, messageWithMillisTimestamp, timestamp, null);
 
       byte messageWithWrongFormatTimestamp[] =
           "?24.140.88.218 2015/09/22T22:19:00+0000 A1442960340 GET http://api.com/test/?id=123 HTTP/1.1 s200 1017 0.384213448 pass - r685206763364 91ea566f - \"for iOS/5.4.2 (iPhone; 9.0)\"".getBytes("UTF-8");
-      mMessageWithWrongFormatTimestamp = new Message("test", 0, 0, null, messageWithWrongFormatTimestamp, timestamp);
+      mMessageWithWrongFormatTimestamp = new Message("test", 0, 0, null, messageWithWrongFormatTimestamp, timestamp, null);
 
     }
 
@@ -78,7 +78,7 @@ public class RegexMessageParserTest extends TestCase {
     public void testExtractTimestampMillisEmpty() throws Exception {
         RegexMessageParser regexMessageParser = new RegexMessageParser(mConfig);
         byte emptyBytes2[] = "".getBytes();
-        regexMessageParser.extractTimestampMillis(new Message("test", 0, 0, null, emptyBytes2, timestamp));
+        regexMessageParser.extractTimestampMillis(new Message("test", 0, 0, null, emptyBytes2, timestamp, null));
     }
 
     @Test(expected=NumberFormatException.class)
