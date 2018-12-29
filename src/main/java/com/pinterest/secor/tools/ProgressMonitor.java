@@ -84,7 +84,8 @@ public class ProgressMonitor {
 
         if (mConfig.getStatsDHostPort() != null && !mConfig.getStatsDHostPort().isEmpty()) {
             HostAndPort hostPort = HostAndPort.fromString(mConfig.getStatsDHostPort());
-            mStatsDClient = new NonBlockingStatsDClient(null, hostPort.getHostText(), hostPort.getPort());
+            mStatsDClient = new NonBlockingStatsDClient(null, hostPort.getHostText(), hostPort.getPort(),
+                    mConfig.getStatsDDogstatsdConstantTags());
         }
     }
 
@@ -161,20 +162,30 @@ public class ProgressMonitor {
         for (Stat stat : stats) {
             @SuppressWarnings("unchecked")
             Map<String, String> tags = (Map<String, String>) stat.get(Stat.STAT_KEYS.TAGS.getName());
-            StringBuilder builder = new StringBuilder();
-	    if (mConfig.getStatsDPrefixWithConsumerGroup()) {
-		builder.append(tags.get(Stat.STAT_KEYS.GROUP.getName()))
-		    .append(PERIOD);
-	    }
-	    String aspect = builder
-		.append((String)stat.get(Stat.STAT_KEYS.METRIC.getName()))
-		.append(PERIOD)
-		.append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
-		.append(PERIOD)
-		.append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
-		.toString();
-            long value = Long.parseLong((String)stat.get(Stat.STAT_KEYS.VALUE.getName()));
-            mStatsDClient.recordGaugeValue(aspect, value);
+            long value = Long.parseLong((String) stat.get(Stat.STAT_KEYS.VALUE.getName()));
+            if (mConfig.getStatsdDogstatdsTagsEnabled()) {
+                String metricName = (String) stat.get(Stat.STAT_KEYS.METRIC.getName());
+                String[] tagArray = new String[tags.size()];
+                int i = 0;
+                for (Map.Entry<String, String> e : tags.entrySet()) {
+                    tagArray[i++] = e.getKey() + ':' + e.getValue();
+                }
+                mStatsDClient.recordGaugeValue(metricName, value, tagArray);
+            } else {
+                StringBuilder builder = new StringBuilder();
+                if (mConfig.getStatsDPrefixWithConsumerGroup()) {
+                    builder.append(tags.get(Stat.STAT_KEYS.GROUP.getName()))
+                            .append(PERIOD);
+                }
+                String metricName = builder
+                        .append((String) stat.get(Stat.STAT_KEYS.METRIC.getName()))
+                        .append(PERIOD)
+                        .append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
+                        .append(PERIOD)
+                        .append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
+                        .toString();
+                mStatsDClient.recordGaugeValue(metricName, value);
+            }
         }
     }
 
