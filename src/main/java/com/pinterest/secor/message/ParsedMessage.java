@@ -30,8 +30,13 @@ public class ParsedMessage extends Message {
 
     @Override
     public String toString() {
-        return "ParsedMessage{" + fieldsToString() +  ", mPartitions=" +
+        return "ParsedMessage{" + fieldsToString(false) +  ", mPartitions=" +
                Arrays.toString(mPartitions) + '}';
+    }
+
+    public String toTruncatedString() {
+        return "ParsedMessage{" + fieldsToString(true) +  ", mPartitions=" +
+                Arrays.toString(mPartitions) + '}';
     }
 
     public ParsedMessage(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload,
