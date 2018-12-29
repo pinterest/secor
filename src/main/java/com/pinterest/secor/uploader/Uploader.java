@@ -229,11 +229,12 @@ public class Uploader {
         return false;
     }
 
-    protected void checkTopicPartition(TopicPartition topicPartition) throws Exception {
+    protected void checkTopicPartition(TopicPartition topicPartition, boolean forceUpload) throws Exception {
         final long size = mFileRegistry.getSize(topicPartition);
         final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
         LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
-        if (size >= mConfig.getMaxFileSizeBytes() ||
+        if (forceUpload ||
+                size >= mConfig.getMaxFileSizeBytes() ||
                 modificationAgeSec >= mConfig.getMaxFileAgeSeconds() ||
                 isRequiredToUploadAtTime(topicPartition)) {
             long newOffsetCount = mZookeeperConnector.getCommittedOffsetCount(topicPartition);
@@ -256,6 +257,10 @@ public class Uploader {
                 // There was a rebalancing event and someone committed an offset lower than that
                 // of the current message.  We need to trim local files.
                 trimFiles(topicPartition, newOffsetCount);
+                // We might still be at the right place to upload. (In fact, we always trim the first time
+                // we hit the upload condition because oldOffsetCount starts at -1, but this is usually a no-op trim.)
+                // Check again! This is especially important if this was an "upload in graceful shutdown".
+                checkTopicPartition(topicPartition, forceUpload);
             }
         }
     }
@@ -271,10 +276,10 @@ public class Uploader {
      *
      * @throws Exception if any error occurs while appying the policy
      */
-    public void applyPolicy() throws Exception {
+    public void applyPolicy(boolean forceUpload) throws Exception {
         Collection<TopicPartition> topicPartitions = mFileRegistry.getTopicPartitions();
         for (TopicPartition topicPartition : topicPartitions) {
-            checkTopicPartition(topicPartition);
+            checkTopicPartition(topicPartition, forceUpload);
         }
     }
 }

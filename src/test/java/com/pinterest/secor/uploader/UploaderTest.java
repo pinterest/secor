@@ -140,7 +140,7 @@ public class UploaderTest extends TestCase {
         PowerMockito.mockStatic(FileUtil.class);
         Mockito.when(FileUtil.getPrefix("some_topic", mConfig)).
                 thenReturn("s3a://some_bucket/some_s3_parent_dir");
-        mUploader.applyPolicy();
+        mUploader.applyPolicy(false);
 
         final String lockPath = "/secor/locks/some_topic/0";
         Mockito.verify(mZookeeperConnector).lock(lockPath);
@@ -188,7 +188,7 @@ public class UploaderTest extends TestCase {
         PowerMockito.mockStatic(FileUtil.class);
         Mockito.when(FileUtil.getPrefix("some_topic", mConfig)).
                 thenReturn("s3a://some_bucket/some_s3_parent_dir");
-        mUploader.applyPolicy();
+        mUploader.applyPolicy(false);
 
         final String lockPath = "/secor/locks/some_topic/0";
         Mockito.verify(mZookeeperConnector).lock(lockPath);
@@ -216,7 +216,7 @@ public class UploaderTest extends TestCase {
         Mockito.when(mOffsetTracker.getLastSeenOffset(mTopicPartition))
                 .thenReturn(20L);
 
-        mUploader.applyPolicy();
+        mUploader.applyPolicy(false);
 
         Mockito.verify(mFileRegistry).deleteTopicPartition(mTopicPartition);
     }
@@ -225,9 +225,10 @@ public class UploaderTest extends TestCase {
         Mockito.when(
                 mZookeeperConnector.getCommittedOffsetCount(mTopicPartition))
                 .thenReturn(21L);
+        // The second time it's called, it returns 21L because of the first call.
         Mockito.when(
                 mOffsetTracker.setCommittedOffsetCount(mTopicPartition, 21L))
-                .thenReturn(20L);
+                .thenReturn(20L, 21L);
         Mockito.when(mOffsetTracker.getLastSeenOffset(mTopicPartition))
                 .thenReturn(21L);
 
@@ -263,7 +264,7 @@ public class UploaderTest extends TestCase {
         Mockito.when(mFileRegistry.getOrCreateWriter(dstLogFilePath, null))
                 .thenReturn(writer);
 
-        mUploader.applyPolicy();
+        mUploader.applyPolicy(false);
 
         Mockito.verify(writer).write(Mockito.any(KeyValue.class));
         Mockito.verify(mFileRegistry).deletePath(mLogFilePath);
