@@ -487,6 +487,14 @@ public class SecorConfig {
     	return getBoolean("statsd.prefixWithConsumerGroup");
     }
 
+    public boolean getStatsdDogstatdsTagsEnabled() {
+        return getBoolean("statsd.dogstatsd.tags.enabled");
+    }
+
+    public String[] getStatsDDogstatsdConstantTags() {
+        return getStringArray("statsd.dogstatsd.constant.tags");
+    }
+
     public String getMonitoringBlacklistTopics() {
         return getString("monitoring.blacklist.topics");
     }
