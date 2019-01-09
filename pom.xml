@@ -682,7 +682,7 @@
                     <dependency>
                         <groupId>com.fasterxml.jackson.module</groupId>
                         <artifactId>jackson-module-scala_2.10</artifactId>
-                        <version>2.9.5</version>
+                        <version>2.9.8</version>
                     </dependency>
                 </dependencies>
             </dependencyManagement>
@@ -852,7 +852,7 @@
                     <dependency>
                         <groupId>com.fasterxml.jackson.module</groupId>
                         <artifactId>jackson-module-scala_2.10</artifactId>
-                        <version>2.9.5</version>
+                        <version>2.9.8</version>
                     </dependency>
                 </dependencies>
             </dependencyManagement>
@@ -897,7 +897,7 @@
                     <dependency>
                         <groupId>com.fasterxml.jackson.module</groupId>
                         <artifactId>jackson-module-scala_2.10</artifactId>
-                        <version>2.9.5</version>
+                        <version>2.9.8</version>
                     </dependency>
                 </dependencies>
             </dependencyManagement>
