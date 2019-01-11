@@ -13,4 +13,13 @@ public class MessageTest {
 	// NullPointerException
     }
 
+    @Test
+    public void testBinaryKeyAndPayloadToString() {
+        Message message = new Message("testTopic", 0, 123,
+                new byte[]{(byte)0x80}, new byte[]{(byte)0x80}, 0l);
+        // no assert necessary, just making sure it does not throw a
+        // NullPointerException
+        System.out.println(message);
+    }
+
 }

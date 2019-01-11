@@ -19,6 +19,12 @@ package com.pinterest.secor.message;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.String;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 
 /**
  * Message represents a raw Kafka log message.
@@ -36,18 +42,47 @@ public class Message {
     private byte[] mPayload;
     private long mTimestamp;
 
-    protected String fieldsToString() {
+    private static final int TRUNCATED_STRING_MAX_LEN = 1024;
+    /**
+     * Message key and payload may be arbitrary binary strings, so we should make sure we don't throw
+     * when logging them by using a CharsetDecoder which replaces bad data. (While in practice `new String(bytes)`
+     * does the same thing, the documentation for that method leaves that behavior unspecified.)
+     * Additionally, in contexts where Message.toString() will be logged at a high level (including exception
+     * messages), we truncate long keys and payloads, which may be very long binary data.
+     */
+    private String bytesToString(byte[] bytes, boolean truncate) {
+        CharsetDecoder decoder = Charset.defaultCharset()
+                .newDecoder()
+                .onMalformedInput(CodingErrorAction.REPLACE)
+                .onUnmappableCharacter(CodingErrorAction.REPLACE);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+        CharBuffer charBuffer;
+        try {
+            charBuffer = decoder.decode(byteBuffer);
+        } catch (CharacterCodingException e) {
+            // Shouldn't happen due to choosing REPLACE above, but Java makes us catch it anyway.
+            throw new RuntimeException(e);
+        }
+        String s = charBuffer.toString();
+        if (truncate && s.length() > TRUNCATED_STRING_MAX_LEN) {
+            return new StringBuilder().append(s, 0, TRUNCATED_STRING_MAX_LEN).append("[...]").toString();
+        } else {
+            return s;
+        }
+    }
+
+    protected String fieldsToString(boolean truncate) {
         return "topic='" + mTopic + '\'' +
                ", kafkaPartition=" + mKafkaPartition +
                ", offset=" + mOffset +
-               ", kafkaKey=" + new String(mKafkaKey) +
-               ", payload=" + new String(mPayload) +
+               ", kafkaKey=" + bytesToString(mKafkaKey, truncate) +
+               ", payload=" + bytesToString(mPayload, truncate) +
                ", timestamp=" + mTimestamp;
     }
 
     @Override
     public String toString() {
-        return "Message{" + fieldsToString() + '}';
+        return "Message{" + fieldsToString(false) + '}';
     }
 
     public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload, long timestamp) {

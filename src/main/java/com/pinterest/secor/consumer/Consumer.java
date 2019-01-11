@@ -167,7 +167,13 @@ public class Consumer extends Thread {
                     mMetricCollector.metric("consumer.message_size_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
                     mMetricCollector.increment("consumer.throughput_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
                 } catch (Exception e) {
-                    throw new RuntimeException("Failed to write message " + parsedMessage, e);
+                    // Log the full stringification of parsedMessage at DEBUG level, but include only a truncated
+                    // version in the thrown exception, since messages can be ginormous and this exception often
+                    // just indicates an IO error unrelated to the message content.
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Failed to write message " + parsedMessage, e);
+                    }
+                    throw new RuntimeException("Failed to write message " + parsedMessage.toTruncatedString(), e);
                 }
             }
         }
