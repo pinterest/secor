@@ -271,6 +271,10 @@ public class SecorConfig {
         return getLong("secor.max.file.age.seconds");
     }
 
+    public boolean getUploadOnShutdown() {
+        return getBoolean("secor.upload.on.shutdown");
+    }
+
     public boolean getFileAgeYoungest() {
         return getBoolean("secor.file.age.youngest");
     }

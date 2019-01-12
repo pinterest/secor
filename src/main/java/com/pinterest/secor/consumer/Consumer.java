@@ -59,6 +59,10 @@ public class Consumer extends Thread {
     protected Uploader mUploader;
     // TODO(pawel): we should keep a count per topic partition.
     protected double mUnparsableMessages;
+    // If we aren't configured to upload on shutdown, then don't bother to check
+    // the volatile variable.
+    private boolean mUploadOnShutdown;
+    private volatile boolean mShuttingDown = false;
 
     public Consumer(SecorConfig config) {
         mConfig = config;
@@ -78,6 +82,24 @@ public class Consumer extends Thread {
         mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
         mMessageTransformer = ReflectionUtil.createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);
         mUnparsableMessages = 0.;
+
+        mUploadOnShutdown = mConfig.getUploadOnShutdown();
+        if (mUploadOnShutdown) {
+            Runtime.getRuntime().addShutdownHook(this.new FinalUploadShutdownHook());
+        }
+    }
+
+    // When the JVM starts to shut down, tell the Consumer thread to upload once and wait for it to finish.
+    private class FinalUploadShutdownHook extends Thread {
+        @Override
+        public void run() {
+            mShuttingDown = true;
+            try {
+                Consumer.this.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -100,19 +122,26 @@ public class Consumer extends Thread {
                 break;
             }
 
+            if (mUploadOnShutdown && mShuttingDown) {
+                LOG.info("Shutting down");
+                break;
+            }
+
             long now = System.currentTimeMillis();
             if (nMessages++ % checkMessagesPerSecond == 0 ||
                     (now - lastChecked) > checkEveryNSeconds * 1000) {
                 lastChecked = now;
-                checkUploadPolicy();
+                checkUploadPolicy(false);
             }
         }
-        checkUploadPolicy();
+        LOG.info("Done reading messages; uploading what we have");
+        checkUploadPolicy(true);
+        LOG.info("Consumer thread done");
     }
 
-    protected void checkUploadPolicy() {
+    protected void checkUploadPolicy(boolean forceUpload) {
         try {
-            mUploader.applyPolicy();
+            mUploader.applyPolicy(forceUpload);
         } catch (Exception e) {
             throw new RuntimeException("Failed to apply upload policy", e);
         }
