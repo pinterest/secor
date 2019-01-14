@@ -701,7 +701,7 @@
                 <dependency>
                     <groupId>com.twitter</groupId>
                     <artifactId>ostrich_2.10</artifactId>
-                    <version>9.2.1</version>
+                    <version>9.18.0</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -738,7 +738,7 @@
                 <dependency>
                     <groupId>com.twitter</groupId>
                     <artifactId>ostrich_2.10</artifactId>
-                    <version>9.2.1</version>
+                    <version>9.18.0</version>
                  </dependency>
             </dependencies>
         </profile>
@@ -871,7 +871,7 @@
                 <dependency>
                     <groupId>com.twitter</groupId>
                     <artifactId>ostrich_2.10</artifactId>
-                    <version>9.2.1</version>
+                    <version>9.18.0</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -916,7 +916,7 @@
                 <dependency>
                     <groupId>com.twitter</groupId>
                     <artifactId>ostrich_2.10</artifactId>
-                    <version>9.2.1</version>
+                    <version>9.18.0</version>
                 </dependency>
             </dependencies>
         </profile>
