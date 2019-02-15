@@ -35,7 +35,7 @@ import com.pinterest.secor.common.SecorConfig;
  * @author Ashish (ashu.impetus@gmail.com)
  *
  */
-public class DefaultORCSchemaProvider implements ORCScehmaProvider {
+public class DefaultORCSchemaProvider implements ORCSchemaProvider {
 
     private Map<String, TypeDescription> topicToSchemaMap;
     private TypeDescription schemaForAlltopic;
