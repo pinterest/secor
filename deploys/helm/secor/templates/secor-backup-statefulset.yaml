@@ -23,6 +23,7 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+
 spec:
   serviceName: {{ template "secor.fullname" . }}-backup
   selector:
@@ -41,7 +42,6 @@ spec:
       labels:
         app: {{ template "secor.fullname" . }}-backup
         release: {{ .Release.Name }}
-
     spec:
       containers:
         - name: secor
@@ -69,58 +69,58 @@ spec:
             - name: "local-var"
               mountPath: "/mnt/secor_data/message_logs/backup"
           resources:
-{{ toYaml .Values.secor.backup.resources | indent 12 }}
+  {{ toYaml .Values.secor.backup.resources | indent 12 }}
 
-        - name: monitor
-          image: {{ .Values.image.prefix }}{{ .Values.image.repository }}:{{ .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - name: "SECOR_MAIN_CLASS"
-              value: "com.pinterest.secor.main.ProgressMonitorMain"
-            - name: "GOOGLE_APPLICATION_CREDENTIALS"
-              value: "/var/run/secret/cloud.google.com/service-account.json"
-            - name: "CONFIG_FILE"
-              value: "{{ .Values.secor.backup.configFile }}"
-            - name: "LOG4J_CONFIGURATION"
-              value: "{{ .Values.secor.backup.monitor.logConfigFile }}"
-            - name: "ZOOKEEPER_QUORUM"
-              value: "{{ .Values.secor.zookeeper.quorum }}"
-            - name: "ZOOKEEPER_PATH"
-              value: "/"
-          volumeMounts:
-            - mountPath: /opt/secor/config
-              name: config
-            - name: "service-account"
-              mountPath: "/var/run/secret/cloud.google.com"
-            - name: "local-var"
-              mountPath: "/mnt/secor_data/message_logs/backup"
+  - name: monitor
+    image: {{ .Values.image.prefix }}{{ .Values.image.repository }}:{{ .Values.image.tag }}
+    imagePullPolicy: {{ .Values.image.pullPolicy }}
+    env:
+      - name: "SECOR_MAIN_CLASS"
+        value: "com.pinterest.secor.main.ProgressMonitorMain"
+      - name: "GOOGLE_APPLICATION_CREDENTIALS"
+        value: "/var/run/secret/cloud.google.com/service-account.json"
+      - name: "CONFIG_FILE"
+        value: "{{ .Values.secor.backup.configFile }}"
+      - name: "LOG4J_CONFIGURATION"
+        value: "{{ .Values.secor.backup.monitor.logConfigFile }}"
+      - name: "ZOOKEEPER_QUORUM"
+        value: "{{ .Values.secor.zookeeper.quorum }}"
+      - name: "ZOOKEEPER_PATH"
+        value: "/"
+    volumeMounts:
+      - mountPath: /opt/secor/config
+        name: config
+      - name: "service-account"
+        mountPath: "/var/run/secret/cloud.google.com"
+      - name: "local-var"
+        mountPath: "/mnt/secor_data/message_logs/backup"
 
-        - name: statsd
-          image: {{ .Values.exporter.image.repository }}:{{ .Values.exporter.image.tag }}
-          imagePullPolicy: {{ .Values.exporter.image.pullPolicy }}
-          ports:
-           - containerPort: 9102
-           - containerPort: 9125
-             protocol: UDP
+  - name: statsd
+    image: {{ .Values.exporter.image.repository }}:{{ .Values.exporter.image.tag }}
+    imagePullPolicy: {{ .Values.exporter.image.pullPolicy }}
+    ports:
+      - containerPort: 9102
+      - containerPort: 9125
+        protocol: UDP
 
-      volumes:
-        - configMap:
-            name: {{ template "secor.fullname" . }}-config
-          name: config
-        - name: "service-account"
-          secret:
-            secretName: {{ template "secor.fullname" . }}-service-account
+volumes:
+  - configMap:
+      name: {{ template "secor.fullname" . }}-config
+    name: config
+  - name: "service-account"
+    secret:
+      secretName: {{ template "secor.fullname" . }}-service-account
 
-  volumeClaimTemplates:
-    - metadata:
-        name: local-var
-        labels:
-          app: {{ template "secor.fullname" . }}-backup
-        annotations:
-          volume.beta.kubernetes.io/storage-class: "{{ .Values.secor.backup.storage.class }}"
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: "{{ .Values.secor.backup.storage.size }}"
+volumeClaimTemplates:
+  - metadata:
+      name: local-var
+      labels:
+        app: {{ template "secor.fullname" . }}-backup
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "{{ .Values.secor.backup.storage.class }}"
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: "{{ .Values.secor.backup.storage.size }}"

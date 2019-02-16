@@ -71,7 +71,7 @@ steps:
       - 'BRANCH_NAME=$BRANCH_NAME'
       - '_CACHE_BUCKET=${_CACHE_BUCKET}'
       - '_M2_LOCAL_REPOSITORY=${_M2_LOCAL_REPOSITORY}'
- 
+
 timeout: 1200s
 images:
   - "us.gcr.io/${PROJECT_ID}/secor"

@@ -32,7 +32,7 @@ secor:
         #cpu: 8000m # If backfilling!
         cpu: 1000m
         memory: 5000Mi
- 
+
   partition:
     configFile: /opt/secor/config/secor.kubernetes-prod.partition.properties
     logConfigFile: /opt/secor/config/log4j.kubernetes-prod.properties

@@ -52,7 +52,6 @@ secor:
       requests:
         cpu: 800m
         memory: 768Mi
- 
 
 exporter:
   image:

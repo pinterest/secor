@@ -42,7 +42,6 @@ spec:
         - name: secor
           image: {{ .Values.image.prefix }}{{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-
           env:
             - name: "CONFIG_FILE"
               value: "{{ .Values.secor.partition.configFile }}"
@@ -56,34 +55,6 @@ spec:
               value: "{{ .Values.secor.zookeeper.path }}"
             - name: "JVM_MEMORY"
               value: "{{ .Values.secor.partition.jvm.memory }}"
-
-          volumeMounts:
-           - mountPath: /opt/secor/config
-             name: config
-           - name: "service-account"
-             mountPath: "/var/run/secret/cloud.google.com"
-           - name: "local-var"
-             mountPath: "/mnt/secor_data/message_logs/partition"
-          resources:
-{{ toYaml .Values.secor.partition.resources | indent 12 }}
-
-        - name: monitor
-          image: {{ .Values.image.prefix }}{{ .Values.image.repository }}:{{ .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - name: "CONFIG_FILE"
-              value: "{{ .Values.secor.partition.configFile }}"
-            - name: "LOG4J_CONFIGURATION"
-              value: "{{ .Values.secor.partition.monitor.logConfigFile }}"
-            - name: "SECOR_MAIN_CLASS"
-              value: "com.pinterest.secor.main.ProgressMonitorMain"
-            - name: "GOOGLE_APPLICATION_CREDENTIALS"
-              value: "/var/run/secret/cloud.google.com/service-account.json"
-            - name: "ZOOKEEPER_QUORUM"
-              value: "{{ .Values.secor.zookeeper.quorum }}"
-            - name: "ZOOKEEPER_PATH"
-              value: "{{ .Values.secor.zookeeper.path }}"
-
           volumeMounts:
             - mountPath: /opt/secor/config
               name: config
@@ -91,34 +62,60 @@ spec:
               mountPath: "/var/run/secret/cloud.google.com"
             - name: "local-var"
               mountPath: "/mnt/secor_data/message_logs/partition"
+          resources:
+  {{ toYaml .Values.secor.partition.resources | indent 12 }}
 
-        - name: statsd
-          image: {{ .Values.exporter.image.repository }}:{{ .Values.exporter.image.tag }}
-          imagePullPolicy: {{ .Values.exporter.image.pullPolicy }}
-          ports:
-            - containerPort: 9102
-            - containerPort: 9125
-              protocol: UDP
+  - name: monitor
+    image: {{ .Values.image.prefix }}{{ .Values.image.repository }}:{{ .Values.image.tag }}
+    imagePullPolicy: {{ .Values.image.pullPolicy }}
+    env:
+      - name: "CONFIG_FILE"
+        value: "{{ .Values.secor.partition.configFile }}"
+      - name: "LOG4J_CONFIGURATION"
+        value: "{{ .Values.secor.partition.monitor.logConfigFile }}"
+      - name: "SECOR_MAIN_CLASS"
+        value: "com.pinterest.secor.main.ProgressMonitorMain"
+      - name: "GOOGLE_APPLICATION_CREDENTIALS"
+        value: "/var/run/secret/cloud.google.com/service-account.json"
+      - name: "ZOOKEEPER_QUORUM"
+        value: "{{ .Values.secor.zookeeper.quorum }}"
+      - name: "ZOOKEEPER_PATH"
+        value: "{{ .Values.secor.zookeeper.path }}"
+    volumeMounts:
+      - mountPath: /opt/secor/config
+        name: config
+      - name: "service-account"
+        mountPath: "/var/run/secret/cloud.google.com"
+      - name: "local-var"
+        mountPath: "/mnt/secor_data/message_logs/partition"
 
-      volumes:
-       - configMap:
-           name: secor-config
-         name: config
+  - name: statsd
+    image: {{ .Values.exporter.image.repository }}:{{ .Values.exporter.image.tag }}
+    imagePullPolicy: {{ .Values.exporter.image.pullPolicy }}
+    ports:
+      - containerPort: 9102
+      - containerPort: 9125
+        protocol: UDP
 
-       - name: "service-account"
-         secret:
-           secretName: "secor-service-account"
+volumes:
+  - configMap:
+      name: secor-config
+    name: config
 
-  volumeClaimTemplates:
-    - metadata:
-        name: local-var
-        labels:
-          app: {{ template "secor.fullname" . }}
-        annotations:
-          volume.beta.kubernetes.io/storage-class: "{{ .Values.secor.partition.storage.class }}"
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: "{{ .Values.secor.partition.storage.size }}"
+  - name: "service-account"
+    secret:
+      secretName: "secor-service-account"
+
+volumeClaimTemplates:
+  - metadata:
+      name: local-var
+      labels:
+        app: {{ template "secor.fullname" . }}
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "{{ .Values.secor.partition.storage.class }}"
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: "{{ .Values.secor.partition.storage.size }}"
