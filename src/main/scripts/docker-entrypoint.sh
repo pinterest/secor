@@ -17,7 +17,6 @@
 # under the License.
 set -e
 
-
 SECOR_CONFIG=''
 
 if [ -z "$ZOOKEEPER_QUORUM" ]; then
@@ -49,7 +48,6 @@ if [[ ! -z "$SECOR_GROUP" ]]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.kafka.group=$SECOR_GROUP"
     echo "secor.kafka.group=$SECOR_GROUP"
 fi
-
 
 if [[ ! -z "$AWS_REGION" ]]; then
     SECOR_CONFIG="$SECOR_CONFIG -Daws.region=$AWS_REGION"
@@ -124,7 +122,6 @@ if [[ ! -z "$SECOR_MAX_FILE_SECONDS" ]]; then
     echo "secor.max.file.age.seconds=$SECOR_MAX_FILE_SECONDS"
 fi
 
-
 if [[ ! -z "$SECOR_KAFKA_TOPIC_FILTER" ]]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.kafka.topic_filter=$SECOR_KAFKA_TOPIC_FILTER"
     echo "secor.kafka.topic_filter=$SECOR_KAFKA_TOPIC_FILTER"
@@ -139,13 +136,13 @@ if [[ ! -z "$SECOR_MESSAGE_PARSER" ]]; then
 fi
 SECOR_CONFIG="$SECOR_CONFIG $SECOR_EXTRA_OPTS"
 
-
 cd /opt/secor
-
 
 DEFAULT_CLASSPATH="*:lib/*"
 CLASSPATH=${CLASSPATH:-$DEFAULT_CLASSPATH}
 
-java -Xmx${JVM_MEMORY:-512m} $JAVA_OPTS -ea -Dsecor_group=${SECOR_GROUP:-partition} -Dlog4j.configuration=file:${LOG4J_CONFIGURATION:-log4j.docker.properties} \
-        -Dconfig=${CONFIG_FILE:-secor.prod.partition.properties} $SECOR_CONFIG \
-        -cp $CLASSPATH ${SECOR_MAIN_CLASS:-com.pinterest.secor.main.ConsumerMain}
+java -Xmx${JVM_MEMORY:-512m} $JAVA_OPTS -ea \
+    -Dsecor_group=${SECOR_GROUP:-partition} \
+    -Dlog4j.configuration=file:${LOG4J_CONFIGURATION:-log4j.docker.properties} \
+    -Dconfig=${CONFIG_FILE:-secor.prod.partition.properties} $SECOR_CONFIG \
+    -cp $CLASSPATH ${SECOR_MAIN_CLASS:-com.pinterest.secor.main.ConsumerMain}

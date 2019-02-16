@@ -17,7 +17,6 @@
 # under the License.
 
 # Author: Pawel Garbacki (pawel@pinterest.com)
-
 set -e
 
 if [ $# -lt 1 ]; then
