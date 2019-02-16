@@ -129,7 +129,7 @@ public class S3UploadManager extends UploadManager {
             S3ClientOptions clientOptions = new S3ClientOptions();
             clientOptions.setPathStyleAccess(true);
             if (System.getenv("SECOR_DEV") == "true"){
-                clientOptions.setChunkedEncodingDisabled();
+                clientOptions.disableChunkedEncoding();
             }
             client.setS3ClientOptions(clientOptions);
         }
