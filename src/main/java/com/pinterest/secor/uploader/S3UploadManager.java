@@ -128,6 +128,9 @@ public class S3UploadManager extends UploadManager {
         if (mConfig.getAwsClientPathStyleAccess()) {
             S3ClientOptions clientOptions = new S3ClientOptions();
             clientOptions.setPathStyleAccess(true);
+            if (System.getenv("SECOR_DEV") == "true"){
+                clientOptions.setChunkedEncodingDisabled();
+            }
             client.setS3ClientOptions(clientOptions);
         }
 
