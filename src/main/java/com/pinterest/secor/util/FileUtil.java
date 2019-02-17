@@ -18,20 +18,7 @@
  */
 package com.pinterest.secor.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-
-import java.text.SimpleDateFormat;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.pinterest.secor.common.SecorConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -41,7 +28,18 @@ import org.apache.hadoop.fs.s3a.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.pinterest.secor.common.SecorConfig;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * File util implements utilities for interactions with the file system.
@@ -49,11 +47,12 @@ import com.pinterest.secor.common.SecorConfig;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class FileUtil {
+
     private static final Logger LOG = LoggerFactory.getLogger(FileUtil.class);
-    private static Configuration mConf = new Configuration(true);
-    private static final char[] m_digits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a',
-        'b', 'c', 'd', 'e', 'f'};
+    private static final char[] m_digits =
+            {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     private static final Pattern datePattern = Pattern.compile(".*dt=(\\d\\d\\d\\d-\\d\\d-\\d\\d).*");
+    private static Configuration mConf = new Configuration(true);
 
     public static void configure(SecorConfig config) {
         if (config != null) {
@@ -74,7 +73,7 @@ public class FileUtil {
             } else if (config.getCloudService().equals("S3")) {
                 if (config.getAwsAccessKey().isEmpty() != config.getAwsSecretKey().isEmpty()) {
                     throw new IllegalArgumentException(
-                        "Must specify both aws.access.key and aws.secret.key or neither.");
+                            "Must specify both aws.access.key and aws.secret.key or neither.");
                 }
                 if (!config.getAwsAccessKey().isEmpty()) {
                     mConf.set(Constants.ACCESS_KEY, config.getAwsAccessKey());
@@ -90,8 +89,7 @@ public class FileUtil {
         return FileSystem.get(URI.create(path), mConf);
     }
 
-    public static boolean s3PathPrefixIsAltered(String logFileName, SecorConfig config)
-                                                        throws Exception {
+    public static boolean s3PathPrefixIsAltered(String logFileName, SecorConfig config) throws Exception {
         Date logDate = null;
         if (config.getS3AlterPathDate() != null && !config.getS3AlterPathDate().isEmpty()) {
 
@@ -123,12 +121,12 @@ public class FileUtil {
         return config.getS3FileSystem() + "://" + config.getS3Bucket() + "/" + config.getS3AlternativePath();
     }
 
-    public static String getPrefix(String topic, SecorConfig config)  throws IOException {
+    public static String getPrefix(String topic, SecorConfig config) throws IOException {
         String prefix = null;
         if (config.getCloudService().equals("Swift")) {
             String container = null;
             if (config.getSeparateContainersForTopics()) {
-                if (!exists("swift://" + topic + ".GENERICPROJECT")){
+                if (!exists("swift://" + topic + ".GENERICPROJECT")) {
                     String containerUrl = "swift://" + topic + ".GENERICPROJECT";
                     Path containerPath = new Path(containerUrl);
                     getFileSystem(containerUrl).create(containerPath).close();
@@ -139,7 +137,7 @@ public class FileUtil {
             }
             prefix = "swift://" + container + ".GENERICPROJECT/" + config.getSwiftPath();
         } else if (config.getCloudService().equals("S3")) {
-                prefix = config.getS3Prefix();
+            prefix = config.getS3Prefix();
         } else if (config.getCloudService().equals("GS")) {
             prefix = "gs://" + config.getGsBucket() + "/" + config.getGsPath();
         } else if (config.getCloudService().equals("Azure")) {
@@ -164,7 +162,7 @@ public class FileUtil {
                 }
             }
         }
-        return paths.toArray(new String[] {});
+        return paths.toArray(new String[]{});
     }
 
     public static String[] listRecursively(String path) throws IOException {
@@ -172,14 +170,14 @@ public class FileUtil {
         String[] directPaths = list(path);
         for (String directPath : directPaths) {
             if (directPath.equals(path)) {
-                assert directPaths.length == 1: Integer.toString(directPaths.length) + " == 1";
+                assert directPaths.length == 1 : Integer.toString(directPaths.length) + " == 1";
                 paths.add(directPath);
             } else {
                 String[] recursivePaths = listRecursively(directPath);
                 paths.addAll(Arrays.asList(recursivePaths));
             }
         }
-        return paths.toArray(new String[] {});
+        return paths.toArray(new String[]{});
     }
 
     public static boolean exists(String path) throws IOException {
@@ -232,46 +230,47 @@ public class FileUtil {
                     stringPath = statusPath.toUri().getPath();
                 }
                 if (!stringPath.equals(path)) {
-                    modificationTime = Math.max(modificationTime,
-                            getModificationTimeMsRecursive(stringPath));
+                    modificationTime = Math.max(modificationTime, getModificationTimeMsRecursive(stringPath));
                 }
             }
         }
         return modificationTime;
     }
-    
-    /** Generate MD5 hash of topic and partitions. And extract first 4 characters of the MD5 hash.
-     * @param topic topic name
+
+    /**
+     * Generate MD5 hash of topic and partitions. And extract first 4 characters of the MD5 hash.
+     *
+     * @param topic      topic name
      * @param partitions partitions
      * @return md5 hash
      */
     public static String getMd5Hash(String topic, String[] partitions) {
-      ArrayList<String> elements = new ArrayList<String>();
-      elements.add(topic);
-      for (String partition : partitions) {
-        elements.add(partition);
-      }
-      String pathPrefix = StringUtils.join(elements, "/");
-      try {
-        final MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-        byte[] md5Bytes = messageDigest.digest(pathPrefix.getBytes("UTF-8"));
-        return getHexEncode(md5Bytes).substring(0, 4);
-      } catch (NoSuchAlgorithmException e) {
-        LOG.error(e.getMessage());
-      } catch (UnsupportedEncodingException e) {
-        LOG.error(e.getMessage());
-      }
-      return "";
+        ArrayList<String> elements = new ArrayList<String>();
+        elements.add(topic);
+        for (String partition : partitions) {
+            elements.add(partition);
+        }
+        String pathPrefix = StringUtils.join(elements, "/");
+        try {
+            final MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+            byte[] md5Bytes = messageDigest.digest(pathPrefix.getBytes("UTF-8"));
+            return getHexEncode(md5Bytes).substring(0, 4);
+        } catch (NoSuchAlgorithmException e) {
+            LOG.error(e.getMessage());
+        } catch (UnsupportedEncodingException e) {
+            LOG.error(e.getMessage());
+        }
+        return "";
     }
 
     private static String getHexEncode(byte[] bytes) {
-      final char[] chars = new char[bytes.length * 2];
-      for (int i = 0; i < bytes.length; ++i) {
-        final int cx = i * 2;
-        final byte b = bytes[i];
-        chars[cx] = m_digits[(b & 0xf0) >> 4];
-        chars[cx + 1] = m_digits[(b & 0x0f)];
-      }
-      return new String(chars);
+        final char[] chars = new char[bytes.length * 2];
+        for (int i = 0; i < bytes.length; ++i) {
+            final int cx = i * 2;
+            final byte b = bytes[i];
+            chars[cx] = m_digits[(b & 0xf0) >> 4];
+            chars[cx + 1] = m_digits[(b & 0x0f)];
+        }
+        return new String(chars);
     }
 }

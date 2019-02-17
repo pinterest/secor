@@ -24,10 +24,11 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 
 /**
- * JsonMessageParser extracts timestamp field (specified by 'message.timestamp.name')
- * from JSON data and partitions data by date.
+ * JsonMessageParser extracts timestamp field (specified by 'message.timestamp.name') from JSON data and partitions data
+ * by date.
  */
 public class JsonMessageParser extends TimestampedMessageParser {
+
     private final boolean m_timestampRequired;
 
     public JsonMessageParser(SecorConfig config) {

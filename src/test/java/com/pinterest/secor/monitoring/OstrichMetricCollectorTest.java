@@ -29,6 +29,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Stats.class})
 public class OstrichMetricCollectorTest {
+
     private OstrichMetricCollector metricCollector = new OstrichMetricCollector();
 
     @Before

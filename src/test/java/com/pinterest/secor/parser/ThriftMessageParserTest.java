@@ -20,6 +20,7 @@ package com.pinterest.secor.parser;
 
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
+import com.pinterest.secor.thrift.UnitTestMessage;
 import junit.framework.TestCase;
 import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -28,10 +29,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.pinterest.secor.thrift.UnitTestMessage;
-
 @RunWith(PowerMockRunner.class)
 public class ThriftMessageParserTest extends TestCase {
+
     private SecorConfig mConfig;
     private long timestamp;
 
@@ -102,7 +102,7 @@ public class ThriftMessageParserTest extends TestCase {
         Mockito.when(mConfig.getMessageTimestampId()).thenReturn(6);
         Mockito.when(mConfig.getMessageTimestampType()).thenReturn("i64");
         Mockito.when(mConfig.getThriftProtocolClass()).thenReturn("org.apache.thrift.protocol.TBinaryProtocol");
-        
+
         ThriftMessageParser parser = new ThriftMessageParser(mConfig);
 
         assertEquals(1405970352000L, parser.extractTimestampMillis(buildMessage(1L, 2, 1405970352L)));

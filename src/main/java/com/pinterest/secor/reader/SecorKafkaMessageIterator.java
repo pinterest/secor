@@ -37,6 +37,7 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class SecorKafkaMessageIterator implements KafkaMessageIterator {
+
     private static final Logger LOG = LoggerFactory.getLogger(SecorKafkaMessageIterator.class);
     private KafkaConsumer<byte[], byte[]> mKafkaConsumer;
     private Deque<ConsumerRecord<byte[], byte[]>> mRecordsBatch;
@@ -59,7 +60,7 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         } else {
             ConsumerRecord<byte[], byte[]> consumerRecord = mRecordsBatch.pop();
             return new Message(consumerRecord.topic(), consumerRecord.partition(), consumerRecord.offset(),
-                    consumerRecord.key(), consumerRecord.value(), consumerRecord.timestamp());
+                               consumerRecord.key(), consumerRecord.value(), consumerRecord.timestamp());
         }
     }
 
@@ -88,10 +89,12 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         optionalConfig(config.getSslTruststorePassword(), conf -> props.put("ssl.truststore.password", conf));
         optionalConfig(config.getIsolationLevel(), conf -> props.put("isolation.level", conf));
         optionalConfig(config.getMaxPollRecords(), conf -> props.put("max.poll.records", conf));
-        optionalConfig(config.getSaslClientCallbackHandlerClass(), conf -> props.put("sasl.client.callback.handler.class", conf));
+        optionalConfig(config.getSaslClientCallbackHandlerClass(),
+                       conf -> props.put("sasl.client.callback.handler.class", conf));
         optionalConfig(config.getSaslJaasConfig(), conf -> props.put("sasl.jaas.config", conf));
         optionalConfig(config.getSaslKerberosServiceName(), conf -> props.put("sasl.kerberos.service.name", conf));
-        optionalConfig(config.getSaslLoginCallbackHandlerClass(), conf -> props.put("sasl.login.callback.handler.class", conf));
+        optionalConfig(config.getSaslLoginCallbackHandlerClass(),
+                       conf -> props.put("sasl.login.callback.handler.class", conf));
         optionalConfig(config.getSaslLoginClass(), conf -> props.put("sasl.login.class", conf));
         optionalConfig(config.getSaslMechanism(), conf -> props.put("sasl.mechanism", conf));
         optionalConfig(config.getSecurityProtocol(), conf -> props.put("security.protocol", conf));
@@ -100,7 +103,8 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         optionalConfig(config.getSslProtocol(), conf -> props.put("ssl.protocol", conf));
         optionalConfig(config.getSslProvider(), conf -> props.put("ssl.provider", conf));
         optionalConfig(config.getSslTruststoreType(), conf -> props.put("ssl.truststore.type", conf));
-        optionalConfig(config.getNewConsumerPartitionAssignmentStrategyClass(), conf -> props.put("partition.assignment.strategy", conf));
+        optionalConfig(config.getNewConsumerPartitionAssignmentStrategyClass(),
+                       conf -> props.put("partition.assignment.strategy", conf));
 
         String dualCommitEnabled = config.getDualCommitEnabled();
         String offsetStorage = config.getOffsetsStorage();
@@ -167,7 +171,8 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
 
     @Override
     public void commit(com.pinterest.secor.common.TopicPartition topicPartition, long offset) {
-        TopicPartition kafkaTopicPartition = new TopicPartition(topicPartition.getTopic(), topicPartition.getPartition());
+        TopicPartition kafkaTopicPartition =
+                new TopicPartition(topicPartition.getTopic(), topicPartition.getPartition());
         OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(offset);
 
         try {

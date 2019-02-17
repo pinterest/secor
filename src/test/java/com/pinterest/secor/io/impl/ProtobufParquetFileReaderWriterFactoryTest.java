@@ -18,19 +18,6 @@
  */
 package com.pinterest.secor.io.impl;
 
-import static org.junit.Assert.assertArrayEquals;
-
-import java.util.HashMap;
-import java.util.Map;
-import org.apache.parquet.hadoop.ParquetWriter;
-
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import com.google.common.io.Files;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
@@ -40,9 +27,18 @@ import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.protobuf.Messages.UnitTestMessage3;
 import com.pinterest.secor.util.ParquetUtil;
 import com.pinterest.secor.util.ReflectionUtil;
-
-
 import junit.framework.TestCase;
+import org.apache.parquet.hadoop.ParquetWriter;
+import org.json.simple.JSONObject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertArrayEquals;
 
 @RunWith(PowerMockRunner.class)
 public class ProtobufParquetFileReaderWriterFactoryTest extends TestCase {
@@ -60,22 +56,19 @@ public class ProtobufParquetFileReaderWriterFactoryTest extends TestCase {
         classPerTopic.put("test-pb-topic", UnitTestMessage3.class.getName());
         Mockito.when(config.getProtobufMessageClassPerTopic()).thenReturn(classPerTopic);
         Mockito.when(config.getFileReaderWriterFactory())
-                .thenReturn(ProtobufParquetFileReaderWriterFactory.class.getName());
-        Mockito.when(ParquetUtil.getParquetBlockSize(config))
-                .thenReturn(ParquetWriter.DEFAULT_BLOCK_SIZE);
-        Mockito.when(ParquetUtil.getParquetPageSize(config))
-                .thenReturn(ParquetWriter.DEFAULT_PAGE_SIZE);
+               .thenReturn(ProtobufParquetFileReaderWriterFactory.class.getName());
+        Mockito.when(ParquetUtil.getParquetBlockSize(config)).thenReturn(ParquetWriter.DEFAULT_BLOCK_SIZE);
+        Mockito.when(ParquetUtil.getParquetPageSize(config)).thenReturn(ParquetWriter.DEFAULT_PAGE_SIZE);
         Mockito.when(ParquetUtil.getParquetEnableDictionary(config))
-                .thenReturn(ParquetWriter.DEFAULT_IS_DICTIONARY_ENABLED);
-        Mockito.when(ParquetUtil.getParquetValidation(config))
-                .thenReturn(ParquetWriter.DEFAULT_IS_VALIDATING_ENABLED);
+               .thenReturn(ParquetWriter.DEFAULT_IS_DICTIONARY_ENABLED);
+        Mockito.when(ParquetUtil.getParquetValidation(config)).thenReturn(ParquetWriter.DEFAULT_IS_VALIDATING_ENABLED);
 
+        LogFilePath tempLogFilePath =
+                new LogFilePath(Files.createTempDir().toString(), "test-pb-topic", new String[]{"part-1"}, 0, 1, 23232,
+                                ".log");
 
-        LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-pb-topic",
-                new String[] { "part-1" }, 0, 1, 23232, ".log");
-
-        FileWriter fileWriter = ReflectionUtil.createFileWriter(config.getFileReaderWriterFactory(), tempLogFilePath,
-                null, config);
+        FileWriter fileWriter =
+                ReflectionUtil.createFileWriter(config.getFileReaderWriterFactory(), tempLogFilePath, null, config);
 
         UnitTestMessage3 msg1 = UnitTestMessage3.newBuilder().setData("abc").setTimestamp(1467176315L).build();
         UnitTestMessage3 msg2 = UnitTestMessage3.newBuilder().setData("XYZ").setTimestamp(1467176344L).build();
@@ -86,8 +79,8 @@ public class ProtobufParquetFileReaderWriterFactoryTest extends TestCase {
         fileWriter.write(kv2);
         fileWriter.close();
 
-        FileReader fileReader = ReflectionUtil.createFileReader(config.getFileReaderWriterFactory(), tempLogFilePath,
-                null, config);
+        FileReader fileReader =
+                ReflectionUtil.createFileReader(config.getFileReaderWriterFactory(), tempLogFilePath, null, config);
 
         KeyValue kvout = fileReader.next();
         assertEquals(kv1.getOffset(), kvout.getOffset());
@@ -111,22 +104,19 @@ public class ProtobufParquetFileReaderWriterFactoryTest extends TestCase {
         Mockito.when(config.getMessageFormatPerTopic()).thenReturn(formatForAll);
 
         Mockito.when(config.getFileReaderWriterFactory())
-                .thenReturn(ProtobufParquetFileReaderWriterFactory.class.getName());
-        Mockito.when(ParquetUtil.getParquetBlockSize(config))
-                .thenReturn(ParquetWriter.DEFAULT_BLOCK_SIZE);
-        Mockito.when(ParquetUtil.getParquetPageSize(config))
-                .thenReturn(ParquetWriter.DEFAULT_PAGE_SIZE);
+               .thenReturn(ProtobufParquetFileReaderWriterFactory.class.getName());
+        Mockito.when(ParquetUtil.getParquetBlockSize(config)).thenReturn(ParquetWriter.DEFAULT_BLOCK_SIZE);
+        Mockito.when(ParquetUtil.getParquetPageSize(config)).thenReturn(ParquetWriter.DEFAULT_PAGE_SIZE);
         Mockito.when(ParquetUtil.getParquetEnableDictionary(config))
-                .thenReturn(ParquetWriter.DEFAULT_IS_DICTIONARY_ENABLED);
-        Mockito.when(ParquetUtil.getParquetValidation(config))
-                .thenReturn(ParquetWriter.DEFAULT_IS_VALIDATING_ENABLED);
+               .thenReturn(ParquetWriter.DEFAULT_IS_DICTIONARY_ENABLED);
+        Mockito.when(ParquetUtil.getParquetValidation(config)).thenReturn(ParquetWriter.DEFAULT_IS_VALIDATING_ENABLED);
 
+        LogFilePath tempLogFilePath =
+                new LogFilePath(Files.createTempDir().toString(), "test-pb-topic", new String[]{"part-1"}, 0, 1, 23232,
+                                ".log");
 
-        LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-pb-topic",
-                new String[] { "part-1" }, 0, 1, 23232, ".log");
-
-        FileWriter fileWriter = ReflectionUtil.createFileWriter(config.getFileReaderWriterFactory(), tempLogFilePath,
-                null, config);
+        FileWriter fileWriter =
+                ReflectionUtil.createFileWriter(config.getFileReaderWriterFactory(), tempLogFilePath, null, config);
 
         UnitTestMessage3 protomsg1 = UnitTestMessage3.newBuilder().setData("abc").setTimestamp(1467176315L).build();
         UnitTestMessage3 protomsg2 = UnitTestMessage3.newBuilder().setData("XYZ").setTimestamp(1467176344L).build();
@@ -148,8 +138,8 @@ public class ProtobufParquetFileReaderWriterFactoryTest extends TestCase {
         fileWriter.write(kv2);
         fileWriter.close();
 
-        FileReader fileReader = ReflectionUtil.createFileReader(config.getFileReaderWriterFactory(), tempLogFilePath,
-                null, config);
+        FileReader fileReader =
+                ReflectionUtil.createFileReader(config.getFileReaderWriterFactory(), tempLogFilePath, null, config);
 
         KeyValue kvout = fileReader.next();
         assertEquals(kv1.getOffset(), kvout.getOffset());

@@ -22,18 +22,19 @@ import com.google.common.util.concurrent.RateLimiter;
 import com.pinterest.secor.common.SecorConfig;
 
 /**
- * Rate limit util wraps around a rate limiter shared across consumer threads.  The rate limiting
- * mechanism does not prevent temporary bursts of the load on the broker caused by the message
- * prefetching mechanism of the native kafka client.
+ * Rate limit util wraps around a rate limiter shared across consumer threads.  The rate limiting mechanism does not
+ * prevent temporary bursts of the load on the broker caused by the message prefetching mechanism of the native kafka
+ * client.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class RateLimitUtil {
+
     private static RateLimiter mRateLimiter = null;
 
     public static void configure(SecorConfig config) {
-        // Lazy initialization of the rate limiter would have to be in a synchronized block so
-        // creating it here makes things simple.
+        // Lazy initialization of the rate limiter would have to be in a synchronized block so creating it here makes
+        // things simple.
         mRateLimiter = RateLimiter.create(config.getMessagesPerSecond());
     }
 

@@ -20,7 +20,6 @@ package com.pinterest.secor.message;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.String;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -36,7 +35,7 @@ import java.nio.charset.CodingErrorAction;
 public class Message {
 
     private static final byte[] EMPTY_BYTES = new byte[0];
-
+    private static final int TRUNCATED_STRING_MAX_LEN = 1024;
     private String mTopic;
     private int mKafkaPartition;
     private long mOffset;
@@ -44,19 +43,33 @@ public class Message {
     private byte[] mPayload;
     private long mTimestamp;
 
-    private static final int TRUNCATED_STRING_MAX_LEN = 1024;
+    public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload, long timestamp) {
+        mTopic = topic;
+        mKafkaPartition = kafkaPartition;
+        mOffset = offset;
+        mKafkaKey = kafkaKey;
+        if (mKafkaKey == null) {
+            mKafkaKey = EMPTY_BYTES;
+        }
+        mPayload = payload;
+        if (mPayload == null) {
+            mPayload = EMPTY_BYTES;
+        }
+        mTimestamp = timestamp;
+    }
+
     /**
-     * Message key and payload may be arbitrary binary strings, so we should make sure we don't throw
-     * when logging them by using a CharsetDecoder which replaces bad data. (While in practice `new String(bytes)`
-     * does the same thing, the documentation for that method leaves that behavior unspecified.)
-     * Additionally, in contexts where Message.toString() will be logged at a high level (including exception
-     * messages), we truncate long keys and payloads, which may be very long binary data.
+     * Message key and payload may be arbitrary binary strings, so we should make sure we don't throw when logging them
+     * by using a CharsetDecoder which replaces bad data. (While in practice `new String(bytes)` does the same thing,
+     * the documentation for that method leaves that behavior unspecified.) Additionally, in contexts where
+     * Message.toString() will be logged at a high level (including exception messages), we truncate long keys and
+     * payloads, which may be very long binary data.
      */
     private String bytesToString(byte[] bytes, boolean truncate) {
         CharsetDecoder decoder = Charset.defaultCharset()
-                .newDecoder()
-                .onMalformedInput(CodingErrorAction.REPLACE)
-                .onUnmappableCharacter(CodingErrorAction.REPLACE);
+                                        .newDecoder()
+                                        .onMalformedInput(CodingErrorAction.REPLACE)
+                                        .onUnmappableCharacter(CodingErrorAction.REPLACE);
         ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
         CharBuffer charBuffer;
         try {
@@ -74,32 +87,14 @@ public class Message {
     }
 
     protected String fieldsToString(boolean truncate) {
-        return "topic='" + mTopic + '\'' +
-               ", kafkaPartition=" + mKafkaPartition +
-               ", offset=" + mOffset +
-               ", kafkaKey=" + bytesToString(mKafkaKey, truncate) +
-               ", payload=" + bytesToString(mPayload, truncate) +
-               ", timestamp=" + mTimestamp;
+        return "topic='" + mTopic + '\'' + ", kafkaPartition=" + mKafkaPartition + ", offset=" + mOffset +
+                ", kafkaKey=" + bytesToString(mKafkaKey, truncate) + ", payload=" + bytesToString(mPayload, truncate) +
+                ", timestamp=" + mTimestamp;
     }
 
     @Override
     public String toString() {
         return "Message{" + fieldsToString(false) + '}';
-    }
-
-    public Message(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload, long timestamp) {
-        mTopic = topic;
-        mKafkaPartition = kafkaPartition;
-        mOffset = offset;
-        mKafkaKey = kafkaKey;
-        if (mKafkaKey == null) {
-            mKafkaKey = EMPTY_BYTES;
-        }
-        mPayload = payload;
-        if (mPayload == null) {
-            mPayload = EMPTY_BYTES;
-        }
-        mTimestamp = timestamp;
     }
 
     public String getTopic() {

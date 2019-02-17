@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
  * @author Liam Stewart (liam.stewart@gmail.com)
  */
 public class FutureHandle<T> implements Handle<T> {
+
     private Future<T> mFuture;
 
     public FutureHandle(Future<T> f) {

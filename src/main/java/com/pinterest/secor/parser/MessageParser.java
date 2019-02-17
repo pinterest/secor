@@ -27,9 +27,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.regex.Pattern;
 
-// TODO(pawel): should we offer a multi-message parser capable of parsing multiple types of
-// messages?  E.g., it could be implemented as a composite trying out different parsers and using
-// the one that works.  What is the performance cost of such approach?
+// TODO(pawel): should we offer a multi-message parser capable of parsing multiple types of messages?  E.g., it could
+//  be implemented as a composite trying out different parsers and using the one that works.  What is the performance
+//  cost of such approach?
 
 /**
  * Message parser extracts partitions from messages.
@@ -37,18 +37,18 @@ import java.util.regex.Pattern;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public abstract class MessageParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MessageParser.class);
+    protected final String offsetPrefix;
     protected SecorConfig mConfig;
     protected String[] mNestedFields;
-    protected final String offsetPrefix;
-    private static final Logger LOG = LoggerFactory.getLogger(MessageParser.class);
 
     public MessageParser(SecorConfig config) {
         mConfig = config;
         offsetPrefix = usingOffsetPrefix(mConfig);
-        if (mConfig.getMessageTimestampName() != null &&
-            !mConfig.getMessageTimestampName().isEmpty() &&
-            mConfig.getMessageTimestampNameSeparator() != null &&
-            !mConfig.getMessageTimestampNameSeparator().isEmpty()) {
+        if (mConfig.getMessageTimestampName() != null && !mConfig.getMessageTimestampName().isEmpty() &&
+                mConfig.getMessageTimestampNameSeparator() != null &&
+                !mConfig.getMessageTimestampNameSeparator().isEmpty()) {
             String separatorPattern = Pattern.quote(mConfig.getMessageTimestampNameSeparator());
             mNestedFields = mConfig.getMessageTimestampName().split(separatorPattern);
         }
@@ -60,9 +60,8 @@ public abstract class MessageParser {
 
     public ParsedMessage parse(Message message) throws Exception {
         String[] partitions = extractPartitions(message);
-        return new ParsedMessage(message.getTopic(), message.getKafkaPartition(),
-                                 message.getOffset(), message.getKafkaKey(),
-                                 message.getPayload(), partitions, message.getTimestamp());
+        return new ParsedMessage(message.getTopic(), message.getKafkaPartition(), message.getOffset(),
+                                 message.getKafkaKey(), message.getPayload(), partitions, message.getTimestamp());
     }
 
     public abstract String[] extractPartitions(Message payload) throws Exception;
@@ -71,12 +70,12 @@ public abstract class MessageParser {
         Object fieldValue = null;
         if (mNestedFields != null) {
             Object finalValue = null;
-            for (int i=0; i < mNestedFields.length; i++) {
+            for (int i = 0; i < mNestedFields.length; i++) {
                 if (!jsonObject.containsKey(mNestedFields[i])) {
                     LOG.warn("Could not find key {} in message", mConfig.getMessageTimestampName());
                     break;
                 }
-                if (i < (mNestedFields.length -1)) {
+                if (i < (mNestedFields.length - 1)) {
                     jsonObject = (JSONObject) jsonObject.get(mNestedFields[i]);
                 } else {
                     finalValue = jsonObject.get(mNestedFields[i]);

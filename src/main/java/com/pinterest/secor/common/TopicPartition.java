@@ -24,6 +24,7 @@ package com.pinterest.secor.common;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class TopicPartition {
+
     private String mTopic;
     private int mPartition;
 
@@ -42,13 +43,21 @@ public class TopicPartition {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         TopicPartition that = (TopicPartition) o;
 
-        if (mPartition != that.mPartition) return false;
-        if (mTopic != null ? !mTopic.equals(that.mTopic) : that.mTopic != null) return false;
+        if (mPartition != that.mPartition) {
+            return false;
+        }
+        if (mTopic != null ? !mTopic.equals(that.mTopic) : that.mTopic != null) {
+            return false;
+        }
 
         return true;
     }
@@ -62,9 +71,6 @@ public class TopicPartition {
 
     @Override
     public String toString() {
-        return "TopicPartition{" +
-                "mTopic='" + mTopic + '\'' +
-                ", mPartition=" + mPartition +
-                '}';
+        return "TopicPartition{" + "mTopic='" + mTopic + '\'' + ", mPartition=" + mPartition + '}';
     }
 }

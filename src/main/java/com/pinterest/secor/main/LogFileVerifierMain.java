@@ -25,51 +25,55 @@ import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
+/*
  * Log file verifier main.
  *
  * Run:
- *     $ cd optimus/secor
- *     $ mvn package
- *     $ cd target
- *     $ java -ea -Dlog4j.configuration=log4j.dev.properties -Dconfig=secor.dev.backup.properties \
- *         -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.LogFileVerifierMain -t \
- *         topic -q
- *
+ *   $ cd optimus/secor
+ *   $ mvn package
+ *   $ cd target
+ *   $ java -ea \
+ *      -Dlog4j.configuration=log4j.dev.properties \
+ *      -Dconfig=secor.dev.backup.properties \
+ *      -cp "secor-0.1-SNAPSHOT.jar:lib/*"
+ *      com.pinterest.secor.main.LogFileVerifierMain -t topic -q
+ */
+
+/**
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class LogFileVerifierMain {
+
     private static final Logger LOG = LoggerFactory.getLogger(LogFileVerifierMain.class);
 
     private static CommandLine parseArgs(String[] args) throws ParseException {
         Options options = new Options();
         options.addOption(OptionBuilder.withLongOpt("topic")
-               .withDescription("kafka topic name")
-               .hasArg()
-               .withArgName("<topic>")
-               .withType(String.class)
-               .create("t"));
+                                       .withDescription("kafka topic name")
+                                       .hasArg()
+                                       .withArgName("<topic>")
+                                       .withType(String.class)
+                                       .create("t"));
         options.addOption(OptionBuilder.withLongOpt("start_offset")
-               .withDescription("offset identifying the first set of files to check")
-               .hasArg()
-               .withArgName("<offset>")
-               .withType(Long.class)
-               .create("s"));
+                                       .withDescription("offset identifying the first set of files to check")
+                                       .hasArg()
+                                       .withArgName("<offset>")
+                                       .withType(Long.class)
+                                       .create("s"));
         options.addOption(OptionBuilder.withLongOpt("end_offset")
-               .withDescription("offset identifying the last set of files to check")
-               .hasArg()
-               .withArgName("<offset>")
-               .withType(Long.class)
-               .create("e"));
+                                       .withDescription("offset identifying the last set of files to check")
+                                       .hasArg()
+                                       .withArgName("<offset>")
+                                       .withType(Long.class)
+                                       .create("e"));
         options.addOption(OptionBuilder.withLongOpt("messages")
-               .withDescription("expected number of messages")
-               .hasArg()
-               .withArgName("<num_messages>")
-               .withType(Number.class)
-               .create("m"));
+                                       .withDescription("expected number of messages")
+                                       .hasArg()
+                                       .withArgName("<num_messages>")
+                                       .withType(Number.class)
+                                       .create("m"));
         options.addOption("q", "sequence_offsets", false, "whether to verify that offsets " +
-                          "increase sequentially.  Requires loading all offsets in a snapshot " +
-                          "to memory so use cautiously");
+                "increase sequentially. Requires loading all offsets in a snapshot to memory so use cautiously");
 
         CommandLineParser parser = new GnuParser();
         return parser.parse(options, args);
@@ -80,8 +84,7 @@ public class LogFileVerifierMain {
             CommandLine commandLine = parseArgs(args);
             SecorConfig config = SecorConfig.load();
             FileUtil.configure(config);
-            LogFileVerifier verifier = new LogFileVerifier(config,
-                commandLine.getOptionValue("topic"));
+            LogFileVerifier verifier = new LogFileVerifier(config, commandLine.getOptionValue("topic"));
             long startOffset = -2;
             long endOffset = Long.MAX_VALUE;
             if (commandLine.hasOption("start_offset")) {

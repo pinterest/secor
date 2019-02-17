@@ -18,7 +18,8 @@
  */
 package com.pinterest.secor.uploader;
 
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.SecorConfig;
 
 /**
  * Manages uploads.
@@ -26,6 +27,7 @@ import com.pinterest.secor.common.*;
  * @author Liam Stewart (liam.stewart@gmail.com)
  */
 public abstract class UploadManager {
+
     protected SecorConfig mConfig;
 
     public UploadManager(SecorConfig config) {

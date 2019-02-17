@@ -24,5 +24,6 @@ package com.pinterest.secor.uploader;
  * @author Liam Stewart (liam.stewart@gmail.com)
  */
 public interface Handle<T> {
+
     public T get() throws Exception;
 }

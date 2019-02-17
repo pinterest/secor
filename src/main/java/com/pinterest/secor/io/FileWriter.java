@@ -22,13 +22,14 @@ import java.io.IOException;
 
 /**
  * Generic file writer interface for for a particular type of Secor output file
- *
- * Should be returned by a FileReaderWriterFactory that also know how to build
- * a corresponding FileReader (that is able to read the files written by this FileWriter).
+ * <p>
+ * Should be returned by a FileReaderWriterFactory that also know how to build a corresponding FileReader (that is able
+ * to read the files written by this FileWriter).
  *
  * @author Praveen Murugesan (praveen@uber.com)
  */
 public interface FileWriter {
+
     /**
      * @return length of data written up to now to the underlying file
      * @throws java.io.IOException on IO error

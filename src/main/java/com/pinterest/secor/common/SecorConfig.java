@@ -26,11 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -38,10 +34,8 @@ import java.util.TimeZone;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class SecorConfig {
+
     private static final Logger LOG = LoggerFactory.getLogger(SecorConfig.class);
-
-    private final PropertiesConfiguration mProperties;
-
     private static final ThreadLocal<SecorConfig> mSecorConfig = new ThreadLocal<SecorConfig>() {
 
         @Override
@@ -67,10 +61,7 @@ public class SecorConfig {
             return new SecorConfig(properties);
         }
     };
-
-    public static SecorConfig load() throws ConfigurationException {
-        return mSecorConfig.get();
-    }
+    private final PropertiesConfiguration mProperties;
 
     /**
      * Exposed for testability
@@ -79,6 +70,10 @@ public class SecorConfig {
      */
     public SecorConfig(PropertiesConfiguration properties) {
         mProperties = properties;
+    }
+
+    public static SecorConfig load() throws ConfigurationException {
+        return mSecorConfig.get();
     }
 
     public String getKafkaSeedBrokerHost() {
@@ -289,10 +284,12 @@ public class SecorConfig {
         return getInt("secor.messages.per.second");
     }
 
-    public String getS3FileSystem() { return getString("secor.s3.filesystem"); }
+    public String getS3FileSystem() {
+        return getString("secor.s3.filesystem");
+    }
 
     public boolean getSeparateContainersForTopics() {
-    	return getString("secor.swift.containers.for.each.topic").toLowerCase().equals("true");
+        return getString("secor.swift.containers.for.each.topic").toLowerCase().equals("true");
     }
 
     public String getSwiftContainer() {
@@ -335,9 +332,13 @@ public class SecorConfig {
         return getString("secor.kafka.topic_blacklist");
     }
 
-    public String getKafkaTopicUploadAtMinuteMarkFilter() { return getString("secor.kafka.upload_at_minute_mark.topic_filter");}
+    public String getKafkaTopicUploadAtMinuteMarkFilter() {
+        return getString("secor.kafka.upload_at_minute_mark.topic_filter");
+    }
 
-    public int getUploadMinuteMark(){ return getInt("secor.upload.minute_mark");}
+    public int getUploadMinuteMark() {
+        return getInt("secor.upload.minute_mark");
+    }
 
     public String getKafkaGroup() {
         return getString("secor.kafka.group");
@@ -351,7 +352,9 @@ public class SecorConfig {
         return getInt("zookeeper.sync.time.ms");
     }
 
-    public String getSchemaRegistryUrl(){ return getString("schema.registry.url"); }
+    public String getSchemaRegistryUrl() {
+        return getString("schema.registry.url");
+    }
 
     public String getMessageParserClass() {
         return getString("secor.message.parser.class");
@@ -365,8 +368,8 @@ public class SecorConfig {
         return getString("secor.upload.manager.class");
     }
 
-    public String getMessageTransformerClass(){
-    	return getString("secor.message.transformer.class");
+    public String getMessageTransformerClass() {
+        return getString("secor.message.transformer.class");
     }
 
     public int getTopicPartitionForgetSeconds() {
@@ -413,8 +416,8 @@ public class SecorConfig {
         return getBoolean("aws.client.pathstyleaccess", false);
     }
 
-    public boolean getAwsProxyEnabled(){
-    	return getBoolean("aws.proxy.isEnabled");
+    public boolean getAwsProxyEnabled() {
+        return getBoolean("aws.proxy.isEnabled");
     }
 
     public String getAwsProxyHttpHost() {
@@ -462,19 +465,19 @@ public class SecorConfig {
     }
 
     public String getSwiftPublic() {
-    	return getString("swift.public");
+        return getString("swift.public");
     }
 
     public String getSwiftPort() {
-    	return getString("swift.port");
+        return getString("swift.port");
     }
 
     public String getSwiftGetAuth() {
-    	return getString("swift.use.get.auth");
+        return getString("swift.use.get.auth");
     }
 
     public String getSwiftApiKey() {
-    	return getString("swift.api.key");
+        return getString("swift.api.key");
     }
 
     public String getQuboleApiToken() {
@@ -489,8 +492,8 @@ public class SecorConfig {
         return getString("statsd.hostport");
     }
 
-    public boolean getStatsDPrefixWithConsumerGroup(){
-    	return getBoolean("statsd.prefixWithConsumerGroup");
+    public boolean getStatsDPrefixWithConsumerGroup() {
+        return getBoolean("statsd.prefixWithConsumerGroup");
     }
 
     public boolean getStatsdDogstatdsTagsEnabled() {
@@ -571,27 +574,27 @@ public class SecorConfig {
     }
 
     public String getFileReaderWriterFactory() {
-    	return getString("secor.file.reader.writer.factory");
+        return getString("secor.file.reader.writer.factory");
     }
 
-    public String getFileReaderDelimiter(){
-      String readerDelimiter = getString("secor.file.reader.Delimiter");
-      if (readerDelimiter.length() > 1) {
-        throw new RuntimeException("secor.file.reader.Delimiter length can not be greater than 1 character");
-      }
-      return readerDelimiter;
+    public String getFileReaderDelimiter() {
+        String readerDelimiter = getString("secor.file.reader.Delimiter");
+        if (readerDelimiter.length() > 1) {
+            throw new RuntimeException("secor.file.reader.Delimiter length can not be greater than 1 character");
+        }
+        return readerDelimiter;
     }
 
-    public String getFileWriterDelimiter(){
-      String writerDelimiter = getString("secor.file.writer.Delimiter");
-      if (writerDelimiter.length() > 1) {
-        throw new RuntimeException("secor.file.writer.Delimiter length can not be greater than 1 character");
-      }
-      return writerDelimiter;
+    public String getFileWriterDelimiter() {
+        String writerDelimiter = getString("secor.file.writer.Delimiter");
+        if (writerDelimiter.length() > 1) {
+            throw new RuntimeException("secor.file.writer.Delimiter length can not be greater than 1 character");
+        }
+        return writerDelimiter;
     }
 
     public String getPerfTestTopicPrefix() {
-    	return getString("secor.kafka.perf_topic_prefix");
+        return getString("secor.kafka.perf_topic_prefix");
     }
 
     public String getZookeeperPath() {
@@ -636,18 +639,28 @@ public class SecorConfig {
     }
 
     public boolean getS3MD5HashPrefix() {
-      return getBoolean("secor.s3.prefix.md5hash");
+        return getBoolean("secor.s3.prefix.md5hash");
     }
 
-    public String getAzureEndpointsProtocol() { return getString("secor.azure.endpoints.protocol"); }
+    public String getAzureEndpointsProtocol() {
+        return getString("secor.azure.endpoints.protocol");
+    }
 
-    public String getAzureAccountName() { return getString("secor.azure.account.name"); }
+    public String getAzureAccountName() {
+        return getString("secor.azure.account.name");
+    }
 
-    public String getAzureAccountKey() { return getString("secor.azure.account.key"); }
+    public String getAzureAccountKey() {
+        return getString("secor.azure.account.key");
+    }
 
-    public String getAzureContainer() { return getString("secor.azure.container.name"); }
+    public String getAzureContainer() {
+        return getString("secor.azure.container.name");
+    }
 
-    public String getAzurePath() { return getString("secor.azure.path"); }
+    public String getAzurePath() {
+        return getString("secor.azure.path");
+    }
 
     public Map<String, String> getProtobufMessageClassPerTopic() {
         String prefix = "secor.protobuf.message.class";
@@ -700,8 +713,7 @@ public class SecorConfig {
 
     public void checkProperty(String name) {
         if (!mProperties.containsKey(name)) {
-            throw new RuntimeException("Failed to find required configuration option '" +
-                                       name + "'.");
+            throw new RuntimeException("Failed to find required configuration option '" + name + "'.");
         }
     }
 
@@ -742,21 +754,16 @@ public class SecorConfig {
     public String getMetricsCollectorClass() {
         return getString("secor.monitoring.metrics.collector.class");
     }
-    
+
     /**
-     * This method is used for fetching all the properties which start with the given prefix.
-     * It returns a Map of all those key-val.
-     * 
-     * e.g.
-     * a.b.c=val1
-     * a.b.d=val2
-     * a.b.e=val3
-     * 
-     * If prefix is a.b then,
-     * These will be fetched as a map {c = val1, d = val2, e = val3}
-     * 
+     * This method is used for fetching all the properties which start with the given prefix. It returns a Map of all
+     * those key-val.
+     * <p>
+     * e.g. a.b.c=val1 a.b.d=val2 a.b.e=val3
+     * <p>
+     * If prefix is a.b then, These will be fetched as a map {c = val1, d = val2, e = val3}
+     *
      * @param prefix property prefix
-     * @return
      */
     public Map<String, String> getPropertyMapForPrefix(String prefix) {
         Iterator<String> keys = mProperties.getKeys(prefix);
@@ -768,12 +775,12 @@ public class SecorConfig {
         }
         return map;
     }
-    
+
     public Map<String, String> getORCMessageSchema() {
         return getPropertyMapForPrefix("secor.orc.message.schema");
     }
-    
-    public String getORCSchemaProviderClass(){
+
+    public String getORCSchemaProviderClass() {
         return getString("secor.orc.schema.provider");
     }
 }

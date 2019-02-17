@@ -21,6 +21,7 @@ package com.pinterest.secor.monitoring;
 import com.twitter.ostrich.stats.Stats;
 
 public class OstrichMetricCollector implements MetricCollector {
+
     @Override
     public void increment(String label, String topic) {
         Stats.incr(label);

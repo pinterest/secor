@@ -18,12 +18,11 @@
  */
 package com.pinterest.secor.util;
 
-import org.mockito.Mockito;
-import org.junit.Test;
+import com.pinterest.secor.common.SecorConfig;
 import org.junit.Assert;
 import org.junit.Before;
-
-import com.pinterest.secor.common.SecorConfig;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 public class FileUtilTest {
 
@@ -64,19 +63,16 @@ public class FileUtilTest {
     public void testGetPrefix() throws Exception {
         //FileUtil.configure(mSwiftConfig);
         Assert.assertEquals(FileUtil.getPrefix("some_topic", mSwiftConfig),
-                "swift://some_container.GENERICPROJECT/some_swift_parent_dir");
+                            "swift://some_container.GENERICPROJECT/some_swift_parent_dir");
 
         //FileUtil.configure(mS3AConfig);
-        Assert.assertEquals(FileUtil.getPrefix("some_topic", mS3AConfig),
-                "s3a://some_bucket/some_s3_parent_dir");
+        Assert.assertEquals(FileUtil.getPrefix("some_topic", mS3AConfig), "s3a://some_bucket/some_s3_parent_dir");
 
         //FileUtil.configure(mS3NConfig);
-        Assert.assertEquals(FileUtil.getPrefix("some_topic", mS3NConfig),
-                "s3n://some_bucket/some_s3_parent_dir");
+        Assert.assertEquals(FileUtil.getPrefix("some_topic", mS3NConfig), "s3n://some_bucket/some_s3_parent_dir");
 
         //FileUtil.configure(mGSConfig);
-        Assert.assertEquals(FileUtil.getPrefix("some_topic", mGSconfig),
-                "gs://some_gs_bucket/some_gs_parent_dir");
+        Assert.assertEquals(FileUtil.getPrefix("some_topic", mGSconfig), "gs://some_gs_bucket/some_gs_parent_dir");
 
         // return to the previous state
         FileUtil.configure(null);

@@ -22,6 +22,7 @@ import com.pinterest.secor.message.Message;
 import org.apache.thrift.TException;
 
 public interface KafkaClient {
+
     int getNumPartitions(String topic);
 
     Message getLastMessage(TopicPartition topicPartition) throws TException;

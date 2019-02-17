@@ -22,7 +22,6 @@ import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.util.StatsUtil;
-
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +30,12 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * FileRegistry keeps track of local log files currently being appended to and the associated
- * writers.
+ * FileRegistry keeps track of local log files currently being appended to and the associated writers.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class FileRegistry {
+
     private static final Logger LOG = LoggerFactory.getLogger(FileRegistry.class);
 
     private final SecorConfig mConfig;
@@ -53,6 +52,7 @@ public class FileRegistry {
 
     /**
      * Get all topic partitions.
+     *
      * @return Collection of all registered topic partitions.
      */
     public Collection<TopicPartition> getTopicPartitions() {
@@ -77,6 +77,7 @@ public class FileRegistry {
 
     /**
      * Get paths in a given topic partition.
+     *
      * @param topicPartition The topic partition to retrieve paths for.
      * @return Collection of file paths in the given topic partition.
      */
@@ -86,6 +87,7 @@ public class FileRegistry {
 
     /**
      * Get paths in a given topic partition.
+     *
      * @param topicPartitionGroup The topic partition to retrieve paths for.
      * @return Collection of file paths in the given topic partition.
      */
@@ -99,31 +101,29 @@ public class FileRegistry {
 
     /**
      * Retrieve an existing writer for a given path.
+     *
      * @param path The path to retrieve writer for.
      * @return Writer for a given path or null if no writer has been created yet.
-     * @throws Exception on error
      */
-    public FileWriter getWriter(LogFilePath path)
-            throws Exception {
+    public FileWriter getWriter(LogFilePath path) {
         return mWriters.get(path);
     }
 
     /**
      * Retrieve a writer for a given path or create a new one if it does not exist.
-     * @param path The path to retrieve writer for.
+     *
+     * @param path  The path to retrieve writer for.
      * @param codec Optional compression codec.
      * @return Writer for a given path.
      * @throws Exception on error
      */
-    public FileWriter getOrCreateWriter(LogFilePath path, CompressionCodec codec)
-            throws Exception {
+    public FileWriter getOrCreateWriter(LogFilePath path, CompressionCodec codec) throws Exception {
         FileWriter writer = mWriters.get(path);
         if (writer == null) {
             // Just in case.
             FileUtil.delete(path.getLogFilePath());
             FileUtil.delete(path.getLogFileCrcPath());
-            TopicPartitionGroup topicPartition = new TopicPartitionGroup(path.getTopic(),
-                    path.getKafkaPartitions());
+            TopicPartitionGroup topicPartition = new TopicPartitionGroup(path.getTopic(), path.getKafkaPartitions());
             HashSet<LogFilePath> files = mFiles.get(topicPartition);
             if (files == null) {
                 files = new HashSet<LogFilePath>();
@@ -147,20 +147,19 @@ public class FileRegistry {
 
     /**
      * Delete a given path, the underlying file, and the corresponding writer.
+     *
      * @param path The path to delete.
      * @throws IOException on error
      */
     public void deletePath(LogFilePath path) throws IOException {
-        TopicPartitionGroup topicPartition = new TopicPartitionGroup(path.getTopic(),
-                                                           path.getKafkaPartitions());
+        TopicPartitionGroup topicPartition = new TopicPartitionGroup(path.getTopic(), path.getKafkaPartitions());
         HashSet<LogFilePath> paths = mFiles.get(topicPartition);
         paths.remove(path);
         if (paths.isEmpty()) {
             mFiles.remove(topicPartition);
-            StatsUtil.clearLabel("secor.size." + topicPartition.getTopic() + "." +
-                                 topicPartition.getPartitions()[0]);
+            StatsUtil.clearLabel("secor.size." + topicPartition.getTopic() + "." + topicPartition.getPartitions()[0]);
             StatsUtil.clearLabel("secor.modification_age_sec." + topicPartition.getTopic() + "." +
-                                 topicPartition.getPartitions()[0]);
+                                         topicPartition.getPartitions()[0]);
         }
         deleteWriter(path);
         FileUtil.delete(path.getLogFilePath());
@@ -169,6 +168,7 @@ public class FileRegistry {
 
     /**
      * Delete all paths, files, and writers in a given topic partition.
+     *
      * @param topicPartition The topic partition to remove.
      * @throws IOException on error
      */
@@ -189,6 +189,7 @@ public class FileRegistry {
 
     /**
      * Delete writer for a given topic partition.  Underlying file is not removed.
+     *
      * @param path The path to remove the writer for.
      * @throws IOException on error
      */
@@ -206,6 +207,7 @@ public class FileRegistry {
 
     /**
      * Delete all writers in a given topic partition.  Underlying files are not removed.
+     *
      * @param topicPartition The topic partition to remove the writers for.
      * @throws IOException on error
      */
@@ -217,7 +219,7 @@ public class FileRegistry {
         HashSet<LogFilePath> paths = mFiles.get(topicPartitionGroup);
         if (paths == null) {
             LOG.warn("No paths found for topic {} partition {}", topicPartitionGroup.getTopic(),
-                Arrays.toString(topicPartitionGroup.getPartitions()));
+                     Arrays.toString(topicPartitionGroup.getPartitions()));
         } else {
             for (LogFilePath path : paths) {
                 deleteWriter(path);
@@ -227,9 +229,9 @@ public class FileRegistry {
 
     /**
      * Get aggregated size of all files in a given topic partition.
+     *
      * @param topicPartition The topic partition to get the size for.
-     * @return Aggregated size of files in the topic partition or 0 if the topic partition does
-     *     not contain any files.
+     * @return Aggregated size of files in the topic partition or 0 if the topic partition does not contain any files.
      * @throws IOException on error
      */
     public long getSize(TopicPartition topicPartition) throws IOException {
@@ -246,22 +248,22 @@ public class FileRegistry {
             }
         }
         StatsUtil.setLabel("secor.size." + topicPartitionGroup.getTopic() + "." +
-            Arrays.toString(topicPartitionGroup.getPartitions()), Long.toString(result));
+                                   Arrays.toString(topicPartitionGroup.getPartitions()), Long.toString(result));
         return result;
     }
 
     /**
      * Get the creation age of the most recently created file in a given topic partition.
+     *
      * @param topicPartition The topic partition to get the age of.
-     * @return Age of the most recently created file in the topic partition or -1 if the partition
-     *     does not contain any files.
-     * @throws IOException on error
+     * @return Age of the most recently created file in the topic partition or -1 if the partition does not contain any
+     * files.
      */
-    public long getModificationAgeSec(TopicPartition topicPartition) throws IOException {
+    public long getModificationAgeSec(TopicPartition topicPartition) {
         return getModificationAgeSec(new TopicPartitionGroup(topicPartition));
     }
 
-    public long getModificationAgeSec(TopicPartitionGroup topicPartitionGroup) throws IOException {
+    public long getModificationAgeSec(TopicPartitionGroup topicPartitionGroup) {
         long now = System.currentTimeMillis() / 1000L;
         long result;
         if (mConfig.getFileAgeYoungest()) {
@@ -291,7 +293,7 @@ public class FileRegistry {
             result = -1;
         }
         StatsUtil.setLabel("secor.modification_age_sec." + topicPartitionGroup.getTopic() + "." +
-            Arrays.toString(topicPartitionGroup.getPartitions()), Long.toString(result));
+                                   Arrays.toString(topicPartitionGroup.getPartitions()), Long.toString(result));
         return result;
     }
 }

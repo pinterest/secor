@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class LogFileDeleter {
+
     private static final Logger LOG = LoggerFactory.getLogger(LogFileDeleter.class);
     private SecorConfig mConfig;
 
@@ -49,9 +50,8 @@ public class LogFileDeleter {
         for (String consumerDir : consumerDirs) {
             long modificationTime = FileUtil.getModificationTimeMsRecursive(consumerDir);
             String modificationTimeStr = format.format(modificationTime);
-            LOG.info("Consumer log dir {} last modified at {}", consumerDir , modificationTimeStr);
-            final long localLogDeleteAgeMs =
-                    mConfig.getLocalLogDeleteAgeHours() * 60L * 60L * 1000L;
+            LOG.info("Consumer log dir {} last modified at {}", consumerDir, modificationTimeStr);
+            final long localLogDeleteAgeMs = mConfig.getLocalLogDeleteAgeHours() * 60L * 60L * 1000L;
             if (System.currentTimeMillis() - modificationTime > localLogDeleteAgeMs) {
                 LOG.info("Deleting directory {} last modified at {}", consumerDir, modificationTimeStr);
                 FileUtil.delete(consumerDir);

@@ -42,9 +42,9 @@ import java.util.concurrent.Future;
  * https://github.com/azure/azure-storage-java
  *
  * @author Taichi Nakashima (nsd22843@gmail.com)
- *
  */
 public class AzureUploadManager extends UploadManager {
+
     private static final Logger LOG = LoggerFactory.getLogger(AzureUploadManager.class);
     private static final ExecutorService executor = Executors.newFixedThreadPool(256);
 
@@ -54,9 +54,8 @@ public class AzureUploadManager extends UploadManager {
         super(config);
 
         final String storageConnectionString =
-                "DefaultEndpointsProtocol=" + mConfig.getAzureEndpointsProtocol() + ";" +
-                "AccountName=" + mConfig.getAzureAccountName() + ";" +
-                "AccountKey=" + mConfig.getAzureAccountKey() + ";";
+                "DefaultEndpointsProtocol=" + mConfig.getAzureEndpointsProtocol() + ";" + "AccountName=" +
+                        mConfig.getAzureAccountName() + ";" + "AccountKey=" + mConfig.getAzureAccountKey() + ";";
 
         CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
         blobClient = storageAccount.createCloudBlobClient();

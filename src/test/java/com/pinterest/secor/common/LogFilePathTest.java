@@ -29,6 +29,7 @@ import java.util.Arrays;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class LogFilePathTest extends TestCase {
+
     private static final String PREFIX = "/some_parent_dir";
     private static final String TOPIC = "some_topic";
     private static final String[] PARTITIONS = {"some_partition", "some_other_partition"};
@@ -36,11 +37,9 @@ public class LogFilePathTest extends TestCase {
     private static final int KAFKA_PARTITION = 0;
     private static final long LAST_COMMITTED_OFFSET = 100;
     private static final String PATH =
-        "/some_parent_dir/some_topic/some_partition/some_other_partition/" +
-        "10_0_00000000000000000100";
+            "/some_parent_dir/some_topic/some_partition/some_other_partition/10_0_00000000000000000100";
     private static final String CRC_PATH =
-            "/some_parent_dir/some_topic/some_partition/some_other_partition/" +
-            ".10_0_00000000000000000100.crc";
+            "/some_parent_dir/some_topic/some_partition/some_other_partition/.10_0_00000000000000000100.crc";
 
     private LogFilePath mLogFilePath;
     private long timestamp;
@@ -48,16 +47,15 @@ public class LogFilePathTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        mLogFilePath = new LogFilePath(PREFIX, TOPIC, PARTITIONS, GENERATION, KAFKA_PARTITION,
-                                       LAST_COMMITTED_OFFSET, "");
+        mLogFilePath =
+                new LogFilePath(PREFIX, TOPIC, PARTITIONS, GENERATION, KAFKA_PARTITION, LAST_COMMITTED_OFFSET, "");
         timestamp = System.currentTimeMillis();
     }
 
     public void testConstructFromMessage() throws Exception {
-        ParsedMessage message = new ParsedMessage(TOPIC, KAFKA_PARTITION, 1000, null,
-                                                  "some_payload".getBytes(), PARTITIONS, timestamp);
-        LogFilePath logFilePath = new LogFilePath(PREFIX, GENERATION, LAST_COMMITTED_OFFSET,
-                                                  message, "");
+        ParsedMessage message =
+                new ParsedMessage(TOPIC, KAFKA_PARTITION, 1000, null, "some_payload".getBytes(), PARTITIONS, timestamp);
+        LogFilePath logFilePath = new LogFilePath(PREFIX, GENERATION, LAST_COMMITTED_OFFSET, message, "");
         assertEquals(PATH, logFilePath.getLogFilePath());
     }
 

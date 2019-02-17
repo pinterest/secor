@@ -23,25 +23,22 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.KafkaClient;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.parser.TimestampedMessageParser;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.timgroup.statsd.NonBlockingStatsDClient;
-
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
@@ -64,9 +61,7 @@ public class ProgressMonitor {
     private String mPrefix;
     private NonBlockingStatsDClient mStatsDClient;
 
-    public ProgressMonitor(SecorConfig config)
-            throws Exception
-    {
+    public ProgressMonitor(SecorConfig config) throws Exception {
         mConfig = config;
         mZookeeperConnector = new ZookeeperConnector(mConfig);
         try {
@@ -76,8 +71,7 @@ public class ProgressMonitor {
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        mMessageParser = (MessageParser) ReflectionUtil.createMessageParser(
-                mConfig.getMessageParserClass(), mConfig);
+        mMessageParser = (MessageParser) ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
 
         mPrefix = mConfig.getMonitoringPrefix();
         if (Strings.isNullOrEmpty(mPrefix)) {
@@ -87,7 +81,7 @@ public class ProgressMonitor {
         if (mConfig.getStatsDHostPort() != null && !mConfig.getStatsDHostPort().isEmpty()) {
             HostAndPort hostPort = HostAndPort.fromString(mConfig.getStatsDHostPort());
             mStatsDClient = new NonBlockingStatsDClient(null, hostPort.getHostText(), hostPort.getPort(),
-                    mConfig.getStatsDDogstatsdConstantTags());
+                                                        mConfig.getStatsDDogstatsdConstantTags());
         }
     }
 
@@ -101,17 +95,15 @@ public class ProgressMonitor {
             connection.setRequestProperty("Accept", "*/*");
             if (body != null) {
                 connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Length",
-                        Integer.toString(body.getBytes().length));
+                connection.setRequestProperty("Content-Length", Integer.toString(body.getBytes().length));
             }
-            connection.setUseCaches (false);
+            connection.setUseCaches(false);
             connection.setDoInput(true);
             connection.setDoOutput(true);
 
             if (body != null) {
                 // Send request.
-                DataOutputStream dataOutputStream = new DataOutputStream(
-                    connection.getOutputStream());
+                DataOutputStream dataOutputStream = new DataOutputStream(connection.getOutputStream());
                 dataOutputStream.writeBytes(body);
                 dataOutputStream.flush();
                 dataOutputStream.close();
@@ -122,8 +114,8 @@ public class ProgressMonitor {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             Map response = (Map) JSONValue.parse(reader);
             if (!response.get("failed").equals(0)) {
-                throw new RuntimeException("url " + url + " with body " + body + " failed " +
-                    JSONObject.toJSONString(response));
+                throw new RuntimeException(
+                        "url " + url + " with body " + body + " failed " + JSONObject.toJSONString(response));
             }
         } catch (IOException exception) {
             if (connection != null) {
@@ -133,8 +125,7 @@ public class ProgressMonitor {
         }
     }
 
-    private void exportToTsdb(Stat stat)
-            throws IOException {
+    private void exportToTsdb(Stat stat) throws IOException {
         LOG.info("exporting metric to tsdb {}", stat);
         makeRequest(stat.toString());
     }
@@ -176,16 +167,14 @@ public class ProgressMonitor {
             } else {
                 StringBuilder builder = new StringBuilder();
                 if (mConfig.getStatsDPrefixWithConsumerGroup()) {
-                    builder.append(tags.get(Stat.STAT_KEYS.GROUP.getName()))
-                            .append(PERIOD);
+                    builder.append(tags.get(Stat.STAT_KEYS.GROUP.getName())).append(PERIOD);
                 }
-                String metricName = builder
-                        .append((String) stat.get(Stat.STAT_KEYS.METRIC.getName()))
-                        .append(PERIOD)
-                        .append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
-                        .append(PERIOD)
-                        .append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
-                        .toString();
+                String metricName = builder.append((String) stat.get(Stat.STAT_KEYS.METRIC.getName()))
+                                           .append(PERIOD)
+                                           .append(tags.get(Stat.STAT_KEYS.TOPIC.getName()))
+                                           .append(PERIOD)
+                                           .append(tags.get(Stat.STAT_KEYS.PARTITION.getName()))
+                                           .toString();
                 mStatsDClient.recordGaugeValue(metricName, value);
             }
         }
@@ -205,7 +194,7 @@ public class ProgressMonitor {
             for (Integer partition : partitions) {
                 TopicPartition topicPartition = new TopicPartition(topic, partition);
                 Message committedMessage = mKafkaClient.getCommittedMessage(topicPartition);
-                long committedOffset = - 1;
+                long committedOffset = -1;
                 long committedTimestampMillis = -1;
                 if (committedMessage == null) {
                     LOG.warn("no committed message found in topic {} partition {}", topic, partition);
@@ -221,24 +210,24 @@ public class ProgressMonitor {
                 } else {
                     long lastOffset = lastMessage.getOffset();
                     long lastTimestampMillis = getTimestamp(lastMessage);
-                    assert committedOffset <= lastOffset: Long.toString(committedOffset) + " <= " +
-                        lastOffset;
+                    assert committedOffset <= lastOffset : Long.toString(committedOffset) + " <= " + lastOffset;
 
                     long offsetLag = lastOffset - committedOffset;
                     long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
-                    Map<String, String> tags = ImmutableMap.of(
-                            Stat.STAT_KEYS.TOPIC.getName(), topic,
-                            Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition),
-                            Stat.STAT_KEYS.GROUP.getName(), mConfig.getKafkaGroup()
-                    );
+                    Map<String, String> tags =
+                            ImmutableMap.of(Stat.STAT_KEYS.TOPIC.getName(), topic, Stat.STAT_KEYS.PARTITION.getName(),
+                                            Integer.toString(partition), Stat.STAT_KEYS.GROUP.getName(),
+                                            mConfig.getKafkaGroup());
 
                     long timestamp = System.currentTimeMillis() / 1000;
-                    stats.add(Stat.createInstance(metricName("lag.offsets"), tags, Long.toString(offsetLag), timestamp));
-                    stats.add(Stat.createInstance(metricName("lag.seconds"), tags, Long.toString(timestampMillisLag / 1000), timestamp));
+                    stats.add(
+                            Stat.createInstance(metricName("lag.offsets"), tags, Long.toString(offsetLag), timestamp));
+                    stats.add(Stat.createInstance(metricName("lag.seconds"), tags,
+                                                  Long.toString(timestampMillisLag / 1000), timestamp));
 
-                    LOG.debug("topic {} partition {} committed offset {} last offset {} committed timestamp {} last timestamp {}",
-                            topic, partition, committedOffset, lastOffset,
-                            (committedTimestampMillis / 1000), (lastTimestampMillis / 1000));
+                    LOG.debug("topic {} partition {} committed offset {} last offset {} committed timestamp {} last " +
+                                      "timestamp {}", topic, partition, committedOffset, lastOffset,
+                              (committedTimestampMillis / 1000), (lastTimestampMillis / 1000));
                 }
             }
         }
@@ -252,18 +241,26 @@ public class ProgressMonitor {
 
     private long getTimestamp(Message message) throws Exception {
         if (mMessageParser instanceof TimestampedMessageParser) {
-            return ((TimestampedMessageParser)mMessageParser).getTimestampMillis(message);
+            return ((TimestampedMessageParser) mMessageParser).getTimestampMillis(message);
         } else {
             return -1;
         }
     }
 
     /**
-     *
      * JSON hash map extension to store statistics
-     *
      */
     private static class Stat extends JSONObject {
+
+        public Stat(Map<String, Object> map) {
+            super(map);
+        }
+
+        public static Stat createInstance(String metric, Map<String, String> tags, String value, long timestamp) {
+            return new Stat(ImmutableMap.of(STAT_KEYS.METRIC.getName(), metric, STAT_KEYS.TAGS.getName(), tags,
+                                            STAT_KEYS.VALUE.getName(), value, STAT_KEYS.TIMESTAMP.getName(),
+                                            timestamp));
+        }
 
         // definition of all the stat keys
         public enum STAT_KEYS {
@@ -275,28 +272,15 @@ public class ProgressMonitor {
             PARTITION("partition"),
             GROUP("group");
 
+            private final String mName;
+
             STAT_KEYS(String name) {
                 this.mName = name;
             }
 
-            private final String mName;
-
             public String getName() {
                 return this.mName;
             }
-        }
-
-        public static Stat createInstance(String metric, Map<String, String> tags, String value, long timestamp) {
-            return new Stat(ImmutableMap.of(
-                    STAT_KEYS.METRIC.getName(), metric,
-                    STAT_KEYS.TAGS.getName(), tags,
-                    STAT_KEYS.VALUE.getName(), value,
-                    STAT_KEYS.TIMESTAMP.getName(), timestamp
-            ));
-        }
-
-        public Stat(Map<String, Object> map) {
-            super(map);
         }
     }
 

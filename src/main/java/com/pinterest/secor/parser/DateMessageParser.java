@@ -18,37 +18,32 @@
  */
 package com.pinterest.secor.parser;
 
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.message.Message;
+import net.minidev.json.JSONObject;
+import net.minidev.json.JSONValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.message.Message;
-
-import net.minidev.json.JSONObject;
-import net.minidev.json.JSONValue;
-
 /**
- * DateMessageParser extracts the timestamp field (specified by 'message.timestamp.name')
- *  and the date pattern (specified by 'message.timestamp.input.pattern')
- *
- * @see java.text.SimpleDateFormat
+ * DateMessageParser extracts the timestamp field (specified by 'message.timestamp.name') and the date pattern
+ * (specified by 'message.timestamp.input.pattern')
  *
  * @author Lucas Zago (lucaszago@gmail.com)
- *
+ * @see java.text.SimpleDateFormat
  */
 public class DateMessageParser extends MessageParser {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DateMessageParser.class);
     protected static final String defaultDate = "dt=1970-01-01";
+    private static final Logger LOG = LoggerFactory.getLogger(DateMessageParser.class);
+    protected final String mDtPrefix;
     protected SimpleDateFormat outputFormatter;
     protected Object inputPattern;
     protected SimpleDateFormat inputFormatter;
-
-    protected final String mDtPrefix;
 
     public DateMessageParser(SecorConfig config) {
         super(config);
@@ -67,7 +62,7 @@ public class DateMessageParser extends MessageParser {
     @Override
     public String[] extractPartitions(Message message) {
         JSONObject jsonObject = (JSONObject) JSONValue.parse(message.getPayload());
-        String result[] = { defaultDate };
+        String result[] = {defaultDate};
 
         if (jsonObject != null) {
             Object fieldValue = getJsonFieldValue(jsonObject);

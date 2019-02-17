@@ -23,6 +23,7 @@ import com.pinterest.secor.common.SecorConfig;
 import java.net.UnknownHostException;
 
 public class KafkaMessageIteratorFactory {
+
     public static KafkaMessageIterator getIterator(String className, SecorConfig config) {
         KafkaMessageIterator iterator;
         try {

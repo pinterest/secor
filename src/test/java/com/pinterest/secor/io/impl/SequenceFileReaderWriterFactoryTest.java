@@ -29,6 +29,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class SequenceFileReaderWriterFactoryTest {
+
     private SequenceFileReaderWriterFactory mFactory;
 
     public void setUp() throws Exception {
@@ -38,16 +39,11 @@ public class SequenceFileReaderWriterFactoryTest {
     @Test
     public void testSequenceReadWriteRoundTrip() throws Exception {
         SequenceFileReaderWriterFactory factory = new SequenceFileReaderWriterFactory();
-        LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(),
-                "test-topic",
-                new String[]{"part-1"},
-                0,
-                1,
-                0,
-                ".log"
-        );
+        LogFilePath tempLogFilePath =
+                new LogFilePath(Files.createTempDir().toString(), "test-topic", new String[]{"part-1"}, 0, 1, 0,
+                                ".log");
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, null);
-        KeyValue kv1 = (new KeyValue(23232, new byte[]{23, 45, 40 ,10, 122}));
+        KeyValue kv1 = (new KeyValue(23232, new byte[]{23, 45, 40, 10, 122}));
         KeyValue kv2 = (new KeyValue(23233, new byte[]{2, 3, 4, 5}));
         fileWriter.write(kv1);
         fileWriter.write(kv2);

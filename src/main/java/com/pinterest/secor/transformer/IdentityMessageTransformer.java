@@ -23,20 +23,22 @@ import com.pinterest.secor.message.Message;
 
 /**
  * Default message transformer class which does no transformation
- * 
- * @author Ashish (ashu.impetus@gmail.com)
  *
+ * @author Ashish (ashu.impetus@gmail.com)
  */
 public class IdentityMessageTransformer implements MessageTransformer {
+
     protected SecorConfig mConfig;
+
     /**
      * Constructor
-     * 
+     *
      * @param config secor config
      */
     public IdentityMessageTransformer(SecorConfig config) {
         mConfig = config;
     }
+
     @Override
     public Message transform(Message message) {
         return message;

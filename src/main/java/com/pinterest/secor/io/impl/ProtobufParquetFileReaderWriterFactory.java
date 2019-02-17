@@ -18,15 +18,6 @@
  */
 package com.pinterest.secor.io.impl;
 
-import java.io.IOException;
-
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.parquet.hadoop.ParquetReader;
-import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-import org.apache.parquet.proto.ProtoParquetReader;
-import org.apache.parquet.proto.ProtoParquetWriter;
-
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
@@ -38,20 +29,27 @@ import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.ParquetUtil;
 import com.pinterest.secor.util.ProtobufUtil;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.parquet.hadoop.ParquetReader;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.proto.ProtoParquetReader;
+import org.apache.parquet.proto.ProtoParquetWriter;
+
+import java.io.IOException;
 
 /**
  * Implementation for reading/writing protobuf messages to/from Parquet files.
- * 
+ *
  * @author Michael Spector (spektom@gmail.com)
  */
 public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterFactory {
-
-    private ProtobufUtil protobufUtil;
 
     protected final int blockSize;
     protected final int pageSize;
     protected final boolean enableDictionary;
     protected final boolean validating;
+    private ProtobufUtil protobufUtil;
 
     public ProtobufParquetFileReaderWriterFactory(SecorConfig config) {
         protobufUtil = new ProtobufUtil(config);
@@ -105,11 +103,11 @@ public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterF
 
         public ProtobufParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
-            CompressionCodecName codecName = CompressionCodecName
-                    .fromCompressionCodec(codec != null ? codec.getClass() : null);
+            CompressionCodecName codecName =
+                    CompressionCodecName.fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
-            writer = new ProtoParquetWriter<Message>(path, protobufUtil.getMessageClass(topic), codecName,
-                    blockSize, pageSize, enableDictionary, validating);
+            writer = new ProtoParquetWriter<Message>(path, protobufUtil.getMessageClass(topic), codecName, blockSize,
+                                                     pageSize, enableDictionary, validating);
         }
 
         @Override

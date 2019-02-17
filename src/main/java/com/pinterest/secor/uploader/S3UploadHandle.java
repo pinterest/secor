@@ -22,12 +22,12 @@ import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
 
 /**
- * Wraps an Upload being managed by the AWS SDK TransferManager. `get`
- * blocks until the upload completes.
+ * Wraps an Upload being managed by the AWS SDK TransferManager. `get` blocks until the upload completes.
  *
  * @author Liam Stewart (liam.stewart@gmail.com)
  */
 public class S3UploadHandle implements Handle<UploadResult> {
+
     private Upload mUpload;
 
     public S3UploadHandle(Upload u) {

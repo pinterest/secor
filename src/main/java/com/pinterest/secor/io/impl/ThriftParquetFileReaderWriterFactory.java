@@ -18,8 +18,14 @@
  */
 package com.pinterest.secor.io.impl;
 
-import java.io.IOException;
-
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.io.FileReader;
+import com.pinterest.secor.io.FileReaderWriterFactory;
+import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.ParquetUtil;
+import com.pinterest.secor.util.ThriftUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.parquet.hadoop.ParquetReader;
@@ -29,30 +35,19 @@ import org.apache.parquet.thrift.ThriftParquetWriter;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
 
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.io.FileReader;
-import com.pinterest.secor.io.FileReaderWriterFactory;
-import com.pinterest.secor.io.FileWriter;
-import com.pinterest.secor.io.KeyValue;
-import com.pinterest.secor.util.ParquetUtil;
-import com.pinterest.secor.util.ThriftUtil;
+import java.io.IOException;
 
 /**
- * Adapted from
- * com.pinterest.secor.io.impl.ProtobufParquetFileReaderWriterFactory
- * Implementation for reading/writing thrift messages to/from Parquet files.
- * 
- 
+ * Adapted from com.pinterest.secor.io.impl.ProtobufParquetFileReaderWriterFactory Implementation for reading/writing
+ * thrift messages to/from Parquet files.
  */
 public class ThriftParquetFileReaderWriterFactory implements FileReaderWriterFactory {
-
-    private ThriftUtil thriftUtil;
 
     protected final int blockSize;
     protected final int pageSize;
     protected final boolean enableDictionary;
     protected final boolean validating;
+    private ThriftUtil thriftUtil;
 
     public ThriftParquetFileReaderWriterFactory(SecorConfig config) {
         thriftUtil = new ThriftUtil(config);
@@ -116,13 +111,14 @@ public class ThriftParquetFileReaderWriterFactory implements FileReaderWriterFac
         private ThriftParquetWriter writer;
         private String topic;
 
-        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @SuppressWarnings({"rawtypes", "unchecked"})
         public ThriftParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
-            CompressionCodecName codecName = CompressionCodecName.fromCompressionCodec(codec != null ? codec.getClass() : null);
+            CompressionCodecName codecName =
+                    CompressionCodecName.fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
-            writer = new ThriftParquetWriter(path, thriftUtil.getMessageClass(topic), codecName,
-                    blockSize, pageSize, enableDictionary, validating);
+            writer = new ThriftParquetWriter(path, thriftUtil.getMessageClass(topic), codecName, blockSize, pageSize,
+                                             enableDictionary, validating);
         }
 
         @Override

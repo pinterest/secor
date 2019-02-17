@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
+
     private static final Logger LOG = LoggerFactory.getLogger(MessageReader.class);
     private SecorConfig mConfig;
     private ConsumerConnector mConsumerConnector;
@@ -66,9 +67,8 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
             timestamp = mKafkaMessageTimestampFactory.getKafkaMessageTimestamp().getTimestamp(kafkaMessage);
         }
 
-        return new Message(kafkaMessage.topic(), kafkaMessage.partition(),
-                kafkaMessage.offset(), kafkaMessage.key(),
-                kafkaMessage.message(), timestamp);
+        return new Message(kafkaMessage.topic(), kafkaMessage.partition(), kafkaMessage.offset(), kafkaMessage.key(),
+                           kafkaMessage.message(), timestamp);
     }
 
     @Override
@@ -80,11 +80,11 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
         if (!mConfig.getKafkaTopicBlacklist().isEmpty() && !mConfig.getKafkaTopicFilter().isEmpty()) {
             throw new RuntimeException("Topic filter and blacklist cannot be both specified.");
         }
-        TopicFilter topicFilter = !mConfig.getKafkaTopicBlacklist().isEmpty() ? new Blacklist(mConfig.getKafkaTopicBlacklist()) :
-                new Whitelist(mConfig.getKafkaTopicFilter());
+        TopicFilter topicFilter = !mConfig.getKafkaTopicBlacklist().isEmpty()
+                                  ? new Blacklist(mConfig.getKafkaTopicBlacklist())
+                                  : new Whitelist(mConfig.getKafkaTopicFilter());
         LOG.debug("Use TopicFilter {}({})", topicFilter.getClass(), topicFilter);
-        List<KafkaStream<byte[], byte[]>> streams =
-                mConsumerConnector.createMessageStreamsByFilter(topicFilter);
+        List<KafkaStream<byte[], byte[]>> streams = mConsumerConnector.createMessageStreamsByFilter(topicFilter);
         KafkaStream<byte[], byte[]> stream = streams.get(0);
         mIterator = stream.iterator();
         mKafkaMessageTimestampFactory = new KafkaMessageTimestampFactory(mConfig.getKafkaMessageTimestampClass());
@@ -100,8 +100,7 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
         props.put("zookeeper.connect", mConfig.getZookeeperQuorum() + mConfig.getKafkaZookeeperPath());
         props.put("group.id", mConfig.getKafkaGroup());
 
-        props.put("zookeeper.session.timeout.ms",
-                Integer.toString(mConfig.getZookeeperSessionTimeoutMs()));
+        props.put("zookeeper.session.timeout.ms", Integer.toString(mConfig.getZookeeperSessionTimeoutMs()));
         props.put("zookeeper.sync.time.ms", Integer.toString(mConfig.getZookeeperSyncTimeMs()));
         props.put("auto.commit.enable", "false");
         props.put("auto.offset.reset", mConfig.getConsumerAutoOffsetReset());
@@ -112,16 +111,13 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
         props.put("offsets.storage", mConfig.getOffsetsStorage());
 
         props.put("partition.assignment.strategy", mConfig.getPartitionAssignmentStrategy());
-        if (mConfig.getRebalanceMaxRetries() != null &&
-                !mConfig.getRebalanceMaxRetries().isEmpty()) {
+        if (mConfig.getRebalanceMaxRetries() != null && !mConfig.getRebalanceMaxRetries().isEmpty()) {
             props.put("rebalance.max.retries", mConfig.getRebalanceMaxRetries());
         }
-        if (mConfig.getRebalanceBackoffMs() != null &&
-                !mConfig.getRebalanceBackoffMs().isEmpty()) {
+        if (mConfig.getRebalanceBackoffMs() != null && !mConfig.getRebalanceBackoffMs().isEmpty()) {
             props.put("rebalance.backoff.ms", mConfig.getRebalanceBackoffMs());
         }
-        if (mConfig.getSocketReceiveBufferBytes() != null &&
-                !mConfig.getSocketReceiveBufferBytes().isEmpty()) {
+        if (mConfig.getSocketReceiveBufferBytes() != null && !mConfig.getSocketReceiveBufferBytes().isEmpty()) {
             props.put("socket.receive.buffer.bytes", mConfig.getSocketReceiveBufferBytes());
         }
         if (mConfig.getFetchMessageMaxBytes() != null && !mConfig.getFetchMessageMaxBytes().isEmpty()) {

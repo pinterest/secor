@@ -28,6 +28,7 @@ import java.net.UnknownHostException;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class IdUtil {
+
     public static String getConsumerId() throws UnknownHostException {
         String hostname = InetAddress.getLocalHost().getHostName();
         String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];

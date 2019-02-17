@@ -44,6 +44,7 @@ import java.util.Arrays;
  * @author Praveen Murugesan (praveen@uber.com)
  */
 public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWriterFactory {
+
     private static final int KAFKA_MESSAGE_OFFSET = 1;
     private static final int KAFKA_HASH_KEY = 2;
     private static final int KAFKA_MESSAGE_TIMESTAMP = 3;
@@ -60,6 +61,7 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
     }
 
     protected class MessagePackSequenceFileReader implements FileReader {
+
         private final SequenceFile.Reader mReader;
         private final BytesWritable mKey;
         private final BytesWritable mValue;
@@ -98,7 +100,8 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
                     }
                 }
                 unpacker.close();
-                return new KeyValue(offset, keyBytes, Arrays.copyOfRange(mValue.getBytes(), 0, mValue.getLength()), timestamp);
+                return new KeyValue(offset, keyBytes, Arrays.copyOfRange(mValue.getBytes(), 0, mValue.getLength()),
+                                    timestamp);
             } else {
                 return null;
             }
@@ -111,6 +114,7 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
     }
 
     protected class MessagePackSequenceFileWriter implements FileWriter {
+
         private final SequenceFile.Writer mWriter;
         private final BytesWritable mKey;
         private final BytesWritable mValue;
@@ -120,12 +124,10 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
             Path fsPath = new Path(path.getLogFilePath());
             FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
             if (codec != null) {
-                this.mWriter = SequenceFile.createWriter(fs, config, fsPath,
-                        BytesWritable.class, BytesWritable.class,
-                        SequenceFile.CompressionType.BLOCK, codec);
+                this.mWriter = SequenceFile.createWriter(fs, config, fsPath, BytesWritable.class, BytesWritable.class,
+                                                         SequenceFile.CompressionType.BLOCK, codec);
             } else {
-                this.mWriter = SequenceFile.createWriter(fs, config, fsPath,
-                        BytesWritable.class, BytesWritable.class);
+                this.mWriter = SequenceFile.createWriter(fs, config, fsPath, BytesWritable.class, BytesWritable.class);
             }
             this.mKey = new BytesWritable();
             this.mValue = new BytesWritable();
@@ -153,18 +155,17 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
             // = 27 + N
             ByteArrayOutputStream out = new ByteArrayOutputStream(17 + timestampLength + kafkaKey.length);
             MessagePacker packer = MessagePack.newDefaultPacker(out)
-                    .packMapHeader(numberOfFieldsMappedInHeader(keyValue))
-                    .packInt(KAFKA_MESSAGE_OFFSET)
-                    .packLong(keyValue.getOffset());
+                                              .packMapHeader(numberOfFieldsMappedInHeader(keyValue))
+                                              .packInt(KAFKA_MESSAGE_OFFSET)
+                                              .packLong(keyValue.getOffset());
 
-            if (keyValue.hasTimestamp())
-                packer.packInt(KAFKA_MESSAGE_TIMESTAMP)
-                        .packLong(timestamp);
+            if (keyValue.hasTimestamp()) {
+                packer.packInt(KAFKA_MESSAGE_TIMESTAMP).packLong(timestamp);
+            }
 
-            if (keyValue.hasKafkaKey())
-                packer.packInt(KAFKA_HASH_KEY)
-                        .packBinaryHeader(kafkaKey.length)
-                        .writePayload(kafkaKey);
+            if (keyValue.hasKafkaKey()) {
+                packer.packInt(KAFKA_HASH_KEY).packBinaryHeader(kafkaKey.length).writePayload(kafkaKey);
+            }
 
             packer.close();
             byte[] outBytes = out.toByteArray();
@@ -181,11 +182,13 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
         private int numberOfFieldsMappedInHeader(KeyValue keyValue) {
             int fields = 1;
 
-            if (keyValue.hasKafkaKey())
+            if (keyValue.hasKafkaKey()) {
                 fields++;
+            }
 
-            if (keyValue.hasTimestamp())
+            if (keyValue.hasTimestamp()) {
                 fields++;
+            }
 
             return fields;
         }

@@ -26,7 +26,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
-import org.apache.thrift.TException;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -36,6 +35,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 public class SecorKafkaClient implements KafkaClient {
+
     public static final int MAX_READ_POLL_ATTEMPTS = 10;
     private KafkaConsumer<byte[], byte[]> mKafkaConsumer;
     private AdminClient mKafkaAdminClient;
@@ -44,7 +44,8 @@ public class SecorKafkaClient implements KafkaClient {
 
     @Override
     public int getNumPartitions(String topic) {
-        Map<String, KafkaFuture<TopicDescription>> description = mKafkaAdminClient.describeTopics(Collections.singleton(topic)).values();
+        Map<String, KafkaFuture<TopicDescription>> description =
+                mKafkaAdminClient.describeTopics(Collections.singleton(topic)).values();
         int numPartitions;
         try {
             numPartitions = description.get(topic).get().partitions().size();
@@ -56,8 +57,9 @@ public class SecorKafkaClient implements KafkaClient {
     }
 
     @Override
-    public Message getLastMessage(TopicPartition topicPartition) throws TException {
-        org.apache.kafka.common.TopicPartition kafkaTopicPartition = new org.apache.kafka.common.TopicPartition(topicPartition.getTopic(), topicPartition.getPartition());
+    public Message getLastMessage(TopicPartition topicPartition) {
+        org.apache.kafka.common.TopicPartition kafkaTopicPartition =
+                new org.apache.kafka.common.TopicPartition(topicPartition.getTopic(), topicPartition.getPartition());
         mKafkaConsumer.assign(Collections.singleton(kafkaTopicPartition));
         long endOffset = mKafkaConsumer.endOffsets(Collections.singleton(kafkaTopicPartition)).get(kafkaTopicPartition);
         mKafkaConsumer.seek(kafkaTopicPartition, endOffset - 1);
@@ -67,7 +69,8 @@ public class SecorKafkaClient implements KafkaClient {
 
     @Override
     public Message getCommittedMessage(TopicPartition topicPartition) throws Exception {
-        org.apache.kafka.common.TopicPartition kafkaTopicPartition = new org.apache.kafka.common.TopicPartition(topicPartition.getTopic(), topicPartition.getPartition());
+        org.apache.kafka.common.TopicPartition kafkaTopicPartition =
+                new org.apache.kafka.common.TopicPartition(topicPartition.getTopic(), topicPartition.getPartition());
         mKafkaConsumer.assign(Collections.singleton(kafkaTopicPartition));
         long committedOffset = mZookeeperConnector.getCommittedOffsetCount(topicPartition);
         mKafkaConsumer.seek(kafkaTopicPartition, committedOffset - 1);
@@ -79,12 +82,14 @@ public class SecorKafkaClient implements KafkaClient {
         int pollAttempts = 0;
         Message message = null;
         while (pollAttempts < MAX_READ_POLL_ATTEMPTS) {
-            Iterator<ConsumerRecord<byte[], byte[]>> records = kafkaConsumer.poll(Duration.ofMillis(mPollTimeout)).iterator();
+            Iterator<ConsumerRecord<byte[], byte[]>> records =
+                    kafkaConsumer.poll(Duration.ofMillis(mPollTimeout)).iterator();
             if (!records.hasNext()) {
                 pollAttempts++;
             } else {
                 ConsumerRecord<byte[], byte[]> record = records.next();
-                message = new Message(record.topic(), record.partition(), record.offset(), record.key(), record.value(), record.timestamp());
+                message = new Message(record.topic(), record.partition(), record.offset(), record.key(), record.value(),
+                                      record.timestamp());
                 break;
             }
         }

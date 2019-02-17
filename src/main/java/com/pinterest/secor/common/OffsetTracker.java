@@ -29,6 +29,7 @@ import java.util.HashMap;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class OffsetTracker {
+
     private static final Logger LOG = LoggerFactory.getLogger(OffsetTracker.class);
 
     private HashMap<TopicPartition, Long> mLastSeenOffset;
@@ -54,11 +55,11 @@ public class OffsetTracker {
         mLastSeenOffset.put(topicPartition, offset);
         if (lastSeenOffset + 1 != offset) {
             if (lastSeenOffset >= 0) {
-                LOG.warn("offset for topic {} partition {} changed from {} to {}",
-                        topicPartition.getTopic(),topicPartition.getPartition(),lastSeenOffset, offset);
+                LOG.warn("offset for topic {} partition {} changed from {} to {}", topicPartition.getTopic(),
+                         topicPartition.getPartition(), lastSeenOffset, offset);
             } else {
-                LOG.info("starting to consume topic {} partition {} from offset {}",
-                        topicPartition.getTopic(),topicPartition.getPartition(),offset);
+                LOG.info("starting to consume topic {} partition {} from offset {}", topicPartition.getTopic(),
+                         topicPartition.getPartition(), offset);
             }
         }
         if (mFirstSeendOffset.get(topicPartition) == null) {
@@ -89,8 +90,7 @@ public class OffsetTracker {
     public long setCommittedOffsetCount(TopicPartition topicPartition, long count) {
         long trueCommittedOffsetCount = getTrueCommittedOffsetCount(topicPartition);
         // Committed offsets should never go back.
-        assert trueCommittedOffsetCount <= count: Long.toString(trueCommittedOffsetCount) +
-                " <= " + count;
+        assert trueCommittedOffsetCount <= count : Long.toString(trueCommittedOffsetCount) + " <= " + count;
         mCommittedOffsetCount.put(topicPartition, count);
         return trueCommittedOffsetCount;
     }

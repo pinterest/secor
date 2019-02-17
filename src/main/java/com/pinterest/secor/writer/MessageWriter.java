@@ -18,11 +18,7 @@
  */
 package com.pinterest.secor.writer;
 
-import com.pinterest.secor.common.FileRegistry;
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.OffsetTracker;
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.*;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.message.Message;
@@ -42,18 +38,17 @@ import java.io.IOException;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class MessageWriter {
-    private static final Logger LOG = LoggerFactory.getLogger(MessageWriter.class);
 
+    private static final Logger LOG = LoggerFactory.getLogger(MessageWriter.class);
+    protected final int mGeneration;
     protected SecorConfig mConfig;
     protected OffsetTracker mOffsetTracker;
     protected FileRegistry mFileRegistry;
     protected String mFileExtension;
     protected CompressionCodec mCodec;
     protected String mLocalPrefix;
-    protected final int mGeneration;
 
-    public MessageWriter(SecorConfig config, OffsetTracker offsetTracker,
-                         FileRegistry fileRegistry) throws Exception {
+    public MessageWriter(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry) throws Exception {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
@@ -63,24 +58,23 @@ public class MessageWriter {
         }
         if (mConfig.getFileExtension() != null && !mConfig.getFileExtension().isEmpty()) {
             mFileExtension = mConfig.getFileExtension();
-        } else if (mFileExtension == null){
+        } else if (mFileExtension == null) {
             mFileExtension = "";
         }
-        
+
         mLocalPrefix = mConfig.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
         mGeneration = mConfig.getGeneration();
     }
 
     public void adjustOffset(Message message) throws IOException {
-        TopicPartition topicPartition = new TopicPartition(message.getTopic(),
-                                                           message.getKafkaPartition());
+        TopicPartition topicPartition = new TopicPartition(message.getTopic(), message.getKafkaPartition());
         long lastSeenOffset = mOffsetTracker.getLastSeenOffset(topicPartition);
         if (message.getOffset() != lastSeenOffset + 1) {
             StatsUtil.incr("secor.consumer_rebalance_count." + topicPartition.getTopic());
             // There was a rebalancing event since we read the last message.
             LOG.debug("offset of message {} does not follow sequentially the last seen offset {}. " +
-                            "Deleting files in topic {} partition {}",
-                    message, lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
+                              "Deleting files in topic {} partition {}", message, lastSeenOffset,
+                      topicPartition.getTopic(), topicPartition.getPartition());
 
             mFileRegistry.deleteTopicPartition(topicPartition);
         }
@@ -88,14 +82,12 @@ public class MessageWriter {
     }
 
     public void write(ParsedMessage message) throws Exception {
-        TopicPartition topicPartition = new TopicPartition(message.getTopic(),
-                                                           message.getKafkaPartition());
+        TopicPartition topicPartition = new TopicPartition(message.getTopic(), message.getKafkaPartition());
         long offset = mOffsetTracker.getAdjustedCommittedOffsetCount(topicPartition);
-        LogFilePath path = new LogFilePath(mLocalPrefix, mGeneration, offset, message,
-        		mFileExtension);
+        LogFilePath path = new LogFilePath(mLocalPrefix, mGeneration, offset, message, mFileExtension);
         FileWriter writer = mFileRegistry.getOrCreateWriter(path, mCodec);
-        writer.write(new KeyValue(message.getOffset(), message.getKafkaKey(), message.getPayload(), message.getTimestamp()));
-        LOG.debug("appended message {} to file {}.  File length {}",
-                  message, path, writer.getLength());
+        writer.write(
+                new KeyValue(message.getOffset(), message.getKafkaKey(), message.getPayload(), message.getTimestamp()));
+        LOG.debug("appended message {} to file {}.  File length {}", message, path, writer.getLength());
     }
 }

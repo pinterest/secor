@@ -24,11 +24,10 @@ import org.junit.Test;
 import static junit.framework.TestCase.assertEquals;
 
 /**
- *
  * @author Luke Sun (luke.skywalker.sun@gmail.com)
- *
  */
 public class BackOffUtilTest {
+
     @Before
     public void setUp() throws Exception {}
 
@@ -38,7 +37,7 @@ public class BackOffUtilTest {
     @Test
     public void testExponentialBackOff() {
         BackOffUtil back = new BackOffUtil();
-        for (long i = 0; i < Integer.MAX_VALUE+1L; i++) {
+        for (long i = 0; i < Integer.MAX_VALUE + 1L; i++) {
             back.isBackOff();
             // RandomizationFactor 0
             if (back.getLastBackOff() <= back.getCount()) {

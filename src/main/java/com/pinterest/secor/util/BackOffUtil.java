@@ -24,11 +24,10 @@ import com.google.api.client.util.ExponentialBackOff;
 import java.io.IOException;
 
 /**
- *
  * @author Luke Sun (luke.skywalker.sun@gmail.com)
- *
  */
 public class BackOffUtil {
+
     private int count;
     private long lastBackOff;
     private BackOff backOff;
@@ -40,13 +39,12 @@ public class BackOffUtil {
     public BackOffUtil(boolean isExponential) {
         if (isExponential) {
             // aggressive
-            backOff = new ExponentialBackOff.Builder()
-                    .setInitialIntervalMillis(2)
-                    .setMaxElapsedTimeMillis(Integer.MAX_VALUE)
-                    .setMaxIntervalMillis(Integer.MAX_VALUE)
-                    .setMultiplier(1.5)
-                    .setRandomizationFactor(0)
-                    .build();
+            backOff = new ExponentialBackOff.Builder().setInitialIntervalMillis(2)
+                                                      .setMaxElapsedTimeMillis(Integer.MAX_VALUE)
+                                                      .setMaxIntervalMillis(Integer.MAX_VALUE)
+                                                      .setMultiplier(1.5)
+                                                      .setRandomizationFactor(0)
+                                                      .build();
         } else {
             // conservative
             backOff = new FixedBackOff();
@@ -80,8 +78,9 @@ public class BackOffUtil {
     }
 
     public class FixedBackOff implements BackOff {
-        private long interval;
+
         private final long max = Long.MAX_VALUE;
+        private long interval;
         private int inc;
 
         public FixedBackOff() {

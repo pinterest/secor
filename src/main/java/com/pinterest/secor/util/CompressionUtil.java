@@ -18,28 +18,25 @@
  */
 package com.pinterest.secor.util;
 
-import java.util.Collections;
-import java.util.LinkedList;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
+import java.util.Collections;
+import java.util.LinkedList;
+
 /**
- * 
  * Compression Codec related helper methods
- * 
- * @author Praveen Murugesan (praveen@uber.com)
  *
+ * @author Praveen Murugesan (praveen@uber.com)
  */
 public class CompressionUtil {
 
-    public static CompressionCodec createCompressionCodec(String className)
-            throws Exception {
+    public static CompressionCodec createCompressionCodec(String className) throws Exception {
         Configuration configuration = new Configuration();
-        CompressionCodecFactory.setCodecClasses(configuration,new LinkedList<Class>(Collections.singletonList(Class.forName(className))));
-        CompressionCodecFactory ccf = new CompressionCodecFactory(
-                configuration);
+        CompressionCodecFactory.setCodecClasses(configuration, new LinkedList<Class>(
+                Collections.singletonList(Class.forName(className))));
+        CompressionCodecFactory ccf = new CompressionCodecFactory(configuration);
         return ccf.getCodecByClassName(className);
     }
 }

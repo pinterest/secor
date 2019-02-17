@@ -28,6 +28,7 @@ import java.util.List;
  * @author Henry Cai (hcai@pinterest.com)
  */
 public class TopicPartitionGroup {
+
     private String mTopic;
     private int[] mPartitions;
 
@@ -58,13 +59,21 @@ public class TopicPartitionGroup {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         TopicPartitionGroup that = (TopicPartitionGroup) o;
 
-        if (!Arrays.equals(mPartitions, that.mPartitions)) return false;
-        if (mTopic != null ? !mTopic.equals(that.mTopic) : that.mTopic != null) return false;
+        if (!Arrays.equals(mPartitions, that.mPartitions)) {
+            return false;
+        }
+        if (mTopic != null ? !mTopic.equals(that.mTopic) : that.mTopic != null) {
+            return false;
+        }
 
         return true;
     }
@@ -78,9 +87,7 @@ public class TopicPartitionGroup {
 
     @Override
     public String toString() {
-        return "TopicPartitionGroup{" +
-                "mTopic='" + mTopic + '\'' +
-                ", mPartitions=" + Arrays.toString(mPartitions) +
+        return "TopicPartitionGroup{" + "mTopic='" + mTopic + '\'' + ", mPartitions=" + Arrays.toString(mPartitions) +
                 '}';
     }
 }

@@ -47,8 +47,8 @@ public class ReflectionUtilTest {
 
     @Test
     public void testCreateMessageParser() throws Exception {
-        MessageParser messageParser = ReflectionUtil.createMessageParser("com.pinterest.secor.parser.OffsetMessageParser",
-                mSecorConfig);
+        MessageParser messageParser =
+                ReflectionUtil.createMessageParser("com.pinterest.secor.parser.OffsetMessageParser", mSecorConfig);
     }
 
     @Test(expected = ClassNotFoundException.class)
@@ -65,21 +65,20 @@ public class ReflectionUtilTest {
     public void testMessageParserConstructorMissing() throws Exception {
         // Try to create a message parser using an existent and available class, but one not
         // assignable to MessageParser
-        ReflectionUtil.createMessageParser("java.lang.Object",
-                mSecorConfig);
+        ReflectionUtil.createMessageParser("java.lang.Object", mSecorConfig);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testFileWriterConstructorMissing() throws Exception {
         // Try to create a message parser using an existent and available class, but one not
         // assignable to MessageParser
-        ReflectionUtil.createFileWriter("java.lang.Object",
-                mLogFilePath, null, mSecorConfig);
+        ReflectionUtil.createFileWriter("java.lang.Object", mLogFilePath, null, mSecorConfig);
     }
 
     @Test
     public void testCreateMetricsCollector() throws Exception {
-        MetricCollector metricCollector = ReflectionUtil.createMetricCollector("com.pinterest.secor.monitoring.OstrichMetricCollector");
+        MetricCollector metricCollector =
+                ReflectionUtil.createMetricCollector("com.pinterest.secor.monitoring.OstrichMetricCollector");
 
         Assert.assertNotNull(metricCollector);
         Assert.assertThat(metricCollector, CoreMatchers.instanceOf(OstrichMetricCollector.class));
@@ -92,8 +91,7 @@ public class ReflectionUtilTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testCreateMetricsCollectorNotAssignable() throws Exception {
-        // Try to create a message parser using an existent and available class, but one not
-        // assignable to MessageParser
+        // Try to create a message parser using an existent and available class, but one not assignable to MessageParser
         ReflectionUtil.createMetricCollector("java.lang.Object");
     }
 }

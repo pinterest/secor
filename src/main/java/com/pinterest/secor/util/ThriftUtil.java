@@ -18,10 +18,7 @@
  */
 package com.pinterest.secor.util;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import com.pinterest.secor.common.SecorConfig;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TException;
@@ -31,20 +28,20 @@ import org.apache.thrift.protocol.TProtocolFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.pinterest.secor.common.SecorConfig;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
- * Adapted from ProtobufUtil Various utilities for working with thrift encoded
- * messages. This utility will look for thrift class in the configuration. It
- * can be either per Kafka topic configuration, for example:
- * 
- * <code>secor.thrift.message.class.&lt;topic&gt;=&lt;thrift class name&gt;</code>
- * 
- * or, it can be global configuration for all topics (in case all the topics
- * transfer the same message type):
- * 
- * <code>secor.thrift.message.class.*=&lt;thrift class name&gt;</code>
- * 
+ * Adapted from ProtobufUtil Various utilities for working with thrift encoded messages. This utility will look for
+ * thrift class in the configuration. It can be either per Kafka topic configuration, for example:
+ *
+ * <code>secor.thrift.message.class.<topic>=<thrift class name></code>
+ * <p>
+ * or, it can be global configuration for all topics (in case all the topics transfer the same message type):
+ *
+ * <code>secor.thrift.message.class.*=<thrift class name></code>
+ *
  * @author jaime sastre (jaime sastre.s@gmail.com)
  */
 public class ThriftUtil {
@@ -60,17 +57,14 @@ public class ThriftUtil {
 
     /**
      * Creates new instance of {@link ThriftUtil}
-     * 
-     * @param config
-     *            Secor configuration instance
-     * @throws RuntimeException
-     *             when configuration option
-     *             <code>secor.thrift.message.class</code> is invalid.
+     *
+     * @param config Secor configuration instance
+     * @throws RuntimeException when configuration option <code>secor.thrift.message.class</code> is invalid.
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public ThriftUtil(SecorConfig config) {
         Map<String, String> messageClassPerTopic = config.getThriftMessageClassPerTopic();
-        
+
         for (Entry<String, String> entry : messageClassPerTopic.entrySet()) {
             try {
                 String topic = entry.getKey();
@@ -95,9 +89,11 @@ public class ThriftUtil {
 
             if (protocolName != null) {
                 String factoryClassName = protocolName.concat("$Factory");
-                messageProtocolFactory = ((Class<? extends TProtocolFactory>) Class.forName(factoryClassName)).newInstance();
-            } else
+                messageProtocolFactory =
+                        ((Class<? extends TProtocolFactory>) Class.forName(factoryClassName)).newInstance();
+            } else {
                 messageProtocolFactory = new TBinaryProtocol.Factory();
+            }
 
         } catch (ClassNotFoundException e) {
             LOG.error("Unable to load thrift protocol class", e);
@@ -110,12 +106,10 @@ public class ThriftUtil {
 
     /**
      * Returns configured thrift message class for the given Kafka topic
-     * 
-     * @param topic
-     *            Kafka topic
-     * @return thrift message class used by this utility instance, or
-     *         <code>null</code> in case valid class couldn't be found in the
-     *         configuration.
+     *
+     * @param topic Kafka topic
+     * @return thrift message class used by this utility instance, or <code>null</code> in case valid class couldn't be
+     * found in the configuration.
      */
     @SuppressWarnings("rawtypes")
     public Class<? extends TBase> getMessageClass(String topic) {
@@ -132,8 +126,7 @@ public class ThriftUtil {
     }
 
     @SuppressWarnings("rawtypes")
-    public byte[] encodeMessage(TBase object) throws InstantiationException,
-            IllegalAccessException, TException {
+    public byte[] encodeMessage(TBase object) throws InstantiationException, IllegalAccessException, TException {
         TSerializer serializer = new TSerializer(messageProtocolFactory);
         return serializer.serialize(object);
     }

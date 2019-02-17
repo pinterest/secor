@@ -27,12 +27,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * RegexMessageParser extracts timestamp field (specified by 'message.timestamp.input.pattern')
- * The pattern specifies the regular exp to extract the timestamp field from a free-text line.
- *
- *  * @author Henry Cai (hcai@pinterest.com)
+ * RegexMessageParser extracts timestamp field (specified by 'message.timestamp.input.pattern') The pattern specifies
+ * the regular exp to extract the timestamp field from a free-text line.
+ * <p>
+ * * @author Henry Cai (hcai@pinterest.com)
  */
 public class RegexMessageParser extends TimestampedMessageParser {
+
     private static final Logger LOG = LoggerFactory.getLogger(RegexMessageParser.class);
 
     private final Pattern mTsPattern;

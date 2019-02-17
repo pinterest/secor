@@ -18,58 +18,42 @@
  */
 package com.pinterest.secor.uploader;
 
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
-import com.amazonaws.services.s3.model.SSECustomerKey;
-import com.pinterest.secor.common.*;
-import com.pinterest.secor.util.FileUtil;
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.*;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
-import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
+import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-
+import com.amazonaws.services.s3.transfer.Upload;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.util.FileUtil;
 
 /**
- * Manages uploads to S3 using the TransferManager class from the AWS
- * SDK.
+ * Manages uploads to S3 using the TransferManager class from the AWS SDK.
  * <p>
- * Set the <code>aws.sse.type</code> property to specify the type of
- * encryption to use. Supported options are:
- * <code>S3</code>, <code>KMS</code> and <code>customer</code>. See AWS
- * documentation for Server-Side Encryption (SSE) for details on these
- * options.<br>
- * Leave blank to use unencrypted uploads.<br>
- * If set to <code>KMS</code>, the <code>aws.sse.kms.key</code> property
- * specifies the id of the key to use. Leave unset to use the default AWS
- * key.<br>
- * If set to <code>customer</code>, the <code>aws.sse.customer.key</code>
- * property must be set to the base64 encoded customer key to use.
- * </p>
+ * Set the <code>aws.sse.type</code> property to specify the type of encryption to use. Supported options are:
+ * <code>S3</code>, <code>KMS</code> and <code>customer</code>. See AWS documentation for Server-Side Encryption
+ * (SSE) for details on these options.<br> Leave blank to use unencrypted uploads. If set to <code>KMS</code>, the
+ * <code>aws.sse.kms.key</code> property specifies the id of the key to use. Leave unset to use the default AWS key.
+ * <p>
+ * If set to <code>customer</code>, the <code>aws.sse.customer.key</code> property must be set to the base64 encoded
+ * customer key to use.
  *
  * @author Liam Stewart (liam.stewart@gmail.com)
  */
 public class S3UploadManager extends UploadManager {
+
     private static final Logger LOG = LoggerFactory.getLogger(S3UploadManager.class);
     private static final String KMS = "KMS";
     private static final String S3 = "S3";
@@ -96,14 +80,14 @@ public class S3UploadManager extends UploadManager {
 
         ClientConfiguration clientConfiguration = new ClientConfiguration();
         boolean isHttpProxyEnabled = mConfig.getAwsProxyEnabled();
-        
+
         //proxy settings
-        if(isHttpProxyEnabled){
-        	LOG.info("Http Proxy Enabled for S3UploadManager");
-        	String httpProxyHost = mConfig.getAwsProxyHttpHost();
-        	int httpProxyPort = mConfig.getAwsProxyHttpPort();
-        	clientConfiguration.setProxyHost(httpProxyHost);
-        	clientConfiguration.setProxyPort(httpProxyPort);        	
+        if (isHttpProxyEnabled) {
+            LOG.info("Http Proxy Enabled for S3UploadManager");
+            String httpProxyHost = mConfig.getAwsProxyHttpHost();
+            int httpProxyPort = mConfig.getAwsProxyHttpPort();
+            clientConfiguration.setProxyHost(httpProxyHost);
+            clientConfiguration.setProxyPort(httpProxyPort);
         }
 
         if (accessKey.isEmpty() || secretKey.isEmpty()) {
@@ -117,6 +101,7 @@ public class S3UploadManager extends UploadManager {
                         return new BasicSessionCredentials(accessKey, secretKey, sessionToken);
                     }
                 }
+
                 public void refresh() {}
             };
         }
@@ -158,8 +143,7 @@ public class S3UploadManager extends UploadManager {
             // add MD5 hash to the prefix to have proper partitioning of the secor logs on s3
             String md5Hash = FileUtil.getMd5Hash(localPath.getTopic(), localPath.getPartitions());
             s3Key = localPath.withPrefix(md5Hash + "/" + curS3Path).getLogFilePath();
-        }
-        else {
+        } else {
             s3Key = localPath.withPrefix(curS3Path).getLogFilePath();
         }
 
@@ -177,7 +161,8 @@ public class S3UploadManager extends UploadManager {
                 enableCustomerEncryption(uploadRequest);
             } else {
                 // bad option
-                throw new IllegalArgumentException(mConfig.getAwsSseType() + "is not a suitable type for AWS SSE encryption");
+                throw new IllegalArgumentException(
+                        mConfig.getAwsSseType() + "is not a suitable type for AWS SSE encryption");
             }
         } else {
             LOG.info("uploading file {} to s3://{}/{} with no encryption", localFile, s3Bucket, s3Key);

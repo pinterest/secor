@@ -23,39 +23,45 @@ import com.pinterest.secor.tools.ProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-/**
+/*
  * Progress monitor main.
  *
  * Run:
- *     $ cd optimus/secor
- *     $ mvn package
- *     $ cd target
- *     $ java -ea -Dlog4j.configuration=log4j.dev.properties -Dconfig=secor.dev.backup.properties \
- *         -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.ProgressMonitorMain
- *
+ *   $ cd optimus/secor
+ *   $ mvn package
+ *   $ cd target
+ *   $ java -ea \
+ *      -Dlog4j.configuration=log4j.dev.properties \
+ *      -Dconfig=secor.dev.backup.properties \
+ *      -cp "secor-0.1-SNAPSHOT.jar:lib/*" \
+ *      com.pinterest.secor.main.ProgressMonitorMain
+ */
+
+/**
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class ProgressMonitorMain {
+
     private static final Logger LOG = LoggerFactory.getLogger(ProgressMonitorMain.class);
 
     private static void loop(ProgressMonitor progressMonitor, long interval) {
-	final ProgressMonitor monitor = progressMonitor;
-	Runnable runner = new Runnable() {
-		public void run() {
-		    try {
-			monitor.exportStats();
-		    } catch (Throwable t) {
-			LOG.error("Progress monitor failed", t);
-		    }
-		}
-	    };
+        final ProgressMonitor monitor = progressMonitor;
+        Runnable runner = new Runnable() {
+            public void run() {
+                try {
+                    monitor.exportStats();
+                } catch (Throwable t) {
+                    LOG.error("Progress monitor failed", t);
+                }
+            }
+        };
 
-	ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-	scheduler.scheduleAtFixedRate(runner, 0, interval, TimeUnit.SECONDS);
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(runner, 0, interval, TimeUnit.SECONDS);
     }
 
     public static void main(String[] args) {
@@ -63,12 +69,12 @@ public class ProgressMonitorMain {
             SecorConfig config = SecorConfig.load();
             ProgressMonitor progressMonitor = new ProgressMonitor(config);
 
-	    long interval = config.getMonitoringIntervalSeconds();
-	    if (interval > 0) {
-		loop(progressMonitor, interval);
-	    } else {
-		progressMonitor.exportStats();
-	    }
+            long interval = config.getMonitoringIntervalSeconds();
+            if (interval > 0) {
+                loop(progressMonitor, interval);
+            } else {
+                progressMonitor.exportStats();
+            }
         } catch (Throwable t) {
             LOG.error("Progress monitor failed", t);
             System.exit(1);

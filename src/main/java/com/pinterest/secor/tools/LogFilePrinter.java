@@ -34,6 +34,7 @@ import java.io.IOException;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class LogFilePrinter {
+
     private boolean mPrintOffsetsOnly;
 
     public LogFilePrinter(boolean printOffsetsOnly) throws IOException {
@@ -43,8 +44,7 @@ public class LogFilePrinter {
     public void printFile(String path) throws Exception {
         FileSystem fileSystem = FileUtil.getFileSystem(path);
         Path fsPath = new Path(path);
-        SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, fsPath,
-                new Configuration());
+        SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, fsPath, new Configuration());
         LongWritable key = (LongWritable) reader.getKeyClass().newInstance();
         BytesWritable value = (BytesWritable) reader.getValueClass().newInstance();
         System.out.println("reading file " + path);
@@ -54,7 +54,7 @@ public class LogFilePrinter {
             } else {
                 byte[] nonPaddedBytes = new byte[value.getLength()];
                 System.arraycopy(value.getBytes(), 0, nonPaddedBytes, 0, value.getLength());
-                System.out.println(Long.toString(key.get()) + ": " + new String(nonPaddedBytes)); 
+                System.out.println(Long.toString(key.get()) + ": " + new String(nonPaddedBytes));
             }
         }
     }

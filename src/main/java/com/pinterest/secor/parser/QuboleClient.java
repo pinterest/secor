@@ -33,6 +33,7 @@ import java.util.Map;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class QuboleClient {
+
     private final long MAX_QUBOLE_WAIT_TIME_MS;
 
     private String mApiToken;
@@ -52,17 +53,15 @@ public class QuboleClient {
             connection.setRequestProperty("Accept", "*/*");
             if (body != null) {
                 connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Length",
-                                              Integer.toString(body.getBytes().length));
+                connection.setRequestProperty("Content-Length", Integer.toString(body.getBytes().length));
             }
-            connection.setUseCaches (false);
+            connection.setUseCaches(false);
             connection.setDoInput(true);
             connection.setDoOutput(true);
 
             if (body != null) {
                 // Send request.
-                DataOutputStream dataOutputStream = new DataOutputStream(
-                    connection.getOutputStream());
+                DataOutputStream dataOutputStream = new DataOutputStream(connection.getOutputStream());
                 dataOutputStream.writeBytes(body);
                 dataOutputStream.flush();
                 dataOutputStream.close();
@@ -73,13 +72,12 @@ public class QuboleClient {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             Object responseObj = JSONValue.parse(reader);
             if (!(responseObj instanceof Map)) {
-                throw new RuntimeException("command " + url + " body " + body + " unexpected " +
-                    responseObj);
+                throw new RuntimeException("command " + url + " body " + body + " unexpected " + responseObj);
             }
-            Map response = (Map)responseObj;
+            Map response = (Map) responseObj;
             if (response.get("status").equals("error")) {
-                throw new RuntimeException("command " + url + " with body " + body + " failed " +
-                    JSONObject.toJSONString(response));
+                throw new RuntimeException(
+                        "command " + url + " with body " + body + " failed " + JSONObject.toJSONString(response));
             }
             return response;
         } catch (IOException exception) {
@@ -108,18 +106,16 @@ public class QuboleClient {
             if (response.get("status").equals("done")) {
                 return;
             }
-            System.out.println("waiting 3 seconds for results of query " + commandId +
-                               ". Current status " + response.get("status"));
+            System.out.println("waiting 3 seconds for results of query " + commandId + ". Current status " +
+                                       response.get("status"));
             Thread.sleep(3000);
         }
 
         throw new IOException("Qubole commandId" + commandId + " failed to return within timeout.");
     }
 
-    public void addPartition(String table, String partition) throws IOException,
-            InterruptedException {
-        String queryStr = "ALTER TABLE " + table + " ADD IF NOT EXISTS PARTITION (" + partition +
-                ")";
+    public void addPartition(String table, String partition) throws IOException, InterruptedException {
+        String queryStr = "ALTER TABLE " + table + " ADD IF NOT EXISTS PARTITION (" + partition + ")";
         int commandId = query(queryStr);
         waitForCompletion(commandId, MAX_QUBOLE_WAIT_TIME_MS);
     }

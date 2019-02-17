@@ -50,32 +50,126 @@ public class DateMessageParserTest extends TestCase {
 
         timestamp = System.currentTimeMillis();
 
-        byte format1[] = "{\"timestamp\":\"2014-07-30 10:53:20\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
-            .getBytes("UTF-8");
+        byte format1[] =
+                ("{\"timestamp\":\"2014-07-30 10:53:20\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\"," +
+                         "\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\"," +
+                         "\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\"," +
+                         "\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) " +
+                         "471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis " +
+                         "nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat " +
+                         "incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco " +
+                         "nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\"," +
+                         "\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102" +
+                         ".788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"]," +
+                         "\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"}," +
+                         "{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 " +
+                         "unread messages.\",\"favoriteFruit\":\"strawberry\"}").getBytes("UTF-8");
         mFormat1 = new Message("test", 0, 0, null, format1, timestamp);
 
-        byte format2[] = "{\"timestamp\":\"2014/10/25\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
-            .getBytes("UTF-8");
+        byte format2[] = ("{\"timestamp\":\"2014/10/25\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\"," +
+                                  "\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold" +
+                                  ".it/32x32\"," + "\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\"," +
+                                  "\"gender\":\"female\"," +
+                                  "\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\"," +
+                                  "\"phone\":\"+1 (848) " +
+                                  "471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\"," +
+                                  "\"about\":\"Quis " +
+                                  "nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. " +
+                                  "Cupidatat " +
+                                  "incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod " +
+                                  "ullamco " + "nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\"," +
+                                  "\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012," +
+                                  "\"longitude\":102" +
+                                  ".788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\"," +
+                                  "\"laborum\"]," +
+                                  "\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton " +
+                                  "Briggs\"}," +
+                                  "{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You " +
+                                  "have 7 " + "unread messages.\",\"favoriteFruit\":\"strawberry\"}").getBytes("UTF-8");
         mFormat2 = new Message("test", 0, 0, null, format2, timestamp);
 
-        byte format3[] = "{\"timestamp\":\"02001.July.04 AD 12:08 PM\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
-            .getBytes("UTF-8");
+        byte format3[] = ("{\"timestamp\":\"02001.July.04 AD 12:08 PM\",\"id\":0," +
+                                  "\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false," +
+                                  "\"balance\":\"$3,561" +
+                                  ".87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\"," +
+                                  "\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\"," +
+                                  "\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\"," +
+                                  "\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud " +
+                                  "Lorem " +
+                                  "deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat " +
+                                  "incididunt minim " +
+                                  "anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud " +
+                                  "Lorem sit " +
+                                  "amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 " +
+                                  "+08:00\"," +
+                                  "\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\"," +
+                                  "\"dolore\"," +
+                                  "\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca " +
+                                  "Hardy\"}," +
+                                  "{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}]," +
+                                  "\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\"," +
+                                  "\"favoriteFruit\":\"strawberry\"}").getBytes("UTF-8");
         mFormat3 = new Message("test", 0, 0, null, format3, timestamp);
 
-        byte invalidDate[] = "{\"timestamp\":\"11111111\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
-            .getBytes("UTF-8");
+        byte invalidDate[] =
+                ("{\"timestamp\":\"11111111\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\"," +
+                         "\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\"," +
+                         "\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\"," +
+                         "\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) " +
+                         "471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis " +
+                         "nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat " +
+                         "incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco " +
+                         "nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\"," +
+                         "\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102" +
+                         ".788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"]," +
+                         "\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"}," +
+                         "{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 " +
+                         "unread messages.\",\"favoriteFruit\":\"strawberry\"}").getBytes("UTF-8");
         mInvalidDate = new Message("test", 0, 0, null, invalidDate, timestamp);
 
-        byte isoFormat[] = "{\"timestamp\":\"2006-01-02T15:04:05Z\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
-            .getBytes("UTF-8");
+        byte isoFormat[] =
+                ("{\"timestamp\":\"2006-01-02T15:04:05Z\",\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\"," +
+                         "\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\"," +
+                         "\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\"," +
+                         "\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) " +
+                         "471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis " +
+                         "nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat " +
+                         "incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco " +
+                         "nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\"," +
+                         "\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102" +
+                         ".788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"]," +
+                         "\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"}," +
+                         "{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 " +
+                         "unread messages.\",\"favoriteFruit\":\"strawberry\"}").getBytes("UTF-8");
         mISOFormat = new Message("test", 0, 0, null, isoFormat, timestamp);
 
-        byte nanosecondISOFormat[] = "{\"timestamp\":\"2006-01-02T23:59:59.999999999Z\"}"
-            .getBytes("UTF-8");
+        byte nanosecondISOFormat[] = "{\"timestamp\":\"2006-01-02T23:59:59.999999999Z\"}".getBytes("UTF-8");
         mNanosecondISOFormat = new Message("test", 0, 0, null, nanosecondISOFormat, timestamp);
 
-        byte nestedISOFormat[] = "{\"meta_data\":{\"created\":\"2016-01-11T11:50:28.647Z\"},\"id\":0,\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false,\"balance\":\"$3,561.87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23,\"eyeColor\":\"green\",\"name\":\"Mercedes Brewer\",\"gender\":\"female\",\"company\":\"MALATHION\",\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) 471-3000\",\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis nostrud Lorem deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat incididunt minim anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco nostrud Lorem sit amet Lorem aliquip esse esse velit.\\r\\n\",\"registered\":\"2014-01-14T13:07:28 +08:00\",\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\",\"amet\",\"dolore\",\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0,\"name\":\"Rebecca Hardy\"},{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena Campos\"}],\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\",\"favoriteFruit\":\"strawberry\"}"
-            .getBytes("UTF-8");
+        byte nestedISOFormat[] = ("{\"meta_data\":{\"created\":\"2016-01-11T11:50:28.647Z\"},\"id\":0," +
+                                          "\"guid\":\"0436b17b-e78a-4e82-accf-743bf1f0b884\",\"isActive\":false," +
+                                          "\"balance\":\"$3,561" +
+                                          ".87\",\"picture\":\"http://placehold.it/32x32\",\"age\":23," +
+                                          "\"eyeColor\":\"green\"," +
+                                          "\"name\":\"Mercedes Brewer\",\"gender\":\"female\"," +
+                                          "\"company\":\"MALATHION\"," +
+                                          "\"email\":\"mercedesbrewer@malathion.com\",\"phone\":\"+1 (848) " +
+                                          "471-3000\"," +
+                                          "\"address\":\"786 Gilmore Court, Brule, Maryland, 3200\",\"about\":\"Quis " +
+                                          "nostrud Lorem " +
+                                          "deserunt esse ut reprehenderit aliqua nisi et sunt mollit est. Cupidatat " +
+                                          "incididunt minim " +
+                                          "anim eiusmod culpa elit est dolor ullamco. Aliqua cillum eiusmod ullamco " +
+                                          "nostrud Lorem sit " + "amet Lorem aliquip esse esse velit.\\r\\n\"," +
+                                          "\"registered\":\"2014-01-14T13:07:28 +08:00\"," +
+                                          "\"latitude\":47.672012,\"longitude\":102.788623,\"tags\":[\"amet\"," +
+                                          "\"amet\",\"dolore\"," +
+                                          "\"eu\",\"qui\",\"fugiat\",\"laborum\"],\"friends\":[{\"id\":0," +
+                                          "\"name\":\"Rebecca Hardy\"}," +
+                                          "{\"id\":1,\"name\":\"Sutton Briggs\"},{\"id\":2,\"name\":\"Dena " +
+                                          "Campos\"}]," +
+                                          "\"greeting\":\"Hello, Mercedes Brewer! You have 7 unread messages.\"," +
+                                          "\"favoriteFruit\":\"strawberry\"}").getBytes("UTF-8");
         mNestedISOFormat = new Message("test", 0, 0, null, nestedISOFormat, timestamp);
     }
 
@@ -111,13 +205,11 @@ public class DateMessageParserTest extends TestCase {
 
         // invalid date
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss"); // any pattern
-        assertEquals(DateMessageParser.defaultDate, new DateMessageParser(
-            mConfig).extractPartitions(mInvalidDate)[0]);
+        assertEquals(DateMessageParser.defaultDate, new DateMessageParser(mConfig).extractPartitions(mInvalidDate)[0]);
 
         // invalid pattern
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyy-MM-dd :s");
-        assertEquals(DateMessageParser.defaultDate, new DateMessageParser(
-            mConfig).extractPartitions(mFormat1)[0]);
+        assertEquals(DateMessageParser.defaultDate, new DateMessageParser(mConfig).extractPartitions(mFormat1)[0]);
     }
 
     @Test
@@ -146,7 +238,8 @@ public class DateMessageParserTest extends TestCase {
         Mockito.when(mConfig.getMessageTimestampName()).thenReturn("timestamp");
         Mockito.when(mConfig.getMessageTimestampInputPattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
         Mockito.when(mConfig.getString("partitioner.granularity.date.prefix", "dt=")).thenReturn("");
-        Mockito.when(mConfig.getString("partitioner.granularity.date.format", "yyyy-MM-dd")).thenReturn("'yr='yyyy'/mo='MM'/dy='dd'/hr='HH");
+        Mockito.when(mConfig.getString("partitioner.granularity.date.format", "yyyy-MM-dd"))
+               .thenReturn("'yr='yyyy'/mo='MM'/dy='dd'/hr='HH");
 
         assertEquals("yr=2014/mo=07/dy=30/hr=10", new DateMessageParser(mConfig).extractPartitions(mFormat1)[0]);
     }

@@ -89,10 +89,10 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         mMinFormatter = new SimpleDateFormat(mMinFormat);
         mMinFormatter.setTimeZone(config.getTimeZone());
 
-        mDtHrFormatter = new SimpleDateFormat(mDtFormat+ "-" + mHrFormat);
+        mDtHrFormatter = new SimpleDateFormat(mDtFormat + "-" + mHrFormat);
         mDtHrFormatter.setTimeZone(config.getTimeZone());
 
-        mDtHrMinFormatter = new SimpleDateFormat(mDtFormat+ "-" + mHrFormat + "-" + mMinFormat);
+        mDtHrMinFormatter = new SimpleDateFormat(mDtFormat + "-" + mHrFormat + "-" + mMinFormat);
         mDtHrMinFormatter.setTimeZone(config.getTimeZone());
     }
 
@@ -186,13 +186,11 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
         return generatePartitions(timestampMillis, mUsingHourly, mUsingMinutely);
     }
 
-    private long getFinalizedTimestampMillis(Message lastMessage,
-                                             Message committedMessage) throws Exception {
+    private long getFinalizedTimestampMillis(Message lastMessage, Message committedMessage) throws Exception {
         long lastTimestamp = getTimestampMillis(lastMessage);
         long committedTimestamp = getTimestampMillis(committedMessage);
         long now = System.currentTimeMillis();
-        if (lastTimestamp == committedTimestamp &&
-                (now - lastTimestamp) > mFinalizerDelaySeconds * 1000) {
+        if (lastTimestamp == committedTimestamp && (now - lastTimestamp) > mFinalizerDelaySeconds * 1000) {
             LOG.info("No new message coming, use the current time: " + now);
             return now;
         }
@@ -200,8 +198,8 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     }
 
     @Override
-    public String[] getFinalizedUptoPartitions(List<Message> lastMessages,
-                                               List<Message> committedMessages) throws Exception {
+    public String[] getFinalizedUptoPartitions(List<Message> lastMessages, List<Message> committedMessages)
+            throws Exception {
 
         if (lastMessages == null || committedMessages == null) {
             LOG.error("Either: {} and {} is null", lastMessages, committedMessages);
@@ -254,9 +252,8 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
                 usingHourly = true;
             }
         } else if (mUsingHourly && millis % DAY_IN_MILLIS == 0) {
-            // On the day boundary, if the current partition is [dt=07-07, hr=00], the previous
-            // one is dt=07-06;  If the current one is [dt=07-06], the previous one is
-            // [dt=07-06, hr-23]
+            // On the day boundary, if the current partition is [dt=07-07, hr=00], the previous one is dt=07-06;
+            // If the current one is [dt=07-06], the previous one is [dt=07-06, hr-23]
             // So we would return in the order of:
             // dt=07-07, hr=01
             // dt=07-07, hr=00

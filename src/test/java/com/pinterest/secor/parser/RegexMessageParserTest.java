@@ -18,9 +18,8 @@
  */
 package com.pinterest.secor.parser;
 
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
-
 import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,12 +49,16 @@ public class RegexMessageParserTest extends TestCase {
         timestamp = System.currentTimeMillis();
 
         byte messageWithMillisTimestamp[] =
-            "?24.140.88.218 2015/09/22T22:19:00+0000 1442960340 GET http://api.com/test/?id=123 HTTP/1.1 s200 1017 0.384213448 pass - r685206763364 91ea566f - \"for iOS/5.4.2 (iPhone; 9.0)\"".getBytes("UTF-8");
+                ("?24.140.88.218 2015/09/22T22:19:00+0000 1442960340 GET http://api.com/test/?id=123 HTTP/1.1 s200 " +
+                         "1017 0.384213448 pass - r685206763364 91ea566f - \"for iOS/5.4.2 (iPhone; 9.0)\"").getBytes(
+                        "UTF-8");
         mMessageWithMillisTimestamp = new Message("test", 0, 0, null, messageWithMillisTimestamp, timestamp);
 
-      byte messageWithWrongFormatTimestamp[] =
-          "?24.140.88.218 2015/09/22T22:19:00+0000 A1442960340 GET http://api.com/test/?id=123 HTTP/1.1 s200 1017 0.384213448 pass - r685206763364 91ea566f - \"for iOS/5.4.2 (iPhone; 9.0)\"".getBytes("UTF-8");
-      mMessageWithWrongFormatTimestamp = new Message("test", 0, 0, null, messageWithWrongFormatTimestamp, timestamp);
+        byte messageWithWrongFormatTimestamp[] =
+                ("?24.140.88.218 2015/09/22T22:19:00+0000 A1442960340 GET http://api.com/test/?id=123 HTTP/1.1 s200 " +
+                         "1017 0.384213448 pass - r685206763364 91ea566f - \"for iOS/5.4.2 (iPhone; 9.0)\"").getBytes(
+                        "UTF-8");
+        mMessageWithWrongFormatTimestamp = new Message("test", 0, 0, null, messageWithWrongFormatTimestamp, timestamp);
 
     }
 
@@ -71,20 +74,20 @@ public class RegexMessageParserTest extends TestCase {
     public void testExtractTimestampMillis() throws Exception {
         RegexMessageParser regexMessageParser = new RegexMessageParser(mConfig);
 
-        assertEquals(1442960340000l, regexMessageParser.extractTimestampMillis(mMessageWithMillisTimestamp));
+        assertEquals(1442960340000L, regexMessageParser.extractTimestampMillis(mMessageWithMillisTimestamp));
     }
 
-    @Test(expected=NumberFormatException.class)
+    @Test(expected = NumberFormatException.class)
     public void testExtractTimestampMillisEmpty() throws Exception {
         RegexMessageParser regexMessageParser = new RegexMessageParser(mConfig);
         byte emptyBytes2[] = "".getBytes();
         regexMessageParser.extractTimestampMillis(new Message("test", 0, 0, null, emptyBytes2, timestamp));
     }
 
-    @Test(expected=NumberFormatException.class)
+    @Test(expected = NumberFormatException.class)
     public void testExtractTimestampMillisException1() throws Exception {
         RegexMessageParser regexMessageParser = new RegexMessageParser(mConfig);
-       regexMessageParser.extractTimestampMillis(mMessageWithWrongFormatTimestamp);
+        regexMessageParser.extractTimestampMillis(mMessageWithWrongFormatTimestamp);
     }
 
 }

@@ -29,13 +29,14 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * SplitByFieldMessageParser extracts event type field (specified by 'message.split.field.name')
- * and timestamp field (specified by 'message.timestamp.name')
- * from JSON data and splits data into multiple outputs by event type and then partitions each output by date.
- *
+ * SplitByFieldMessageParser extracts event type field (specified by 'message.split.field.name') and timestamp field
+ * (specified by 'message.timestamp.name') from JSON data and splits data into multiple outputs by event type and then
+ * partitions each output by date.
+ * <p>
  * Caution: this parser doesn't support finalization of partitions.
  */
 public class SplitByFieldMessageParser extends TimestampedMessageParser implements Partitioner {
+
     private static final Logger LOG = LoggerFactory.getLogger(SplitByFieldMessageParser.class);
     private final String mSplitFieldName;
 
@@ -65,8 +66,8 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
     }
 
     @Override
-    public String[] getFinalizedUptoPartitions(List<Message> lastMessages,
-                                               List<Message> committedMessages) throws Exception {
+    public String[] getFinalizedUptoPartitions(List<Message> lastMessages, List<Message> committedMessages)
+            throws Exception {
         throw new UnsupportedOperationException("Partition finalization is not supported");
     }
 

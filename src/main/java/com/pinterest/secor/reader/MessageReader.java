@@ -39,25 +39,25 @@ import java.util.Map;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class MessageReader {
-    private static final Logger LOG = LoggerFactory.getLogger(MessageReader.class);
 
+    private static final Logger LOG = LoggerFactory.getLogger(MessageReader.class);
+    protected final int mTopicPartitionForgetSeconds;
+    protected final int mCheckMessagesPerSecond;
     protected SecorConfig mConfig;
     protected KafkaMessageIterator mKafkaMessageIterator;
     protected OffsetTracker mOffsetTracker;
     protected HashMap<TopicPartition, Long> mLastAccessTime;
-    protected final int mTopicPartitionForgetSeconds;
-    protected final int mCheckMessagesPerSecond;
     protected int mNMessages;
 
-    public MessageReader(SecorConfig config, OffsetTracker offsetTracker) throws
-            UnknownHostException {
+    public MessageReader(SecorConfig config, OffsetTracker offsetTracker) throws UnknownHostException {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mLastAccessTime = new HashMap<TopicPartition, Long>();
         StatsUtil.setLabel("secor.kafka.consumer.id", IdUtil.getConsumerId());
         mTopicPartitionForgetSeconds = mConfig.getTopicPartitionForgetSeconds();
         mCheckMessagesPerSecond = mConfig.getMessagesPerSecond() / mConfig.getConsumerThreads();
-        mKafkaMessageIterator = KafkaMessageIteratorFactory.getIterator(mConfig.getKafkaMessageIteratorClass(), mConfig);
+        mKafkaMessageIterator =
+                KafkaMessageIteratorFactory.getIterator(mConfig.getKafkaMessageIteratorClass(), mConfig);
     }
 
     private void updateAccessTime(TopicPartition topicPartition) {
@@ -79,8 +79,7 @@ public class MessageReader {
             if (topicPartitions.length() > 0) {
                 topicPartitions.append(' ');
             }
-            topicPartitions.append(topicPartition.getTopic() + '/' +
-                                   topicPartition.getPartition());
+            topicPartitions.append(topicPartition.getTopic() + '/' + topicPartition.getPartition());
         }
         StatsUtil.setLabel("secor.topic_partitions", topicPartitions.toString());
     }
@@ -99,8 +98,7 @@ public class MessageReader {
         if (message == null) {
             return null;
         }
-        TopicPartition topicPartition = new TopicPartition(message.getTopic(),
-                                                           message.getKafkaPartition());
+        TopicPartition topicPartition = new TopicPartition(message.getTopic(), message.getKafkaPartition());
         updateAccessTime(topicPartition);
         // Skip already committed messages.
         long committedOffsetCount = mOffsetTracker.getTrueCommittedOffsetCount(topicPartition);
@@ -109,8 +107,8 @@ public class MessageReader {
             exportStats();
         }
         if (message.getOffset() < committedOffsetCount) {
-            LOG.debug("skipping message {} because its offset precedes committed offset count {}",
-                    message, committedOffsetCount);
+            LOG.debug("skipping message {} because its offset precedes committed offset count {}", message,
+                      committedOffsetCount);
             return null;
         }
         return message;

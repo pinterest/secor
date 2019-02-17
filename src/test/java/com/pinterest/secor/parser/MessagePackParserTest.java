@@ -62,33 +62,34 @@ public class MessagePackParserTest extends TestCase {
 
         HashMap<String, Object> mapWithSecondTimestamp = new HashMap<String, Object>();
         mapWithSecondTimestamp.put("ts", 1405970352);
-        mMessageWithSecondsTimestamp = new Message("test", 0, 0, null,
-                mObjectMapper.writeValueAsBytes(mapWithSecondTimestamp), timestamp);
+        mMessageWithSecondsTimestamp =
+                new Message("test", 0, 0, null, mObjectMapper.writeValueAsBytes(mapWithSecondTimestamp), timestamp);
 
         HashMap<String, Object> mapWithMillisTimestamp = new HashMap<String, Object>();
-        mapWithMillisTimestamp.put("ts", 1405970352123l);
+        mapWithMillisTimestamp.put("ts", 1405970352123L);
         mapWithMillisTimestamp.put("isActive", true);
         mapWithMillisTimestamp.put("email", "alice@example.com");
         mapWithMillisTimestamp.put("age", 27);
-        mMessageWithMillisTimestamp = new Message("test", 0, 0, null,
-                mObjectMapper.writeValueAsBytes(mapWithMillisTimestamp), timestamp);
-
+        mMessageWithMillisTimestamp =
+                new Message("test", 0, 0, null, mObjectMapper.writeValueAsBytes(mapWithMillisTimestamp), timestamp);
 
         HashMap<String, Object> mapWithMillisFloatTimestamp = new HashMap<String, Object>();
         mapWithMillisFloatTimestamp.put("ts", 1405970352123.0);
         mapWithMillisFloatTimestamp.put("isActive", false);
         mapWithMillisFloatTimestamp.put("email", "bob@example.com");
         mapWithMillisFloatTimestamp.put("age", 35);
-        mMessageWithMillisFloatTimestamp = new Message("test", 0, 0, null,
-                mObjectMapper.writeValueAsBytes(mapWithMillisFloatTimestamp), timestamp);
+        mMessageWithMillisFloatTimestamp =
+                new Message("test", 0, 0, null, mObjectMapper.writeValueAsBytes(mapWithMillisFloatTimestamp),
+                            timestamp);
 
         HashMap<String, Object> mapWithMillisStringTimestamp = new HashMap<String, Object>();
         mapWithMillisStringTimestamp.put("ts", "1405970352123");
         mapWithMillisStringTimestamp.put("isActive", null);
         mapWithMillisStringTimestamp.put("email", "charlie@example.com");
         mapWithMillisStringTimestamp.put("age", 67);
-        mMessageWithMillisStringTimestamp = new Message("test", 0, 0, null,
-                mObjectMapper.writeValueAsBytes(mapWithMillisStringTimestamp), timestamp);
+        mMessageWithMillisStringTimestamp =
+                new Message("test", 0, 0, null, mObjectMapper.writeValueAsBytes(mapWithMillisStringTimestamp),
+                            timestamp);
     }
 
     @Test
@@ -96,52 +97,45 @@ public class MessagePackParserTest extends TestCase {
         Mockito.when(mConfig.useKafkaTimestamp()).thenReturn(true);
         mMessagePackParser = new MessagePackParser(mConfig);
 
-        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(
-                mMessageWithSecondsTimestamp));
-        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(
-                mMessageWithMillisTimestamp));
-        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(
-                mMessageWithMillisFloatTimestamp));
-        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(
-                mMessageWithMillisStringTimestamp));
+        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(mMessageWithSecondsTimestamp));
+        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(mMessageWithMillisTimestamp));
+        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(mMessageWithMillisFloatTimestamp));
+        assertEquals(timestamp, mMessagePackParser.getTimestampMillis(mMessageWithMillisStringTimestamp));
     }
 
     @Test
     public void testExtractTimestampMillis() throws Exception {
-        assertEquals(1405970352000l, mMessagePackParser.getTimestampMillis(
-                mMessageWithSecondsTimestamp));
-        assertEquals(1405970352123l, mMessagePackParser.getTimestampMillis(
-                mMessageWithMillisTimestamp));
-        assertEquals(1405970352123l, mMessagePackParser.getTimestampMillis(
-                mMessageWithMillisFloatTimestamp));
-        assertEquals(1405970352123l, mMessagePackParser.getTimestampMillis(
-                mMessageWithMillisStringTimestamp));
+        assertEquals(1405970352000L, mMessagePackParser.getTimestampMillis(mMessageWithSecondsTimestamp));
+        assertEquals(1405970352123L, mMessagePackParser.getTimestampMillis(mMessageWithMillisTimestamp));
+        assertEquals(1405970352123L, mMessagePackParser.getTimestampMillis(mMessageWithMillisFloatTimestamp));
+        assertEquals(1405970352123L, mMessagePackParser.getTimestampMillis(mMessageWithMillisStringTimestamp));
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testMissingTimestamp() throws Exception {
         HashMap<String, Object> mapWithoutTimestamp = new HashMap<String, Object>();
         mapWithoutTimestamp.put("email", "mary@example.com");
-        Message nMessageWithoutTimestamp = new Message("test", 0, 0, null,
-                mObjectMapper.writeValueAsBytes(mapWithoutTimestamp), timestamp);
+        Message nMessageWithoutTimestamp =
+                new Message("test", 0, 0, null, mObjectMapper.writeValueAsBytes(mapWithoutTimestamp), timestamp);
         mMessagePackParser.getTimestampMillis(nMessageWithoutTimestamp);
     }
 
-    @Test(expected=NumberFormatException.class)
+    @Test(expected = NumberFormatException.class)
     public void testUnsupportedTimestampFormat() throws Exception {
         HashMap<String, Object> mapWitUnsupportedFormatTimestamp = new HashMap<String, Object>();
         mapWitUnsupportedFormatTimestamp.put("ts", "2014-11-14T18:12:52.878Z");
-        Message nMessageWithUnsupportedFormatTimestamp = new Message("test", 0, 0, null,
-                mObjectMapper.writeValueAsBytes(mapWitUnsupportedFormatTimestamp), timestamp);
+        Message nMessageWithUnsupportedFormatTimestamp =
+                new Message("test", 0, 0, null, mObjectMapper.writeValueAsBytes(mapWitUnsupportedFormatTimestamp),
+                            timestamp);
         mMessagePackParser.getTimestampMillis(nMessageWithUnsupportedFormatTimestamp);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testNullTimestamp() throws Exception {
         HashMap<String, Object> mapWitNullTimestamp = new HashMap<String, Object>();
         mapWitNullTimestamp.put("ts", null);
-        Message nMessageWithNullTimestamp = new Message("test", 0, 0, null,
-                mObjectMapper.writeValueAsBytes(mapWitNullTimestamp), timestamp);
+        Message nMessageWithNullTimestamp =
+                new Message("test", 0, 0, null, mObjectMapper.writeValueAsBytes(mapWitNullTimestamp), timestamp);
         mMessagePackParser.getTimestampMillis(nMessageWithNullTimestamp);
     }
 

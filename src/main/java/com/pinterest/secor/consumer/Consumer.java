@@ -38,16 +38,16 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 /**
- * Consumer is a top-level component coordinating reading, writing, and uploading Kafka log
- * messages.  It is implemented as a thread with the intent of running multiple consumer
- * concurrently.
- *
- * Note that consumer is not fixed with a specific topic partition.  Kafka rebalancing mechanism
- * allocates topic partitions to consumers dynamically to accommodate consumer population changes.
+ * Consumer is a top-level component coordinating reading, writing, and uploading Kafka log messages.  It is implemented
+ * as a thread with the intent of running multiple consumer concurrently.
+ * <p>
+ * Note that consumer is not fixed with a specific topic partition.  Kafka rebalancing mechanism allocates topic
+ * partitions to consumers dynamically to accommodate consumer population changes.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class Consumer extends Thread {
+
     private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);
 
     protected SecorConfig mConfig;
@@ -91,19 +91,6 @@ public class Consumer extends Thread {
         }
     }
 
-    // When the JVM starts to shut down, tell the Consumer thread to upload once and wait for it to finish.
-    private class FinalUploadShutdownHook extends Thread {
-        @Override
-        public void run() {
-            mShuttingDown = true;
-            try {
-                Consumer.this.join();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     @Override
     public void run() {
         try {
@@ -130,8 +117,7 @@ public class Consumer extends Thread {
             }
 
             long now = System.currentTimeMillis();
-            if (nMessages++ % checkMessagesPerSecond == 0 ||
-                    (now - lastChecked) > checkEveryNSeconds * 1000) {
+            if (nMessages++ % checkMessagesPerSecond == 0 || (now - lastChecked) > checkEveryNSeconds * 1000) {
                 lastChecked = now;
                 checkUploadPolicy(false);
             }
@@ -195,8 +181,10 @@ public class Consumer extends Thread {
                 try {
                     mMessageWriter.write(parsedMessage);
 
-                    mMetricCollector.metric("consumer.message_size_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
-                    mMetricCollector.increment("consumer.throughput_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
+                    mMetricCollector.metric("consumer.message_size_bytes", rawMessage.getPayload().length,
+                                            rawMessage.getTopic());
+                    mMetricCollector.increment("consumer.throughput_bytes", rawMessage.getPayload().length,
+                                               rawMessage.getTopic());
                 } catch (Exception e) {
                     // Log the full stringification of parsedMessage at DEBUG level, but include only a truncated
                     // version in the thrown exception, since messages can be ginormous and this exception often
@@ -218,5 +206,19 @@ public class Consumer extends Thread {
      */
     public OffsetTracker getOffsetTracker() {
         return this.mOffsetTracker;
+    }
+
+    // When the JVM starts to shut down, tell the Consumer thread to upload once and wait for it to finish.
+    private class FinalUploadShutdownHook extends Thread {
+
+        @Override
+        public void run() {
+            mShuttingDown = true;
+            try {
+                Consumer.this.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

@@ -22,13 +22,14 @@ import java.io.IOException;
 
 /**
  * Generic file reader interface for a particular type of Secor output file
- *
- * Should be returned by a FileReaderWriterFactory that also knows how to build
- * a corresponding FileReader (that is able to read the files written by this FileWriter).
+ * <p>
+ * Should be returned by a FileReaderWriterFactory that also knows how to build a corresponding FileReader (that is able
+ * to read the files written by this FileWriter).
  *
  * @author Praveen Murugesan (praveen@uber.com)
  */
 public interface FileReader {
+
     /**
      * Get the next key/value from the file
      *

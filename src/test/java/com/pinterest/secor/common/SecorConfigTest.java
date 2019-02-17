@@ -45,7 +45,8 @@ public class SecorConfigTest {
     @Test
     public void config_should_read_migration_required() throws ConfigurationException {
 
-        URL configFile = Thread.currentThread().getContextClassLoader().getResource("secor.kafka.migration.test.properties");
+        URL configFile =
+                Thread.currentThread().getContextClassLoader().getResource("secor.kafka.migration.test.properties");
         PropertiesConfiguration properties = new PropertiesConfiguration(configFile);
 
         SecorConfig secorConfig = new SecorConfig(properties);
@@ -61,7 +62,7 @@ public class SecorConfigTest {
 
         SecorConfig secorConfig = new SecorConfig(properties);
         Map<String, String> messageClassPerTopic = secorConfig.getProtobufMessageClassPerTopic();
-        
+
         assertEquals(2, messageClassPerTopic.size());
         assertEquals(UnitTestMessage1.class.getName(), messageClassPerTopic.get("mytopic1"));
         assertEquals(UnitTestMessage2.class.getName(), messageClassPerTopic.get("mytopic2"));

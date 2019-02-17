@@ -26,6 +26,7 @@ import com.twitter.ostrich.stats.Stats;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class StatsUtil {
+
     public static void setLabel(String name, String value) {
         long threadId = Thread.currentThread().getId();
         name += "." + threadId;
@@ -39,7 +40,7 @@ public class StatsUtil {
     }
 
     public static void incr(String name) {
-      Stats.incr(name);
+        Stats.incr(name);
     }
 
 }

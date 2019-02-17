@@ -18,6 +18,8 @@
  */
 package com.pinterest.secor.tools;
 
+import com.pinterest.secor.thrift.TestEnum;
+import com.pinterest.secor.thrift.TestMessage;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -29,9 +31,6 @@ import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.protocol.TSimpleJSONProtocol;
 
-import com.pinterest.secor.thrift.TestMessage;
-import com.pinterest.secor.thrift.TestEnum;
-
 import java.util.Properties;
 
 /**
@@ -40,14 +39,15 @@ import java.util.Properties;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class TestLogMessageProducer extends Thread {
+
     private final String mTopic;
     private final int mNumMessages;
     private final String mType;
     private final String mMetadataBrokerList;
     private final int mTimeshift;
 
-    public TestLogMessageProducer(String topic, int numMessages, String type,
-                                  String metadataBrokerList, int timeshift) {
+    public TestLogMessageProducer(String topic, int numMessages, String type, String metadataBrokerList,
+                                  int timeshift) {
         mTopic = topic;
         mNumMessages = numMessages;
         mType = type;
@@ -69,7 +69,7 @@ public class TestLogMessageProducer extends Thread {
         Producer<String, byte[]> producer = new KafkaProducer<>(properties);
 
         TProtocolFactory protocol = null;
-        if(mType.equals("json")) {
+        if (mType.equals("json")) {
             protocol = new TSimpleJSONProtocol.Factory();
         } else if (mType.equals("binary")) {
             protocol = new TBinaryProtocol.Factory();
@@ -80,8 +80,7 @@ public class TestLogMessageProducer extends Thread {
         TSerializer serializer = new TSerializer(protocol);
         for (int i = 0; i < mNumMessages; ++i) {
             long time = (System.currentTimeMillis() - mTimeshift * 1000L) * 1000000L + i;
-            TestMessage testMessage = new TestMessage(time,
-                                                      "some_value_" + i);
+            TestMessage testMessage = new TestMessage(time, "some_value_" + i);
             if (i % 2 == 0) {
                 testMessage.setEnumField(TestEnum.SOME_VALUE);
             } else {
@@ -90,7 +89,7 @@ public class TestLogMessageProducer extends Thread {
             byte[] bytes;
             try {
                 bytes = serializer.serialize(testMessage);
-            } catch(TException e) {
+            } catch (TException e) {
                 throw new RuntimeException("Failed to serialize message " + testMessage, e);
             }
             ProducerRecord<String, byte[]> data = new ProducerRecord<>(mTopic, Integer.toString(i), bytes);

@@ -27,26 +27,25 @@ import org.msgpack.jackson.dataformat.MessagePackFactory;
 import java.util.HashMap;
 
 /**
- * MessagePack timestamped message parser.
- * Requires a second or ms timestamp.
- * Does not support message.timestamp.input.pattern.
+ * MessagePack timestamped message parser. Requires a second or ms timestamp. Does not support
+ * message.timestamp.input.pattern.
  *
  * @author Zack Dever (zack@rd.io)
  */
 public class MessagePackParser extends TimestampedMessageParser {
+
     private ObjectMapper mMessagePackObjectMapper;
     private TypeReference mTypeReference;
 
     public MessagePackParser(SecorConfig config) {
         super(config);
         mMessagePackObjectMapper = new ObjectMapper(new MessagePackFactory());
-        mTypeReference = new TypeReference<HashMap<String, Object>>(){};
+        mTypeReference = new TypeReference<HashMap<String, Object>>() {};
     }
 
     @Override
     public long extractTimestampMillis(Message message) throws Exception {
-        HashMap<String, Object> msgHash = mMessagePackObjectMapper.readValue(message.getPayload(),
-                mTypeReference);
+        HashMap<String, Object> msgHash = mMessagePackObjectMapper.readValue(message.getPayload(), mTypeReference);
         Object timestampValue = msgHash.get(mConfig.getMessageTimestampName());
 
         if (timestampValue instanceof Number) {

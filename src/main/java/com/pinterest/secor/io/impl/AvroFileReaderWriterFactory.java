@@ -18,14 +18,14 @@
  */
 package com.pinterest.secor.io.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
-import com.google.protobuf.Message;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
-import com.pinterest.secor.util.FileUtil;
+import com.pinterest.secor.io.FileReader;
+import com.pinterest.secor.io.FileReaderWriterFactory;
+import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.ParquetUtil;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
@@ -33,30 +33,19 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
-import org.apache.parquet.avro.AvroParquetReader;
-import org.apache.parquet.avro.AvroParquetWriter;
-import org.apache.parquet.hadoop.ParquetReader;
-import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.io.FileReader;
-import com.pinterest.secor.io.FileReaderWriterFactory;
-import com.pinterest.secor.io.FileWriter;
-import com.pinterest.secor.io.KeyValue;
-import com.pinterest.secor.util.ParquetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
 
@@ -75,6 +64,17 @@ public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
         schemaRegistryClient = new SecorSchemaRegistryClient(config);
     }
 
+    protected static byte[] serializeAvroRecord(SpecificDatumWriter<GenericRecord> writer, GenericRecord record)
+            throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
+        writer.write(record, encoder);
+        encoder.flush();
+        ByteBuffer serialized = ByteBuffer.allocate(out.toByteArray().length);
+        serialized.put(out.toByteArray());
+        return serialized.array();
+    }
+
     @Override
     public FileReader BuildFileReader(LogFilePath logFilePath, CompressionCodec codec) throws Exception {
         return new AvroFileReader(logFilePath, codec);
@@ -83,16 +83,6 @@ public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
     @Override
     public FileWriter BuildFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws Exception {
         return new AvroFileWriter(logFilePath, codec);
-    }
-
-    protected static byte[] serializeAvroRecord(SpecificDatumWriter<GenericRecord> writer, GenericRecord record) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
-        writer.write(record, encoder);
-        encoder.flush();
-        ByteBuffer serialized = ByteBuffer.allocate(out.toByteArray().length);
-        serialized.put(out.toByteArray());
-        return serialized.array();
     }
 
     protected class AvroFileReader implements FileReader {
@@ -148,15 +138,15 @@ public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
             LOG.debug("Creating Brand new Writer for path {}", logFilePath.getLogFilePath());
             topic = logFilePath.getTopic();
             Schema schema = schemaRegistryClient.getSchema(topic);
-            SpecificDatumWriter specificDatumWriter= new SpecificDatumWriter(schema);
+            SpecificDatumWriter specificDatumWriter = new SpecificDatumWriter(schema);
             writer = new DataFileWriter(specificDatumWriter);
             writer.setCodec(getCodecFactory(codec));
             writer.create(schema, file);
         }
 
         private CodecFactory getCodecFactory(CompressionCodec codec) {
-            CompressionCodecName codecName = CompressionCodecName
-                    .fromCompressionCodec(codec != null ? codec.getClass() : null);
+            CompressionCodecName codecName =
+                    CompressionCodecName.fromCompressionCodec(codec != null ? codec.getClass() : null);
             try {
                 return CodecFactory.fromString(codecName.name().toLowerCase());
             } catch (AvroRuntimeException e) {
@@ -174,7 +164,7 @@ public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
         public void write(KeyValue keyValue) throws IOException {
             GenericRecord record = schemaRegistryClient.decodeMessage(topic, keyValue.getValue());
             LOG.trace("Writing record {}", record);
-            if (record != null){
+            if (record != null) {
                 writer.append(record);
             }
         }

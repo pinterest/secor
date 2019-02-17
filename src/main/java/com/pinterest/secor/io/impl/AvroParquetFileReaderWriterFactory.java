@@ -18,12 +18,14 @@
  */
 package com.pinterest.secor.io.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
-import com.google.protobuf.Message;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
+import com.pinterest.secor.io.FileReader;
+import com.pinterest.secor.io.FileReaderWriterFactory;
+import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.ParquetUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.Encoder;
@@ -36,16 +38,12 @@ import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.io.FileReader;
-import com.pinterest.secor.io.FileReaderWriterFactory;
-import com.pinterest.secor.io.FileWriter;
-import com.pinterest.secor.io.KeyValue;
-import com.pinterest.secor.util.ParquetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFactory {
 
@@ -64,6 +62,17 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         schemaRegistryClient = new SecorSchemaRegistryClient(config);
     }
 
+    protected static byte[] serializeAvroRecord(SpecificDatumWriter<GenericRecord> writer, GenericRecord record)
+            throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
+        writer.write(record, encoder);
+        encoder.flush();
+        ByteBuffer serialized = ByteBuffer.allocate(out.toByteArray().length);
+        serialized.put(out.toByteArray());
+        return serialized.array();
+    }
+
     @Override
     public FileReader BuildFileReader(LogFilePath logFilePath, CompressionCodec codec) throws Exception {
         return new AvroParquetFileReader(logFilePath, codec);
@@ -72,16 +81,6 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
     @Override
     public FileWriter BuildFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws Exception {
         return new AvroParquetFileWriter(logFilePath, codec);
-    }
-
-    protected static byte[] serializeAvroRecord(SpecificDatumWriter<GenericRecord> writer, GenericRecord record) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
-        writer.write(record, encoder);
-        encoder.flush();
-        ByteBuffer serialized = ByteBuffer.allocate(out.toByteArray().length);
-        serialized.put(out.toByteArray());
-        return serialized.array();
     }
 
     protected class AvroParquetFileReader implements FileReader {
@@ -123,14 +122,14 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         public AvroParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
             LOG.debug("Creating Brand new Writer for path {}", path);
-            CompressionCodecName codecName = CompressionCodecName
-                    .fromCompressionCodec(codec != null ? codec.getClass() : null);
+            CompressionCodecName codecName =
+                    CompressionCodecName.fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
             // Not setting blockSize, pageSize, enableDictionary, and validating
             writer = AvroParquetWriter.builder(path)
-                    .withSchema(schemaRegistryClient.getSchema(topic))
-                    .withCompressionCodec(codecName)
-                    .build();
+                                      .withSchema(schemaRegistryClient.getSchema(topic))
+                                      .withCompressionCodec(codecName)
+                                      .build();
         }
 
         @Override
@@ -142,7 +141,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         public void write(KeyValue keyValue) throws IOException {
             GenericRecord record = schemaRegistryClient.decodeMessage(topic, keyValue.getValue());
             LOG.trace("Writing record {}", record);
-            if (record != null){
+            if (record != null) {
                 writer.write(record);
             }
         }

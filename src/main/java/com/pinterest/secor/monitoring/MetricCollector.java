@@ -20,13 +20,14 @@ package com.pinterest.secor.monitoring;
 
 /**
  * Component which may be used to post metrics.
- *
+ * <p>
  * All methods should be non-blocking and do not throw exceptions.
  */
 public interface MetricCollector {
+
     /**
-     * Increments the specified counter by one.
-     * Convenience method equivalent to {@link #increment(String, int, String)}.
+     * Increments the specified counter by one. Convenience method equivalent to {@link #increment(String, int,
+     * String)}.
      *
      * @param label metric name
      * @param topic a tag which describes which topic this data is collected for
@@ -45,8 +46,8 @@ public interface MetricCollector {
     /**
      * Used to track the statistical distribution of a set of values.
      * <p>
-     * Metrics are collected by tracking the count, min, max, mean (average), and a simple bucket-based histogram of
-     * the distribution. This distribution can be used to determine median, 90th percentile, etc.
+     * Metrics are collected by tracking the count, min, max, mean (average), and a simple bucket-based histogram of the
+     * distribution. This distribution can be used to determine median, 90th percentile, etc.
      *
      * @param label metric name
      * @param value the value to be incorporated in the distribution

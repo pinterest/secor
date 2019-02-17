@@ -19,9 +19,8 @@
 package com.pinterest.secor.parser;
 
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.message.Message;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
-
+import com.pinterest.secor.message.Message;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
@@ -29,14 +28,14 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * AvroMessageParser extracts timestamp field (specified by 'message.timestamp.name')
- * from AVRO data and partitions data by date.
+ * AvroMessageParser extracts timestamp field (specified by 'message.timestamp.name') from AVRO data and partitions data
+ * by date.
  */
 public class AvroMessageParser extends TimestampedMessageParser {
-    private static final Logger LOG = LoggerFactory.getLogger(AvroMessageParser.class);
 
-    private final boolean m_timestampRequired;
+    private static final Logger LOG = LoggerFactory.getLogger(AvroMessageParser.class);
     protected final SecorSchemaRegistryClient schemaRegistryClient;
+    private final boolean m_timestampRequired;
 
     public AvroMessageParser(SecorConfig config) {
         super(config);

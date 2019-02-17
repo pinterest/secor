@@ -22,8 +22,6 @@ import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 import java.util.Date;
@@ -32,9 +30,9 @@ import java.util.Date;
  * Iso8601MessageParser extracts timestamp field (specified by 'message.timestamp.name')
  *
  * @author Jurriaan Pruis (email@jurriaanpruis.nl)
- *
  */
 public class Iso8601MessageParser extends TimestampedMessageParser {
+
     private final boolean m_timestampRequired;
 
     public Iso8601MessageParser(SecorConfig config) {
@@ -56,7 +54,7 @@ public class Iso8601MessageParser extends TimestampedMessageParser {
                 Date dateFormat = DatatypeConverter.parseDateTime(fieldValue.toString()).getTime();
                 return dateFormat.getTime();
             } catch (IllegalArgumentException ex) {
-                if (m_timestampRequired){
+                if (m_timestampRequired) {
                     throw new RuntimeException("Bad timestamp field for message: " + message);
                 }
             }

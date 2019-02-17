@@ -18,12 +18,12 @@
  */
 package com.pinterest.secor.io.impl;
 
-import java.io.IOException;
-import java.util.Arrays;
-
+import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
+import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.FileUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -34,9 +34,8 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.io.KeyValue;
-import com.pinterest.secor.util.FileUtil;
+import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Sequence file reader writer implementation
@@ -58,6 +57,7 @@ public class SequenceFileReaderWriterFactory implements FileReaderWriterFactory 
     }
 
     protected class SequenceFileReader implements FileReader {
+
         private final SequenceFile.Reader mReader;
         private final LongWritable mKey;
         private final BytesWritable mValue;
@@ -87,6 +87,7 @@ public class SequenceFileReaderWriterFactory implements FileReaderWriterFactory 
     }
 
     protected class SequenceFileWriter implements FileWriter {
+
         private final SequenceFile.Writer mWriter;
         private final LongWritable mKey;
         private final BytesWritable mValue;
@@ -97,12 +98,10 @@ public class SequenceFileReaderWriterFactory implements FileReaderWriterFactory 
             fsPath = new Path(path.getLogFilePath());
             FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
             if (codec != null) {
-                this.mWriter = SequenceFile.createWriter(fs, config, fsPath,
-                        LongWritable.class, BytesWritable.class,
-                        SequenceFile.CompressionType.BLOCK, codec);
+                this.mWriter = SequenceFile.createWriter(fs, config, fsPath, LongWritable.class, BytesWritable.class,
+                                                         SequenceFile.CompressionType.BLOCK, codec);
             } else {
-                this.mWriter = SequenceFile.createWriter(fs, config, fsPath,
-                        LongWritable.class, BytesWritable.class);
+                this.mWriter = SequenceFile.createWriter(fs, config, fsPath, LongWritable.class, BytesWritable.class);
             }
             this.mKey = new LongWritable();
             this.mValue = new BytesWritable();

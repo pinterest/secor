@@ -26,7 +26,6 @@ import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
-
 import org.apache.hadoop.io.compress.CompressionCodec;
 
 import java.io.IOException;
@@ -38,16 +37,15 @@ import java.util.*;
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class LogFileVerifier {
+
     private SecorConfig mConfig;
     private String mTopic;
-    private HashMap<TopicPartition, SortedMap<Long, HashSet<LogFilePath>>>
-        mTopicPartitionToOffsetToFiles;
+    private HashMap<TopicPartition, SortedMap<Long, HashSet<LogFilePath>>> mTopicPartitionToOffsetToFiles;
 
     public LogFileVerifier(SecorConfig config, String topic) throws IOException {
         mConfig = config;
         mTopic = topic;
-        mTopicPartitionToOffsetToFiles =
-            new HashMap<TopicPartition, SortedMap<Long, HashSet<LogFilePath>>>();
+        mTopicPartitionToOffsetToFiles = new HashMap<TopicPartition, SortedMap<Long, HashSet<LogFilePath>>>();
     }
 
     private String getTopicPrefix() throws IOException {
@@ -61,10 +59,10 @@ public class LogFileVerifier {
         for (String path : paths) {
             if (!path.endsWith("/_SUCCESS")) {
                 LogFilePath logFilePath = new LogFilePath(prefix, path);
-                TopicPartition topicPartition = new TopicPartition(logFilePath.getTopic(),
-                    logFilePath.getKafkaPartition());
+                TopicPartition topicPartition =
+                        new TopicPartition(logFilePath.getTopic(), logFilePath.getKafkaPartition());
                 SortedMap<Long, HashSet<LogFilePath>> offsetToFiles =
-                    mTopicPartitionToOffsetToFiles.get(topicPartition);
+                        mTopicPartitionToOffsetToFiles.get(topicPartition);
                 if (offsetToFiles == null) {
                     offsetToFiles = new TreeMap<Long, HashSet<LogFilePath>>();
                     mTopicPartitionToOffsetToFiles.put(topicPartition, offsetToFiles);
@@ -87,7 +85,7 @@ public class LogFileVerifier {
             long lastOffset = Long.MAX_VALUE;
             Map.Entry entry = (Map.Entry) iterator.next();
             SortedMap<Long, HashSet<LogFilePath>> offsetToFiles =
-                (SortedMap<Long, HashSet<LogFilePath>>) entry.getValue();
+                    (SortedMap<Long, HashSet<LogFilePath>>) entry.getValue();
             for (long offset : offsetToFiles.keySet()) {
                 if (offset <= fromOffset || firstOffset == -2) {
                     firstOffset = offset;
@@ -124,23 +122,22 @@ public class LogFileVerifier {
             long previousMessageCount = -2L;
             Map.Entry entry = (Map.Entry) iterator.next();
             SortedMap<Long, HashSet<LogFilePath>> offsetToFiles =
-                (SortedMap<Long, HashSet<LogFilePath>>) entry.getValue();
+                    (SortedMap<Long, HashSet<LogFilePath>>) entry.getValue();
             for (HashSet<LogFilePath> logFilePaths : offsetToFiles.values()) {
                 int messageCount = 0;
                 long offset = -2;
                 for (LogFilePath logFilePath : logFilePaths) {
-                    assert offset == -2 || offset == logFilePath.getOffset():
-                        Long.toString(offset) + " || " + offset + " == " + logFilePath.getOffset();
+                    assert offset == -2 || offset == logFilePath.getOffset() :
+                            Long.toString(offset) + " || " + offset + " == " + logFilePath.getOffset();
                     messageCount += getMessageCount(logFilePath);
                     offset = logFilePath.getOffset();
                 }
                 if (previousOffset != -2 && offset - previousOffset != previousMessageCount) {
                     TopicPartition topicPartition = (TopicPartition) entry.getKey();
-                    throw new RuntimeException("Message count of " + previousMessageCount +
-                                               " in topic " + topicPartition.getTopic() +
-                                               " partition " + topicPartition.getPartition() +
-                                               " does not agree with adjacent offsets " +
-                                               previousOffset + " and " + offset);
+                    throw new RuntimeException(
+                            "Message count of " + previousMessageCount + " in topic " + topicPartition.getTopic() +
+                                    " partition " + topicPartition.getPartition() +
+                                    " does not agree with adjacent offsets " + previousOffset + " and " + offset);
                 }
                 previousOffset = offset;
                 previousMessageCount = messageCount;
@@ -148,8 +145,9 @@ public class LogFileVerifier {
             }
         }
         if (numMessages != -1 && aggregateMessageCount != numMessages) {
-            throw new RuntimeException("Message count " + aggregateMessageCount +
-                " does not agree with the expected count " + numMessages);
+            throw new RuntimeException(
+                    "Message count " + aggregateMessageCount + " does not agree with the expected count " +
+                            numMessages);
         }
     }
 
@@ -158,8 +156,8 @@ public class LogFileVerifier {
         KeyValue record;
         while ((record = reader.next()) != null) {
             if (!offsets.add(record.getOffset())) {
-                throw new RuntimeException("duplicate key " + record.getOffset() + " found in file " +
-                    logFilePath.getLogFilePath());
+                throw new RuntimeException(
+                        "duplicate key " + record.getOffset() + " found in file " + logFilePath.getLogFilePath());
             }
         }
         reader.close();
@@ -184,9 +182,9 @@ public class LogFileVerifier {
             long lastOffset = -2;
             for (Long offset : offsets) {
                 if (lastOffset != -2) {
-                    assert lastOffset + 1 == offset: Long.toString(offset) + " + 1 == " + offset +
-                        " for topic " + topicPartition.getTopic() + " partition " +
-                        topicPartition.getPartition();
+                    assert lastOffset + 1 == offset :
+                            Long.toString(offset) + " + 1 == " + offset + " for topic " + topicPartition.getTopic() +
+                                    " partition " + topicPartition.getPartition();
                 }
                 lastOffset = offset;
             }
@@ -195,22 +193,14 @@ public class LogFileVerifier {
 
     /**
      * Helper to create a file reader writer from config
-     *
-     * @param logFilePath
-     * @return
-     * @throws Exception
      */
     private FileReader createFileReader(LogFilePath logFilePath) throws Exception {
         CompressionCodec codec = null;
         if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
             codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
         }
-        FileReader fileReader = ReflectionUtil.createFileReader(
-                mConfig.getFileReaderWriterFactory(),
-                logFilePath,
-                codec,
-                mConfig
-        );
+        FileReader fileReader =
+                ReflectionUtil.createFileReader(mConfig.getFileReaderWriterFactory(), logFilePath, codec, mConfig);
         return fileReader;
     }
 }

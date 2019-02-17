@@ -24,19 +24,25 @@ import com.pinterest.secor.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
+/*
  * Partition finalizer main.
  *
  * Run:
- *     $ cd optimus/secor
- *     $ mvn package
- *     $ cd target
- *     $ java -ea -Dlog4j.configuration=log4j.dev.properties -Dconfig=secor.dev.backup.properties \
- *         -cp "secor-0.1-SNAPSHOT.jar:lib/*" com.pinterest.secor.main.PartitionFinalizerMain
- *
+ *   $ cd optimus/secor
+ *   $ mvn package
+ *   $ cd target
+ *   $ java -ea \
+ *      -Dlog4j.configuration=log4j.dev.properties \
+ *      -Dconfig=secor.dev.backup.properties \
+ *      -cp "secor-0.1-SNAPSHOT.jar:lib/*"
+ *      com.pinterest.secor.main.PartitionFinalizerMain
+ */
+
+/**
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
 public class PartitionFinalizerMain {
+
     private static final Logger LOG = LoggerFactory.getLogger(LogFilePrinterMain.class);
 
     public static void main(String[] args) {

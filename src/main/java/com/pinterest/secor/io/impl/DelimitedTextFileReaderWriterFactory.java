@@ -18,27 +18,21 @@
  */
 package com.pinterest.secor.io.impl;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-
+import com.google.common.io.CountingOutputStream;
+import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.Compressor;
-import org.apache.hadoop.io.compress.CodecPool;
-import org.apache.hadoop.io.compress.Decompressor;
-
-import com.google.common.io.CountingOutputStream;
-import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.FileUtil;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.compress.CodecPool;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.Compressor;
+import org.apache.hadoop.io.compress.Decompressor;
+
+import java.io.*;
 
 /**
  * Delimited Text File Reader Writer with Compression
@@ -46,6 +40,7 @@ import com.pinterest.secor.util.FileUtil;
  * @author Praveen Murugesan (praveen@uber.com)
  */
 public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFactory {
+
     private static final byte DELIMITER = '\n';
 
     @Override
@@ -60,6 +55,7 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
     }
 
     protected class DelimitedTextFileReader implements FileReader {
+
         private final BufferedInputStream mReader;
         private long mOffset;
         private Decompressor mDecompressor = null;
@@ -68,10 +64,10 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
             Path fsPath = new Path(path.getLogFilePath());
             FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
             InputStream inputStream = fs.open(fsPath);
-            this.mReader = (codec == null) ? new BufferedInputStream(inputStream)
-                    : new BufferedInputStream(
-                    codec.createInputStream(inputStream,
-                                            mDecompressor = CodecPool.getDecompressor(codec)));
+            this.mReader = (codec == null)
+                           ? new BufferedInputStream(inputStream)
+                           : new BufferedInputStream(codec.createInputStream(inputStream, mDecompressor =
+                                   CodecPool.getDecompressor(codec)));
             this.mOffset = path.getOffset();
         }
 
@@ -84,8 +80,7 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
                     if (messageBuffer.size() == 0) { // if no byte read
                         return null;
                     } else { // if bytes followed by end of stream: framing error
-                        throw new EOFException(
-                                "Non-empty message without delimiter");
+                        throw new EOFException("Non-empty message without delimiter");
                     }
                 }
                 messageBuffer.write(nextByte);
@@ -102,6 +97,7 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
     }
 
     protected class DelimitedTextFileWriter implements FileWriter {
+
         private final CountingOutputStream mCountingStream;
         private final BufferedOutputStream mWriter;
         private Compressor mCompressor = null;
@@ -110,10 +106,10 @@ public class DelimitedTextFileReaderWriterFactory implements FileReaderWriterFac
             Path fsPath = new Path(path.getLogFilePath());
             FileSystem fs = FileUtil.getFileSystem(path.getLogFilePath());
             this.mCountingStream = new CountingOutputStream(fs.create(fsPath));
-            this.mWriter = (codec == null) ? new BufferedOutputStream(
-                    this.mCountingStream) : new BufferedOutputStream(
-                    codec.createOutputStream(this.mCountingStream,
-                                             mCompressor = CodecPool.getCompressor(codec)));
+            this.mWriter = (codec == null)
+                           ? new BufferedOutputStream(this.mCountingStream)
+                           : new BufferedOutputStream(codec.createOutputStream(this.mCountingStream, mCompressor =
+                                   CodecPool.getCompressor(codec)));
         }
 
         @Override

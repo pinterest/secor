@@ -33,9 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SecorSchemaRegistryClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecorSchemaRegistryClient.class);
-
-    protected KafkaAvroDeserializer deserializer;
     private final static Map<String, Schema> schemas = new ConcurrentHashMap<>();
+    protected KafkaAvroDeserializer deserializer;
     protected SchemaRegistryClient schemaRegistryClient;
 
     public SecorSchemaRegistryClient(SecorConfig config) {
@@ -44,7 +43,7 @@ public class SecorSchemaRegistryClient {
             props.put("schema.registry.url", config.getSchemaRegistryUrl());
             schemaRegistryClient = new CachedSchemaRegistryClient(config.getSchemaRegistryUrl(), 30);
             init(config);
-        } catch (Exception e){
+        } catch (Exception e) {
             LOG.error("Error initalizing schema registry", e);
             throw new RuntimeException(e);
         }

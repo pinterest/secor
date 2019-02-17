@@ -22,6 +22,7 @@ import com.pinterest.secor.common.SecorConfig;
 import org.apache.parquet.hadoop.ParquetWriter;
 
 public class ParquetUtil {
+
     public static int getParquetBlockSize(SecorConfig config) {
         return config.getInt("parquet.block.size", ParquetWriter.DEFAULT_BLOCK_SIZE);
     }

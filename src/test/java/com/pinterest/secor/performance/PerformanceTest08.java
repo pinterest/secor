@@ -207,7 +207,8 @@
 //                        topic, i);
 //                SimpleConsumer consumer = mKafkaClient
 //                        .createConsumer(new TopicPartition(topic, i));
-//                Map<TopicAndPartition, PartitionOffsetRequestInfo> requestInfo = new HashMap<TopicAndPartition, PartitionOffsetRequestInfo>();
+//                Map<TopicAndPartition, PartitionOffsetRequestInfo> requestInfo = new HashMap<TopicAndPartition,
+//                PartitionOffsetRequestInfo>();
 //                requestInfo.put(topicAndPartition,
 //                        new PartitionOffsetRequestInfo(-1, 1));
 //                kafka.javaapi.OffsetRequest request = new kafka.javaapi.OffsetRequest(
