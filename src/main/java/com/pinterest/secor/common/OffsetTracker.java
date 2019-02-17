@@ -33,13 +33,13 @@ public class OffsetTracker {
     private static final Logger LOG = LoggerFactory.getLogger(OffsetTracker.class);
 
     private HashMap<TopicPartition, Long> mLastSeenOffset;
-    private HashMap<TopicPartition, Long> mFirstSeendOffset;
+    private HashMap<TopicPartition, Long> mFirstSeenOffset;
     private HashMap<TopicPartition, Long> mCommittedOffsetCount;
 
     public OffsetTracker() {
         mLastSeenOffset = new HashMap<TopicPartition, Long>();
         mCommittedOffsetCount = new HashMap<TopicPartition, Long>();
-        mFirstSeendOffset = new HashMap<TopicPartition, Long>();
+        mFirstSeenOffset = new HashMap<TopicPartition, Long>();
     }
 
     public long getLastSeenOffset(TopicPartition topicPartition) {
@@ -62,8 +62,8 @@ public class OffsetTracker {
                          topicPartition.getPartition(), offset);
             }
         }
-        if (mFirstSeendOffset.get(topicPartition) == null) {
-            mFirstSeendOffset.put(topicPartition, offset);
+        if (mFirstSeenOffset.get(topicPartition) == null) {
+            mFirstSeenOffset.put(topicPartition, offset);
         }
         return lastSeenOffset;
     }
@@ -79,7 +79,7 @@ public class OffsetTracker {
     public long getAdjustedCommittedOffsetCount(TopicPartition topicPartition) {
         long trueCommittedOffsetCount = getTrueCommittedOffsetCount(topicPartition);
         if (trueCommittedOffsetCount == -1L) {
-            Long firstSeenOffset = mFirstSeendOffset.get(topicPartition);
+            Long firstSeenOffset = mFirstSeenOffset.get(topicPartition);
             if (firstSeenOffset != null) {
                 return firstSeenOffset;
             }

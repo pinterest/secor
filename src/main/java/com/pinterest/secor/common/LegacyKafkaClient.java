@@ -222,7 +222,7 @@ public class LegacyKafkaClient implements KafkaClient {
             }
             return getMessage(topicPartition, committedOffset, consumer);
         } catch (MessageDoesNotExistException e) {
-            // If a RuntimeEMessageDoesNotExistException exception is raised, the message at the last comitted offset
+            // If a RuntimeEMessageDoesNotExistException exception is raised, the message at the last committed offset
             // does not exist in Kafka. This is usually due to the message being compacted away by the Kafka log
             // compaction process.
             //

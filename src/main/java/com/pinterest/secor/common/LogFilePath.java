@@ -55,9 +55,9 @@ public class LogFilePath {
 
     public LogFilePath(String prefix, String topic, String[] partitions, int generation, int[] kafkaPartitions,
                        long[] offsets, String extension) {
-        assert kafkaPartitions != null & kafkaPartitions.length >= 1 :
-                "Wrong kafkaParttions: " + Arrays.toString(kafkaPartitions);
-        assert offsets != null & offsets.length >= 1 : "Wrong offsets: " + Arrays.toString(offsets);
+        assert kafkaPartitions != null && kafkaPartitions.length >= 1 :
+                "Wrong kafkaPartitions: " + Arrays.toString(kafkaPartitions);
+        assert offsets != null && offsets.length >= 1 : "Wrong offsets: " + Arrays.toString(offsets);
         assert kafkaPartitions.length == offsets.length :
                 "Size mismatch partitions: " + Arrays.toString(kafkaPartitions) + " offsets: " +
                         Arrays.toString(offsets);

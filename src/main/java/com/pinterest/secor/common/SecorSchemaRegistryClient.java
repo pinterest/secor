@@ -44,7 +44,7 @@ public class SecorSchemaRegistryClient {
             schemaRegistryClient = new CachedSchemaRegistryClient(config.getSchemaRegistryUrl(), 30);
             init(config);
         } catch (Exception e) {
-            LOG.error("Error initalizing schema registry", e);
+            LOG.error("Error initializing schema registry", e);
             throw new RuntimeException(e);
         }
     }

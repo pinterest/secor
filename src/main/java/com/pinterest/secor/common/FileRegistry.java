@@ -176,8 +176,8 @@ public class FileRegistry {
         deleteTopicPartitionGroup((new TopicPartitionGroup(topicPartition)));
     }
 
-    public void deleteTopicPartitionGroup(TopicPartitionGroup topicPartitioGroup) throws IOException {
-        HashSet<LogFilePath> paths = mFiles.get(topicPartitioGroup);
+    public void deleteTopicPartitionGroup(TopicPartitionGroup topicPartitionGroup) throws IOException {
+        HashSet<LogFilePath> paths = mFiles.get(topicPartitionGroup);
         if (paths == null) {
             return;
         }

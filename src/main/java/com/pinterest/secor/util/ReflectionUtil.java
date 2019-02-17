@@ -48,7 +48,7 @@ public class ReflectionUtil {
      * See the secor.upload.manager.class config option.
      *
      * @param className The class name of a subclass of UploadManager
-     * @param config    The SecorCondig to initialize the UploadManager with
+     * @param config    The SecorConfig to initialize the UploadManager with
      * @return an UploadManager instance with the runtime type of the class passed by name
      * @throws Exception on error
      */
@@ -90,7 +90,7 @@ public class ReflectionUtil {
      * See the secor.message.parser.class config option.
      *
      * @param className The class name of a subclass of MessageParser
-     * @param config    The SecorCondig to initialize the MessageParser with
+     * @param config    The SecorConfig to initialize the MessageParser with
      * @return a MessageParser instance with the runtime type of the class passed by name
      * @throws Exception on error
      */
@@ -113,7 +113,7 @@ public class ReflectionUtil {
      * See the secor.file.reader.writer.factory config option.
      *
      * @param className the class name of a subclass of FileReaderWriterFactory
-     * @param config    The SecorCondig to initialize the FileReaderWriterFactory with
+     * @param config    The SecorConfig to initialize the FileReaderWriterFactory with
      * @return a FileReaderWriterFactory with the runtime type of the class passed by name
      */
     private static FileReaderWriterFactory createFileReaderWriterFactory(String className, SecorConfig config)
@@ -139,7 +139,7 @@ public class ReflectionUtil {
      * @param className   the class name of a subclass of FileReaderWriterFactory to create a FileWriter from
      * @param logFilePath the LogFilePath that the returned FileWriter should write to
      * @param codec       an instance CompressionCodec to compress the file written with, or null for no compression
-     * @param config      The SecorCondig to initialize the FileWriter with
+     * @param config      The SecorConfig to initialize the FileWriter with
      * @return a FileWriter specialised to write the type of files supported by the FileReaderWriterFactory
      * @throws Exception on error
      */
@@ -154,7 +154,7 @@ public class ReflectionUtil {
      * @param className   the class name of a subclass of FileReaderWriterFactory to create a FileReader from
      * @param logFilePath the LogFilePath that the returned FileReader should read from
      * @param codec       an instance CompressionCodec to decompress the file being read, or null for no compression
-     * @param config      The SecorCondig to initialize the FileReader with
+     * @param config      The SecorConfig to initialize the FileReader with
      * @return a FileReader specialised to read the type of files supported by the FileReaderWriterFactory
      * @throws Exception on error
      */
