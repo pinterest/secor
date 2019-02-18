@@ -23,9 +23,8 @@ option java_package = "com.pinterest.secor.protobuf";
 import "google/protobuf/timestamp.proto";
 option java_outer_classname = "TimestampedMessages";
 
-
 message UnitTestTimestamp1 {
-    google.protobuf.Timestamp timestamp = 5;
+	google.protobuf.Timestamp timestamp = 5;
 }
 
 message UnitTestTimestamp2 {
