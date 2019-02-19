@@ -180,6 +180,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -199,6 +200,12 @@
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
             <version>1.10</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.sumologic.plugins.log4j</groupId>
+            <artifactId>sumo-log4j-appender</artifactId>
+            <version>2.10</version>
         </dependency>
 
         <dependency>

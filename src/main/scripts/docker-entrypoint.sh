@@ -3,6 +3,7 @@ set -e
 
 
 SECOR_CONFIG=''
+SUMO_CONFIG=''
 
 if [ -z "$ZOOKEEPER_QUORUM" ]; then
     echo "ZOOKEEPER_QUORUM variable not set, launch with -e ZOOKEEPER_QUORUM=zookeeper:2181"
@@ -124,12 +125,30 @@ fi
 SECOR_CONFIG="$SECOR_CONFIG $SECOR_EXTRA_OPTS"
 
 
+if [[ ! -z "$SUMO_URL" ]]; then
+    SUMO_CONFIG="$SUMO_CONFIG -Dlog4j.appender.sumo.urlr=$SUMO_URL"
+    echo "log4j.appender.sumo.url=$SUMO_URL"
+fi
+if [[ ! -z "$SUMO_SOURCE_NAME" ]]; then
+    SUMO_CONFIG="$SUMO_CONFIG -Dlog4j.appender.sumo.sourceName=$SUMO_SOURCE_NAME"
+    echo "log4j.appender.sumo.sourceName=$SUMO_SOURCE_NAME"
+fi
+if [[ ! -z "$SUMO_SOURCE_HOST" ]]; then
+    SUMO_CONFIG="$SUMO_CONFIG -Dlog4j.appender.sumo.sourceHost=$SUMO_SOURCE_HOST"
+    echo "log4j.appender.sumo.sourceHost=$SUMO_SOURCE_HOST"
+fi
+if [[ ! -z "$SUMO_SOURCE_CATEGORY" ]]; then
+    SUMO_CONFIG="$SUMO_CONFIG -Dlog4j.appender.sumo.sourceCategory=$SUMO_SOURCE_CATEGORY"
+    echo "log4j.appender.sumo.sourceCategory=$SUMO_SOURCE_CATEGORY"
+fi
+
 cd /opt/secor
 
 
 DEFAULT_CLASSPATH="*:lib/*"
 CLASSPATH=${CLASSPATH:-$DEFAULT_CLASSPATH}
 
-java -Xmx${JVM_MEMORY:-512m} $JAVA_OPTS -ea -Dsecor_group=${SECOR_GROUP:-partition} -Dlog4j.configuration=file:${LOG4J_CONFIGURATION:-log4j.docker.properties} \
+java -Xmx${JVM_MEMORY:-512m} $JAVA_OPTS -ea -Dsecor_group=${SECOR_GROUP:-partition} 
+        -Dlog4j.configuration=file:${LOG4J_CONFIGURATION:-log4j.docker.properties} $SUMO_CONFIG\
         -Dconfig=${CONFIG_FILE:-secor.prod.partition.properties} $SECOR_CONFIG \
         -cp $CLASSPATH ${SECOR_MAIN_CLASS:-com.pinterest.secor.main.ConsumerMain}
