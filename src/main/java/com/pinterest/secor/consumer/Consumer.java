@@ -65,6 +65,7 @@ public class Consumer extends Thread {
     // the volatile variable.
     private boolean mUploadOnShutdown;
     private volatile boolean mShuttingDown = false;
+    private static volatile boolean mCallingSystemExit = false;
 
     public Consumer(SecorConfig config) {
         mConfig = config;
@@ -95,6 +96,16 @@ public class Consumer extends Thread {
     private class FinalUploadShutdownHook extends Thread {
         @Override
         public void run() {
+            if (mCallingSystemExit) {
+                // We're shutting down because a consumer thread crashed. We don't want to do a final
+                // upload: we just want to exit.  If this particular thread was the one that crashed,
+                // we would deadlock if we didn't return here (the Consumer thread is blocked
+                // in System.exit on shutdown handlers to run, and this thread would be blocked on the
+                // Consumer thread to exit).  Even if it were a different thread that crashed, we
+                // still want to exit the process as soon as possible: until we restart the process,
+                // the partition being read by the other thread won't be consumed by anyone.
+                return;
+            }
             mShuttingDown = true;
             try {
                 Consumer.this.join();
@@ -107,38 +118,45 @@ public class Consumer extends Thread {
     @Override
     public void run() {
         try {
-            // init() cannot be called in the constructor since it contains logic dependent on the
-            // thread id.
-            init();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize the consumer", e);
-        }
-        // check upload policy every N seconds or 10,000 messages/consumer timeouts
-        long checkEveryNSeconds = Math.min(10 * 60, mConfig.getMaxFileAgeSeconds() / 2);
-        long checkMessagesPerSecond = mConfig.getMessagesPerSecond();
-        long nMessages = 0;
-        long lastChecked = System.currentTimeMillis();
-        while (true) {
-            boolean hasMoreMessages = consumeNextMessage();
-            if (!hasMoreMessages) {
-                break;
+            try {
+                // init() cannot be called in the constructor since it contains logic dependent on the
+                // thread id.
+                init();
             }
-
-            if (mUploadOnShutdown && mShuttingDown) {
-                LOG.info("Shutting down");
-                break;
+            catch (Exception e) {
+                throw new RuntimeException("Failed to initialize the consumer", e);
             }
+            // check upload policy every N seconds or 10,000 messages/consumer timeouts
+            long checkEveryNSeconds = Math.min(10 * 60, mConfig.getMaxFileAgeSeconds() / 2);
+            long checkMessagesPerSecond = mConfig.getMessagesPerSecond();
+            long nMessages = 0;
+            long lastChecked = System.currentTimeMillis();
+            while (true) {
+                boolean hasMoreMessages = consumeNextMessage();
+                if (!hasMoreMessages) {
+                    break;
+                }
 
-            long now = System.currentTimeMillis();
-            if (nMessages++ % checkMessagesPerSecond == 0 ||
+                if (mUploadOnShutdown && mShuttingDown) {
+                    LOG.info("Shutting down");
+                    break;
+                }
+
+                long now = System.currentTimeMillis();
+                if (nMessages++ % checkMessagesPerSecond == 0 ||
                     (now - lastChecked) > checkEveryNSeconds * 1000) {
-                lastChecked = now;
-                checkUploadPolicy(false);
+                    lastChecked = now;
+                    checkUploadPolicy(false);
+                }
             }
+            LOG.info("Done reading messages; uploading what we have");
+            checkUploadPolicy(true);
+            LOG.info("Consumer thread done");
+        } catch (Throwable t) {
+            LOG.error("Thread failed", t);
+            mCallingSystemExit = true;
+            System.exit(1);
         }
-        LOG.info("Done reading messages; uploading what we have");
-        checkUploadPolicy(true);
-        LOG.info("Consumer thread done");
     }
 
     protected void checkUploadPolicy(boolean forceUpload) {
