@@ -537,6 +537,8 @@ public class SecorConfig {
         return mProperties.getBoolean("message.timestamp.required");
     }
 
+    public long getMessageTimestampSkewMaxMs() { return getLong("message.timestamp.skew.max.ms"); }
+
     public String getMessageSplitFieldName() {
         return getString("message.split.field.name");
     }
