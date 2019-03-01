@@ -19,6 +19,7 @@
 package com.pinterest.secor.uploader;
 
 import com.google.common.base.Joiner;
+import com.pinterest.secor.common.DeterministicUploadPolicyTracker;
 import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.OffsetTracker;
@@ -60,6 +61,7 @@ public class Uploader {
     protected ZookeeperConnector mZookeeperConnector;
     protected UploadManager mUploadManager;
     protected MessageReader mMessageReader;
+    private DeterministicUploadPolicyTracker mDeterministicUploadPolicyTracker;
     protected String mTopicFilter;
 
     private boolean isOffsetsStorageKafka = false;
@@ -75,15 +77,17 @@ public class Uploader {
      * @param metricCollector component that ingest metrics into monitoring system
      */
     public void init(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
-                     UploadManager uploadManager, MessageReader messageReader, MetricCollector metricCollector) {
+                     UploadManager uploadManager, MessageReader messageReader, MetricCollector metricCollector,
+                     DeterministicUploadPolicyTracker deterministicUploadPolicyTracker) {
         init(config, offsetTracker, fileRegistry, uploadManager, messageReader,
-                new ZookeeperConnector(config), metricCollector);
+                new ZookeeperConnector(config), metricCollector, deterministicUploadPolicyTracker);
     }
 
     // For testing use only.
     public void init(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
                      UploadManager uploadManager, MessageReader messageReader,
-                     ZookeeperConnector zookeeperConnector, MetricCollector metricCollector) {
+                     ZookeeperConnector zookeeperConnector, MetricCollector metricCollector,
+                     DeterministicUploadPolicyTracker deterministicUploadPolicyTracker) {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
@@ -92,6 +96,7 @@ public class Uploader {
         mZookeeperConnector = zookeeperConnector;
         mTopicFilter = mConfig.getKafkaTopicUploadAtMinuteMarkFilter();
         mMetricCollector = metricCollector;
+        mDeterministicUploadPolicyTracker = deterministicUploadPolicyTracker;
         if (mConfig.getOffsetsStorage().equals(SecorConstants.KAFKA_OFFSETS_STORAGE_KAFKA)) {
             isOffsetsStorageKafka = true;
         }
@@ -128,12 +133,19 @@ public class Uploader {
                     uploadHandle.get();
                 }
                 mFileRegistry.deleteTopicPartition(topicPartition);
+                if (mDeterministicUploadPolicyTracker != null) {
+                    mDeterministicUploadPolicyTracker.reset(topicPartition);
+                }
                 mZookeeperConnector.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
                 mOffsetTracker.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
                 if (isOffsetsStorageKafka) {
                     mMessageReader.commit(topicPartition, lastSeenOffset + 1);
                 }
                 mMetricCollector.increment("uploader.file_uploads.count", paths.size(), topicPartition.getTopic());
+            } else {
+                LOG.warn("Zookeeper committed offset didn't match for topic {} partition {}: {} vs {}",
+                         topicPartition.getTopic(), topicPartition.getTopic(), zookeeperCommittedOffsetCount,
+                         committedOffsetCount);
             }
         } finally {
             mZookeeperConnector.unlock(lockPath);
@@ -157,8 +169,12 @@ public class Uploader {
     }
 
     private void trim(LogFilePath srcPath, long startOffset) throws Exception {
+        final TopicPartition topicPartition = new TopicPartition(srcPath.getTopic(), srcPath.getKafkaPartition());
         if (startOffset == srcPath.getOffset()) {
-            return;
+            // If *all* the files had the right offset already, trimFiles would have returned
+            // before resetting the tracker. If just some do, we don't want to rewrite files in place
+            // (it's probably safe but let's not stress it), but this shouldn't happen anyway.
+            throw new RuntimeException("Some LogFilePath has unchanged offset, but they don't all? " + srcPath);
         }
         FileReader reader = null;
         FileWriter writer = null;
@@ -188,6 +204,9 @@ public class Uploader {
                         		codec);
                     }
                     writer.write(keyVal);
+                    if (mDeterministicUploadPolicyTracker != null) {
+                        mDeterministicUploadPolicyTracker.track(topicPartition, keyVal);
+                    }
                     copiedMessages++;
                 }
             }
@@ -207,6 +226,14 @@ public class Uploader {
 
     protected void trimFiles(TopicPartition topicPartition, long startOffset) throws Exception {
         Collection<LogFilePath> paths = mFileRegistry.getPaths(topicPartition);
+        if (paths.stream().allMatch(srcPath -> srcPath.getOffset() == startOffset)) {
+            // We thought we needed to trim, but we were wrong: we already had started at the right offset.
+            // (Probably because we don't initialize the offset from ZK on startup.)
+            return;
+        }
+        if (mDeterministicUploadPolicyTracker != null) {
+            mDeterministicUploadPolicyTracker.reset(topicPartition);
+        }
         for (LogFilePath path : paths) {
             trim(path, startOffset);
         }
@@ -232,13 +259,19 @@ public class Uploader {
     }
 
     protected void checkTopicPartition(TopicPartition topicPartition, boolean forceUpload) throws Exception {
-        final long size = mFileRegistry.getSize(topicPartition);
-        final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
-        LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
-        if (forceUpload ||
-                size >= mConfig.getMaxFileSizeBytes() ||
-                modificationAgeSec >= mConfig.getMaxFileAgeSeconds() ||
-                isRequiredToUploadAtTime(topicPartition)) {
+        boolean shouldUpload;
+        if (mDeterministicUploadPolicyTracker != null) {
+            shouldUpload = mDeterministicUploadPolicyTracker.shouldUpload(topicPartition);
+        } else {
+            final long size = mFileRegistry.getSize(topicPartition);
+            final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
+            LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
+            shouldUpload = forceUpload ||
+                           size >= mConfig.getMaxFileSizeBytes() ||
+                           modificationAgeSec >= mConfig.getMaxFileAgeSeconds() ||
+                           isRequiredToUploadAtTime(topicPartition);
+        }
+        if (shouldUpload) {
             long newOffsetCount = mZookeeperConnector.getCommittedOffsetCount(topicPartition);
             long oldOffsetCount = mOffsetTracker.setCommittedOffsetCount(topicPartition,
                     newOffsetCount);
@@ -252,6 +285,9 @@ public class Uploader {
                 // There was a rebalancing event and someone committed an offset beyond that of the
                 // current message.  We need to delete the local file.
                 mFileRegistry.deleteTopicPartition(topicPartition);
+                if (mDeterministicUploadPolicyTracker != null) {
+                    mDeterministicUploadPolicyTracker.reset(topicPartition);
+                }
             } else {  // oldOffsetCount < newOffsetCount <= lastSeenOffset
                 LOG.debug("previous committed offset count {} is lower than committed offset {} is lower than or equal to last seen offset {}. " +
                                 "Trimming files in topic {} partition {}",

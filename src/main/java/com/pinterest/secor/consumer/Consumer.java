@@ -18,6 +18,7 @@
  */
 package com.pinterest.secor.consumer;
 
+import com.pinterest.secor.common.DeterministicUploadPolicyTracker;
 import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
@@ -57,6 +58,7 @@ public class Consumer extends Thread {
     protected MessageWriter mMessageWriter;
     protected MessageParser mMessageParser;
     protected OffsetTracker mOffsetTracker;
+    private DeterministicUploadPolicyTracker mDeterministicUploadPolicyTracker;
     protected MessageTransformer mMessageTransformer;
     protected Uploader mUploader;
     // TODO(pawel): we should keep a count per topic partition.
@@ -73,6 +75,13 @@ public class Consumer extends Thread {
 
     private void init() throws Exception {
         mOffsetTracker = new OffsetTracker();
+        if (mConfig.getDeterministicUpload()) {
+            mDeterministicUploadPolicyTracker = new DeterministicUploadPolicyTracker(
+                mConfig.getMaxFileTimestampRangeMillis(), mConfig.getMaxInputPayloadSizeBytes()
+            );
+        } else {
+          mDeterministicUploadPolicyTracker = null;
+        }
         mMessageReader = new MessageReader(mConfig, mOffsetTracker);
         mMetricCollector = ReflectionUtil.createMetricCollector(mConfig.getMetricsCollectorClass());
 
@@ -80,14 +89,18 @@ public class Consumer extends Thread {
         UploadManager uploadManager = ReflectionUtil.createUploadManager(mConfig.getUploadManagerClass(), mConfig);
 
         mUploader = ReflectionUtil.createUploader(mConfig.getUploaderClass());
-        mUploader.init(mConfig, mOffsetTracker, fileRegistry, uploadManager, mMessageReader, mMetricCollector);
-        mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry);
+        mUploader.init(mConfig, mOffsetTracker, fileRegistry, uploadManager, mMessageReader, mMetricCollector,
+                       mDeterministicUploadPolicyTracker);
+        mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry, mDeterministicUploadPolicyTracker);
         mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
         mMessageTransformer = ReflectionUtil.createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);
         mUnparsableMessages = 0.;
 
         mUploadOnShutdown = mConfig.getUploadOnShutdown();
         if (mUploadOnShutdown) {
+            if (mDeterministicUploadPolicyTracker != null) {
+                throw new RuntimeException("Can't set secor.upload.on.shutdown with secor.upload.deterministic!");
+            }
             Runtime.getRuntime().addShutdownHook(this.new FinalUploadShutdownHook());
         }
     }
@@ -143,14 +156,17 @@ public class Consumer extends Thread {
                 }
 
                 long now = System.currentTimeMillis();
-                if (nMessages++ % checkMessagesPerSecond == 0 ||
+                if (mDeterministicUploadPolicyTracker != null ||
+                    nMessages++ % checkMessagesPerSecond == 0 ||
                     (now - lastChecked) > checkEveryNSeconds * 1000) {
                     lastChecked = now;
                     checkUploadPolicy(false);
                 }
             }
-            LOG.info("Done reading messages; uploading what we have");
-            checkUploadPolicy(true);
+            if (mDeterministicUploadPolicyTracker == null) {
+                LOG.info("Done reading messages; uploading what we have");
+                checkUploadPolicy(true);
+            }
             LOG.info("Consumer thread done");
         } catch (Throwable t) {
             LOG.error("Thread failed", t);
@@ -223,6 +239,9 @@ public class Consumer extends Thread {
                         LOG.trace("Failed to write message " + parsedMessage, e);
                     }
                     throw new RuntimeException("Failed to write message " + parsedMessage.toTruncatedString(), e);
+                }
+                if (mDeterministicUploadPolicyTracker != null) {
+                  mDeterministicUploadPolicyTracker.track(rawMessage);
                 }
             }
         }

@@ -62,7 +62,8 @@ public class UploaderTest extends TestCase {
                             UploadManager uploadManager,
                             MessageReader messageReader,
                             ZookeeperConnector zookeeperConnector) {
-            init(config, offsetTracker, fileRegistry, uploadManager, messageReader, zookeeperConnector, Mockito.mock(MetricCollector.class));
+            init(config, offsetTracker, fileRegistry, uploadManager, messageReader, zookeeperConnector,
+                 Mockito.mock(MetricCollector.class), null);
             mReader = Mockito.mock(FileReader.class);
         }
 
