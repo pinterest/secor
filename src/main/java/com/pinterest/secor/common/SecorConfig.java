@@ -277,6 +277,18 @@ public class SecorConfig {
         return getBoolean("secor.upload.on.shutdown");
     }
 
+    public boolean getDeterministicUpload() {
+        return getBoolean("secor.upload.deterministic");
+    }
+
+    public long getMaxFileTimestampRangeMillis() {
+        return getLong("secor.max.file.timestamp.range.millis");
+    }
+
+    public long getMaxInputPayloadSizeBytes() {
+        return getLong("secor.max.input.payload.size.bytes");
+    }
+
     public boolean getFileAgeYoungest() {
         return getBoolean("secor.file.age.youngest");
     }

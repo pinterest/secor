@@ -18,6 +18,7 @@
  */
 package com.pinterest.secor.writer;
 
+import com.pinterest.secor.common.DeterministicUploadPolicyTracker;
 import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.OffsetTracker;
@@ -47,16 +48,19 @@ public class MessageWriter {
     protected SecorConfig mConfig;
     protected OffsetTracker mOffsetTracker;
     protected FileRegistry mFileRegistry;
+    private DeterministicUploadPolicyTracker mDeterministicUploadPolicyTracker;
     protected String mFileExtension;
     protected CompressionCodec mCodec;
     protected String mLocalPrefix;
     protected final int mGeneration;
 
     public MessageWriter(SecorConfig config, OffsetTracker offsetTracker,
-                         FileRegistry fileRegistry) throws Exception {
+                         FileRegistry fileRegistry,
+                         DeterministicUploadPolicyTracker deterministicUploadPolicyTracker) throws Exception {
         mConfig = config;
         mOffsetTracker = offsetTracker;
         mFileRegistry = fileRegistry;
+        mDeterministicUploadPolicyTracker = deterministicUploadPolicyTracker;
         if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
             mCodec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
             mFileExtension = mCodec.getDefaultExtension();
@@ -83,6 +87,9 @@ public class MessageWriter {
                     message, lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
 
             mFileRegistry.deleteTopicPartition(topicPartition);
+            if (mDeterministicUploadPolicyTracker != null) {
+                mDeterministicUploadPolicyTracker.reset(topicPartition);
+            }
         }
         mOffsetTracker.setLastSeenOffset(topicPartition, message.getOffset());
     }
