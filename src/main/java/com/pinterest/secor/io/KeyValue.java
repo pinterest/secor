@@ -18,6 +18,10 @@
  */
 package com.pinterest.secor.io;
 
+import com.pinterest.secor.message.MessageHeader;
+
+import java.util.List;
+
 /**
  * Generic Object used to read next message from various file reader
  * implementations
@@ -31,6 +35,7 @@ public class KeyValue {
 	private final byte[] mKafkaKey;
 	private final byte[] mValue;
 	private final long mTimestamp;
+	private List<MessageHeader> mHeaders;
 
 	// constructor
 	public KeyValue(long offset, byte[] value) {
@@ -56,6 +61,15 @@ public class KeyValue {
 		this.mTimestamp = timestamp;
 	}
 
+	// constructor
+	public KeyValue(long offset, byte[] kafkaKey, byte[] value, long timestamp, List<MessageHeader> headers) {
+		this.mOffset = offset;
+		this.mKafkaKey = kafkaKey;
+		this.mValue = value;
+		this.mTimestamp = timestamp;
+		this.mHeaders = headers;
+	}
+
 	public long getOffset() {
 		return this.mOffset;
 	}
@@ -78,5 +92,9 @@ public class KeyValue {
 
 	public boolean hasTimestamp(){
 		return this.mTimestamp != -1;
+	}
+
+	public List<MessageHeader> getHeaders() {
+		return mHeaders;
 	}
 }
