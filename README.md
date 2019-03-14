@@ -27,6 +27,9 @@ cd secor
 ##### Customize configuration parameters
 Edit `src/main/config/*.properties` files to specify parameters describing the environment. Those files contain comments describing the meaning of individual parameters.
 
+##### Kafka Headers support
+Kafka headers are only supported with kafka 2.0.0 or higher, compile secor with `-Pkafka-2.0.0` to use kafka 2.0.0 libraries. 
+
 ##### Create and install jars
 ```sh
 # By default this will install the "kafka-0.10.2.0" profile

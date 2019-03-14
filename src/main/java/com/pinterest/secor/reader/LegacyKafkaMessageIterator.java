@@ -68,7 +68,7 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
 
         return new Message(kafkaMessage.topic(), kafkaMessage.partition(),
                 kafkaMessage.offset(), kafkaMessage.key(),
-                kafkaMessage.message(), timestamp);
+                kafkaMessage.message(), timestamp, null);
     }
 
     @Override

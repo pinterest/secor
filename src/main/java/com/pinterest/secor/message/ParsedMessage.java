@@ -20,6 +20,7 @@ package com.pinterest.secor.message;
 
 import java.lang.String;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Parsed message is a Kafka message that has been processed by the parser that extracted its
@@ -42,8 +43,8 @@ public class ParsedMessage extends Message {
     }
 
     public ParsedMessage(String topic, int kafkaPartition, long offset, byte[] kafkaKey, byte[] payload,
-                         String[] mPartitions, long timestamp) {
-        super(topic, kafkaPartition, offset, kafkaKey, payload, timestamp);
+                         String[] mPartitions, long timestamp, List<MessageHeader> headers) {
+        super(topic, kafkaPartition, offset, kafkaKey, payload, timestamp, headers);
         this.mPartitions = mPartitions;
     }
 

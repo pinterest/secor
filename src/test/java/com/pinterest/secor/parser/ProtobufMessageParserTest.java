@@ -43,7 +43,7 @@ public class ProtobufMessageParserTest extends TestCase {
         byte data[] = new byte[16];
         CodedOutputStream output = CodedOutputStream.newInstance(data);
         output.writeUInt64(1, timestamp);
-        return new Message("test", 0, 0, null, data, timestamp);
+        return new Message("test", 0, 0, null, data, timestamp, null);
     }
 
     @Override
@@ -87,11 +87,11 @@ public class ProtobufMessageParserTest extends TestCase {
 
         UnitTestMessage1 message = UnitTestMessage1.newBuilder().setTimestamp(1405970352L).build();
         assertEquals(1405970352000l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp)));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp, null)));
 
         message = UnitTestMessage1.newBuilder().setTimestamp(1405970352123l).build();
         assertEquals(1405970352123l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp)));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp, null)));
     }
 
     @Test
@@ -106,11 +106,11 @@ public class ProtobufMessageParserTest extends TestCase {
         UnitTestMessage2 message = UnitTestMessage2.newBuilder()
                 .setInternal(UnitTestMessage2.Internal.newBuilder().setTimestamp(1405970352L).build()).build();
         assertEquals(1405970352000l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp)));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp, null)));
 
         message = UnitTestMessage2.newBuilder()
                 .setInternal(UnitTestMessage2.Internal.newBuilder().setTimestamp(1405970352123l).build()).build();
         assertEquals(1405970352123l,
-                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp)));
+                parser.extractTimestampMillis(new Message("test", 0, 0, null, message.toByteArray(), timestamp, null)));
     }
 }

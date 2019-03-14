@@ -53,7 +53,7 @@ public class ThriftMessageParserTest extends TestCase {
         TSerializer serializer = new TSerializer(new TBinaryProtocol.Factory());
         byte[] data = serializer.serialize(thriftMessage);
 
-        return new Message("test", 0, 0, null, data, timestamp);
+        return new Message("test", 0, 0, null, data, timestamp, null);
     }
 
     @Test
