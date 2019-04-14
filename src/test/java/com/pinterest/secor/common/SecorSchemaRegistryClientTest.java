@@ -99,5 +99,8 @@ public class SecorSchemaRegistryClientTest extends TestCase {
         assertEquals(output.get("data_field_1"), 1);
         assertTrue(StringUtils.equals((output.get("data_field_2")).toString(), "hello"));
         assertEquals(output.get("timestamp"), 1467176316L);
+
+        output = secorSchemaRegistryClient.decodeMessage("test-avr-topic", new byte[0]);
+        assertNull(output);
     }
 }
