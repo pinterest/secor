@@ -56,9 +56,14 @@ public class SecorSchemaRegistryClient {
     }
 
     public GenericRecord decodeMessage(String topic, byte[] message) {
+        if (message.length == 0) {
+            message = null;
+        }
         GenericRecord record = (GenericRecord) deserializer.deserialize(topic, message);
-        Schema schema = record.getSchema();
-        schemas.put(topic, schema);
+        if (record != null) {
+            Schema schema = record.getSchema();
+            schemas.put(topic, schema);
+        }
         return record;
     }
 
