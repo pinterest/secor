@@ -76,29 +76,29 @@ public class MessagePackSequenceFileReaderWriterFactory implements FileReaderWri
         @Override
         public KeyValue next() throws IOException {
             if (mReader.next(mKey, mValue)) {
-                MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(mKey.getBytes());
-                int mapSize = unpacker.unpackMapHeader();
-                long offset = 0;
-                long timestamp = -1;
-                byte[] keyBytes = EMPTY_BYTES;
-                for (int i = 0; i < mapSize; i++) {
-                    int key = unpacker.unpackInt();
-                    switch (key) {
-                        case KAFKA_MESSAGE_OFFSET:
-                            offset = unpacker.unpackLong();
-                            break;
-                        case KAFKA_MESSAGE_TIMESTAMP:
-                            timestamp = unpacker.unpackLong();
-                            break;
-                        case KAFKA_HASH_KEY:
-                            int keySize = unpacker.unpackBinaryHeader();
-                            keyBytes = new byte[keySize];
-                            unpacker.readPayload(keyBytes);
-                            break;
+                try(MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(mKey.getBytes())) {
+                    int mapSize = unpacker.unpackMapHeader();
+                    long offset = 0;
+                    long timestamp = -1;
+                    byte[] keyBytes = EMPTY_BYTES;
+                    for (int i = 0; i < mapSize; i++) {
+                        int key = unpacker.unpackInt();
+                        switch (key) {
+                            case KAFKA_MESSAGE_OFFSET:
+                                offset = unpacker.unpackLong();
+                                break;
+                            case KAFKA_MESSAGE_TIMESTAMP:
+                                timestamp = unpacker.unpackLong();
+                                break;
+                            case KAFKA_HASH_KEY:
+                                int keySize = unpacker.unpackBinaryHeader();
+                                keyBytes = new byte[keySize];
+                                unpacker.readPayload(keyBytes);
+                                break;
+                        }
                     }
+                    return new KeyValue(offset, keyBytes, Arrays.copyOfRange(mValue.getBytes(), 0, mValue.getLength()), timestamp);
                 }
-                unpacker.close();
-                return new KeyValue(offset, keyBytes, Arrays.copyOfRange(mValue.getBytes(), 0, mValue.getLength()), timestamp);
             } else {
                 return null;
             }
