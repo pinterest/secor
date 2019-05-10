@@ -30,12 +30,21 @@ import java.util.List;
 
 /**
  * AvroMessageParser extracts timestamp field (specified by 'message.timestamp.name')
- * from AVRO data and partitions data by date.
+ * and a custom field specified by ''message.split.field.name'.
+ * from AVRO data and partitions data by date and custom field.
+ *
+ * By default the first partition will be the fieldValue=
+ *
+ * If you want to set it to something else set 'partitioner.granularity.field.prefix'
+ *
+ * This class was heavily based off SplitByFieldMessageParser (which supports JSON). Like
+ * that other parser this parser doesn't support finalization of partitions.
  */
 public class AvroSplitByFieldMessageParser extends TimestampedMessageParser implements Partitioner {
     private static final Logger LOG = LoggerFactory.getLogger(AvroSplitByFieldMessageParser.class);
     private final String mSplitFieldName;
     private final boolean m_timestampRequired;
+    private final String mFieldPrefix;
 
     protected final SecorSchemaRegistryClient schemaRegistryClient;
 
@@ -44,8 +53,13 @@ public class AvroSplitByFieldMessageParser extends TimestampedMessageParser impl
         schemaRegistryClient = new SecorSchemaRegistryClient(config);
         m_timestampRequired = config.isMessageTimestampRequired();
         mSplitFieldName = config.getMessageSplitFieldName();
+        mFieldPrefix = usingFieldPrefix(config);
+
     }
 
+    static String usingFieldPrefix(SecorConfig config) {
+        return config.getString("partitioner.granularity.field.prefix", config.getMessageSplitFieldName() + "=");
+    }
 
     @Override
     public long extractTimestampMillis(Message message) throws Exception {
@@ -63,7 +77,7 @@ public class AvroSplitByFieldMessageParser extends TimestampedMessageParser impl
         long timestampMillis = extractTimestampMillis(record);
 
         String[] timestampPartitions = generatePartitions(timestampMillis, mUsingHourly, mUsingMinutely);
-        return (String[]) ArrayUtils.addAll(new String[]{eventType}, timestampPartitions);
+        return (String[]) ArrayUtils.addAll(new String[]{mFieldPrefix + eventType}, timestampPartitions);
     }
 
     @Override
