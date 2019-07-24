@@ -82,7 +82,7 @@ public class SecorKafkaClient implements KafkaClient {
         int pollAttempts = 0;
         Message message = null;
         while (pollAttempts < MAX_READ_POLL_ATTEMPTS) {
-            Iterator<ConsumerRecord<byte[], byte[]>> records = kafkaConsumer.poll(Duration.ofMillis(mPollTimeout)).iterator();
+            Iterator<ConsumerRecord<byte[], byte[]>> records = kafkaConsumer.poll(Duration.ofSeconds(mPollTimeout)).iterator();
             if (!records.hasNext()) {
                 pollAttempts++;
             } else {
