@@ -11,10 +11,10 @@ build:
 	@mvn package $(MVN_OPTS) -P $(MVN_PROFILE)
 
 dependency_tree:
-	@mvn dependency:tree -P $(MVN_PROFILE)
+	@mvn dependency:tree $(MVN_OPTS) -P $(MVN_PROFILE)
 
 unit:
-	@mvn test -P $(MVN_PROFILE)
+	@mvn test $(MVN_OPTS) -P $(MVN_PROFILE)
 
 integration: build
 	@rm -rf $(TEST_HOME)
