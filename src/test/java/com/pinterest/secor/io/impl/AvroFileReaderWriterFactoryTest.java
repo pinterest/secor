@@ -25,28 +25,19 @@ import com.pinterest.secor.common.SecorSchemaRegistryClient;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
-import com.pinterest.secor.util.ReflectionUtil;
+import com.pinterest.secor.util.AvroSerializer;
 import junit.framework.TestCase;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyByte;
+import static org.junit.Assert.assertArrayEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -76,13 +67,13 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
         writer = new SpecificDatumWriter(schema);
 
         config = Mockito.mock(SecorConfig.class);
-        when(config.getSchemaRegistryUrl()).thenReturn("");
+        when(config.getSchemaRegistryUrl()).thenReturn("test");
         secorSchemaRegistryClient = Mockito.mock(SecorSchemaRegistryClient.class);
         when(secorSchemaRegistryClient.getSchema(anyString())).thenReturn(schema);
         mFactory = new AvroFileReaderWriterFactory(config);
-        when(secorSchemaRegistryClient.decodeMessage("test-avro-topic", AvroFileReaderWriterFactory.serializeAvroRecord(writer, msg1))).thenReturn(msg1);
-        when(secorSchemaRegistryClient.decodeMessage("test-avro-topic", AvroFileReaderWriterFactory.serializeAvroRecord(writer, msg2))).thenReturn(msg2);
-        mFactory.schemaRegistryClient = secorSchemaRegistryClient;
+        when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg1))).thenReturn(msg1);
+        when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg2))).thenReturn(msg2);
+        mFactory.schemaRegistry = secorSchemaRegistryClient;
     }
 
     @Test
@@ -95,8 +86,8 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
 
         FileWriter fileWriter = mFactory.BuildFileWriter(tempLogFilePath, null);
 
-        KeyValue kv1 = (new KeyValue(23232, AvroFileReaderWriterFactory.serializeAvroRecord(writer, msg1)));
-        KeyValue kv2 = (new KeyValue(23233, AvroFileReaderWriterFactory.serializeAvroRecord(writer, msg2)));
+        KeyValue kv1 = (new KeyValue(23232, AvroSerializer.serialize(writer, msg1)));
+        KeyValue kv2 = (new KeyValue(23233, AvroSerializer.serialize(writer, msg2)));
 
         fileWriter.write(kv1);
         fileWriter.write(kv2);
@@ -107,11 +98,11 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
         KeyValue kvout = fileReader.next();
         assertEquals(kv1.getOffset(), kvout.getOffset());
         assertArrayEquals(kv1.getValue(), kvout.getValue());
-        assertEquals(msg1, secorSchemaRegistryClient.decodeMessage("test-avro-topic", kvout.getValue()));
+        assertEquals(msg1, secorSchemaRegistryClient.deserialize("test-avro-topic", kvout.getValue()));
 
         kvout = fileReader.next();
         assertEquals(kv2.getOffset(), kvout.getOffset());
         assertArrayEquals(kv2.getValue(), kvout.getValue());
-        assertEquals(msg2, secorSchemaRegistryClient.decodeMessage("test-avro-topic", kvout.getValue()));
+        assertEquals(msg2, secorSchemaRegistryClient.deserialize("test-avro-topic", kvout.getValue()));
     }
 }
