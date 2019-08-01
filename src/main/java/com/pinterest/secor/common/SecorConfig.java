@@ -26,11 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -782,9 +778,13 @@ public class SecorConfig {
         }
         return map;
     }
-    
+
     public Map<String, String> getORCMessageSchema() {
         return getPropertyMapForPrefix("secor.orc.message.schema");
+    }
+
+    public Map<String, String> getAvroMessageSchema() {
+        return getPropertyMapForPrefix("secor.avro.message.schema");
     }
     
     public String getORCSchemaProviderClass(){

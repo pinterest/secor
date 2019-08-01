@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SecorSchemaRegistryClient {
+public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecorSchemaRegistryClient.class);
 
@@ -55,7 +55,7 @@ public class SecorSchemaRegistryClient {
         deserializer = new KafkaAvroDeserializer(schemaRegistryClient);
     }
 
-    public GenericRecord decodeMessage(String topic, byte[] message) {
+    public GenericRecord deserialize(String topic, byte[] message) {
         if (message.length == 0) {
             message = null;
         }

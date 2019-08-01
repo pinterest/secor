@@ -19,35 +19,27 @@
 package com.pinterest.secor.io.impl;
 
 import com.google.common.io.Files;
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.SecorSchemaRegistryClient;
+import com.pinterest.secor.common.*;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
-import com.pinterest.secor.util.ReflectionUtil;
+import com.pinterest.secor.util.AvroSerializer;
 import junit.framework.TestCase;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyByte;
+import static org.junit.Assert.assertArrayEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -57,13 +49,19 @@ public class AvroParquetFileReaderWriterFactoryTest extends TestCase {
     private AvroParquetFileReaderWriterFactory mFactory;
     private SpecificDatumWriter<GenericRecord> writer;
     private SecorConfig config;
-    private SecorSchemaRegistryClient secorSchemaRegistryClient;
-    private  GenericRecord msg1;
-    private  GenericRecord msg2;
+    private GenericRecord msg1;
+    private GenericRecord msg2;
 
     @Override
     public void setUp() throws Exception {
+        config = Mockito.mock(SecorConfig.class);
+        when(config.getSchemaRegistryUrl()).thenReturn("test");
 
+        mFactory = new AvroParquetFileReaderWriterFactory(config);
+    }
+
+    @Test
+    public void testAvroParquetReadWriteRoundTripUsingSchemaRegistry() throws Exception {
         Schema schema = SchemaBuilder.record("UnitTestRecord")
                 .fields()
                 .name("data").type().stringType().noDefault()
@@ -76,28 +74,48 @@ public class AvroParquetFileReaderWriterFactoryTest extends TestCase {
 
         writer = new SpecificDatumWriter(schema);
 
-        config = Mockito.mock(SecorConfig.class);
-        when(config.getSchemaRegistryUrl()).thenReturn("");
-        secorSchemaRegistryClient = Mockito.mock(SecorSchemaRegistryClient.class);
+        SecorSchemaRegistryClient secorSchemaRegistryClient = Mockito.mock(SecorSchemaRegistryClient.class);
         when(secorSchemaRegistryClient.getSchema(anyString())).thenReturn(schema);
-        mFactory = new AvroParquetFileReaderWriterFactory(config);
-        when(secorSchemaRegistryClient.decodeMessage("test-avro-topic", AvroParquetFileReaderWriterFactory.serializeAvroRecord(writer, msg1))).thenReturn(msg1);
-        when(secorSchemaRegistryClient.decodeMessage("test-avro-topic", AvroParquetFileReaderWriterFactory.serializeAvroRecord(writer, msg2))).thenReturn(msg2);
-        mFactory.schemaRegistryClient = secorSchemaRegistryClient;
-    }
-
-    @Test
-    public void testAvroParquetReadWriteRoundTrip() throws Exception {
+        when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg1))).thenReturn(msg1);
+        when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg2))).thenReturn(msg2);
+        mFactory.schemaRegistry = secorSchemaRegistryClient;
         when(config.getFileReaderWriterFactory())
                 .thenReturn(AvroParquetFileReaderWriterFactory.class.getName());
 
+        testAvroParquetReadWriteRoundTrip(secorSchemaRegistryClient);
+    }
+
+    @Test
+    public void testAvroParquetReadWriteRoundTripWithoutSchemaRegistry() throws Exception {
+        Schema schema = new Schema.Parser().parse(getClass().getResourceAsStream("/unittest.avsc"));
+
+        GenericRecordBuilder builder = new GenericRecordBuilder(schema);
+        msg1 = builder.set("field1", "foo").set("field2", 1467176315L).build();
+        msg2 = builder.set("field1", "bar").set("field2", 1467176344L).build();
+
+        writer = new SpecificDatumWriter(schema);
+
+        Map<String, String> avroSchemas = Stream
+                .of(new String[][]{
+                        {"test-avro-topic", "/unittest.avsc"}
+                }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+        when(config.getAvroMessageSchema()).thenReturn(avroSchemas);
+        ConfigurableAvroSchemaRegistry configurableAvroSchemaRegistry = new ConfigurableAvroSchemaRegistry(config);
+        mFactory.schemaRegistry = configurableAvroSchemaRegistry;
+        when(config.getFileReaderWriterFactory())
+                .thenReturn(AvroParquetFileReaderWriterFactory.class.getName());
+
+        testAvroParquetReadWriteRoundTrip(configurableAvroSchemaRegistry);
+    }
+
+    private void testAvroParquetReadWriteRoundTrip(AvroSchemaRegistry schemaRegistry) throws Exception {
         LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-avro-topic",
                 new String[] { "part-1" }, 0, 1, 23232, ".avro");
 
         FileWriter fileWriter = mFactory.BuildFileWriter(tempLogFilePath, null);
 
-        KeyValue kv1 = (new KeyValue(23232, AvroParquetFileReaderWriterFactory.serializeAvroRecord(writer, msg1)));
-        KeyValue kv2 = (new KeyValue(23233, AvroParquetFileReaderWriterFactory.serializeAvroRecord(writer, msg2)));
+        KeyValue kv1 = (new KeyValue(23232, AvroSerializer.serialize(writer, msg1)));
+        KeyValue kv2 = (new KeyValue(23233, AvroSerializer.serialize(writer, msg2)));
 
         fileWriter.write(kv1);
         fileWriter.write(kv2);
@@ -108,11 +126,11 @@ public class AvroParquetFileReaderWriterFactoryTest extends TestCase {
         KeyValue kvout = fileReader.next();
         assertEquals(kv1.getOffset(), kvout.getOffset());
         assertArrayEquals(kv1.getValue(), kvout.getValue());
-        assertEquals(msg1, secorSchemaRegistryClient.decodeMessage("test-avro-topic", kvout.getValue()));
+        assertEquals(msg1, schemaRegistry.deserialize("test-avro-topic", kvout.getValue()));
 
         kvout = fileReader.next();
         assertEquals(kv2.getOffset(), kvout.getOffset());
         assertArrayEquals(kv2.getValue(), kvout.getValue());
-        assertEquals(msg2, secorSchemaRegistryClient.decodeMessage("test-avro-topic", kvout.getValue()));
+        assertEquals(msg2, schemaRegistry.deserialize("test-avro-topic", kvout.getValue()));
     }
 }

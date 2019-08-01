@@ -18,15 +18,14 @@
  */
 package com.pinterest.secor.parser;
 
+import com.pinterest.secor.common.AvroSchemaRegistry;
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.SecorSchemaRegistryClient;
 import com.pinterest.secor.message.Message;
-
+import com.pinterest.secor.util.AvroSchemaRegistryFactory;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 import javax.xml.bind.DatatypeConverter;
 import java.util.Date;
@@ -40,18 +39,18 @@ public class AvroIso8601MessageParser extends TimestampedMessageParser {
     private static final Logger LOG = LoggerFactory.getLogger(AvroMessageParser.class);
 
     private final boolean m_timestampRequired;
-    protected final SecorSchemaRegistryClient schemaRegistryClient;
+    private final AvroSchemaRegistry schemaRegistry;
 
     public AvroIso8601MessageParser(SecorConfig config) {
         super(config);
-        schemaRegistryClient = new SecorSchemaRegistryClient(config);
+        schemaRegistry = AvroSchemaRegistryFactory.getSchemaRegistry(config);
         m_timestampRequired = config.isMessageTimestampRequired();
     }
 
     @Override
     public long extractTimestampMillis(final Message message) {
         try {
-            GenericRecord record = schemaRegistryClient.decodeMessage(message.getTopic(), message.getPayload());
+            GenericRecord record = schemaRegistry.deserialize(message.getTopic(), message.getPayload());
             if (record != null) {
                 Object fieldValue = record.get(mConfig.getMessageTimestampName());
                 if (fieldValue != null) {
