@@ -363,6 +363,10 @@ public class SecorConfig {
         return getString("secor.upload.manager.class");
     }
 
+    public String getInnerUploadManagerClass() {
+        return getString("secor.inner.upload.manager.class");
+    }
+
     public String getMessageTransformerClass(){
     	return getString("secor.message.transformer.class");
     }
@@ -570,6 +574,10 @@ public class SecorConfig {
 
     public String getFileReaderWriterFactory() {
     	return getString("secor.file.reader.writer.factory");
+    }
+
+    public String getDestinationFileReaderWriterFactory() {
+    	return getString("secor.file.destination.reader.writer.factory");
     }
 
     public String getFileReaderDelimiter(){
