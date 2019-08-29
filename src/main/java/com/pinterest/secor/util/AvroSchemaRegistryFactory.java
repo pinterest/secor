@@ -19,6 +19,7 @@
 package com.pinterest.secor.util;
 
 import com.pinterest.secor.common.AvroSchemaRegistry;
+import com.pinterest.secor.common.ClasspathConfigurableAvroSchemaRegistry;
 import com.pinterest.secor.common.ConfigurableAvroSchemaRegistry;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.SecorSchemaRegistryClient;
@@ -30,6 +31,8 @@ public class AvroSchemaRegistryFactory {
             return new SecorSchemaRegistryClient(config);
         } else if (!config.getAvroMessageSchema().isEmpty()) {
             return new ConfigurableAvroSchemaRegistry(config);
+        } else if (!config.getAvroSpecificClassesSchemas().isEmpty()) {
+            return new ClasspathConfigurableAvroSchemaRegistry(config);
         } else {
             throw new RuntimeException("Schema registry URL or schema map must be specified");
         }

@@ -522,7 +522,7 @@ public class SecorConfig {
     }
 
     public String getMessageTimestampName() {
-        return getString("message.timestamp.name");
+        return getString("message.timestamp.name", "");
     }
 
     public String getMessageTimestampNameSeparator() {
@@ -786,7 +786,11 @@ public class SecorConfig {
     public Map<String, String> getAvroMessageSchema() {
         return getPropertyMapForPrefix("secor.avro.message.schema");
     }
-    
+
+    public Map<String, String> getAvroSpecificClassesSchemas() {
+        return getPropertyMapForPrefix("secor.avro.message.class");
+    }
+
     public String getORCSchemaProviderClass(){
         return getString("secor.orc.schema.provider");
     }
