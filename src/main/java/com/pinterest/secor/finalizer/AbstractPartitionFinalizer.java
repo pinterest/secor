@@ -18,10 +18,16 @@
  */
 package com.pinterest.secor.finalizer;
 
-import com.pinterest.secor.common.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Stack;
+
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.common.kafka.KafkaClient;
-import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.common.kafka.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.parser.TimestampedMessageParser;
@@ -32,29 +38,23 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
-
 /**
  * Partition finalizer writes _SUCCESS files to date partitions that very likely won't be receiving
  * any new messages. It also adds those partitions to Hive.
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
-public class PartitionFinalizer {
-    private static final Logger LOG = LoggerFactory.getLogger(PartitionFinalizer.class);
+public abstract class AbstractPartitionFinalizer {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractPartitionFinalizer.class);
 
-    private final SecorConfig              mConfig;
-    private final ZookeeperConnector       mZookeeperConnector;
-    private final TimestampedMessageParser mMessageParser;
-    private final KafkaClient              mKafkaClient;
-    private final QuboleClient             mQuboleClient;
-    private final String                   mFileExtension;
-    private final int                      mLookbackPeriods;
+    protected final SecorConfig              mConfig;
+    private final   ZookeeperConnector       mZookeeperConnector;
+    private final   TimestampedMessageParser mMessageParser;
+    private final   KafkaClient              mKafkaClient;
+    private final   String                   mFileExtension;
+    private final   int                      mLookbackPeriods;
 
-    public PartitionFinalizer(SecorConfig config) throws Exception {
+    AbstractPartitionFinalizer(SecorConfig config) throws Exception {
         mConfig = config;
         Class kafkaClientClass = Class.forName(mConfig.getKafkaClientClass());
         this.mKafkaClient = (KafkaClient) kafkaClientClass.newInstance();
@@ -62,7 +62,6 @@ public class PartitionFinalizer {
         mZookeeperConnector = new ZookeeperConnector(mConfig);
         mMessageParser = (TimestampedMessageParser) ReflectionUtil.createMessageParser(
           mConfig.getMessageParserClass(), mConfig);
-        mQuboleClient = new QuboleClient(mConfig);
         if (mConfig.getFileExtension() != null && !mConfig.getFileExtension().isEmpty()) {
             mFileExtension = mConfig.getFileExtension();
         } else if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
@@ -77,8 +76,8 @@ public class PartitionFinalizer {
 
     private String[] getFinalizedUptoPartitions(String topic) throws Exception {
         final int numPartitions = mKafkaClient.getNumPartitions(topic);
-        List<Message> lastMessages = new ArrayList<Message>(numPartitions);
-        List<Message> committedMessages = new ArrayList<Message>(numPartitions);
+        List<Message> lastMessages = new ArrayList<>(numPartitions);
+        List<Message> committedMessages = new ArrayList<>(numPartitions);
         for (int partition = 0; partition < numPartitions; ++partition) {
             TopicPartition topicPartition = new TopicPartition(topic, partition);
             Message lastMessage = mKafkaClient.getLastMessage(topicPartition);
@@ -98,49 +97,31 @@ public class PartitionFinalizer {
 
     private void finalizePartitionsUpTo(String topic, String[] uptoPartitions) throws Exception {
         String prefix = FileUtil.getPrefix(topic, mConfig);
-        LOG.info("Finalize up to (but not include) {}, dim: {}",
-            uptoPartitions, uptoPartitions.length);
+        LOG.info("Finalize up to (but not include) {}, dim: {}", uptoPartitions, uptoPartitions.length);
 
-        String[] previous = mMessageParser.getPreviousPartitions(uptoPartitions);
-        Stack<String[]> toBeFinalized = new Stack<String[]>();
-        // Walk backwards to collect all partitions which are previous to the upTo partition
-        // Do not include the upTo partition
-        // Stop at the first partition which already have the SUCCESS file
-        for (int i = 0; i < mLookbackPeriods; i++) {
-            LOG.info("Looking for partition: " + Arrays.toString(previous));
-            LogFilePath logFilePath = new LogFilePath(prefix, topic, previous,
-                mConfig.getGeneration(), 0, 0, mFileExtension);
-
-            if (FileUtil.s3PathPrefixIsAltered(logFilePath.getLogFilePath(), mConfig)) {
-                logFilePath = logFilePath.withPrefix(FileUtil.getS3AlternativePrefix(mConfig));
-            }
-
-            String logFileDir = logFilePath.getLogFileDir();
-            if (FileUtil.exists(logFileDir)) {
-                String successFilePath = logFileDir + "/_SUCCESS";
-                if (FileUtil.exists(successFilePath)) {
-                    LOG.info(
-                        "SuccessFile exist already, short circuit return. " + successFilePath);
-                    break;
-                }
-                LOG.info("Folder {} exists and ready to be finalized.", logFileDir);
-                toBeFinalized.push(previous);
-            } else {
-                LOG.info("Folder {} doesn't exist, skip", logFileDir);
-            }
-            previous = mMessageParser.getPreviousPartitions(previous);
-        }
+        Stack<String[]> toBeFinalized = collectPartitionsToBeFinalized(topic, uptoPartitions, prefix);
 
         LOG.info("To be finalized partitions: {}", toBeFinalized);
         if (toBeFinalized.isEmpty()) {
             LOG.warn("There is no partitions to be finalized.");
             return;
         }
+        finalizePartitions(topic, uptoPartitions, prefix, toBeFinalized);
+    }
 
-        // Now walk forward the collected partitions to do the finalization
-        // Note we are deliberately walking backwards and then forwards to make sure we don't
-        // end up in a situation that a later date partition is finalized and then the system
-        // crashes (which creates unfinalized partition folders in between)
+    /**
+     * Now walk forward the collected partitions to do the finalization
+     * Note we are deliberately walking backwards and then forwards to make sure we don't
+     * end up in a situation that a later date partition is finalized and then the system
+     * crashes (which creates unfinalized partition folders in between)
+     * @param topic
+     * @param uptoPartitions
+     * @param prefix
+     * @param toBeFinalized
+     * @throws Exception
+     */
+    private void finalizePartitions(String topic, String[] uptoPartitions, String prefix, Stack<String[]> toBeFinalized) throws Exception {
+
         while (!toBeFinalized.isEmpty()) {
             String[] current = toBeFinalized.pop();
             LOG.info("Finalizing partition: " + Arrays.toString(current));
@@ -163,44 +144,82 @@ public class PartitionFinalizer {
                         sb.append(parts[1]);
                         sb.append("'");
                     }
-                    LOG.info("Hive partition string: " + sb);
-
-                    String hiveTableName = mConfig.getHiveTableName(topic);
-                    LOG.info("Hive table name from config: {}", hiveTableName);
-                    if (hiveTableName == null) {
-                        String hivePrefix = null;
-                        try {
-                            hivePrefix = mConfig.getHivePrefix();
-                            hiveTableName = hivePrefix + topic;
-                            LOG.info("Hive table name from prefix: {}", hiveTableName);
-                        } catch (RuntimeException ex) {
-                            LOG.warn("HivePrefix is not defined.  Skip hive registration");
-                        }
-                    }
-                    if (hiveTableName != null && mConfig.getQuboleEnabled()) {
-                        mQuboleClient.addPartition(hiveTableName, sb.toString());
-                    }
+                    addPartition(topic, sb.toString());
                 } catch (Exception e) {
                     LOG.error("failed to finalize topic " + topic, e);
                     continue;
                 }
             }
+            generateSuccessFile(topic, prefix, current);
+        }
+    }
 
-            // Generate the SUCCESS file at the end
-            LogFilePath logFilePath = new LogFilePath(prefix, topic, current,
+    public abstract void addPartition(String topic, String toString) throws IOException, InterruptedException;
+
+    /***
+     * Walk backwards to collect all partitions which are previous to the upTo partition
+     * Do not include the upTo partition
+     *  Stop at the first partition which already have the SUCCESS file
+     * @param topic
+     * @param uptoPartitions
+     * @param prefix
+     * @return
+     * @throws Exception
+     */
+    private Stack<String[]> collectPartitionsToBeFinalized(String topic, String[] uptoPartitions, String prefix) throws Exception {
+        String[] previous = mMessageParser.getPreviousPartitions(uptoPartitions);
+        Stack<String[]> toBeFinalized = new Stack<>();
+
+        for (int i = 0; i < mLookbackPeriods; i++) {
+            LOG.info("Looking for partition: " + Arrays.toString(previous));
+            LogFilePath logFilePath = new LogFilePath(prefix, topic, previous,
                 mConfig.getGeneration(), 0, 0, mFileExtension);
 
             if (FileUtil.s3PathPrefixIsAltered(logFilePath.getLogFilePath(), mConfig)) {
                 logFilePath = logFilePath.withPrefix(FileUtil.getS3AlternativePrefix(mConfig));
-                LOG.info("Will finalize alternative s3 logFilePath {}", logFilePath);
             }
 
             String logFileDir = logFilePath.getLogFileDir();
-            String successFilePath = logFileDir + "/_SUCCESS";
-
-            LOG.info("touching file {}", successFilePath);
-            FileUtil.touch(successFilePath);
+            LOG.info("Scanning log file dir : " + logFileDir);
+            if (FileUtil.exists(logFileDir)) {
+                String successFilePath = logFileDir + "/_SUCCESS";
+                if (FileUtil.exists(successFilePath)) {
+                    LOG.info(
+                        "SuccessFile exist already, short circuit return. " + successFilePath);
+                    break;
+                }
+                LOG.info("Folder {} exists and ready to be finalized.", logFileDir);
+                toBeFinalized.push(previous);
+            } else {
+                LOG.info("Folder {} doesn't exist, skip", logFileDir);
+            }
+            previous = mMessageParser.getPreviousPartitions(previous);
         }
+        return toBeFinalized;
+    }
+
+    /**
+     * Generate the SUCCESS file at the end
+     *
+     * @param topic
+     * @param prefix
+     * @param current
+     * @throws Exception
+     */
+    public void generateSuccessFile(String topic, String prefix, String[] current) throws Exception {
+        LogFilePath logFilePath = new LogFilePath(prefix, topic, current,
+          mConfig.getGeneration(), 0, 0, mFileExtension);
+
+        if (FileUtil.s3PathPrefixIsAltered(logFilePath.getLogFilePath(), mConfig)) {
+            logFilePath = logFilePath.withPrefix(FileUtil.getS3AlternativePrefix(mConfig));
+            LOG.info("Will finalize alternative s3 logFilePath {}", logFilePath);
+        }
+
+        String logFileDir = logFilePath.getLogFileDir();
+        String successFilePath = logFileDir + "/_SUCCESS";
+
+        LOG.info("touching file {}", successFilePath);
+        FileUtil.touch(successFilePath);
     }
 
     public void finalizePartitions() throws Exception {
@@ -211,7 +230,7 @@ public class PartitionFinalizer {
             } else {
                 LOG.info("finalizing topic {}", topic);
                 String[] partitions = getFinalizedUptoPartitions(topic);
-                LOG.info("finalized timestamp for topic {} is {}", topic , partitions);
+                LOG.info("finalized timestamp for topic {} is {}", topic, partitions);
                 if (partitions != null) {
                     finalizePartitionsUpTo(topic, partitions);
                 }

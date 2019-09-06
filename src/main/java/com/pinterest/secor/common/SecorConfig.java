@@ -18,6 +18,8 @@
  */
 package com.pinterest.secor.common;
 
+import java.util.*;
+
 import com.google.common.base.Strings;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.ConfigurationUtils;
@@ -25,8 +27,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -417,6 +417,10 @@ public class SecorConfig {
         return getString("aws.role");
     }
 
+    public String getAWSCredentialsProvider() {
+        return getString("aws.credentials.provider","");
+    }
+
     public boolean getAwsClientPathStyleAccess() {
         return getBoolean("aws.client.pathstyleaccess", false);
     }
@@ -564,12 +568,24 @@ public class SecorConfig {
         return mProperties.getString(key, null);
     }
 
-    public boolean getQuboleEnabled() {
-        return getBoolean("secor.enable.qubole");
+    public boolean getMetastoreEnabled() {
+        return getBoolean("secor.enable.metastore");
+    }
+
+    public String getMetastoreToUpdate() {
+        return getString("secor.metastore.enabled","Hive");
     }
 
     public long getQuboleTimeoutMs() {
         return getLong("secor.qubole.timeout.ms");
+    }
+
+    public int getGlueTimeoutMs() {
+        return getInt("secor.glue.timeout.ms",3 * 60000);
+    }
+
+    public String getGlueDatabaseName() {
+        return getString("secor.glue.database.name");
     }
 
     public String getCompressionCodec() {
@@ -739,6 +755,10 @@ public class SecorConfig {
 
     public long getLong(String name) {
         return mProperties.getLong(name);
+    }
+
+    public long getLong(String name, Long defaultValue) {
+        return mProperties.getLong(name, defaultValue);
     }
 
     public String[] getStringArray(String name) {
