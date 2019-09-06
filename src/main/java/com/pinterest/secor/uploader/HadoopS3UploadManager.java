@@ -19,6 +19,7 @@
 package com.pinterest.secor.uploader;
 
 import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.util.FileUtil;
 
 import java.util.concurrent.ExecutorService;
@@ -28,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
 import java.util.concurrent.Future;
 
 /**

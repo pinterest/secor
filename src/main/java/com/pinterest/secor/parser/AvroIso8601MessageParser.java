@@ -18,7 +18,7 @@
  */
 package com.pinterest.secor.parser;
 
-import com.pinterest.secor.common.AvroSchemaRegistry;
+import com.pinterest.secor.common.kafka.AvroSchemaRegistry;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.AvroSchemaRegistryFactory;

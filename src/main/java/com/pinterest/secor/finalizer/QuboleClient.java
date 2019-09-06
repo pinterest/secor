@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.parser;
+package com.pinterest.secor.finalizer;
 
 import com.pinterest.secor.common.SecorConfig;
 import net.minidev.json.JSONObject;

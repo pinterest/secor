@@ -16,17 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.common;
+package com.pinterest.secor.common.kafka;
 
-import com.pinterest.secor.message.Message;
-import org.apache.thrift.TException;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericRecord;
 
-public interface KafkaClient {
-    int getNumPartitions(String topic);
+public interface AvroSchemaRegistry {
+    GenericRecord deserialize(String topic, byte[] payload);
 
-    Message getLastMessage(TopicPartition topicPartition) throws TException;
-
-    Message getCommittedMessage(TopicPartition topicPartition) throws Exception;
-
-    void init(SecorConfig config);
+    Schema getSchema(String topic);
 }

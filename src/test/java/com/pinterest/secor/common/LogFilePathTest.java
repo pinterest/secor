@@ -18,6 +18,7 @@
  */
 package com.pinterest.secor.common;
 
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.message.ParsedMessage;
 import junit.framework.TestCase;
 
@@ -43,7 +44,7 @@ public class LogFilePathTest extends TestCase {
             ".10_0_00000000000000000100.crc";
 
     private LogFilePath mLogFilePath;
-    private long timestamp;
+    private long        timestamp;
 
     @Override
     protected void setUp() throws Exception {

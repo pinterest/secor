@@ -18,9 +18,9 @@
  */
 package com.pinterest.secor.consumer;
 
-import com.pinterest.secor.common.DeterministicUploadPolicyTracker;
-import com.pinterest.secor.common.FileRegistry;
-import com.pinterest.secor.common.OffsetTracker;
+import com.pinterest.secor.common.files.DeterministicUploadPolicyTracker;
+import com.pinterest.secor.common.files.FileRegistry;
+import com.pinterest.secor.common.kafka.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
@@ -32,7 +32,7 @@ import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.uploader.Uploader;
 import com.pinterest.secor.util.ReflectionUtil;
-import com.pinterest.secor.writer.MessageWriter;
+import com.pinterest.secor.io.MessageWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

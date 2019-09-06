@@ -16,8 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.common;
+package com.pinterest.secor.common.kafka;
 
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.kafka.SecorSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
@@ -42,12 +44,12 @@ import static org.mockito.Mockito.when;
 @RunWith(PowerMockRunner.class)
 public class SecorSchemaRegistryClientTest extends TestCase {
 
-    private KafkaAvroDeserializer kafkaAvroDeserializer;
-    private SchemaRegistryClient schemaRegistryClient;
-    private SecorSchemaRegistryClient secorSchemaRegistryClient;
-    private SecorConfig secorConfig;
+    private KafkaAvroDeserializer              kafkaAvroDeserializer;
+    private SchemaRegistryClient               schemaRegistryClient;
+    private SecorSchemaRegistryClient          secorSchemaRegistryClient;
+    private SecorConfig                        secorConfig;
     private SpecificDatumWriter<GenericRecord> writer;
-    private KafkaAvroSerializer avroSerializer;
+    private KafkaAvroSerializer                avroSerializer;
 
     @Override
     public void setUp() {

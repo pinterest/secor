@@ -18,10 +18,10 @@
  */
 package com.pinterest.secor.util;
 
-import com.pinterest.secor.common.AvroSchemaRegistry;
-import com.pinterest.secor.common.ConfigurableAvroSchemaRegistry;
+import com.pinterest.secor.common.kafka.AvroSchemaRegistry;
+import com.pinterest.secor.common.kafka.ConfigurableAvroSchemaRegistry;
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.SecorSchemaRegistryClient;
+import com.pinterest.secor.common.kafka.SecorSchemaRegistryClient;
 import org.apache.commons.lang.StringUtils;
 
 public class AvroSchemaRegistryFactory {

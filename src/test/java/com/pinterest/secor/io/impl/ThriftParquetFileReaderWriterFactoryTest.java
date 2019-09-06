@@ -34,7 +34,7 @@ import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.google.common.io.Files;
-import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;

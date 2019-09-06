@@ -18,9 +18,9 @@
  */
 package com.pinterest.secor.reader;
 
-import com.pinterest.secor.common.OffsetTracker;
+import com.pinterest.secor.common.kafka.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.kafka.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.RateLimitUtil;

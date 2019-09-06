@@ -30,7 +30,7 @@ import org.apache.parquet.proto.ProtoParquetWriter;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
-import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;

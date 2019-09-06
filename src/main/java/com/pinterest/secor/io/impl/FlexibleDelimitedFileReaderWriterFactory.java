@@ -38,7 +38,7 @@ import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.commons.configuration.ConfigurationException;
 
 import com.google.common.io.CountingOutputStream;
-import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.common.SecorConfig;

@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 
 import org.apache.orc.TypeDescription;
 
-import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 
 /**

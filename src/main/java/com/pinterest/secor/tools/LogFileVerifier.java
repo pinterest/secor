@@ -18,9 +18,9 @@
  */
 package com.pinterest.secor.tools;
 
-import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.kafka.TopicPartition;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.CompressionUtil;

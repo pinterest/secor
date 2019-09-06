@@ -16,9 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.common;
+package com.pinterest.secor.common.kafka;
 
 import com.google.common.net.HostAndPort;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
 import kafka.api.FetchRequestBuilder;
@@ -53,8 +55,8 @@ import java.util.Map;
 public class LegacyKafkaClient implements KafkaClient {
     private static final Logger LOG = LoggerFactory.getLogger(LegacyKafkaClient.class);
 
-    private SecorConfig mConfig;
-    private ZookeeperConnector mZookeeperConnector;
+    private SecorConfig                  mConfig;
+    private ZookeeperConnector           mZookeeperConnector;
     private KafkaMessageTimestampFactory mKafkaMessageTimestampFactory;
 
     public LegacyKafkaClient() {

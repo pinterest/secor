@@ -16,10 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.parser;
+package com.pinterest.secor.finalizer;
 
 import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.files.LogFilePath;
+import com.pinterest.secor.common.kafka.KafkaClient;
+import com.pinterest.secor.common.ZookeeperConnector;
+import com.pinterest.secor.common.kafka.TopicPartition;
 import com.pinterest.secor.message.Message;
+import com.pinterest.secor.parser.TimestampedMessageParser;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
@@ -41,13 +46,13 @@ import java.util.Stack;
 public class PartitionFinalizer {
     private static final Logger LOG = LoggerFactory.getLogger(PartitionFinalizer.class);
 
-    private final SecorConfig mConfig;
-    private final ZookeeperConnector mZookeeperConnector;
+    private final SecorConfig              mConfig;
+    private final ZookeeperConnector       mZookeeperConnector;
     private final TimestampedMessageParser mMessageParser;
-    private final KafkaClient mKafkaClient;
-    private final QuboleClient mQuboleClient;
-    private final String mFileExtension;
-    private final int mLookbackPeriods;
+    private final KafkaClient              mKafkaClient;
+    private final QuboleClient             mQuboleClient;
+    private final String                   mFileExtension;
+    private final int                      mLookbackPeriods;
 
     public PartitionFinalizer(SecorConfig config) throws Exception {
         mConfig = config;

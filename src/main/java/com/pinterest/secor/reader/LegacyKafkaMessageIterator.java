@@ -19,7 +19,7 @@
 package com.pinterest.secor.reader;
 
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.kafka.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
 import com.pinterest.secor.util.IdUtil;

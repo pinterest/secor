@@ -19,7 +19,7 @@
 package com.pinterest.secor.main;
 
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.parser.PartitionFinalizer;
+import com.pinterest.secor.finalizer.PartitionFinalizer;
 import com.pinterest.secor.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

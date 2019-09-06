@@ -20,7 +20,7 @@ package com.pinterest.secor.util.orc.schema;
 
 import org.apache.orc.TypeDescription;
 
-import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.files.LogFilePath;
 
 /**
  * ORC schema provider interface

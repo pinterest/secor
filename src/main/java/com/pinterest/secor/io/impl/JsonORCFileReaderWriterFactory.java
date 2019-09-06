@@ -42,8 +42,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.pinterest.secor.common.FileRegistry;
-import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.files.FileRegistry;
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;

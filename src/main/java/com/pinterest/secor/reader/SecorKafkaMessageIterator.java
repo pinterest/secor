@@ -154,8 +154,8 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         Map<TopicPartition, Long> committedOffsets = new HashMap<>();
 
         for (TopicPartition topicPartition : assignment) {
-            com.pinterest.secor.common.TopicPartition secorTopicPartition =
-                    new com.pinterest.secor.common.TopicPartition(topicPartition.topic(), topicPartition.partition());
+            com.pinterest.secor.common.kafka.TopicPartition secorTopicPartition =
+                    new com.pinterest.secor.common.kafka.TopicPartition(topicPartition.topic(), topicPartition.partition());
             try {
                 long committedOffset = mZookeeperConnector.getCommittedOffsetCount(secorTopicPartition);
                 committedOffsets.put(topicPartition, committedOffset);
@@ -169,7 +169,7 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
     }
 
     @Override
-    public void commit(com.pinterest.secor.common.TopicPartition topicPartition, long offset) {
+    public void commit(com.pinterest.secor.common.kafka.TopicPartition topicPartition, long offset) {
         TopicPartition kafkaTopicPartition = new TopicPartition(topicPartition.getTopic(), topicPartition.getPartition());
         OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(offset);
 

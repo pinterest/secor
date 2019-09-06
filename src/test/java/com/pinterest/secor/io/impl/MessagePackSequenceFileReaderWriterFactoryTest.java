@@ -19,7 +19,7 @@
 package com.pinterest.secor.io.impl;
 
 import com.google.common.io.Files;
-import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
