@@ -1,8 +1,8 @@
 package com.pinterest.secor.common;
 
-import ai.humn.avro.DataHelper;
-import ai.humn.avro.RacDTO;
-import ai.humn.avro.Serializer;
+import ai.humn.telematics.avro.DataHelper;
+import ai.humn.telematics.avro.Serializer;
+import ai.humn.telematics.avro.dto.RacDTO;
 import com.pinterest.secor.util.AvroSchemaRegistryFactory;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;

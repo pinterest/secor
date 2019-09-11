@@ -1,7 +1,7 @@
 package com.pinterest.secor.testing;
 
-import ai.humn.avro.RacDTO;
 import ai.humn.telematics.avro.dto.ObdDataDTO;
+import ai.humn.telematics.avro.dto.RacDTO;
 import com.pinterest.secor.common.SecorConfig;
 import org.mockito.Mockito;
 

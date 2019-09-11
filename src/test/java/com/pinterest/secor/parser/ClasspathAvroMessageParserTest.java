@@ -1,8 +1,8 @@
 package com.pinterest.secor.parser;
 
-import ai.humn.avro.DataHelper;
-import ai.humn.avro.RacDTO;
-import ai.humn.avro.Serializer;
+import ai.humn.telematics.avro.DataHelper;
+import ai.humn.telematics.avro.Serializer;
+import ai.humn.telematics.avro.dto.RacDTO;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.testing.TestAvroRecord;

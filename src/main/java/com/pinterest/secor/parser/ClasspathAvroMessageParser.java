@@ -1,6 +1,6 @@
 package com.pinterest.secor.parser;
 
-import ai.humn.avro.extraction.InformationExtractor;
+import ai.humn.telematics.avro.extraction.InformationExtractor;
 import com.pinterest.secor.common.ClasspathConfigurableAvroSchemaRegistry;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
