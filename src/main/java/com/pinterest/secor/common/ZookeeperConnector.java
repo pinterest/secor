@@ -20,6 +20,7 @@ package com.pinterest.secor.common;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.pinterest.secor.common.kafka.TopicPartition;
 import com.twitter.common.quantity.Amount;
 import com.twitter.common.quantity.Time;
 import com.twitter.common.zookeeper.DistributedLock;
@@ -46,10 +47,10 @@ import java.util.List;
 public class ZookeeperConnector {
     private static final Logger LOG = LoggerFactory.getLogger(ZookeeperConnector.class);
 
-    private SecorConfig mConfig;
-    private ZooKeeperClient mZookeeperClient;
+    private SecorConfig                      mConfig;
+    private ZooKeeperClient                  mZookeeperClient;
     private HashMap<String, DistributedLock> mLocks;
-    private String mCommittedOffsetGroupPath;
+    private String                           mCommittedOffsetGroupPath;
 
     protected ZookeeperConnector() {
     }

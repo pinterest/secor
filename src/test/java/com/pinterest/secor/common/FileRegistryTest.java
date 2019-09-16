@@ -18,6 +18,9 @@
  */
 package com.pinterest.secor.common;
 
+import com.pinterest.secor.common.files.FileRegistry;
+import com.pinterest.secor.common.files.LogFilePath;
+import com.pinterest.secor.common.kafka.TopicPartition;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
@@ -43,16 +46,16 @@ import java.util.Collection;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ FileRegistry.class, FileUtil.class, ReflectionUtil.class })
 public class FileRegistryTest extends TestCase {
-    private static final String PATH = "/some_parent_dir/some_topic/some_partition/some_other_partition/"
+    private static final String         PATH = "/some_parent_dir/some_topic/some_partition/some_other_partition/"
             + "10_0_00000000000000000100";
-    private static final String PATH_GZ = "/some_parent_dir/some_topic/some_partition/some_other_partition/"
+    private static final String         PATH_GZ = "/some_parent_dir/some_topic/some_partition/some_other_partition/"
             + "10_0_00000000000000000100.gz";
-    private static final String CRC_PATH = "/some_parent_dir/some_topic/some_partition/some_other_partition/"
+    private static final String         CRC_PATH = "/some_parent_dir/some_topic/some_partition/some_other_partition/"
             + ".10_0_00000000000000000100.crc";
-    private LogFilePath mLogFilePath;
-    private LogFilePath mLogFilePathGz;
-    private TopicPartition mTopicPartition;
-    private FileRegistry mRegistry;
+    private              LogFilePath    mLogFilePath;
+    private              LogFilePath    mLogFilePathGz;
+    private              TopicPartition mTopicPartition;
+    private              FileRegistry   mRegistry;
 
     public void setUp() throws Exception {
         super.setUp();

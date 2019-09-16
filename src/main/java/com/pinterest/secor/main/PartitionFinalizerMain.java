@@ -19,7 +19,9 @@
 package com.pinterest.secor.main;
 
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.parser.PartitionFinalizer;
+import com.pinterest.secor.finalizer.AbstractPartitionFinalizer;
+import com.pinterest.secor.finalizer.GluePartitionFinalizer;
+import com.pinterest.secor.finalizer.HivePartitionFinalizer;
 import com.pinterest.secor.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +45,14 @@ public class PartitionFinalizerMain {
         try {
             SecorConfig config = SecorConfig.load();
             FileUtil.configure(config);
-            PartitionFinalizer partitionFinalizer = new PartitionFinalizer(config);
+            String metastore = config.getMetastoreToUpdate();
+            AbstractPartitionFinalizer partitionFinalizer;
+            if(metastore.equalsIgnoreCase("Glue")){
+                partitionFinalizer = new GluePartitionFinalizer(config);
+            }else{
+                //Keeping the default configuration
+                partitionFinalizer = new HivePartitionFinalizer(config);
+            }
             partitionFinalizer.finalizePartitions();
         } catch (Throwable t) {
             LOG.error("Partition finalizer failed", t);

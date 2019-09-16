@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.pinterest.secor.common.aws.AssumeRoleAndDefaultCredentialsProviderChain;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -81,6 +82,14 @@ public class FileUtil {
                     mConf.set(Constants.SECRET_KEY, config.getAwsSecretKey());
                     mConf.set("fs.s3n.awsAccessKeyId", config.getAwsAccessKey());
                     mConf.set("fs.s3n.awsSecretAccessKey", config.getAwsSecretKey());
+                }
+                if (!config.getAWSCredentialsProvider().isEmpty()) {
+                    mConf.set("fs.s3a.aws.credentials.provider", AssumeRoleAndDefaultCredentialsProviderChain.class.getName());
+                }
+                if (!config.getAwsEndpoint().isEmpty() || !config.getAwsRegion().isEmpty()) {
+                    String awsEndpoint = config.getAwsEndpoint();
+                    String forgedEndpoint = awsEndpoint.isEmpty() ? String.format("s3.%s.amazonaws.com", config.getAwsRegion()) : awsEndpoint;
+                    mConf.set("fs.s3a.endpoint", forgedEndpoint);
                 }
             }
         }

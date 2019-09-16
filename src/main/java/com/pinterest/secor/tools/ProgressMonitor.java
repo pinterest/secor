@@ -24,6 +24,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.kafka.KafkaClient;
+import com.pinterest.secor.common.ZookeeperConnector;
+import com.pinterest.secor.common.kafka.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.parser.TimestampedMessageParser;
@@ -57,11 +60,11 @@ public class ProgressMonitor {
     private static final Logger LOG = LoggerFactory.getLogger(ProgressMonitor.class);
     private static final String PERIOD = ".";
 
-    private SecorConfig mConfig;
-    private ZookeeperConnector mZookeeperConnector;
-    private KafkaClient mKafkaClient;
-    private MessageParser mMessageParser;
-    private String mPrefix;
+    private SecorConfig             mConfig;
+    private ZookeeperConnector      mZookeeperConnector;
+    private KafkaClient             mKafkaClient;
+    private MessageParser           mMessageParser;
+    private String                  mPrefix;
     private NonBlockingStatsDClient mStatsDClient;
 
     public ProgressMonitor(SecorConfig config)

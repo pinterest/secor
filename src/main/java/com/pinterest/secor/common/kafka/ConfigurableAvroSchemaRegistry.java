@@ -16,8 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.common;
+package com.pinterest.secor.common.kafka;
 
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.kafka.AvroSchemaRegistry;
 import com.pinterest.secor.parser.AvroMessageParser;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;

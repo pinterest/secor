@@ -18,6 +18,8 @@
  */
 package com.pinterest.secor.common;
 
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.ZookeeperConnector;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.Assert;
 import org.junit.Before;

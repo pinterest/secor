@@ -18,7 +18,7 @@
  */
 package com.pinterest.secor.util;
 
-import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.monitoring.MetricCollector;
 import com.pinterest.secor.monitoring.OstrichMetricCollector;

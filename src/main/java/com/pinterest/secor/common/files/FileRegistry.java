@@ -16,8 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.common;
+package com.pinterest.secor.common.files;
 
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.kafka.TopicPartition;
+import com.pinterest.secor.common.kafka.TopicPartitionGroup;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
@@ -39,10 +42,10 @@ import java.util.*;
 public class FileRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(FileRegistry.class);
 
-    private final SecorConfig mConfig;
-    private HashMap<TopicPartitionGroup, HashSet<LogFilePath>> mFiles;
-    private HashMap<LogFilePath, FileWriter> mWriters;
-    private HashMap<LogFilePath, Long> mCreationTimes;
+    private final SecorConfig                                        mConfig;
+    private       HashMap<TopicPartitionGroup, HashSet<LogFilePath>> mFiles;
+    private       HashMap<LogFilePath, FileWriter>                   mWriters;
+    private       HashMap<LogFilePath, Long>                         mCreationTimes;
 
     public FileRegistry(SecorConfig mConfig) {
         this.mConfig = mConfig;

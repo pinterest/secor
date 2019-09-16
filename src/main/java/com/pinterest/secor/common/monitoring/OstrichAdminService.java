@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.common;
+package com.pinterest.secor.common.monitoring;
 
 import java.util.Arrays;
 import java.util.Properties;
@@ -30,9 +30,7 @@ import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.collection.JavaConversions;
 import scala.collection.Map$;
-import scala.collection.immutable.List;
 import scala.collection.immutable.List$;
-import scala.collection.mutable.Buffer;
 import scala.util.matching.Regex;
 
 /**

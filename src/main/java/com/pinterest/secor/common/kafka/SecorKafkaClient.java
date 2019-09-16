@@ -16,8 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.common;
+package com.pinterest.secor.common.kafka;
 
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.MessageHeader;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -39,11 +41,11 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 public class SecorKafkaClient implements KafkaClient {
-    public static final int MAX_READ_POLL_ATTEMPTS = 10;
-    private KafkaConsumer<byte[], byte[]> mKafkaConsumer;
-    private AdminClient mKafkaAdminClient;
-    private ZookeeperConnector mZookeeperConnector;
-    private int mPollTimeout;
+    public static final int                           MAX_READ_POLL_ATTEMPTS = 10;
+    private             KafkaConsumer<byte[], byte[]> mKafkaConsumer;
+    private             AdminClient                   mKafkaAdminClient;
+    private             ZookeeperConnector            mZookeeperConnector;
+    private             int                           mPollTimeout;
 
     @Override
     public int getNumPartitions(String topic) {

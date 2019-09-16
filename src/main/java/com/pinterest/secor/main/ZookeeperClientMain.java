@@ -19,7 +19,7 @@
 package com.pinterest.secor.main;
 
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.kafka.TopicPartition;
 import com.pinterest.secor.common.ZookeeperConnector;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.common;
+package com.pinterest.secor.common.files;
 
 import com.pinterest.secor.message.ParsedMessage;
 import org.apache.commons.codec.binary.Base64;

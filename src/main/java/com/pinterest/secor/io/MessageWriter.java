@@ -16,16 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.writer;
+package com.pinterest.secor.io;
 
-import com.pinterest.secor.common.DeterministicUploadPolicyTracker;
-import com.pinterest.secor.common.FileRegistry;
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.OffsetTracker;
+import com.pinterest.secor.common.files.DeterministicUploadPolicyTracker;
+import com.pinterest.secor.common.files.FileRegistry;
+import com.pinterest.secor.common.files.LogFilePath;
+import com.pinterest.secor.common.kafka.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.common.TopicPartition;
-import com.pinterest.secor.io.FileWriter;
-import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.common.kafka.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.util.CompressionUtil;

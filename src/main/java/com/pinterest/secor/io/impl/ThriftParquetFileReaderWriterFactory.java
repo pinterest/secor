@@ -29,7 +29,7 @@ import org.apache.parquet.thrift.ThriftParquetWriter;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
 
-import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.files.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileReaderWriterFactory;

@@ -18,7 +18,7 @@
  */
 package com.pinterest.secor.main;
 
-import com.pinterest.secor.common.OstrichAdminService;
+import com.pinterest.secor.common.monitoring.OstrichAdminService;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.consumer.Consumer;
 import com.pinterest.secor.tools.LogFileDeleter;

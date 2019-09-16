@@ -18,12 +18,12 @@
  */
 package com.pinterest.secor.uploader;
 
-import com.pinterest.secor.common.FileRegistry;
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.OffsetTracker;
+import com.pinterest.secor.common.files.FileRegistry;
+import com.pinterest.secor.common.files.LogFilePath;
+import com.pinterest.secor.common.kafka.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.SecorConstants;
-import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.kafka.TopicPartition;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;

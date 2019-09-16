@@ -31,11 +31,11 @@
 //
 //import com.google.common.collect.Lists;
 //import com.google.common.collect.Maps;
-//import com.pinterest.secor.common.LegacyKafkaClient;
-//import com.pinterest.secor.common.OffsetTracker;
-//import com.pinterest.secor.common.OstrichAdminService;
+//import com.pinterest.secor.common.kafka.LegacyKafkaClient;
+//import com.pinterest.secor.common.kafka.OffsetTracker;
+//import com.pinterest.secor.common.monitoring.OstrichAdminService;
 //import com.pinterest.secor.common.SecorConfig;
-//import com.pinterest.secor.common.TopicPartition;
+//import com.pinterest.secor.common.kafka.TopicPartition;
 //import com.pinterest.secor.consumer.Consumer;
 //import com.pinterest.secor.tools.LogFileDeleter;
 //import com.pinterest.secor.util.FileUtil;
