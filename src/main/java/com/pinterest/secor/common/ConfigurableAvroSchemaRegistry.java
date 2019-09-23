@@ -19,11 +19,13 @@
 package com.pinterest.secor.common;
 
 import com.pinterest.secor.parser.AvroMessageParser;
+import com.pinterest.secor.util.AvroSerializer;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,5 +68,10 @@ public class ConfigurableAvroSchemaRegistry implements AvroSchemaRegistry {
 
     public Schema getSchema(String topic) {
         return schemas.get(topic);
+    }
+
+    @Override
+    public byte[] serialize(SpecificDatumWriter<GenericRecord> writer, String topic, GenericRecord record) throws IOException {
+        return AvroSerializer.serialize(writer, record);
     }
 }
