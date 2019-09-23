@@ -21,11 +21,13 @@ package com.pinterest.secor.common;
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,6 +37,7 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(SecorSchemaRegistryClient.class);
 
     protected KafkaAvroDeserializer deserializer;
+    protected KafkaAvroSerializer serializer;
     private final static Map<String, Schema> schemas = new ConcurrentHashMap<>();
     protected SchemaRegistryClient schemaRegistryClient;
 
@@ -53,6 +56,7 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
     //Allows the SchemaRegistryClient to be mocked in unit tests
     protected void init(SecorConfig config) {
         deserializer = new KafkaAvroDeserializer(schemaRegistryClient);
+        serializer = new KafkaAvroSerializer(schemaRegistryClient);
     }
 
     public GenericRecord deserialize(String topic, byte[] message) {
@@ -73,5 +77,11 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
             throw new IllegalStateException("Avro schema not found for topic " + topic);
         }
         return schema;
+    }
+
+    @Override
+    public byte[] serialize(String topic, GenericRecord record) throws IOException {
+        return serializer.serialize(topic, record);
+
     }
 }

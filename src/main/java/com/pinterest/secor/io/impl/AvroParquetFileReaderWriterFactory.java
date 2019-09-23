@@ -26,7 +26,6 @@ import com.pinterest.secor.io.FileReaderWriterFactory;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.AvroSchemaRegistryFactory;
-import com.pinterest.secor.util.AvroSerializer;
 import com.pinterest.secor.util.ParquetUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -75,10 +74,12 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         private ParquetReader<GenericRecord> reader;
         private SpecificDatumWriter<GenericRecord> writer;
         private long offset;
+        String topic;
+
 
         public AvroParquetFileReader(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             Path path = new Path(logFilePath.getLogFilePath());
-            String topic = logFilePath.getTopic();
+            topic = logFilePath.getTopic();
             Schema schema = schemaRegistry.getSchema(topic);
             reader = AvroParquetReader.<GenericRecord>builder(path).build();
             writer = new SpecificDatumWriter(schema);
@@ -89,7 +90,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         public KeyValue next() throws IOException {
             GenericRecord record = reader.read();
             if (record != null) {
-                return new KeyValue(offset++, AvroSerializer.serialize(writer, record));
+                return new KeyValue(offset++, schemaRegistry.serialize(topic, record));
             }
             return null;
         }
