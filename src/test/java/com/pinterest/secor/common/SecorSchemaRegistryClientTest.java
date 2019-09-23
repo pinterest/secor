@@ -20,22 +20,23 @@ package com.pinterest.secor.common;
 
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
-import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import junit.framework.TestCase;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.util.Properties;
+import java.io.IOException;
 
 import static org.mockito.Mockito.when;
 
@@ -45,9 +46,10 @@ public class SecorSchemaRegistryClientTest extends TestCase {
     private KafkaAvroDeserializer kafkaAvroDeserializer;
     private SchemaRegistryClient schemaRegistryClient;
     private SecorSchemaRegistryClient secorSchemaRegistryClient;
-    private SecorConfig secorConfig;
-    private SpecificDatumWriter<GenericRecord> writer;
     private KafkaAvroSerializer avroSerializer;
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @Override
     public void setUp() {
@@ -62,13 +64,11 @@ public class SecorSchemaRegistryClientTest extends TestCase {
     private void initKafka() {
         schemaRegistryClient = new MockSchemaRegistryClient();
         kafkaAvroDeserializer = new KafkaAvroDeserializer(schemaRegistryClient);
-        Properties defaultConfig = new Properties();
-        defaultConfig.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, "bogus");
         avroSerializer = new KafkaAvroSerializer(schemaRegistryClient);
     }
 
     @Test
-    public void testDecodeMessage() throws Exception {
+    public void testDecodeMessage() {
         Schema schemaV1 = SchemaBuilder.record("Foo")
                 .fields()
                 .name("data_field_1").type().intType().noDefault()
@@ -103,5 +103,24 @@ public class SecorSchemaRegistryClientTest extends TestCase {
 
         output = secorSchemaRegistryClient.deserialize("test-avr-topic", new byte[0]);
         assertNull(output);
+    }
+
+    @Test
+    public void testGetSchema() throws IOException, RestClientException {
+        Schema expectedSchema = SchemaBuilder.record("Foo")
+                .fields()
+                .name("data_field_1").type().intType().noDefault()
+                .name("timestamp").type().longType().noDefault()
+                .endRecord();
+        schemaRegistryClient.register("test-avr-topic-2-value", expectedSchema);
+        Schema schema = secorSchemaRegistryClient.getSchema("test-avr-topic-2");
+        assertEquals(expectedSchema, schema);
+    }
+
+    @Test
+    public void testGetSchemaDoesNotExist() {
+        exception.expect(IllegalStateException.class);
+        exception.expectMessage("Avro schema not found for topic test-avr-topic-3");
+        secorSchemaRegistryClient.getSchema("test-avr-topic-3");
     }
 }
