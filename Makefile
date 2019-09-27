@@ -3,18 +3,19 @@ TEST_HOME=/tmp/secor_test
 TEST_CONFIG=src/test/config
 JAR_FILE=target/secor-*-SNAPSHOT-bin.tar.gz
 MVN_PROFILE?=kafka-0.10.2.0
-MVN_OPTS=-DskipTests=true -Dmaven.javadoc.skip=true -P $(MVN_PROFILE) -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+MVN_OPTS=-Dmaven.javadoc.skip=true -P $(MVN_PROFILE) -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+MVN_SKIP_TESTS=-DskipTests=true
 
 CONTAINERS=$(shell ls containers)
 
 build:
-	@mvn package $(MVN_OPTS) -P $(MVN_PROFILE)
+	@mvn package $(MVN_OPTS) $(MVN_SKIP_TESTS)
 
 dependency_tree:
-	@mvn dependency:tree $(MVN_OPTS) -P $(MVN_PROFILE)
+	@mvn dependency:tree $(MVN_OPTS) $(MVN_SKIP_TESTS)
 
 unit:
-	@mvn test $(MVN_OPTS) -P $(MVN_PROFILE)
+	@mvn test $(MVN_OPTS)
 
 integration: build
 	@rm -rf $(TEST_HOME)
