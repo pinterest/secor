@@ -20,15 +20,7 @@ package com.pinterest.secor.util.orc;
 
 import java.util.List;
 
-import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.hive.ql.exec.vector.*;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.orc.TypeDescription;
 import org.codehaus.jettison.json.JSONException;
@@ -108,7 +100,7 @@ public class JsonFieldFiller {
                 // printBinary(writer, (BytesColumnVector) vector, row);
                 break;
             case MAP:
-                // printMap(writer, (MapColumnVector) vector, schema, row);
+                setMap(writer, (MapColumnVector) vector, schema, row);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown type "
@@ -138,6 +130,20 @@ public class JsonFieldFiller {
         for (int i = 0; i < fieldTypes.size(); ++i) {
             writer.key(fieldNames.get(i));
             setValue(writer, batch.fields[i], fieldTypes.get(i), row);
+        }
+        writer.endObject();
+    }
+
+    private static void setMap(JSONWriter writer, MapColumnVector vector,
+                               TypeDescription schema, int row) throws JSONException {
+        writer.object();
+        List<TypeDescription> schemaChildren = schema.getChildren();
+        BytesColumnVector keyVector = (BytesColumnVector) vector.keys;
+        long length = vector.lengths[row];
+        long offset = vector.offsets[row];
+        for (int i = 0; i < length; i++) {
+            writer.key(keyVector.toString((int) offset + i));
+            setValue(writer, vector.values, schemaChildren.get(1), (int) offset + i);
         }
         writer.endObject();
     }
