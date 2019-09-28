@@ -21,8 +21,12 @@ package com.pinterest.secor.common;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 
+import java.io.IOException;
+
 public interface AvroSchemaRegistry {
     GenericRecord deserialize(String topic, byte[] payload);
 
     Schema getSchema(String topic);
+
+    byte[] serialize(String topic, GenericRecord record) throws IOException;
 }

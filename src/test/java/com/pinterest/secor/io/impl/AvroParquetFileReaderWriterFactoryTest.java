@@ -32,6 +32,7 @@ import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -78,6 +79,10 @@ public class AvroParquetFileReaderWriterFactoryTest extends TestCase {
         when(secorSchemaRegistryClient.getSchema(anyString())).thenReturn(schema);
         when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg1))).thenReturn(msg1);
         when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg2))).thenReturn(msg2);
+
+        when(secorSchemaRegistryClient.serialize(anyString(), Matchers.any(GenericRecord.class))).
+                thenReturn(AvroSerializer.serialize(writer, msg1), AvroSerializer.serialize(writer, msg2));
+
         mFactory.schemaRegistry = secorSchemaRegistryClient;
         when(config.getFileReaderWriterFactory())
                 .thenReturn(AvroParquetFileReaderWriterFactory.class.getName());
@@ -108,14 +113,17 @@ public class AvroParquetFileReaderWriterFactoryTest extends TestCase {
         testAvroParquetReadWriteRoundTrip(configurableAvroSchemaRegistry);
     }
 
+
     private void testAvroParquetReadWriteRoundTrip(AvroSchemaRegistry schemaRegistry) throws Exception {
+
+        String topic = "test-avro-topic";
         LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-avro-topic",
                 new String[] { "part-1" }, 0, 1, 23232, ".avro");
 
         FileWriter fileWriter = mFactory.BuildFileWriter(tempLogFilePath, null);
 
-        KeyValue kv1 = (new KeyValue(23232, AvroSerializer.serialize(writer, msg1)));
-        KeyValue kv2 = (new KeyValue(23233, AvroSerializer.serialize(writer, msg2)));
+        KeyValue kv1 = new KeyValue(23232, AvroSerializer.serialize(writer, msg1));
+        KeyValue kv2 = new KeyValue(23233, AvroSerializer.serialize(writer, msg2));
 
         fileWriter.write(kv1);
         fileWriter.write(kv2);

@@ -34,6 +34,7 @@ import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -48,8 +49,8 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
     private SpecificDatumWriter<GenericRecord> writer;
     private SecorConfig config;
     private SecorSchemaRegistryClient secorSchemaRegistryClient;
-    private  GenericRecord msg1;
-    private  GenericRecord msg2;
+    private GenericRecord msg1;
+    private GenericRecord msg2;
 
     @Override
     public void setUp() throws Exception {
@@ -74,6 +75,7 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
         when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg1))).thenReturn(msg1);
         when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg2))).thenReturn(msg2);
         mFactory.schemaRegistry = secorSchemaRegistryClient;
+
     }
 
     @Test
@@ -81,13 +83,19 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
         when(config.getFileReaderWriterFactory())
                 .thenReturn(AvroFileReaderWriterFactory.class.getName());
 
-        LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-avro-topic",
-                new String[] { "part-1" }, 0, 1, 23232, ".parquet");
+        String topic = "test-avro-topic";
+
+        when(secorSchemaRegistryClient.serialize(anyString(), Matchers.any(GenericRecord.class))).
+                thenReturn(AvroSerializer.serialize(writer, msg1), AvroSerializer.serialize(writer, msg2));
+
+
+        LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), topic,
+                new String[]{"part-1"}, 0, 1, 23232, ".parquet");
 
         FileWriter fileWriter = mFactory.BuildFileWriter(tempLogFilePath, null);
 
-        KeyValue kv1 = (new KeyValue(23232, AvroSerializer.serialize(writer, msg1)));
-        KeyValue kv2 = (new KeyValue(23233, AvroSerializer.serialize(writer, msg2)));
+        KeyValue kv1 = new KeyValue(23232, AvroSerializer.serialize(writer, msg1));
+        KeyValue kv2 = new KeyValue(23233, AvroSerializer.serialize(writer, msg2));
 
         fileWriter.write(kv1);
         fileWriter.write(kv2);
@@ -105,4 +113,5 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
         assertArrayEquals(kv2.getValue(), kvout.getValue());
         assertEquals(msg2, secorSchemaRegistryClient.deserialize("test-avro-topic", kvout.getValue()));
     }
+
 }

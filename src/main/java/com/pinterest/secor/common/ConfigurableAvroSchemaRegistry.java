@@ -19,11 +19,13 @@
 package com.pinterest.secor.common;
 
 import com.pinterest.secor.parser.AvroMessageParser;
+import com.pinterest.secor.util.AvroSerializer;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +39,12 @@ public class ConfigurableAvroSchemaRegistry implements AvroSchemaRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(AvroMessageParser.class);
     private final Map<String, Schema> schemas = new HashMap<>();
     private final Map<String, SpecificDatumReader<GenericRecord>> readers = new HashMap<>();
+    private final Map<String, SpecificDatumWriter<GenericRecord>> writers = new HashMap<>();
 
     public ConfigurableAvroSchemaRegistry(SecorConfig config) {
         schemas.putAll(config.getAvroMessageSchema().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getAvroSchema(e.getValue()))));
         readers.putAll(schemas.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new SpecificDatumReader<>(e.getValue()))));
+        writers.putAll(schemas.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new SpecificDatumWriter<>(e.getValue()))));
     }
 
     private Schema getAvroSchema(String path) {
@@ -66,5 +70,11 @@ public class ConfigurableAvroSchemaRegistry implements AvroSchemaRegistry {
 
     public Schema getSchema(String topic) {
         return schemas.get(topic);
+    }
+
+    @Override
+    public byte[] serialize(String topic, GenericRecord record) throws IOException {
+        SpecificDatumWriter<GenericRecord> writer = writers.get(topic);
+        return AvroSerializer.serialize(writer, record);
     }
 }

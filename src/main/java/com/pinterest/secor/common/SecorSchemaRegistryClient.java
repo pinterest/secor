@@ -23,6 +23,7 @@ import io.confluent.kafka.schemaregistry.client.SchemaMetadata;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(SecorSchemaRegistryClient.class);
 
     protected KafkaAvroDeserializer deserializer;
+    protected KafkaAvroSerializer serializer;
     private final static Map<String, Schema> schemas = new ConcurrentHashMap<>();
     protected SchemaRegistryClient schemaRegistryClient;
 
@@ -56,6 +58,7 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
     //Allows the SchemaRegistryClient to be mocked in unit tests
     protected void init(SecorConfig config) {
         deserializer = new KafkaAvroDeserializer(schemaRegistryClient);
+        serializer = new KafkaAvroSerializer(schemaRegistryClient);
     }
 
     public GenericRecord deserialize(String topic, byte[] message) {
@@ -93,5 +96,11 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
             }
         }
         return schema;
+    }
+
+    @Override
+    public byte[] serialize(String topic, GenericRecord record) throws IOException {
+        return serializer.serialize(topic, record);
+
     }
 }
