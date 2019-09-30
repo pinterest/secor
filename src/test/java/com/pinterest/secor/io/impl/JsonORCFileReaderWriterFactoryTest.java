@@ -95,6 +95,34 @@ public class JsonORCFileReaderWriterFactoryTest {
     }
 
     @Test
+    public void testMultipleMaps() throws Exception {
+        PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.setProperty("secor.orc.schema.provider", "com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider");
+        properties.setProperty("secor.orc.message.schema.test-topic-multimaps", "struct<f1:map<string\\,int>\\,f2:map<string\\,string>>");
+
+        SecorConfig config = new SecorConfig(properties);
+        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
+
+        LogFilePath tempLogFilePath = new LogFilePath(
+            Files.createTempDir().toString(),
+            "test-topic-multimaps",
+            new String[]{"part-1"},
+            0, 1, 0, ".log"
+        );
+
+        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
+        KeyValue written1 = new KeyValue(13001, "{\"f1\":{\"k1\":0,\"k2\":1234},\"f2\":{\"k3\":\"test\"}}".getBytes());
+        fileWriter.write(written1);
+        fileWriter.close();
+
+        FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
+        KeyValue read1 = fileReader.next();
+        fileReader.close();
+
+        assertArrayEquals(read1.getValue(), written1.getValue());
+    }
+
+    @Test
     public void testJsonORCReadWriteRoundTrip() throws Exception {
         LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(),
             "test-topic",
