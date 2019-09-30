@@ -6,6 +6,7 @@ import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
+import com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.GzipCodec;
@@ -15,6 +16,8 @@ import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
 
 public class JsonORCFileReaderWriterFactoryTest {
+
+    private static final String DEFAULT_ORC_SCHEMA_PROVIDER = DefaultORCSchemaProvider.class.getCanonicalName();
 
     private CompressionCodec codec;
 
@@ -26,7 +29,7 @@ public class JsonORCFileReaderWriterFactoryTest {
     @Test(expected = IllegalArgumentException.class)
     public void testNoSchema() throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", "com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider");
+        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
 
         SecorConfig config = new SecorConfig(properties);
         JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
@@ -45,7 +48,7 @@ public class JsonORCFileReaderWriterFactoryTest {
     @Test
     public void testMapOfStringToString() throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", "com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider");
+        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
         properties.setProperty("secor.orc.message.schema.test-topic-map1", "struct<mappings:map<string\\,string>>");
 
         SecorConfig config = new SecorConfig(properties);
@@ -73,7 +76,7 @@ public class JsonORCFileReaderWriterFactoryTest {
     @Test
     public void testMapOfStringToInteger() throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", "com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider");
+        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
         properties.setProperty("secor.orc.message.schema.test-topic-map2", "struct<mappings:map<string\\,int>>");
 
         SecorConfig config = new SecorConfig(properties);
@@ -137,7 +140,7 @@ public class JsonORCFileReaderWriterFactoryTest {
     @Test
     public void testJsonORCReadWriteRoundTrip() throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", "com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider");
+        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
         properties.setProperty("secor.orc.message.schema.test-topic", "struct<firstname:string\\,age:int\\,test:map<string\\,string>>");
 
         SecorConfig config = new SecorConfig(properties);
