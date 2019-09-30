@@ -30,6 +30,42 @@ public class JsonORCFileReaderWriterFactoryTest {
         codec = new GzipCodec();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testNoSchema() throws Exception {
+        PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.setProperty("secor.orc.schema.provider", "com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider");
+
+        SecorConfig config = new SecorConfig(properties);
+        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
+
+        LogFilePath tempLogFilePath = new LogFilePath(
+            Files.createTempDir().toString(),
+            "test-topic",
+            new String[]{"part-1"},
+            0, 1, 0, ".log"
+        );
+
+        // IllegalArgumentException is expected
+        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
+    }
+
+//    @Test
+    public void test2() throws Exception {
+        LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(),
+            "test-topic2",
+            new String[]{"part-1"},
+            0,
+            1,
+            0,
+            ".log"
+        );
+
+        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
+        KeyValue kv1 = new KeyValue(12345, "{\"values\":[1, 2, 3, 4, 5]}".getBytes());
+        fileWriter.write(kv1);
+        fileWriter.close();
+    }
+
     @Test
     public void testJsonORCReadWriteRoundTrip() throws Exception {
         LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(),
