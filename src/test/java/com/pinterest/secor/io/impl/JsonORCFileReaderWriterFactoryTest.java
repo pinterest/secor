@@ -26,6 +26,14 @@ public class JsonORCFileReaderWriterFactoryTest {
         codec = new GzipCodec();
     }
 
+    private LogFilePath getTempLogFilePath(String topic) {
+        return new LogFilePath(Files.createTempDir().toString(),
+            topic,
+            new String[]{"part-1"},
+            0, 1, 0, ".log"
+        );
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testNoSchema() throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
@@ -34,12 +42,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         SecorConfig config = new SecorConfig(properties);
         JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
 
-        LogFilePath tempLogFilePath = new LogFilePath(
-            Files.createTempDir().toString(),
-            "test-topic",
-            new String[]{"part-1"},
-            0, 1, 0, ".log"
-        );
+        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic");
 
         // IllegalArgumentException is expected
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
@@ -54,12 +57,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         SecorConfig config = new SecorConfig(properties);
         JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
 
-        LogFilePath tempLogFilePath = new LogFilePath(
-            Files.createTempDir().toString(),
-            "test-topic-map1",
-            new String[]{"part-1"},
-            0, 1, 0, ".log"
-        );
+        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic-map1");
 
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
         KeyValue written1 = new KeyValue(10001, "{\"mappings\":{\"key1\":\"value1\",\"key2\":\"value2\"}}".getBytes());
@@ -82,12 +80,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         SecorConfig config = new SecorConfig(properties);
         JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
 
-        LogFilePath tempLogFilePath = new LogFilePath(
-            Files.createTempDir().toString(),
-            "test-topic-map2",
-            new String[]{"part-1"},
-            0, 1, 0, ".log"
-        );
+        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic-map2");
 
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
         KeyValue written1 = new KeyValue(12345, "{\"mappings\":{\"key1\":1,\"key2\":-2}}".getBytes());
@@ -118,12 +111,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         SecorConfig config = new SecorConfig(properties);
         JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
 
-        LogFilePath tempLogFilePath = new LogFilePath(
-            Files.createTempDir().toString(),
-            "test-topic-multimaps",
-            new String[]{"part-1"},
-            0, 1, 0, ".log"
-        );
+        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic-multimaps");
 
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
         KeyValue written1 = new KeyValue(13001, "{\"f1\":{\"k1\":0,\"k2\":1234},\"f2\":{\"k3\":\"test\"}}".getBytes());
@@ -146,12 +134,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         SecorConfig config = new SecorConfig(properties);
         JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
 
-        LogFilePath tempLogFilePath = new LogFilePath(
-            Files.createTempDir().toString(),
-            "test-topic",
-            new String[]{"part-1"},
-            0, 1, 0, ".log"
-        );
+        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic");
 
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
         KeyValue kv1 = new KeyValue(23232, "{\"firstname\":\"Jason\",\"age\":48,\"test\":{\"k1\":\"v1\",\"k2\":\"v2\"}}".getBytes());
