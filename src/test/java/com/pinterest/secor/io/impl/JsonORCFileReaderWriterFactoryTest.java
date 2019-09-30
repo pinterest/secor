@@ -16,17 +16,10 @@ import static org.junit.Assert.assertArrayEquals;
 
 public class JsonORCFileReaderWriterFactoryTest {
 
-    private JsonORCFileReaderWriterFactory factory;
-    private SecorConfig config;
     private CompressionCodec codec;
 
     @Before
     public void setUp() throws Exception {
-        PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", "com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider");
-        properties.setProperty("secor.orc.message.schema.test-topic", "struct<firstname:string\\,age:int>");
-        config = new SecorConfig(properties);
-        factory = new JsonORCFileReaderWriterFactory(config);
         codec = new GzipCodec();
     }
 
@@ -66,7 +59,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         );
 
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue written1 = new KeyValue(12345, "{\"mappings\":{\"key1\":\"value1\",\"key2\":\"value2\"}}".getBytes());
+        KeyValue written1 = new KeyValue(10001, "{\"mappings\":{\"key1\":\"value1\",\"key2\":\"value2\"}}".getBytes());
         fileWriter.write(written1);
         fileWriter.close();
 
@@ -77,21 +70,40 @@ public class JsonORCFileReaderWriterFactoryTest {
         assertArrayEquals(read1.getValue(), written1.getValue());
     }
 
-//    @Test
-    public void test2() throws Exception {
-        LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(),
-            "test-topic2",
+    @Test
+    public void testMapOfStringToInteger() throws Exception {
+        PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.setProperty("secor.orc.schema.provider", "com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider");
+        properties.setProperty("secor.orc.message.schema.test-topic-map2", "struct<mappings:map<string\\,int>>");
+
+        SecorConfig config = new SecorConfig(properties);
+        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
+
+        LogFilePath tempLogFilePath = new LogFilePath(
+            Files.createTempDir().toString(),
+            "test-topic-map2",
             new String[]{"part-1"},
-            0,
-            1,
-            0,
-            ".log"
+            0, 1, 0, ".log"
         );
 
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue kv1 = new KeyValue(12345, "{\"values\":[1, 2, 3, 4, 5]}".getBytes());
-        fileWriter.write(kv1);
+        KeyValue written1 = new KeyValue(12345, "{\"mappings\":{\"key1\":1,\"key2\":-2}}".getBytes());
+        KeyValue written2 = new KeyValue(12346, "{\"mappings\":{\"key3\":1523,\"key4\":3451325}}".getBytes());
+        KeyValue written3 = new KeyValue(12347, "{\"mappings\":{\"key5\":0,\"key6\":-8382}}".getBytes());
+        fileWriter.write(written1);
+        fileWriter.write(written2);
+        fileWriter.write(written3);
         fileWriter.close();
+
+        FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
+        KeyValue read1 = fileReader.next();
+        KeyValue read2 = fileReader.next();
+        KeyValue read3 = fileReader.next();
+        fileReader.close();
+
+        assertArrayEquals(read1.getValue(), written1.getValue());
+        assertArrayEquals(read2.getValue(), written2.getValue());
+        assertArrayEquals(read3.getValue(), written3.getValue());
     }
 
     @Test
@@ -124,18 +136,23 @@ public class JsonORCFileReaderWriterFactoryTest {
 
     @Test
     public void testJsonORCReadWriteRoundTrip() throws Exception {
-        LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(),
+        PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.setProperty("secor.orc.schema.provider", "com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider");
+        properties.setProperty("secor.orc.message.schema.test-topic", "struct<firstname:string\\,age:int\\,test:map<string\\,string>>");
+
+        SecorConfig config = new SecorConfig(properties);
+        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
+
+        LogFilePath tempLogFilePath = new LogFilePath(
+            Files.createTempDir().toString(),
             "test-topic",
             new String[]{"part-1"},
-            0,
-            1,
-            0,
-            ".log"
+            0, 1, 0, ".log"
         );
 
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue kv1 = new KeyValue(23232, "{\"firstname\":\"Jason\",\"age\":48}".getBytes());
-        KeyValue kv2 = new KeyValue(23233, "{\"firstname\":\"Christina\",\"age\":37}".getBytes());
+        KeyValue kv1 = new KeyValue(23232, "{\"firstname\":\"Jason\",\"age\":48,\"test\":{\"k1\":\"v1\",\"k2\":\"v2\"}}".getBytes());
+        KeyValue kv2 = new KeyValue(23233, "{\"firstname\":\"Christina\",\"age\":37,\"test\":{\"k3\":\"v3\"}}".getBytes());
         fileWriter.write(kv1);
         fileWriter.write(kv2);
         fileWriter.close();
