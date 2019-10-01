@@ -183,10 +183,13 @@ public class VectorColumnFiller {
             } else {
                 MapColumnVector vector = (MapColumnVector) vect;
                 JsonObject obj = value.getAsJsonObject();
-                Set<String> keySet = obj.keySet();
                 vector.lengths[row] = obj.size();
                 vector.offsets[row] = row > 0 ? vector.offsets[row - 1] + vector.lengths[row - 1] : 0;
-                vector.keys.ensureSize(keySet.size(), true);
+
+                // Ensure enough space is available to store the keys and the values
+                vector.keys.ensureSize((int) vector.offsets[row] + obj.size(), true);
+                vector.values.ensureSize((int) vector.offsets[row] + obj.size(), true);
+
                 int i = 0;
                 for (String key : obj.keySet()) {
                     childrenConverters[0].convert(new JsonPrimitive(key), vector.keys, (int) vector.offsets[row] + i);

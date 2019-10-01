@@ -1,6 +1,7 @@
 package com.pinterest.secor.io.impl;
 
 import com.google.common.io.Files;
+import com.google.gson.JsonObject;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.io.FileReader;
@@ -13,6 +14,8 @@ import org.apache.hadoop.io.compress.GzipCodec;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Random;
+
 import static org.junit.Assert.assertArrayEquals;
 
 public class JsonORCFileReaderWriterFactoryTest {
@@ -20,6 +23,11 @@ public class JsonORCFileReaderWriterFactoryTest {
     private static final String DEFAULT_ORC_SCHEMA_PROVIDER = DefaultORCSchemaProvider.class.getCanonicalName();
 
     private CompressionCodec codec;
+
+    /**
+     * We want to use a pre-determined seed to make the tests deterministic.
+     */
+    private Random random = new Random(0);
 
     @Before
     public void setUp() throws Exception {
@@ -150,5 +158,49 @@ public class JsonORCFileReaderWriterFactoryTest {
 
         assertArrayEquals(kv1.getValue(), kv3.getValue());
         assertArrayEquals(kv2.getValue(), kv4.getValue());
+    }
+
+    /**
+     * Generates a JsonObject of a specified keyset size.
+     */
+    private JsonObject makeJsonObject(int row, int keysetSize) {
+        JsonObject obj = new JsonObject();
+        JsonObject kvs = new JsonObject();
+
+        for (int i = 0; i < keysetSize; i++) {
+            String key = String.format("key-%d-%d", row, i);
+            int value = random.nextInt();
+            kvs.addProperty(key, value);
+        }
+        obj.add("kvs", kvs);
+
+        return obj;
+    }
+
+    @Test
+    public void testWithLargeKeySet() throws Exception {
+        PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
+        properties.setProperty("secor.orc.message.schema.test-large-keyset", "struct<kvs:map<string\\,int>>");
+
+        SecorConfig config = new SecorConfig(properties);
+        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
+        LogFilePath tempLogFilePath = getTempLogFilePath("test-large-keyset");
+
+        int rowCount = 100;
+        KeyValue written[] = new KeyValue[rowCount];
+        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
+        for (int i = 0; i < rowCount; i++) {
+            int keyCount = random.nextInt(5000) + 1;
+            written[i] = new KeyValue(19000 + i, makeJsonObject(i, keyCount).toString().getBytes());
+            fileWriter.write(written[i]);
+        }
+        fileWriter.close();
+
+        FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
+        for (int i = 0; i < rowCount; i++) {
+            KeyValue read = fileReader.next();
+            assertArrayEquals(written[i].getValue(), read.getValue());
+        }
     }
 }
