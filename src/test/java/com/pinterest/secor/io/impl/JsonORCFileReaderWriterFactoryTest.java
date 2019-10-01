@@ -76,7 +76,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         KeyValue read1 = fileReader.next();
         fileReader.close();
 
-        assertArrayEquals(read1.getValue(), written1.getValue());
+        assertArrayEquals(written1.getValue(), read1.getValue());
     }
 
     @Test
@@ -105,9 +105,9 @@ public class JsonORCFileReaderWriterFactoryTest {
         KeyValue read3 = fileReader.next();
         fileReader.close();
 
-        assertArrayEquals(read1.getValue(), written1.getValue());
-        assertArrayEquals(read2.getValue(), written2.getValue());
-        assertArrayEquals(read3.getValue(), written3.getValue());
+        assertArrayEquals(written1.getValue(), read1.getValue());
+        assertArrayEquals(written2.getValue(), read2.getValue());
+        assertArrayEquals(written3.getValue(), read3.getValue());
     }
 
     @Test
@@ -130,7 +130,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         KeyValue read1 = fileReader.next();
         fileReader.close();
 
-        assertArrayEquals(read1.getValue(), written1.getValue());
+        assertArrayEquals(written1.getValue(), read1.getValue());
     }
 
     @Test
@@ -145,19 +145,19 @@ public class JsonORCFileReaderWriterFactoryTest {
         LogFilePath tempLogFilePath = getTempLogFilePath("test-topic");
 
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue kv1 = new KeyValue(23232, "{\"firstname\":\"Jason\",\"age\":48,\"test\":{\"k1\":\"v1\",\"k2\":\"v2\"}}".getBytes());
-        KeyValue kv2 = new KeyValue(23233, "{\"firstname\":\"Christina\",\"age\":37,\"test\":{\"k3\":\"v3\"}}".getBytes());
-        fileWriter.write(kv1);
-        fileWriter.write(kv2);
+        KeyValue written1 = new KeyValue(23232, "{\"firstname\":\"Jason\",\"age\":48,\"test\":{\"k1\":\"v1\",\"k2\":\"v2\"}}".getBytes());
+        KeyValue written2 = new KeyValue(23233, "{\"firstname\":\"Christina\",\"age\":37,\"test\":{\"k3\":\"v3\"}}".getBytes());
+        fileWriter.write(written1);
+        fileWriter.write(written2);
         fileWriter.close();
 
         FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
-        KeyValue kv3 = fileReader.next();
-        KeyValue kv4 = fileReader.next();
+        KeyValue read1 = fileReader.next();
+        KeyValue read2 = fileReader.next();
         fileReader.close();
 
-        assertArrayEquals(kv1.getValue(), kv3.getValue());
-        assertArrayEquals(kv2.getValue(), kv4.getValue());
+        assertArrayEquals(written1.getValue(), read1.getValue());
+        assertArrayEquals(written2.getValue(), read2.getValue());
     }
 
     /**
@@ -202,5 +202,6 @@ public class JsonORCFileReaderWriterFactoryTest {
             KeyValue read = fileReader.next();
             assertArrayEquals(written[i].getValue(), read.getValue());
         }
+        fileReader.close();
     }
 }
