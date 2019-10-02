@@ -21,6 +21,7 @@ package com.pinterest.secor.util.orc;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.pinterest.secor.util.BackOffUtil;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -29,6 +30,7 @@ import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
@@ -39,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 
@@ -162,6 +165,41 @@ public class VectorColumnFiller {
         }
     }
 
+    static class MapColumnConverter implements JsonConverter {
+        private JsonConverter[] childrenConverters;
+
+        public MapColumnConverter(TypeDescription schema) {
+            List<TypeDescription> kids = schema.getChildren();
+            childrenConverters = new JsonConverter[kids.size()];
+            for (int c = 0; c < childrenConverters.length; ++c) {
+                childrenConverters[c] = createConverter(kids.get(c));
+            }
+        }
+
+        public void convert(JsonElement value, ColumnVector vect, int row) {
+            if (value == null || value.isJsonNull()) {
+                vect.noNulls = false;
+                vect.isNull[row] = true;
+            } else {
+                MapColumnVector vector = (MapColumnVector) vect;
+                JsonObject obj = value.getAsJsonObject();
+                vector.lengths[row] = obj.size();
+                vector.offsets[row] = row > 0 ? vector.offsets[row - 1] + vector.lengths[row - 1] : 0;
+
+                // Ensure enough space is available to store the keys and the values
+                vector.keys.ensureSize((int) vector.offsets[row] + obj.size(), true);
+                vector.values.ensureSize((int) vector.offsets[row] + obj.size(), true);
+
+                int i = 0;
+                for (String key : obj.keySet()) {
+                    childrenConverters[0].convert(new JsonPrimitive(key), vector.keys, (int) vector.offsets[row] + i);
+                    childrenConverters[1].convert(obj.get(key), vector.values, (int) vector.offsets[row] + i);
+                    i++;
+                }
+            }
+        }
+    }
+
     static class StructColumnConverter implements JsonConverter {
         private JsonConverter[] childrenConverters;
         private List<String> fieldNames;
@@ -242,6 +280,8 @@ public class VectorColumnFiller {
             return new StructColumnConverter(schema);
         case LIST:
             return new ListColumnConverter(schema);
+        case MAP:
+            return new MapColumnConverter(schema);
         default:
             throw new IllegalArgumentException("Unhandled type " + schema);
         }

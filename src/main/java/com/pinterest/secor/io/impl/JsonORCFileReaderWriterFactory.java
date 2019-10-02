@@ -152,6 +152,11 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
             Path path = new Path(logFilePath.getLogFilePath());
             schema = schemaProvider.getSchema(logFilePath.getTopic(),
                     logFilePath);
+            if (schema == null) {
+                String topic = logFilePath.getTopic();
+                throw new IllegalArgumentException(
+                    String.format("No schema is provided for topic '%s'", topic));
+            }
             List<TypeDescription> fieldTypes = schema.getChildren();
             converters = new JsonConverter[fieldTypes.size()];
             for (int c = 0; c < converters.length; ++c) {
