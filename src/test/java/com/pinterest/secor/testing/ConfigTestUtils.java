@@ -1,7 +1,7 @@
 package com.pinterest.secor.testing;
 
 import ai.humn.telematics.avro.dto.ObdDataDTO;
-import ai.humn.telematics.avro.dto.RacDTO;
+import ai.humn.telematics.avro.dto.RacStandardExtendedDTO;
 import com.pinterest.secor.common.SecorConfig;
 import org.mockito.Mockito;
 
@@ -12,7 +12,7 @@ public class ConfigTestUtils {
     public static SecorConfig createMockTestConfig() {
         SecorConfig mock = Mockito.mock(SecorConfig.class);
         HashMap<String, String> specificClassesPerTopic = new HashMap<>();
-        specificClassesPerTopic.put("test_topic_rac", RacDTO.class.getCanonicalName());
+        specificClassesPerTopic.put("test_topic_rac", RacStandardExtendedDTO.class.getCanonicalName());
         specificClassesPerTopic.put("test_topic_obd", ObdDataDTO.class.getCanonicalName());
 
         Mockito.when(mock.getSchemaRegistryUrl()).thenReturn("");

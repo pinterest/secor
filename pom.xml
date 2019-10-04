@@ -159,7 +159,7 @@
         <dependency>
             <groupId>ai.humn</groupId>
             <artifactId>avro-ingestion-model</artifactId>
-            <version>1.18.0</version>
+            <version>1.31.0</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>

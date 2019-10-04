@@ -71,7 +71,7 @@ public class SecorConfigTest {
     @Test
     public void testAvroSpecificClassesAreParsedProperly() throws ConfigurationException {
         HashMap<String, String> expectedTopicsAndClasses = new HashMap<>();
-        expectedTopicsAndClasses.put("test_topic_rac", "ai.humn.avro.RacDTO");
+        expectedTopicsAndClasses.put("test_topic_rac", "ai.humn.telematics.avro.dto.RacStandardExtendedDTO");
         expectedTopicsAndClasses.put("test_topic_obd", "ai.humn.telematics.avro.dto.ObdDataDTO");
         URL configFile = Thread.currentThread().getContextClassLoader().getResource("secor.humn.test.properties");
         PropertiesConfiguration properties = new PropertiesConfiguration(configFile);

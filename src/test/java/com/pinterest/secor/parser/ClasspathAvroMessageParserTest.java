@@ -2,7 +2,7 @@ package com.pinterest.secor.parser;
 
 import ai.humn.telematics.avro.DataHelper;
 import ai.humn.telematics.avro.Serializer;
-import ai.humn.telematics.avro.dto.RacDTO;
+import ai.humn.telematics.avro.dto.RacStandardExtendedDTO;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.testing.TestAvroRecord;
@@ -29,7 +29,7 @@ public class ClasspathAvroMessageParserTest {
     public void testTimestampExtractedCorrectly() throws Exception {
         SecorConfig secorConfig = createMockTestConfig();
         initParser(secorConfig);
-        RacDTO racDTO = DataHelper.correctRacData();
+        RacStandardExtendedDTO racDTO = DataHelper.correctRacStandardExtendedData();
         Serializer.configureEnvironment();
         Serializer serializer = new Serializer();
 

@@ -2,7 +2,7 @@ package com.pinterest.secor.common;
 
 import ai.humn.telematics.avro.DataHelper;
 import ai.humn.telematics.avro.Serializer;
-import ai.humn.telematics.avro.dto.RacDTO;
+import ai.humn.telematics.avro.dto.RacStandardExtendedDTO;
 import com.pinterest.secor.util.AvroSchemaRegistryFactory;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -25,13 +25,13 @@ public class ClasspathConfigurableAvroSchemaRegistryTest {
         SecorConfig secorConfig = createMockTestConfig();
         AvroSchemaRegistry registry = AvroSchemaRegistryFactory.getSchemaRegistry(secorConfig);
         Schema schema = registry.getSchema(testTopicName);
-        Assert.assertEquals(schema, RacDTO.SCHEMA$);
+        Assert.assertEquals(schema, RacStandardExtendedDTO.SCHEMA$);
     }
 
     @Test
     public void testRegistryCanDeserializeMessageProperly() throws IOException {
         SecorConfig secorConfig = createMockTestConfig();
-        RacDTO racDTO = DataHelper.correctRacData();
+        RacStandardExtendedDTO racDTO = DataHelper.correctRacStandardExtendedData();
         Serializer serializer = new Serializer();
 
         byte[] bytes = serializer.serialize(racDTO);
