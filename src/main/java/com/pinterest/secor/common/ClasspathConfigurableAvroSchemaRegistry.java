@@ -32,6 +32,8 @@ public class ClasspathConfigurableAvroSchemaRegistry implements AvroSchemaRegist
                         .stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> new SpecificDatumReader<>(e.getValue())))
         );
+
+        LOG.debug("Configured schemas: " + schemas.toString());
     }
 
     @Override

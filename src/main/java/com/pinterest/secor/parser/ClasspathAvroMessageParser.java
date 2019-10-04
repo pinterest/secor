@@ -32,7 +32,7 @@ public class ClasspathAvroMessageParser extends TimestampedMessageParser {
             return extractTimestampFromRecord(record);
         } catch (Exception e) {
             if (m_timestampRequired) {
-                throw new RuntimeException("Missing timestamp field for message: " + message);
+                throw new RuntimeException("Missing timestamp field for message: " + message, e);
             } else {
                 LOG.error("Failed to parse record", e);
             }
