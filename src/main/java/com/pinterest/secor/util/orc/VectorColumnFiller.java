@@ -33,14 +33,18 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 
@@ -219,6 +223,49 @@ public class VectorColumnFiller {
         }
     }
 
+    static class UnionColumnConverter implements JsonConverter {
+
+        /**
+         * Union type in ORC is essentially a collection of two or more non-compatible types,
+         * and it is represented by multiple child columns under UnionColumnVector.
+         * Thus we need their converters.
+         */
+        private Map<String, JsonConverter> childConverters = new HashMap<>();
+
+        public UnionColumnConverter(TypeDescription schema) {
+            List<TypeDescription> children = schema.getChildren();
+            for (TypeDescription childType : children) {
+                JsonConverter converter = createConverter(childType);
+                childConverters.put(childType.getCategory().getName(), converter);
+            }
+        }
+
+        public void convert(JsonElement value, ColumnVector vect, int row) {
+            if (value == null || value.isJsonNull()) {
+                vect.noNulls = false;
+                vect.isNull[row] = true;
+            } else if (value.isJsonPrimitive()) {
+                UnionColumnVector vector = (UnionColumnVector) vect;
+                JsonPrimitive primitive = value.getAsJsonPrimitive();
+
+                // TODO: We need to figure out the type of primitive...
+                if (primitive.isNumber()) {
+                    JsonConverter converter = childConverters.get("int");
+                    converter.convert(value, vector.fields[0], row);
+                }
+                else if (primitive.isBoolean()) {
+                    throw new NotImplementedException();
+                }
+                else if (primitive.isString()) {
+                    JsonConverter converter = childConverters.get("string");
+                    converter.convert(value, vector.fields[1], row);
+                }
+            } else {
+                throw new NotImplementedException();
+            }
+        }
+    }
+
     static class StructColumnConverter implements JsonConverter {
         private JsonConverter[] childrenConverters;
         private List<String> fieldNames;
@@ -301,6 +348,8 @@ public class VectorColumnFiller {
             return new ListColumnConverter(schema);
         case MAP:
             return new MapColumnConverter(schema);
+        case UNION:
+            return new UnionColumnConverter(schema);
         default:
             throw new IllegalArgumentException("Unhandled type " + schema);
         }

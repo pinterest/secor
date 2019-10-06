@@ -56,7 +56,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testUnionType() throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
         properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
