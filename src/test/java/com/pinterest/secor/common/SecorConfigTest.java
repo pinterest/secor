@@ -25,6 +25,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.Test;
 
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -65,6 +66,20 @@ public class SecorConfigTest {
         assertEquals(2, messageClassPerTopic.size());
         assertEquals(UnitTestMessage1.class.getName(), messageClassPerTopic.get("mytopic1"));
         assertEquals(UnitTestMessage2.class.getName(), messageClassPerTopic.get("mytopic2"));
+    }
+
+    @Test
+    public void testAvroSpecificClassesAreParsedProperly() throws ConfigurationException {
+        HashMap<String, String> expectedTopicsAndClasses = new HashMap<>();
+        expectedTopicsAndClasses.put("test_topic_rac", "ai.humn.avro.RacDTO");
+        expectedTopicsAndClasses.put("test_topic_obd", "ai.humn.telematics.avro.dto.ObdDataDTO");
+        URL configFile = Thread.currentThread().getContextClassLoader().getResource("secor.humn.test.properties");
+        PropertiesConfiguration properties = new PropertiesConfiguration(configFile);
+
+        SecorConfig secorConfig = new SecorConfig(properties);
+        Map<String, String> messageClassNamePerTopic = secorConfig.getAvroSpecificClassesSchemas();
+
+        assertEquals(expectedTopicsAndClasses, messageClassNamePerTopic);
     }
 
     @Test
