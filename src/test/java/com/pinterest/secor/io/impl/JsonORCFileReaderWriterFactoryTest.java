@@ -204,4 +204,26 @@ public class JsonORCFileReaderWriterFactoryTest {
         }
         fileReader.close();
     }
+
+    @Test
+    public void testWithNonStringKeys() throws Exception {
+        PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
+        properties.setProperty("secor.orc.message.schema.test-nonstring-keys", "struct<kvs:map<int\\,int>>");
+
+        SecorConfig config = new SecorConfig(properties);
+        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
+        LogFilePath tempLogFilePath = getTempLogFilePath("test-nonstring-keys");
+
+        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
+        KeyValue written1 = new KeyValue(90001, "{\"kvs\":{1:2,3:4}}".getBytes());
+        fileWriter.write(written1);
+        fileWriter.close();
+
+        FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
+        KeyValue read1 = fileReader.next();
+        fileReader.close();
+
+        assertArrayEquals(written1.getValue(), read1.getValue());
+    }
 }
