@@ -168,10 +168,25 @@ public class VectorColumnFiller {
         private JsonConverter[] childConverters;
 
         public MapColumnConverter(TypeDescription schema) {
+            assertKeyType(schema);
+
             List<TypeDescription> childTypes = schema.getChildren();
             childConverters = new JsonConverter[childTypes.size()];
             for (int c = 0; c < childConverters.length; ++c) {
                 childConverters[c] = createConverter(childTypes.get(c));
+            }
+        }
+
+        /**
+         * Rejects non-string keys. This is a limitation imposed by JSON specifications that only allows strings
+         * as keys.
+         */
+        private void assertKeyType(TypeDescription schema) {
+            TypeDescription keyType = schema.getChildren().get(0);
+            String keyTypeName = keyType.getCategory().getName();
+            if (!keyTypeName.equals("string")) {
+                throw new IllegalArgumentException(
+                        String.format("Unsupported key type: %s", keyTypeName));
             }
         }
 
