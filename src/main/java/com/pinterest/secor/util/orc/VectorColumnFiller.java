@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Set;
 
 /**
  * 
@@ -166,13 +165,13 @@ public class VectorColumnFiller {
     }
 
     static class MapColumnConverter implements JsonConverter {
-        private JsonConverter[] childrenConverters;
+        private JsonConverter[] childConverters;
 
         public MapColumnConverter(TypeDescription schema) {
-            List<TypeDescription> kids = schema.getChildren();
-            childrenConverters = new JsonConverter[kids.size()];
-            for (int c = 0; c < childrenConverters.length; ++c) {
-                childrenConverters[c] = createConverter(kids.get(c));
+            List<TypeDescription> childTypes = schema.getChildren();
+            childConverters = new JsonConverter[childTypes.size()];
+            for (int c = 0; c < childConverters.length; ++c) {
+                childConverters[c] = createConverter(childTypes.get(c));
             }
         }
 
@@ -192,8 +191,8 @@ public class VectorColumnFiller {
 
                 int i = 0;
                 for (String key : obj.keySet()) {
-                    childrenConverters[0].convert(new JsonPrimitive(key), vector.keys, (int) vector.offsets[row] + i);
-                    childrenConverters[1].convert(obj.get(key), vector.values, (int) vector.offsets[row] + i);
+                    childConverters[0].convert(new JsonPrimitive(key), vector.keys, (int) vector.offsets[row] + i);
+                    childConverters[1].convert(obj.get(key), vector.values, (int) vector.offsets[row] + i);
                     i++;
                 }
             }
