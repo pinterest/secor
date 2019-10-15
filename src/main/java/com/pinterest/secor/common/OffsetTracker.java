@@ -97,4 +97,37 @@ public class OffsetTracker {
         mCommittedOffsetCount.put(topicPartition, count);
         return trueCommittedOffsetCount;
     }
+
+
+    public String toString() {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Topic Offset dump: \n");
+        sb.append("First Seen offset:\n");
+        dump(mFirstSeendOffset, sb);
+
+        sb.append("Last Seen offset:\n");
+        dump(mLastSeenOffset, sb);
+
+        sb.append("Committed offset: \n");
+        dump(mCommittedOffsetCount, sb);
+
+        return sb.toString();
+
+    }
+
+    private StringBuilder dump(HashMap<TopicPartition, Long> offsetMap, StringBuilder sb) {
+        offsetMap.forEach((tp, offset) -> {
+            sb
+                    .append("[")
+                    .append(tp.toString())
+                    .append(", Offset:" + offset)
+                    .append("]")
+                    .append("\n");
+        });
+
+        return sb;
+    }
+
+
 }

@@ -1,6 +1,5 @@
-#!/bin/sh
+#!/bin/bash
 set -e
-
 
 SECOR_CONFIG=''
 

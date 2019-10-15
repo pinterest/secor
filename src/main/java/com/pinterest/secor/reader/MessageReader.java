@@ -109,8 +109,8 @@ public class MessageReader {
             exportStats();
         }
         if (message.getOffset() < committedOffsetCount) {
-            LOG.debug("skipping message {} because its offset precedes committed offset count {}",
-                    message, committedOffsetCount);
+            LOG.info("skipping message topic {} offset {} because its offset precedes committed offset count {}",
+                    message.getTopic(), message.getOffset(), committedOffsetCount);
             return null;
         }
         return message;

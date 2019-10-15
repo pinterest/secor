@@ -25,6 +25,7 @@ import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.SecorConstants;
+import com.pinterest.secor.common.SingleProcessCounter;
 import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.io.FileReader;
@@ -65,6 +66,7 @@ public class Uploader {
     protected String mTopicFilter;
 
     private boolean isOffsetsStorageKafka = false;
+    private static SingleProcessCounter spc = SingleProcessCounter.getSingleProcessCounter();
 
 
     /**
@@ -142,6 +144,7 @@ public class Uploader {
                     mMessageReader.commit(topicPartition, lastSeenOffset + 1);
                 }
                 mMetricCollector.increment("uploader.file_uploads.count", paths.size(), topicPartition.getTopic());
+                spc.topicUploaded(topicPartition);
             } else {
                 LOG.warn("Zookeeper committed offset didn't match for topic {} partition {}: {} vs {}",
                          topicPartition.getTopic(), topicPartition.getTopic(), zookeeperCommittedOffsetCount,
@@ -182,6 +185,7 @@ public class Uploader {
         int copiedMessages = 0;
         // Deleting the writer closes its stream flushing all pending data to the disk.
         mFileRegistry.deleteWriter(srcPath);
+        long droppedCounter = 0;
         try {
             CompressionCodec codec = null;
             String extension = "";
@@ -195,19 +199,21 @@ public class Uploader {
                 if (keyVal.getOffset() >= startOffset) {
                     if (writer == null) {
                         String localPrefix = mConfig.getLocalPath() + '/' +
-                            IdUtil.getLocalMessageDir();
+                                IdUtil.getLocalMessageDir();
                         dstPath = new LogFilePath(localPrefix, srcPath.getTopic(),
-                                                  srcPath.getPartitions(), srcPath.getGeneration(),
-                                                  srcPath.getKafkaPartition(), startOffset,
-                                                  extension);
+                                srcPath.getPartitions(), srcPath.getGeneration(),
+                                srcPath.getKafkaPartition(), startOffset,
+                                extension);
                         writer = mFileRegistry.getOrCreateWriter(dstPath,
-                        		codec);
+                                codec);
                     }
                     writer.write(keyVal);
                     if (mDeterministicUploadPolicyTracker != null) {
                         mDeterministicUploadPolicyTracker.track(topicPartition, keyVal);
                     }
                     copiedMessages++;
+                } else {
+                    droppedCounter++;
                 }
             }
         } finally {
@@ -216,6 +222,7 @@ public class Uploader {
             }
         }
         mFileRegistry.deletePath(srcPath);
+        spc.decrement(topicPartition, droppedCounter);
         if (dstPath == null) {
             LOG.info("removed file {}", srcPath.getLogFilePath());
         } else {

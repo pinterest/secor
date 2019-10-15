@@ -22,6 +22,8 @@ import com.pinterest.secor.common.DeterministicUploadPolicyTracker;
 import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.SingleProcessCounter;
+import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.monitoring.MetricCollector;
@@ -75,6 +77,7 @@ public class Consumer extends Thread {
     private boolean mUploadOnShutdown;
     private volatile boolean mShuttingDown = false;
     private static volatile boolean mCallingSystemExit = false;
+    private static SingleProcessCounter spc = SingleProcessCounter.getSingleProcessCounter();
 
     public Consumer(SecorConfig config) {
         mConfig = config;
@@ -156,8 +159,9 @@ public class Consumer extends Thread {
             // check upload policy every N seconds or 10,000 messages/consumer timeouts
             long checkEveryNSeconds = Math.min(10 * 60, mConfig.getMaxFileAgeSeconds() / 2);
             long checkMessagesPerSecond = mConfig.getMessagesPerSecond();
-            long nMessages = 0;
+            long nMsgPulls = 0;
             long lastChecked = System.currentTimeMillis();
+            long timeStamp = System.currentTimeMillis();
             while (true) {
                 boolean hasMoreMessages = consumeNextMessage();
                 if (!hasMoreMessages) {
@@ -170,8 +174,14 @@ public class Consumer extends Thread {
                 }
 
                 long now = System.currentTimeMillis();
+
+                if (nMsgPulls % 1000 == 0 || now - timeStamp > 60 * 1000) {
+                    LOG.info("nMsgPulls: " + nMsgPulls + " lastChecked: " + lastChecked);
+                    timeStamp = now;
+                }
+
                 if (mDeterministicUploadPolicyTracker != null ||
-                    nMessages++ % checkMessagesPerSecond == 0 ||
+                        nMsgPulls++ % checkMessagesPerSecond == 0 ||
                     (now - lastChecked) > checkEveryNSeconds * 1000) {
                     lastChecked = now;
                     checkUploadPolicy(false);
@@ -191,6 +201,7 @@ public class Consumer extends Thread {
 
     protected void checkUploadPolicy(boolean forceUpload) {
         try {
+            LOG.info("checkUploadPolicy invoked, " + mOffsetTracker.toString() + ", " + spc.toString());
             mUploader.applyPolicy(forceUpload);
         } catch (Exception e) {
             throw new RuntimeException("Failed to apply upload policy", e);
@@ -242,7 +253,8 @@ public class Consumer extends Thread {
             if (parsedMessage != null) {
                 try {
                     mMessageWriter.write(parsedMessage);
-
+                    spc.increment(new TopicPartition(rawMessage.getTopic(),
+                            rawMessage.getKafkaPartition()), 1l);
                     mMetricCollector.metric("consumer.message_size_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
                     mMetricCollector.increment("consumer.throughput_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
                 } catch (Exception e) {
