@@ -222,21 +222,87 @@ public class VectorColumnFiller {
         }
     }
 
+    /**
+     * The primary challenge here is that available type information at the time of class instantiation and at the
+     * time of invocation of {@code convert()} is different. We have exact type information when
+     * {@code UnionColumnConverter} is instantiated, as it is given as {@code TypeDescription} which represents an
+     * ORC schema. Conversely, when {@code convert()} method is called, limited type information is available because
+     * JSON supports three primitive types only: boolean, number, and string.
+     *
+     * The proposed solution for this issue is to register appropriate converters at the time of instantiation with
+     * a matching {@code ColumnVector} index. Note that {@code UnionColumnVector} has child column vectors to support
+     * each of its child type.
+     */
     static class UnionColumnConverter implements JsonConverter {
+
+        // TODO: Could we come up with a better name?
+        private class ConverterInfo {
+            private int vectorIndex;
+            private JsonConverter converter;
+
+            public ConverterInfo(int vectorIndex, JsonConverter converter) {
+                this.vectorIndex = vectorIndex;
+                this.converter = converter;
+            }
+
+            public int getVectorIndex() {
+                return vectorIndex;
+            }
+
+            public JsonConverter getConverter() {
+                return converter;
+            }
+        }
 
         /**
          * Union type in ORC is essentially a collection of two or more non-compatible types,
          * and it is represented by multiple child columns under UnionColumnVector.
-         * Thus we need their converters.
+         * Thus we need converters for each type.
          */
-        private Map<String, JsonConverter> childConverters = new HashMap<>();
+        private Map<Byte, ConverterInfo> childConverters = new HashMap<>();
 
         public UnionColumnConverter(TypeDescription schema) {
             List<TypeDescription> children = schema.getChildren();
+            int index = 0;
             for (TypeDescription childType : children) {
+                byte mask = getTypeMask(childType.getCategory());
                 JsonConverter converter = createConverter(childType);
-                childConverters.put(childType.getCategory().getName(), converter);
+                // FIXME: Handle cases where childConverters is pre-occupied with the same mask
+                childConverters.put(mask, new ConverterInfo(index++, converter));
             }
+        }
+
+        private byte getTypeMask(TypeDescription.Category category) {
+            switch (category) {
+                case BOOLEAN:
+                    return 0x01;
+                case BYTE:
+                case SHORT:
+                case INT:
+                case LONG:
+                case FLOAT:
+                case DOUBLE:
+                case DECIMAL:
+                    return 0x02;
+                case CHAR:
+                case VARCHAR:
+                case STRING:
+                    return 0x04;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
+
+        private byte getTypeMask(JsonPrimitive value) {
+            byte mask = 0;
+
+            mask |= value.isBoolean() ? 0x01 : 0;
+            mask |= value.isNumber()  ? 0x02 : 0;
+            mask |= value.isString()  ? 0x04 : 0;
+
+            // FIXME: How should we handle isArray() and isObject()?
+
+            return mask;
         }
 
         public void convert(JsonElement value, ColumnVector vect, int row) {
@@ -247,19 +313,19 @@ public class VectorColumnFiller {
                 UnionColumnVector vector = (UnionColumnVector) vect;
                 JsonPrimitive primitive = value.getAsJsonPrimitive();
 
-                // TODO: We need to figure out the type of primitive...
-                if (primitive.isNumber()) {
-                    JsonConverter converter = childConverters.get("int");
-                    converter.convert(value, vector.fields[0], row);
+                byte mask = getTypeMask(primitive);
+                ConverterInfo converterInfo = childConverters.get(mask);
+                if (converterInfo == null) {
+                    String message = String.format("Unable to infer type for '%s'", primitive);
+                    throw new IllegalArgumentException(message);
                 }
-                else if (primitive.isBoolean()) {
-                    throw new UnsupportedOperationException();
-                }
-                else if (primitive.isString()) {
-                    JsonConverter converter = childConverters.get("string");
-                    converter.convert(value, vector.fields[1], row);
-                }
+
+                int vectorIndex = converterInfo.getVectorIndex();
+                JsonConverter converter = converterInfo.getConverter();
+                converter.convert(value, vector.fields[vectorIndex], row);
             } else {
+                // It would be great to support non-primitive types in union type.
+                // Let's leave this for another PR in the future.
                 throw new UnsupportedOperationException();
             }
         }
