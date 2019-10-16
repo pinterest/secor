@@ -38,7 +38,6 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
@@ -254,14 +253,14 @@ public class VectorColumnFiller {
                     converter.convert(value, vector.fields[0], row);
                 }
                 else if (primitive.isBoolean()) {
-                    throw new NotImplementedException();
+                    throw new UnsupportedOperationException();
                 }
                 else if (primitive.isString()) {
                     JsonConverter converter = childConverters.get("string");
                     converter.convert(value, vector.fields[1], row);
                 }
             } else {
-                throw new NotImplementedException();
+                throw new UnsupportedOperationException();
             }
         }
     }

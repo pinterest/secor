@@ -13,7 +13,6 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.GzipCodec;
 import org.junit.Before;
 import org.junit.Test;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Random;
 
@@ -76,7 +75,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         fileWriter.close();
     }
 
-    @Test(expected = NotImplementedException.class)
+    @Test(expected = UnsupportedOperationException.class)
     public void testUnionTypeWithNonPrimitive() throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
         properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
