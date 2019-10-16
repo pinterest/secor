@@ -26,11 +26,17 @@ import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
-
 import org.apache.hadoop.io.compress.CompressionCodec;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Log file verifier checks the consistency of log files.
