@@ -184,7 +184,7 @@ public class VectorColumnFiller {
         private void assertKeyType(TypeDescription schema) {
             TypeDescription keyType = schema.getChildren().get(0);
             String keyTypeName = keyType.getCategory().getName();
-            if (!keyTypeName.equals("string")) {
+            if (!keyTypeName.equalsIgnoreCase("string")) {
                 throw new IllegalArgumentException(
                         String.format("Unsupported key type: %s", keyTypeName));
             }
