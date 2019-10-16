@@ -23,17 +23,18 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.KafkaClient;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.parser.MessageParser;
 import com.pinterest.secor.parser.TimestampedMessageParser;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.timgroup.statsd.NonBlockingStatsDClient;
-
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -18,22 +18,23 @@
  */
 package com.pinterest.secor.common;
 
-import java.util.Arrays;
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-
 import com.pinterest.secor.util.StatsUtil;
-import com.twitter.ostrich.admin.*;
+import com.twitter.ostrich.admin.AdminServiceFactory;
+import com.twitter.ostrich.admin.CustomHttpHandler;
+import com.twitter.ostrich.admin.RuntimeEnvironment;
+import com.twitter.ostrich.admin.StatsFactory;
 import com.twitter.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.collection.JavaConversions;
 import scala.collection.Map$;
-import scala.collection.immutable.List;
 import scala.collection.immutable.List$;
-import scala.collection.mutable.Buffer;
 import scala.util.matching.Regex;
+
+import java.util.Arrays;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 /**
  * OstrichAdminService initializes export of metrics to Ostrich.

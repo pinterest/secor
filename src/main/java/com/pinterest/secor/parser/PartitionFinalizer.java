@@ -18,7 +18,11 @@
  */
 package com.pinterest.secor.parser;
 
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.KafkaClient;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.TopicPartition;
+import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
