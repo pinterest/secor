@@ -182,6 +182,11 @@ public class VectorColumnFiller {
          * as keys.
          */
         private void assertKeyType(TypeDescription schema) {
+            // NOTE: It may be tempting to ensure that schema.getChildren() returns at least one child here, but the
+            // validity of an ORC schema is ensured by TypeDescription. Malformed ORC schema could be a concern.
+            // For example, an ORC schema of `map<>` may produce a TypeDescription instance with no child. However,
+            // TypeDescription.fromString() rejects any malformed ORC schema and therefore we may assume only valid
+            // ORC schema will make to this point.
             TypeDescription keyType = schema.getChildren().get(0);
             String keyTypeName = keyType.getCategory().getName();
             if (!keyTypeName.equalsIgnoreCase("string")) {
