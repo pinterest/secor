@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Set;
 
 /**
  * 
@@ -166,13 +165,33 @@ public class VectorColumnFiller {
     }
 
     static class MapColumnConverter implements JsonConverter {
-        private JsonConverter[] childrenConverters;
+        private JsonConverter[] childConverters;
 
         public MapColumnConverter(TypeDescription schema) {
-            List<TypeDescription> kids = schema.getChildren();
-            childrenConverters = new JsonConverter[kids.size()];
-            for (int c = 0; c < childrenConverters.length; ++c) {
-                childrenConverters[c] = createConverter(kids.get(c));
+            assertKeyType(schema);
+
+            List<TypeDescription> childTypes = schema.getChildren();
+            childConverters = new JsonConverter[childTypes.size()];
+            for (int c = 0; c < childConverters.length; ++c) {
+                childConverters[c] = createConverter(childTypes.get(c));
+            }
+        }
+
+        /**
+         * Rejects non-string keys. This is a limitation imposed by JSON specifications that only allows strings
+         * as keys.
+         */
+        private void assertKeyType(TypeDescription schema) {
+            // NOTE: It may be tempting to ensure that schema.getChildren() returns at least one child here, but the
+            // validity of an ORC schema is ensured by TypeDescription. Malformed ORC schema could be a concern.
+            // For example, an ORC schema of `map<>` may produce a TypeDescription instance with no child. However,
+            // TypeDescription.fromString() rejects any malformed ORC schema and therefore we may assume only valid
+            // ORC schema will make to this point.
+            TypeDescription keyType = schema.getChildren().get(0);
+            String keyTypeName = keyType.getCategory().getName();
+            if (!keyTypeName.equalsIgnoreCase("string")) {
+                throw new IllegalArgumentException(
+                        String.format("Unsupported key type: %s", keyTypeName));
             }
         }
 
@@ -192,8 +211,8 @@ public class VectorColumnFiller {
 
                 int i = 0;
                 for (String key : obj.keySet()) {
-                    childrenConverters[0].convert(new JsonPrimitive(key), vector.keys, (int) vector.offsets[row] + i);
-                    childrenConverters[1].convert(obj.get(key), vector.values, (int) vector.offsets[row] + i);
+                    childConverters[0].convert(new JsonPrimitive(key), vector.keys, (int) vector.offsets[row] + i);
+                    childConverters[1].convert(obj.get(key), vector.values, (int) vector.offsets[row] + i);
                     i++;
                 }
             }
