@@ -235,6 +235,10 @@ public class VectorColumnFiller {
      */
     static class UnionColumnConverter implements JsonConverter {
 
+        private static final byte BOOLEAN_MASK = 0x01;
+        private static final byte NUMBER_MASK = 0x02;
+        private static final byte STRING_MASK = 0x04;
+
         // TODO: Could we come up with a better name?
         private class ConverterInfo {
             private int vectorIndex;
@@ -275,7 +279,7 @@ public class VectorColumnFiller {
         private byte getTypeMask(TypeDescription.Category category) {
             switch (category) {
                 case BOOLEAN:
-                    return 0x01;
+                    return BOOLEAN_MASK;
                 case BYTE:
                 case SHORT:
                 case INT:
@@ -283,11 +287,11 @@ public class VectorColumnFiller {
                 case FLOAT:
                 case DOUBLE:
                 case DECIMAL:
-                    return 0x02;
+                    return NUMBER_MASK;
                 case CHAR:
                 case VARCHAR:
                 case STRING:
-                    return 0x04;
+                    return STRING_MASK;
                 default:
                     throw new UnsupportedOperationException();
             }
@@ -296,9 +300,9 @@ public class VectorColumnFiller {
         private byte getTypeMask(JsonPrimitive value) {
             byte mask = 0;
 
-            mask |= value.isBoolean() ? 0x01 : 0;
-            mask |= value.isNumber()  ? 0x02 : 0;
-            mask |= value.isString()  ? 0x04 : 0;
+            mask |= value.isBoolean() ? BOOLEAN_MASK : 0;
+            mask |= value.isNumber()  ? NUMBER_MASK  : 0;
+            mask |= value.isString()  ? STRING_MASK  : 0;
 
             // FIXME: How should we handle isArray() and isObject()?
 
