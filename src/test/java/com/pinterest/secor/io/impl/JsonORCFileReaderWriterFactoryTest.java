@@ -16,7 +16,7 @@ import org.junit.Test;
 
 import java.util.Random;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public class JsonORCFileReaderWriterFactoryTest {
 
@@ -119,7 +119,22 @@ public class JsonORCFileReaderWriterFactoryTest {
         KeyValue[] read = readRecords(factory, tempLogFilePath, jsonRecords.length);
 
         for (int i = 0; i < jsonRecords.length; i++) {
-            assertArrayEquals(written[i].getValue(), read[i].getValue());
+            // String comparisons make debugging a bit easier, albeit induce greater memory footprint.
+            // For example, byte array comparison yields an error message like:
+            //
+            //     java.lang.AssertionError: array lengths differed, expected.length=35 actual.length=32
+            //
+            // whereas string comparison produces a much more helpful message like:
+            //
+            //     org.junit.ComparisonFailure:
+            //     Expected :{"mappings":{"key5":0,"key6":1.25}}
+            //     Actual   :{"mappings":{"key5":0,"key6":1}}
+            //
+            // The original assertion code was:
+            //
+            //     assertArrayEquals(written[i].getValue(), read[i].getValue())
+            //
+            assertEquals(new String(written[i].getValue()), new String(read[i].getValue()));
         }
     }
 
