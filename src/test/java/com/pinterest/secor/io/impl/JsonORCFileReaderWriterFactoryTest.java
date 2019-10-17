@@ -224,9 +224,9 @@ public class JsonORCFileReaderWriterFactoryTest {
     @Test(expected = IllegalArgumentException.class)
     public void testWithNonStringKeys() throws Exception {
         runCommonTest(
-                "struct<kvs:map<int\\,int>>",
-                "non-string-keys",
-                "{0:{1:2,3:4}}"
+            "struct<kvs:map<int\\,int>>",
+            "non-string-keys",
+            "{0:{1:2,3:4}}"
         );
     }
 }
