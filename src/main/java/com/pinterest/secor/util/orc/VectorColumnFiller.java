@@ -235,9 +235,9 @@ public class VectorColumnFiller {
      */
     static class UnionColumnConverter implements JsonConverter {
 
-        private static final byte BOOLEAN_MASK = 0x01;
-        private static final byte NUMBER_MASK = 0x02;
-        private static final byte STRING_MASK = 0x04;
+        private enum JsonType {
+            NULL, BOOLEAN, NUMBER, STRING, ARRAY, OBJECT
+        }
 
         // TODO: Could we come up with a better name?
         private class ConverterInfo {
@@ -263,23 +263,23 @@ public class VectorColumnFiller {
          * and it is represented by multiple child columns under UnionColumnVector.
          * Thus we need converters for each type.
          */
-        private Map<Byte, ConverterInfo> childConverters = new HashMap<>();
+        private Map<JsonType, ConverterInfo> childConverters = new HashMap<>();
 
         public UnionColumnConverter(TypeDescription schema) {
             List<TypeDescription> children = schema.getChildren();
             int index = 0;
             for (TypeDescription childType : children) {
-                byte mask = getTypeMask(childType.getCategory());
+                JsonType jsonType = getJsonType(childType.getCategory());
                 JsonConverter converter = createConverter(childType);
                 // FIXME: Handle cases where childConverters is pre-occupied with the same mask
-                childConverters.put(mask, new ConverterInfo(index++, converter));
+                childConverters.put(jsonType, new ConverterInfo(index++, converter));
             }
         }
 
-        private byte getTypeMask(TypeDescription.Category category) {
+        private JsonType getJsonType(TypeDescription.Category category) {
             switch (category) {
                 case BOOLEAN:
-                    return BOOLEAN_MASK;
+                    return JsonType.BOOLEAN;
                 case BYTE:
                 case SHORT:
                 case INT:
@@ -287,26 +287,26 @@ public class VectorColumnFiller {
                 case FLOAT:
                 case DOUBLE:
                 case DECIMAL:
-                    return NUMBER_MASK;
+                    return JsonType.NUMBER;
                 case CHAR:
                 case VARCHAR:
                 case STRING:
-                    return STRING_MASK;
+                    return JsonType.STRING;
                 default:
                     throw new UnsupportedOperationException();
             }
         }
 
-        private byte getTypeMask(JsonPrimitive value) {
-            byte mask = 0;
-
-            mask |= value.isBoolean() ? BOOLEAN_MASK : 0;
-            mask |= value.isNumber()  ? NUMBER_MASK  : 0;
-            mask |= value.isString()  ? STRING_MASK  : 0;
-
-            // FIXME: How should we handle isArray() and isObject()?
-
-            return mask;
+        private JsonType getJsonType(JsonPrimitive value) {
+            if (value.isBoolean()) {
+                return JsonType.BOOLEAN;
+            } else if (value.isNumber()) {
+                return JsonType.NUMBER;
+            } else if (value.isString()) {
+                return JsonType.STRING;
+            } else {
+                throw new UnsupportedOperationException();
+            }
         }
 
         public void convert(JsonElement value, ColumnVector vect, int row) {
@@ -317,8 +317,8 @@ public class VectorColumnFiller {
                 UnionColumnVector vector = (UnionColumnVector) vect;
                 JsonPrimitive primitive = value.getAsJsonPrimitive();
 
-                byte mask = getTypeMask(primitive);
-                ConverterInfo converterInfo = childConverters.get(mask);
+                JsonType jsonType = getJsonType(primitive);
+                ConverterInfo converterInfo = childConverters.get(jsonType);
                 if (converterInfo == null) {
                     String message = String.format("Unable to infer type for '%s'", primitive);
                     throw new IllegalArgumentException(message);
