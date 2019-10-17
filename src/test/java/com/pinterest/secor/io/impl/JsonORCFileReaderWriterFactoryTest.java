@@ -106,108 +106,86 @@ public class JsonORCFileReaderWriterFactoryTest {
         fileWriter.close();
     }
 
-    @Test
-    public void testMapOfStringToString() throws Exception {
+    private void runCommonTest(String schema, String topic, String... jsonRecords) throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
         properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
-        properties.setProperty("secor.orc.message.schema.test-topic-map1", "struct<mappings:map<string\\,string>>");
+        properties.setProperty(String.format("secor.orc.message.schema.%s", topic), schema);
 
         SecorConfig config = new SecorConfig(properties);
         JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
 
-        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic-map1");
+        LogFilePath tempLogFilePath = getTempLogFilePath(topic);
+        KeyValue[] written = writeRecords(factory, tempLogFilePath, jsonRecords);
+        KeyValue[] read = readRecords(factory, tempLogFilePath, jsonRecords.length);
 
+        for (int i = 0; i < jsonRecords.length; i++) {
+            assertArrayEquals(written[i].getValue(), read[i].getValue());
+        }
+    }
+
+    private KeyValue[] writeRecords(JsonORCFileReaderWriterFactory factory, LogFilePath tempLogFilePath,
+                                    String... jsonRecords) throws Exception {
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue written1 = new KeyValue(10001, "{\"mappings\":{\"key1\":\"value1\",\"key2\":\"value2\"}}".getBytes());
-        fileWriter.write(written1);
+        KeyValue[] keyValues = new KeyValue[jsonRecords.length];
+        for (int offset = 0; offset < jsonRecords.length; offset++) {
+            String jsonRecord = jsonRecords[offset];
+            keyValues[offset] = new KeyValue(offset, jsonRecord.getBytes());
+            fileWriter.write(keyValues[offset]);
+        }
         fileWriter.close();
 
+        return keyValues;
+    }
+
+    private KeyValue[] readRecords(JsonORCFileReaderWriterFactory factory, LogFilePath tempLogFilePath, int count)
+            throws Exception {
         FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
-        KeyValue read1 = fileReader.next();
+        KeyValue[] keyValues = new KeyValue[count];
+        for (int offset = 0; offset < count; offset++) {
+            keyValues[offset] = fileReader.next();
+        }
         fileReader.close();
 
-        assertArrayEquals(written1.getValue(), read1.getValue());
+        return keyValues;
+    }
+
+    @Test
+    public void testMapOfStringToString() throws Exception {
+        runCommonTest(
+            "struct<mappings:map<string\\,string>>",
+            "string-to-string",
+            "{\"mappings\":{\"key1\":\"value1\",\"key2\":\"value2\"}}"
+        );
     }
 
     @Test
     public void testMapOfStringToInteger() throws Exception {
-        PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
-        properties.setProperty("secor.orc.message.schema.test-topic-map2", "struct<mappings:map<string\\,int>>");
-
-        SecorConfig config = new SecorConfig(properties);
-        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
-
-        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic-map2");
-
-        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue written1 = new KeyValue(12345, "{\"mappings\":{\"key1\":1,\"key2\":-2}}".getBytes());
-        KeyValue written2 = new KeyValue(12346, "{\"mappings\":{\"key3\":1523,\"key4\":3451325}}".getBytes());
-        KeyValue written3 = new KeyValue(12347, "{\"mappings\":{\"key5\":0,\"key6\":-8382}}".getBytes());
-        fileWriter.write(written1);
-        fileWriter.write(written2);
-        fileWriter.write(written3);
-        fileWriter.close();
-
-        FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
-        KeyValue read1 = fileReader.next();
-        KeyValue read2 = fileReader.next();
-        KeyValue read3 = fileReader.next();
-        fileReader.close();
-
-        assertArrayEquals(written1.getValue(), read1.getValue());
-        assertArrayEquals(written2.getValue(), read2.getValue());
-        assertArrayEquals(written3.getValue(), read3.getValue());
+        runCommonTest(
+            "struct<mappings:map<string\\,int>>",
+            "string-to-integer",
+            "{\"mappings\":{\"key1\":1,\"key2\":-2}}",
+            "{\"mappings\":{\"key3\":1523,\"key4\":3451325}}",
+            "{\"mappings\":{\"key5\":0,\"key6\":-8382}}"
+        );
     }
 
     @Test
     public void testMultipleMaps() throws Exception {
-        PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", "com.pinterest.secor.util.orc.schema.DefaultORCSchemaProvider");
-        properties.setProperty("secor.orc.message.schema.test-topic-multimaps", "struct<f1:map<string\\,int>\\,f2:map<string\\,string>>");
-
-        SecorConfig config = new SecorConfig(properties);
-        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
-
-        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic-multimaps");
-
-        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue written1 = new KeyValue(13001, "{\"f1\":{\"k1\":0,\"k2\":1234},\"f2\":{\"k3\":\"test\"}}".getBytes());
-        fileWriter.write(written1);
-        fileWriter.close();
-
-        FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
-        KeyValue read1 = fileReader.next();
-        fileReader.close();
-
-        assertArrayEquals(written1.getValue(), read1.getValue());
+        runCommonTest(
+            "struct<f1:map<string\\,int>\\,f2:map<string\\,string>>",
+            "multiple-maps",
+            "{\"f1\":{\"k1\":0,\"k2\":1234},\"f2\":{\"k3\":\"test\"}}"
+        );
     }
 
     @Test
     public void testJsonORCReadWriteRoundTrip() throws Exception {
-        PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
-        properties.setProperty("secor.orc.message.schema.test-topic", "struct<firstname:string\\,age:int\\,test:map<string\\,string>>");
-
-        SecorConfig config = new SecorConfig(properties);
-        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
-
-        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic");
-
-        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue written1 = new KeyValue(23232, "{\"firstname\":\"Jason\",\"age\":48,\"test\":{\"k1\":\"v1\",\"k2\":\"v2\"}}".getBytes());
-        KeyValue written2 = new KeyValue(23233, "{\"firstname\":\"Christina\",\"age\":37,\"test\":{\"k3\":\"v3\"}}".getBytes());
-        fileWriter.write(written1);
-        fileWriter.write(written2);
-        fileWriter.close();
-
-        FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
-        KeyValue read1 = fileReader.next();
-        KeyValue read2 = fileReader.next();
-        fileReader.close();
-
-        assertArrayEquals(written1.getValue(), read1.getValue());
-        assertArrayEquals(written2.getValue(), read2.getValue());
+        runCommonTest(
+            "struct<firstname:string\\,age:int\\,test:map<string\\,string>>",
+            "round-trip",
+            "{\"firstname\":\"Jason\",\"age\":48,\"test\":{\"k1\":\"v1\",\"k2\":\"v2\"}}",
+            "{\"firstname\":\"Christina\",\"age\":37,\"test\":{\"k3\":\"v3\"}}"
+        );
     }
 
     /**
@@ -257,17 +235,10 @@ public class JsonORCFileReaderWriterFactoryTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testWithNonStringKeys() throws Exception {
-        PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
-        properties.setProperty("secor.orc.message.schema.test-nonstring-keys", "struct<kvs:map<int\\,int>>");
-
-        SecorConfig config = new SecorConfig(properties);
-        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
-        LogFilePath tempLogFilePath = getTempLogFilePath("test-nonstring-keys");
-
-        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue written1 = new KeyValue(90001, "{\"kvs\":{1:2,3:4}}".getBytes());
-        fileWriter.write(written1);
-        fileWriter.close();
+        runCommonTest(
+                "struct<kvs:map<int\\,int>>",
+                "non-string-keys",
+                "{0:{1:2,3:4}}"
+        );
     }
 }
