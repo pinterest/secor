@@ -207,30 +207,18 @@ public class JsonORCFileReaderWriterFactoryTest {
 
     @Test
     public void testWithLargeKeySet() throws Exception {
-        PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
-        properties.setProperty("secor.orc.message.schema.test-large-keyset", "struct<kvs:map<string\\,int>>");
-
-        SecorConfig config = new SecorConfig(properties);
-        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
-        LogFilePath tempLogFilePath = getTempLogFilePath("test-large-keyset");
-
         int rowCount = 100;
-        KeyValue written[] = new KeyValue[rowCount];
-        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
+        String[] jsonObjects = new String[rowCount];
         for (int i = 0; i < rowCount; i++) {
             int keyCount = random.nextInt(5000) + 1;
-            written[i] = new KeyValue(19000 + i, makeJsonObject(i, keyCount).toString().getBytes());
-            fileWriter.write(written[i]);
+            jsonObjects[i] = makeJsonObject(i, keyCount).toString();
         }
-        fileWriter.close();
 
-        FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
-        for (int i = 0; i < rowCount; i++) {
-            KeyValue read = fileReader.next();
-            assertArrayEquals(written[i].getValue(), read.getValue());
-        }
-        fileReader.close();
+        runCommonTest(
+            "struct<kvs:map<string\\,int>>",
+            "large-key-set",
+            jsonObjects
+        );
     }
 
     @Test(expected = IllegalArgumentException.class)
