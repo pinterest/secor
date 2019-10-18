@@ -18,28 +18,6 @@
  */
 package com.pinterest.secor.io.impl;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.List;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.Lz4Codec;
-import org.apache.hadoop.io.compress.SnappyCodec;
-import org.apache.hadoop.io.compress.GzipCodec;
-import org.apache.orc.CompressionKind;
-import org.apache.orc.OrcFile;
-import org.apache.orc.Reader;
-import org.apache.orc.RecordReader;
-import org.apache.orc.TypeDescription;
-import org.apache.orc.Writer;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.pinterest.secor.common.FileRegistry;
@@ -54,6 +32,22 @@ import com.pinterest.secor.util.orc.JsonFieldFiller;
 import com.pinterest.secor.util.orc.VectorColumnFiller;
 import com.pinterest.secor.util.orc.VectorColumnFiller.JsonConverter;
 import com.pinterest.secor.util.orc.schema.ORCSchemaProvider;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.GzipCodec;
+import org.apache.hadoop.io.compress.Lz4Codec;
+import org.apache.hadoop.io.compress.SnappyCodec;
+import org.apache.orc.*;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.List;
 
 /**
  * ORC reader/writer implementation
@@ -152,6 +146,11 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
             Path path = new Path(logFilePath.getLogFilePath());
             schema = schemaProvider.getSchema(logFilePath.getTopic(),
                     logFilePath);
+            if (schema == null) {
+                String topic = logFilePath.getTopic();
+                throw new IllegalArgumentException(
+                        String.format("No schema is provided for topic '%s'", topic));
+            }
             List<TypeDescription> fieldTypes = schema.getChildren();
             converters = new JsonConverter[fieldTypes.size()];
             for (int c = 0; c < converters.length; ++c) {

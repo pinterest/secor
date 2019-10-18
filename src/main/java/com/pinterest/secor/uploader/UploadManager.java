@@ -18,7 +18,8 @@
  */
 package com.pinterest.secor.uploader;
 
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.SecorConfig;
 
 /**
  * Manages uploads.

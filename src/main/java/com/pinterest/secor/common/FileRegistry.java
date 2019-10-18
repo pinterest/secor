@@ -22,7 +22,6 @@ import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.util.StatsUtil;
-
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

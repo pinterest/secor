@@ -18,37 +18,26 @@
  */
 package com.pinterest.secor.uploader;
 
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
-import com.amazonaws.services.s3.model.SSECustomerKey;
-import com.pinterest.secor.common.*;
-import com.pinterest.secor.util.FileUtil;
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.*;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
-import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
+import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-
+import com.amazonaws.services.s3.transfer.Upload;
+import com.pinterest.secor.common.LogFilePath;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import com.pinterest.secor.common.LogFilePath;
-import com.pinterest.secor.common.SecorConfig;
-import com.pinterest.secor.util.FileUtil;
 
 /**
  * Manages uploads to S3 using the TransferManager class from the AWS

@@ -73,7 +73,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
-                <version>2.10.0.pr3</version>
+                <version>2.10.0</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -83,7 +83,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>2.10.0.pr3</version>
+                <version>2.10.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -139,22 +139,22 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>3.9.1</version>
+            <version>3.10.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java-util</artifactId>
-            <version>3.9.1</version>
+            <version>3.10.0</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.11.635</version>
+            <version>1.11.653</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-sts</artifactId>
-            <version>1.11.635</version>
+            <version>1.11.653</version>
         </dependency>
         <dependency>
             <groupId>net.java.dev.jets3t</groupId>
@@ -204,17 +204,22 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>2.7.0</version>
+            <version>2.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs-client</artifactId>
+            <version>3.2.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
-            <version>2.7.0</version>
+            <version>2.9.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-aws</artifactId>
-            <version>2.7.0</version>
+            <version>2.9.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>net.java.dev.jets3t</groupId>
@@ -236,12 +241,16 @@
                     <groupId>com.amazonaws</groupId>
                     <artifactId>aws-java-sdk</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.amazonaws</groupId>
+                    <artifactId>aws-java-sdk-bundle</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-openstack</artifactId>
-            <version>2.7.0</version>
+            <version>2.9.2</version>
         </dependency>
 
         <!-- Parquet file format dependencies -->
@@ -336,12 +345,12 @@
         <dependency>
             <groupId>com.datadoghq</groupId>
             <artifactId>java-dogstatsd-client</artifactId>
-            <version>2.8</version>
+            <version>2.8.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>1.91.0</version>
+            <version>1.97.0</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
@@ -685,7 +694,7 @@
                     <dependency>
                         <groupId>com.fasterxml.jackson.module</groupId>
                         <artifactId>jackson-module-scala_2.10</artifactId>
-                        <version>2.10.0.pr3</version>
+                        <version>2.10.0</version>
                     </dependency>
                 </dependencies>
             </dependencyManagement>
@@ -855,7 +864,7 @@
                     <dependency>
                         <groupId>com.fasterxml.jackson.module</groupId>
                         <artifactId>jackson-module-scala_2.10</artifactId>
-                        <version>2.10.0.pr3</version>
+                        <version>2.10.0</version>
                     </dependency>
                 </dependencies>
             </dependencyManagement>
@@ -900,7 +909,7 @@
                     <dependency>
                         <groupId>com.fasterxml.jackson.module</groupId>
                         <artifactId>jackson-module-scala_2.10</artifactId>
-                        <version>2.10.0.pr3</version>
+                        <version>2.10.0</version>
                     </dependency>
                 </dependencies>
             </dependencyManagement>

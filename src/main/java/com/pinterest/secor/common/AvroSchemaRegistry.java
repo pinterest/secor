@@ -20,7 +20,6 @@ package com.pinterest.secor.common;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.specific.SpecificDatumWriter;
 
 import java.io.IOException;
 
@@ -29,5 +28,5 @@ public interface AvroSchemaRegistry {
 
     Schema getSchema(String topic);
 
-    byte[] serialize(SpecificDatumWriter<GenericRecord> writer, String topic, GenericRecord record) throws IOException;
+    byte[] serialize(String topic, GenericRecord record) throws IOException;
 }

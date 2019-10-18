@@ -19,12 +19,13 @@
 package com.pinterest.secor.common;
 
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaMetadata;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,7 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
             props.put("schema.registry.url", config.getSchemaRegistryUrl());
             schemaRegistryClient = new CachedSchemaRegistryClient(config.getSchemaRegistryUrl(), 30);
             init(config);
-        } catch (Exception e){
+        } catch (Exception e) {
             LOG.error("Error initalizing schema registry", e);
             throw new RuntimeException(e);
         }
@@ -72,16 +73,33 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
         return record;
     }
 
+    /**
+     * Get Avro schema of a topic. It uses the cache that either is set by calling {@link #deserialize(String, byte[])}
+     * or querying this method to avoid hitting Schema Registry for each call.
+     * It uses standard "subject name" strategy and it is topic_name-value.
+     *
+     * @param topic a Kafka topic to query the schema for
+     * @return Schema object for the topic
+     * @throws IllegalStateException if there is no schema registered for this topic or it is not able to fetch it
+     */
     public Schema getSchema(String topic) {
         Schema schema = schemas.get(topic);
         if (schema == null) {
-            throw new IllegalStateException("Avro schema not found for topic " + topic);
+            try {
+                SchemaMetadata schemaMetadata = schemaRegistryClient.getLatestSchemaMetadata(topic + "-value");
+                schema = schemaRegistryClient.getByID(schemaMetadata.getId());
+                schemas.put(topic, schema);
+            } catch (IOException e) {
+                throw new IllegalStateException("Unable to get Avro schema not found for topic " + topic);
+            } catch (RestClientException e) {
+                throw new IllegalStateException("Avro schema not found for topic " + topic);
+            }
         }
         return schema;
     }
 
     @Override
-    public byte[] serialize(SpecificDatumWriter<GenericRecord> writer, String topic, GenericRecord record) throws IOException {
+    public byte[] serialize(String topic, GenericRecord record) throws IOException {
         return serializer.serialize(topic, record);
 
     }

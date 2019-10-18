@@ -21,17 +21,10 @@ package com.pinterest.secor.util.orc;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.pinterest.secor.util.BackOffUtil;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.hive.ql.exec.vector.*;
 import org.apache.orc.TypeDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -162,6 +155,61 @@ public class VectorColumnFiller {
         }
     }
 
+    static class MapColumnConverter implements JsonConverter {
+        private JsonConverter[] childConverters;
+
+        public MapColumnConverter(TypeDescription schema) {
+            assertKeyType(schema);
+
+            List<TypeDescription> childTypes = schema.getChildren();
+            childConverters = new JsonConverter[childTypes.size()];
+            for (int c = 0; c < childConverters.length; ++c) {
+                childConverters[c] = createConverter(childTypes.get(c));
+            }
+        }
+
+        /**
+         * Rejects non-string keys. This is a limitation imposed by JSON specifications that only allows strings
+         * as keys.
+         */
+        private void assertKeyType(TypeDescription schema) {
+            // NOTE: It may be tempting to ensure that schema.getChildren() returns at least one child here, but the
+            // validity of an ORC schema is ensured by TypeDescription. Malformed ORC schema could be a concern.
+            // For example, an ORC schema of `map<>` may produce a TypeDescription instance with no child. However,
+            // TypeDescription.fromString() rejects any malformed ORC schema and therefore we may assume only valid
+            // ORC schema will make to this point.
+            TypeDescription keyType = schema.getChildren().get(0);
+            String keyTypeName = keyType.getCategory().getName();
+            if (!keyTypeName.equalsIgnoreCase("string")) {
+                throw new IllegalArgumentException(
+                        String.format("Unsupported key type: %s", keyTypeName));
+            }
+        }
+
+        public void convert(JsonElement value, ColumnVector vect, int row) {
+            if (value == null || value.isJsonNull()) {
+                vect.noNulls = false;
+                vect.isNull[row] = true;
+            } else {
+                MapColumnVector vector = (MapColumnVector) vect;
+                JsonObject obj = value.getAsJsonObject();
+                vector.lengths[row] = obj.size();
+                vector.offsets[row] = row > 0 ? vector.offsets[row - 1] + vector.lengths[row - 1] : 0;
+
+                // Ensure enough space is available to store the keys and the values
+                vector.keys.ensureSize((int) vector.offsets[row] + obj.size(), true);
+                vector.values.ensureSize((int) vector.offsets[row] + obj.size(), true);
+
+                int i = 0;
+                for (String key : obj.keySet()) {
+                    childConverters[0].convert(new JsonPrimitive(key), vector.keys, (int) vector.offsets[row] + i);
+                    childConverters[1].convert(obj.get(key), vector.values, (int) vector.offsets[row] + i);
+                    i++;
+                }
+            }
+        }
+    }
+
     static class StructColumnConverter implements JsonConverter {
         private JsonConverter[] childrenConverters;
         private List<String> fieldNames;
@@ -242,6 +290,8 @@ public class VectorColumnFiller {
             return new StructColumnConverter(schema);
         case LIST:
             return new ListColumnConverter(schema);
+            case MAP:
+                return new MapColumnConverter(schema);
         default:
             throw new IllegalArgumentException("Unhandled type " + schema);
         }

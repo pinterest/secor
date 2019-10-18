@@ -24,13 +24,7 @@ import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
 import kafka.api.FetchRequestBuilder;
 import kafka.api.PartitionOffsetRequestInfo;
 import kafka.common.TopicAndPartition;
-import kafka.javaapi.FetchResponse;
-import kafka.javaapi.OffsetRequest;
-import kafka.javaapi.OffsetResponse;
-import kafka.javaapi.PartitionMetadata;
-import kafka.javaapi.TopicMetadata;
-import kafka.javaapi.TopicMetadataRequest;
-import kafka.javaapi.TopicMetadataResponse;
+import kafka.javaapi.*;
 import kafka.javaapi.consumer.SimpleConsumer;
 import kafka.message.MessageAndOffset;
 import org.apache.kafka.common.protocol.Errors;
@@ -234,8 +228,8 @@ public class LegacyKafkaClient implements KafkaClient {
             }
             return getMessage(topicPartition, committedOffset, consumer);
         } catch (MessageDoesNotExistException e) {
-          // If a RuntimeEMessageDoesNotExistException exception is raised,
-          // the message at the last comitted offset does not exist in Kafka.
+            // If a MessageDoesNotExistException exception is raised,
+            // the message at the last committed offset does not exist in Kafka.
           // This is usually due to the message being compacted away by the
           // Kafka log compaction process.
           //

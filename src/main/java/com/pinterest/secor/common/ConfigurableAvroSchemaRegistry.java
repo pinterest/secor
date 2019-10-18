@@ -39,10 +39,12 @@ public class ConfigurableAvroSchemaRegistry implements AvroSchemaRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(AvroMessageParser.class);
     private final Map<String, Schema> schemas = new HashMap<>();
     private final Map<String, SpecificDatumReader<GenericRecord>> readers = new HashMap<>();
+    private final Map<String, SpecificDatumWriter<GenericRecord>> writers = new HashMap<>();
 
     public ConfigurableAvroSchemaRegistry(SecorConfig config) {
         schemas.putAll(config.getAvroMessageSchema().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getAvroSchema(e.getValue()))));
         readers.putAll(schemas.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new SpecificDatumReader<>(e.getValue()))));
+        writers.putAll(schemas.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new SpecificDatumWriter<>(e.getValue()))));
     }
 
     private Schema getAvroSchema(String path) {
@@ -71,7 +73,8 @@ public class ConfigurableAvroSchemaRegistry implements AvroSchemaRegistry {
     }
 
     @Override
-    public byte[] serialize(SpecificDatumWriter<GenericRecord> writer, String topic, GenericRecord record) throws IOException {
+    public byte[] serialize(String topic, GenericRecord record) throws IOException {
+        SpecificDatumWriter<GenericRecord> writer = writers.get(topic);
         return AvroSerializer.serialize(writer, record);
     }
 }

@@ -30,10 +30,9 @@ import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.kafka.common.errors.SerializationException;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -42,7 +41,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertArrayEquals;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -79,8 +77,12 @@ public class AvroParquetFileReaderWriterFactoryTest extends TestCase {
 
         SecorSchemaRegistryClient secorSchemaRegistryClient = Mockito.mock(SecorSchemaRegistryClient.class);
         when(secorSchemaRegistryClient.getSchema(anyString())).thenReturn(schema);
-        when(secorSchemaRegistryClient.serialize(any(SpecificDatumWriter.class), any(String.class), any(GenericRecord.class))).thenReturn(AvroSerializer.serialize(writer, msg1), AvroSerializer.serialize(writer, msg2));
-        when(secorSchemaRegistryClient.deserialize(any(String.class), any(byte[].class))).thenReturn(msg1, msg2, msg1, msg2);
+        when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg1))).thenReturn(msg1);
+        when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg2))).thenReturn(msg2);
+
+        when(secorSchemaRegistryClient.serialize(anyString(), Matchers.any(GenericRecord.class))).
+                thenReturn(AvroSerializer.serialize(writer, msg1), AvroSerializer.serialize(writer, msg2));
+
         mFactory.schemaRegistry = secorSchemaRegistryClient;
         when(config.getFileReaderWriterFactory())
                 .thenReturn(AvroParquetFileReaderWriterFactory.class.getName());
@@ -112,45 +114,16 @@ public class AvroParquetFileReaderWriterFactoryTest extends TestCase {
     }
 
 
-    @Ignore
-    public void testAvroParquetReadWriterRoundTripWithConfluentSchemaRegister() throws Exception {
-
-        Schema schema = SchemaBuilder.record("UnitTestRecord")
-                .fields()
-                .name("data").type().stringType().noDefault()
-                .name("timestamp").type().nullable().longType().noDefault()
-                .endRecord();
-
-        GenericRecordBuilder builder = new GenericRecordBuilder(schema);
-        msg1 = builder.set("data", "foo").set("timestamp", 1467176315L).build();
-        writer = new SpecificDatumWriter(schema);
-        SecorSchemaRegistryClient secorSchemaRegistryClient = new SecorSchemaRegistryClient(config);
-
-        KeyValue kv1 = (new KeyValue(23232, AvroSerializer.serialize(writer, msg1)));
-
-
-        Exception e = null;
-        try {
-            secorSchemaRegistryClient.deserialize("test-avro-topic", kv1.getValue());
-        } catch (SerializationException se) {
-            se.printStackTrace();
-            e = se;
-        } catch (Exception otherE) {
-            //ignore
-        }
-
-        assertEquals(null, e);
-
-    }
-
     private void testAvroParquetReadWriteRoundTrip(AvroSchemaRegistry schemaRegistry) throws Exception {
+
+        String topic = "test-avro-topic";
         LogFilePath tempLogFilePath = new LogFilePath(Files.createTempDir().toString(), "test-avro-topic",
                 new String[] { "part-1" }, 0, 1, 23232, ".avro");
 
         FileWriter fileWriter = mFactory.BuildFileWriter(tempLogFilePath, null);
 
-        KeyValue kv1 = (new KeyValue(23232, AvroSerializer.serialize(writer, msg1)));
-        KeyValue kv2 = (new KeyValue(23233, AvroSerializer.serialize(writer, msg2)));
+        KeyValue kv1 = new KeyValue(23232, AvroSerializer.serialize(writer, msg1));
+        KeyValue kv2 = new KeyValue(23233, AvroSerializer.serialize(writer, msg2));
 
         fileWriter.write(kv1);
         fileWriter.write(kv2);

@@ -90,7 +90,7 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
         public KeyValue next() throws IOException {
             GenericRecord record = reader.read();
             if (record != null) {
-                return new KeyValue(offset++, schemaRegistry.serialize(writer, topic, record));
+                return new KeyValue(offset++, schemaRegistry.serialize(topic, record));
             }
             return null;
         }

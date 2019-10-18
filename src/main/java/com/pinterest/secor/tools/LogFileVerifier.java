@@ -26,7 +26,6 @@ import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
-
 import org.apache.hadoop.io.compress.CompressionCodec;
 
 import java.io.IOException;
