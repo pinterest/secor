@@ -24,14 +24,26 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.pinterest.secor.util.BackOffUtil;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.ql.exec.vector.*;
+import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 
@@ -210,6 +222,119 @@ public class VectorColumnFiller {
         }
     }
 
+    /**
+     * The primary challenge here is that available type information at the time of class instantiation and at the
+     * time of invocation of {@code convert()} is different. We have exact type information when
+     * {@code UnionColumnConverter} is instantiated, as it is given as {@code TypeDescription} which represents an
+     * ORC schema. Conversely, when {@code convert()} method is called, limited type information is available because
+     * JSON supports three primitive types only: boolean, number, and string.
+     * <p>
+     * The proposed solution for this issue is to register appropriate converters at the time of instantiation with
+     * a matching {@code ColumnVector} index. Note that {@code UnionColumnVector} has child column vectors to support
+     * each of its child type.
+     */
+    static class UnionColumnConverter implements JsonConverter {
+
+        private enum JsonType {
+            NULL, BOOLEAN, NUMBER, STRING, ARRAY, OBJECT
+        }
+
+        // TODO: Could we come up with a better name?
+        private class ConverterInfo {
+            private int vectorIndex;
+            private JsonConverter converter;
+
+            public ConverterInfo(int vectorIndex, JsonConverter converter) {
+                this.vectorIndex = vectorIndex;
+                this.converter = converter;
+            }
+
+            public int getVectorIndex() {
+                return vectorIndex;
+            }
+
+            public JsonConverter getConverter() {
+                return converter;
+            }
+        }
+
+        /**
+         * Union type in ORC is essentially a collection of two or more non-compatible types,
+         * and it is represented by multiple child columns under UnionColumnVector.
+         * Thus we need converters for each type.
+         */
+        private Map<JsonType, ConverterInfo> childConverters = new HashMap<>();
+
+        public UnionColumnConverter(TypeDescription schema) {
+            List<TypeDescription> children = schema.getChildren();
+            int index = 0;
+            for (TypeDescription childType : children) {
+                JsonType jsonType = getJsonType(childType.getCategory());
+                JsonConverter converter = createConverter(childType);
+                // FIXME: Handle cases where childConverters is pre-occupied with the same mask
+                childConverters.put(jsonType, new ConverterInfo(index++, converter));
+            }
+        }
+
+        private JsonType getJsonType(TypeDescription.Category category) {
+            switch (category) {
+                case BOOLEAN:
+                    return JsonType.BOOLEAN;
+                case BYTE:
+                case SHORT:
+                case INT:
+                case LONG:
+                case FLOAT:
+                case DOUBLE:
+                case DECIMAL:
+                    return JsonType.NUMBER;
+                case CHAR:
+                case VARCHAR:
+                case STRING:
+                    return JsonType.STRING;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
+
+        private JsonType getJsonType(JsonPrimitive value) {
+            if (value.isBoolean()) {
+                return JsonType.BOOLEAN;
+            } else if (value.isNumber()) {
+                return JsonType.NUMBER;
+            } else if (value.isString()) {
+                return JsonType.STRING;
+            } else {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        public void convert(JsonElement value, ColumnVector vect, int row) {
+            if (value == null || value.isJsonNull()) {
+                vect.noNulls = false;
+                vect.isNull[row] = true;
+            } else if (value.isJsonPrimitive()) {
+                UnionColumnVector vector = (UnionColumnVector) vect;
+                JsonPrimitive primitive = value.getAsJsonPrimitive();
+
+                JsonType jsonType = getJsonType(primitive);
+                ConverterInfo converterInfo = childConverters.get(jsonType);
+                if (converterInfo == null) {
+                    String message = String.format("Unable to infer type for '%s'", primitive);
+                    throw new IllegalArgumentException(message);
+                }
+
+                int vectorIndex = converterInfo.getVectorIndex();
+                JsonConverter converter = converterInfo.getConverter();
+                converter.convert(value, vector.fields[vectorIndex], row);
+            } else {
+                // It would be great to support non-primitive types in union type.
+                // Let's leave this for another PR in the future.
+                throw new UnsupportedOperationException();
+            }
+        }
+    }
+
     static class StructColumnConverter implements JsonConverter {
         private JsonConverter[] childrenConverters;
         private List<String> fieldNames;
@@ -292,6 +417,8 @@ public class VectorColumnFiller {
             return new ListColumnConverter(schema);
             case MAP:
                 return new MapColumnConverter(schema);
+            case UNION:
+                return new UnionColumnConverter(schema);
         default:
             throw new IllegalArgumentException("Unhandled type " + schema);
         }

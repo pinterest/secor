@@ -57,6 +57,44 @@ public class JsonORCFileReaderWriterFactoryTest {
     }
 
     @Test
+    public void testUnionType() throws Exception {
+        PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
+        properties.setProperty("secor.orc.message.schema.test-topic-union", "struct<values:uniontype<int\\,string>>");
+
+        SecorConfig config = new SecorConfig(properties);
+        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
+
+        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic-union");
+
+        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
+        KeyValue written1 = new KeyValue(10001, "{\"values\":\"stringvalue\"}".getBytes());
+        KeyValue written2 = new KeyValue(10002, "{\"values\":1234}".getBytes());
+        fileWriter.write(written1);
+        fileWriter.write(written2);
+        fileWriter.close();
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testUnionTypeWithNonPrimitive() throws Exception {
+        PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
+        properties.setProperty("secor.orc.message.schema.test-topic-union", "struct<v1:uniontype<int\\,struct<v2:string\\,v3:bigint>>>");
+
+        SecorConfig config = new SecorConfig(properties);
+        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
+
+        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic-union");
+
+        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
+        KeyValue written1 = new KeyValue(10001, "{\"v1\":1234}".getBytes());
+        KeyValue written2 = new KeyValue(10002, "{\"v1\":{\"v2\":null,\"v3\":1048576}}".getBytes());
+        fileWriter.write(written1);
+        fileWriter.write(written2);
+        fileWriter.close();
+    }
+
+    @Test
     public void testMapOfStringToString() throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
         properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
