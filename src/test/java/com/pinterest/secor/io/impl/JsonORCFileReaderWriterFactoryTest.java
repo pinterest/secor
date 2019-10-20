@@ -73,6 +73,14 @@ public class JsonORCFileReaderWriterFactoryTest {
         fileWriter.write(written1);
         fileWriter.write(written2);
         fileWriter.close();
+
+        FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
+        KeyValue read1 = fileReader.next();
+        KeyValue read2 = fileReader.next();
+        fileReader.close();
+
+        assertArrayEquals(written1.getValue(), read1.getValue());
+        assertArrayEquals(written2.getValue(), read2.getValue());
     }
 
     @Test(expected = UnsupportedOperationException.class)
