@@ -107,8 +107,10 @@ public class JsonFieldFiller {
                 setUnion(writer, (UnionColumnVector) vector, schema, row);
                 break;
             case BINARY:
-                // printBinary(writer, (BytesColumnVector) vector, row);
-                break;
+                // To prevent similar mistakes like the on described in https://github.com/pinterest/secor/pull/1018,
+                // it would be better to explicitly throw an exception here rather than ignore the incoming values,
+                // which causes silent failures in a later stage.
+                throw new UnsupportedOperationException();
             case MAP:
                 setMap(writer, (MapColumnVector) vector, schema, row);
                 break;
