@@ -29,6 +29,7 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.orc.TypeDescription;
@@ -103,7 +104,7 @@ public class JsonFieldFiller {
                 setStruct(writer, (StructColumnVector) vector, schema, row);
                 break;
             case UNION:
-                // printUnion(writer, (UnionColumnVector) vector, schema, row);
+                setUnion(writer, (UnionColumnVector) vector, schema, row);
                 break;
             case BINARY:
                 // printBinary(writer, (BytesColumnVector) vector, row);
@@ -155,5 +156,18 @@ public class JsonFieldFiller {
             setValue(writer, vector.values, schemaChildren.get(1), (int) offset + i);
         }
         writer.endObject();
+    }
+
+    /**
+     * Writes a single row of union type as a JSON object.
+     *
+     * @throws JSONException
+     */
+    private static void setUnion(JSONWriter writer, UnionColumnVector vector,
+                                 TypeDescription schema, int row) throws JSONException {
+        int tag = vector.tags[row];
+        List<TypeDescription> schemaChildren = schema.getChildren();
+        ColumnVector columnVector = vector.fields[tag];
+        setValue(writer, columnVector, schemaChildren.get(tag), row);
     }
 }
