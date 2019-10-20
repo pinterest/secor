@@ -56,56 +56,6 @@ public class JsonORCFileReaderWriterFactoryTest {
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
     }
 
-    @Test
-    public void testUnionType() throws Exception {
-        PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
-        properties.setProperty("secor.orc.message.schema.test-topic-union", "struct<values:uniontype<int\\,string>>");
-
-        SecorConfig config = new SecorConfig(properties);
-        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
-
-        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic-union");
-
-        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue written1 = new KeyValue(10001, "{\"values\":\"stringvalue\"}".getBytes());
-        KeyValue written2 = new KeyValue(10002, "{\"values\":1234}".getBytes());
-        KeyValue written3 = new KeyValue(10003, "{\"values\":null}".getBytes());
-        fileWriter.write(written1);
-        fileWriter.write(written2);
-        fileWriter.write(written3);
-        fileWriter.close();
-
-        FileReader fileReader = factory.BuildFileReader(tempLogFilePath, codec);
-        KeyValue read1 = fileReader.next();
-        KeyValue read2 = fileReader.next();
-        KeyValue read3 = fileReader.next();
-        fileReader.close();
-
-        assertArrayEquals(written1.getValue(), read1.getValue());
-        assertArrayEquals(written2.getValue(), read2.getValue());
-        assertArrayEquals(written3.getValue(), read3.getValue());
-    }
-
-    @Test(expected = UnsupportedOperationException.class)
-    public void testUnionTypeWithNonPrimitive() throws Exception {
-        PropertiesConfiguration properties = new PropertiesConfiguration();
-        properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
-        properties.setProperty("secor.orc.message.schema.test-topic-union", "struct<v1:uniontype<int\\,struct<v2:string\\,v3:bigint>>>");
-
-        SecorConfig config = new SecorConfig(properties);
-        JsonORCFileReaderWriterFactory factory = new JsonORCFileReaderWriterFactory(config);
-
-        LogFilePath tempLogFilePath = getTempLogFilePath("test-topic-union");
-
-        FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
-        KeyValue written1 = new KeyValue(10001, "{\"v1\":1234}".getBytes());
-        KeyValue written2 = new KeyValue(10002, "{\"v1\":{\"v2\":null,\"v3\":1048576}}".getBytes());
-        fileWriter.write(written1);
-        fileWriter.write(written2);
-        fileWriter.close();
-    }
-
     private void runCommonTest(String schema, String topic, String... jsonRecords) throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
         properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
@@ -242,6 +192,26 @@ public class JsonORCFileReaderWriterFactoryTest {
             "struct<kvs:map<int\\,int>>",
             "non-string-keys",
             "{0:{1:2,3:4}}"
+        );
+    }
+
+    @Test
+    public void testUnionType() throws Exception {
+        runCommonTest(
+            "struct<values:uniontype<int\\,string>>",
+            "union-type",
+            "{\"values\":\"stringvalue\"}",
+            "{\"values\":1234}"
+        );
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testUnionTypeWithNonPrimitive() throws Exception {
+        runCommonTest(
+            "struct<v1:uniontype<int\\,struct<v2:string\\,v3:bigint>>>",
+            "union-type-with-non-primitive",
+            "{\"v1\":1234}",
+            "{\"v1\":{\"v2\":null,\"v3\":1048576}}"
         );
     }
 }
