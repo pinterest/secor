@@ -197,13 +197,13 @@ public class JsonORCFileReaderWriterFactoryTest {
     }
 
     @Test
-    @Ignore("This test fails because the code to handle union types is incomplete. This shall be fixed shortly.")
     public void testUnionType() throws Exception {
         runCommonTest(
             "struct<values:uniontype<int\\,string>>",
             "union-type",
             "{\"values\":\"stringvalue\"}",
-            "{\"values\":1234}"
+            "{\"values\":1234}",
+            "{\"values\":null}"
         );
     }
 
