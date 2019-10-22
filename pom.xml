@@ -350,7 +350,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>1.97.0</version>
+            <version>1.98.0</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
