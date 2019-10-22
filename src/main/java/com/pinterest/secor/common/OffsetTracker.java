@@ -36,6 +36,10 @@ public class OffsetTracker {
     private HashMap<TopicPartition, Long> mCommittedOffsetCount;
 
     public OffsetTracker() {
+        reInitiateOffset();
+    }
+
+    public void reInitiateOffset() {
         mLastSeenOffset = new HashMap<TopicPartition, Long>();
         mCommittedOffsetCount = new HashMap<TopicPartition, Long>();
         mFirstSeendOffset = new HashMap<TopicPartition, Long>();
@@ -52,15 +56,14 @@ public class OffsetTracker {
     public long setLastSeenOffset(TopicPartition topicPartition, long offset) {
         long lastSeenOffset = getLastSeenOffset(topicPartition);
         mLastSeenOffset.put(topicPartition, offset);
-        if (lastSeenOffset + 1 != offset) {
-            if (lastSeenOffset >= 0) {
-                LOG.warn("offset for topic {} partition {} changed from {} to {}",
-                        topicPartition.getTopic(),topicPartition.getPartition(),lastSeenOffset, offset);
-            } else {
+        if (offset < lastSeenOffset + 1) {
+            LOG.warn("offset for topic {} partition {} goes back from {} to {}",
+                    topicPartition.getTopic(), topicPartition.getPartition(), lastSeenOffset, offset);
+
+        } else if (lastSeenOffset < 0) {
                 LOG.info("starting to consume topic {} partition {} from offset {}",
                         topicPartition.getTopic(),topicPartition.getPartition(),offset);
             }
-        }
         if (mFirstSeendOffset.get(topicPartition) == null) {
             mFirstSeendOffset.put(topicPartition, offset);
         }
