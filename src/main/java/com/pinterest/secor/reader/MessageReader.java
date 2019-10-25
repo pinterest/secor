@@ -49,7 +49,7 @@ public class MessageReader {
     protected final int mCheckMessagesPerSecond;
     protected int mNMessages;
 
-    public MessageReader(SecorConfig config, OffsetTracker offsetTracker) throws
+    public MessageReader(SecorConfig config, OffsetTracker offsetTracker, KafkaMessageIterator kafkaMessageIterator) throws
             UnknownHostException {
         mConfig = config;
         mOffsetTracker = offsetTracker;
@@ -57,7 +57,7 @@ public class MessageReader {
         StatsUtil.setLabel("secor.kafka.consumer.id", IdUtil.getConsumerId());
         mTopicPartitionForgetSeconds = mConfig.getTopicPartitionForgetSeconds();
         mCheckMessagesPerSecond = mConfig.getMessagesPerSecond() / mConfig.getConsumerThreads();
-        mKafkaMessageIterator = KafkaMessageIteratorFactory.getIterator(mConfig.getKafkaMessageIteratorClass(), mConfig);
+        mKafkaMessageIterator = kafkaMessageIterator;
     }
 
     private void updateAccessTime(TopicPartition topicPartition) {
