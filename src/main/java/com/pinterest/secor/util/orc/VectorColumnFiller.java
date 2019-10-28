@@ -326,6 +326,7 @@ public class VectorColumnFiller {
 
                 int vectorIndex = converterInfo.getVectorIndex();
                 JsonConverter converter = converterInfo.getConverter();
+                vector.tags[row] = vectorIndex;
                 converter.convert(value, vector.fields[vectorIndex], row);
             } else {
                 // It would be great to support non-primitive types in union type.

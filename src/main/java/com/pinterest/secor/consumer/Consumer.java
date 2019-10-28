@@ -26,8 +26,12 @@ import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.monitoring.MetricCollector;
 import com.pinterest.secor.parser.MessageParser;
+import com.pinterest.secor.reader.KafkaMessageIterator;
+import com.pinterest.secor.reader.KafkaMessageIteratorFactory;
 import com.pinterest.secor.reader.LegacyConsumerTimeoutException;
 import com.pinterest.secor.reader.MessageReader;
+import com.pinterest.secor.rebalance.RebalanceHandler;
+import com.pinterest.secor.rebalance.RebalanceSubscriber;
 import com.pinterest.secor.transformer.MessageTransformer;
 import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.uploader.Uploader;
@@ -61,7 +65,10 @@ public class Consumer extends Thread {
     private DeterministicUploadPolicyTracker mDeterministicUploadPolicyTracker;
     protected MessageTransformer mMessageTransformer;
     protected Uploader mUploader;
+    protected KafkaMessageIterator mKafkaMessageIterator;
+
     // TODO(pawel): we should keep a count per topic partition.
+    private boolean isLegacyConsumer;
     protected double mUnparsableMessages;
     // If we aren't configured to upload on shutdown, then don't bother to check
     // the volatile variable.
@@ -71,6 +78,7 @@ public class Consumer extends Thread {
 
     public Consumer(SecorConfig config) {
         mConfig = config;
+        isLegacyConsumer = true;
     }
 
     private void init() throws Exception {
@@ -82,7 +90,8 @@ public class Consumer extends Thread {
         } else {
           mDeterministicUploadPolicyTracker = null;
         }
-        mMessageReader = new MessageReader(mConfig, mOffsetTracker);
+        mKafkaMessageIterator = KafkaMessageIteratorFactory.getIterator(mConfig.getKafkaMessageIteratorClass(), mConfig);
+        mMessageReader = new MessageReader(mConfig, mOffsetTracker, mKafkaMessageIterator);
         mMetricCollector = ReflectionUtil.createMetricCollector(mConfig.getMetricsCollectorClass());
 
         FileRegistry fileRegistry = new FileRegistry(mConfig);
@@ -91,6 +100,11 @@ public class Consumer extends Thread {
         mUploader = ReflectionUtil.createUploader(mConfig.getUploaderClass());
         mUploader.init(mConfig, mOffsetTracker, fileRegistry, uploadManager, mMessageReader, mMetricCollector,
                        mDeterministicUploadPolicyTracker);
+
+        if (mKafkaMessageIterator instanceof RebalanceSubscriber) {
+            ((RebalanceSubscriber) mKafkaMessageIterator).subscribe(new RebalanceHandler(mUploader, fileRegistry, mOffsetTracker), mConfig);
+            isLegacyConsumer = false;
+        }
         mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry, mDeterministicUploadPolicyTracker);
         mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
         mMessageTransformer = ReflectionUtil.createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);
@@ -200,7 +214,7 @@ public class Consumer extends Thread {
         if (rawMessage != null) {
             // Before parsing, update the offset and remove any redundant data
             try {
-                mMessageWriter.adjustOffset(rawMessage);
+                mMessageWriter.adjustOffset(rawMessage, isLegacyConsumer);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to adjust offset.", e);
             }

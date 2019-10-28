@@ -75,14 +75,15 @@ public class MessageWriter {
         mGeneration = mConfig.getGeneration();
     }
 
-    public void adjustOffset(Message message) throws IOException {
+    public void adjustOffset(Message message, boolean isLegacyConsumer) throws IOException {
         TopicPartition topicPartition = new TopicPartition(message.getTopic(),
                                                            message.getKafkaPartition());
         long lastSeenOffset = mOffsetTracker.getLastSeenOffset(topicPartition);
-        if (message.getOffset() != lastSeenOffset + 1) {
+        //this validation logic is for duplicates removing as no rebalancing callbacks is incompatible with LegacyKafkaMessageIterator
+        if (isLegacyConsumer && message.getOffset() != lastSeenOffset + 1) {
             StatsUtil.incr("secor.consumer_rebalance_count." + topicPartition.getTopic());
             // There was a rebalancing event since we read the last message.
-            LOG.debug("offset of message {} does not follow sequentially the last seen offset {}. " +
+            LOG.info("offset of message {} does not follow sequentially the last seen offset {}. " +
                             "Deleting files in topic {} partition {}",
                     message, lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
 

@@ -24,8 +24,15 @@ import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.MessageHeader;
+import com.pinterest.secor.rebalance.RebalanceHandler;
+import com.pinterest.secor.rebalance.RebalanceSubscriber;
+import com.pinterest.secor.rebalance.SecorConsumerRebalanceListener;
 import com.pinterest.secor.util.IdUtil;
-import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.clients.consumer.CommitFailedException;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.slf4j.Logger;
@@ -33,11 +40,17 @@ import org.slf4j.LoggerFactory;
 
 import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-public class SecorKafkaMessageIterator implements KafkaMessageIterator {
+public class SecorKafkaMessageIterator implements KafkaMessageIterator, RebalanceSubscriber {
     private static final Logger LOG = LoggerFactory.getLogger(SecorKafkaMessageIterator.class);
     private KafkaConsumer<byte[], byte[]> mKafkaConsumer;
     private Deque<ConsumerRecord<byte[], byte[]>> mRecordsBatch;
@@ -105,67 +118,9 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
         optionalConfig(config.getSslTruststoreType(), conf -> props.put("ssl.truststore.type", conf));
         optionalConfig(config.getNewConsumerPartitionAssignmentStrategyClass(), conf -> props.put("partition.assignment.strategy", conf));
 
-        String dualCommitEnabled = config.getDualCommitEnabled();
-        String offsetStorage = config.getOffsetsStorage();
-        final boolean skipZookeeperOffsetSeek = offsetStorage.equals("kafka") && dualCommitEnabled.equals("true");
-
         mZookeeperConnector = new ZookeeperConnector(config);
         mRecordsBatch = new ArrayDeque<>();
         mKafkaConsumer = new KafkaConsumer<>(props);
-        ConsumerRebalanceListener reBalanceListener = new ConsumerRebalanceListener() {
-            @Override
-            public void onPartitionsRevoked(Collection<TopicPartition> assignedPartitions) {
-                for (TopicPartition topicPartition : assignedPartitions) {
-                    LOG.debug("re-balance will happen for assigned topic partition {}", topicPartition);
-                }
-            }
-
-            @Override
-            public void onPartitionsAssigned(Collection<TopicPartition> collection) {
-                if (skipZookeeperOffsetSeek) {
-                    LOG.debug("offset storage set to kafka. Skipping reading offsets from zookeeper");
-                    return;
-                }
-                Map<TopicPartition, Long> committedOffsets = getCommittedOffsets(collection);
-                committedOffsets.forEach(((topicPartition, offset) -> {
-                    if (offset == -1) {
-                        if (offsetResetConfig.equals("earliest")) {
-                            mKafkaConsumer.seekToBeginning(Collections.singleton(topicPartition));
-                        } else if (offsetResetConfig.equals("latest")) {
-                            mKafkaConsumer.seekToEnd(Collections.singleton(topicPartition));
-                        }
-                    } else {
-                        LOG.debug("Seeking {} to offset {}", topicPartition, Math.max(0, offset));
-                        mKafkaConsumer.seek(topicPartition, Math.max(0, offset));
-                    }
-                }));
-            }
-        };
-
-        String[] subscribeList = config.getKafkaTopicList();
-        if (Strings.isNullOrEmpty(subscribeList[0])) {
-            mKafkaConsumer.subscribe(Pattern.compile(config.getKafkaTopicFilter()), reBalanceListener);
-        } else {
-            mKafkaConsumer.subscribe(Arrays.asList(subscribeList), reBalanceListener);
-        }
-    }
-
-    private Map<TopicPartition, Long> getCommittedOffsets(Collection<TopicPartition> assignment) {
-        Map<TopicPartition, Long> committedOffsets = new HashMap<>();
-
-        for (TopicPartition topicPartition : assignment) {
-            com.pinterest.secor.common.TopicPartition secorTopicPartition =
-                    new com.pinterest.secor.common.TopicPartition(topicPartition.topic(), topicPartition.partition());
-            try {
-                long committedOffset = mZookeeperConnector.getCommittedOffsetCount(secorTopicPartition);
-                committedOffsets.put(topicPartition, committedOffset);
-            } catch (Exception e) {
-                LOG.trace("Unable to fetch committed offsets from zookeeper", e);
-                throw new RuntimeException(e);
-            }
-        }
-
-        return committedOffsets;
     }
 
     @Override
@@ -183,5 +138,27 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator {
 
     private void optionalConfig(String maybeConf, Consumer<String> configConsumer) {
         Optional.ofNullable(maybeConf).filter(conf -> !conf.isEmpty()).ifPresent(configConsumer);
+    }
+
+    @Override
+    public void subscribe(RebalanceHandler handler, SecorConfig config) {
+        ConsumerRebalanceListener reBalanceListener = new SecorConsumerRebalanceListener(mKafkaConsumer, mZookeeperConnector, getSkipZookeeperOffsetSeek(config), config.getNewConsumerAutoOffsetReset(), handler);
+        ;
+
+        String[] subscribeList = config.getKafkaTopicList();
+        if (Strings.isNullOrEmpty(subscribeList[0])) {
+            mKafkaConsumer.subscribe(Pattern.compile(config.getKafkaTopicFilter()), reBalanceListener);
+        } else {
+            mKafkaConsumer.subscribe(Arrays.asList(subscribeList), reBalanceListener);
+        }
+    }
+
+
+    private boolean getSkipZookeeperOffsetSeek(SecorConfig config) {
+
+        String dualCommitEnabled = config.getDualCommitEnabled();
+        String offsetStorage = config.getOffsetsStorage();
+        return offsetStorage.equals("kafka") && dualCommitEnabled.equals("true");
+
     }
 }
