@@ -278,11 +278,23 @@
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-protobuf</artifactId>
             <version>${parquet.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.hadoop.gplcompression</groupId>
+                    <artifactId>hadoop-lzo</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-thrift</artifactId>
             <version>${parquet.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.hadoop.gplcompression</groupId>
+                    <artifactId>hadoop-lzo</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
