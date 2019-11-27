@@ -20,12 +20,12 @@ package com.pinterest.secor.common;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.twitter.common.quantity.Amount;
-import com.twitter.common.quantity.Time;
-import com.twitter.common.zookeeper.DistributedLock;
-import com.twitter.common.zookeeper.DistributedLockImpl;
-import com.twitter.common.zookeeper.ZooKeeperClient;
 import org.apache.commons.lang.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.recipes.cache.NodeCache;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
+import org.apache.curator.retry.RetryOneTime;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs;
@@ -47,8 +47,8 @@ public class ZookeeperConnector {
     private static final Logger LOG = LoggerFactory.getLogger(ZookeeperConnector.class);
 
     private SecorConfig mConfig;
-    private ZooKeeperClient mZookeeperClient;
-    private HashMap<String, DistributedLock> mLocks;
+    private CuratorFramework mCurator;
+    private HashMap<String, InterProcessMutex> mLocks;
     private String mCommittedOffsetGroupPath;
 
     protected ZookeeperConnector() {
@@ -56,8 +56,9 @@ public class ZookeeperConnector {
 
     public ZookeeperConnector(SecorConfig config) {
         mConfig = config;
-        mZookeeperClient = new ZooKeeperClient(Amount.of(1, Time.DAYS), getZookeeperAddresses());
-        mLocks = new HashMap<String, DistributedLock>();
+        mCurator = CuratorFrameworkFactory.newClient(mConfig.getZookeeperQuorum(), new RetryOneTime(3000));
+        mCurator.start();
+        mLocks = new HashMap<String, InterProcessMutex>();
     }
 
     private Iterable<InetSocketAddress> getZookeeperAddresses() {
@@ -76,15 +77,23 @@ public class ZookeeperConnector {
 
     public void lock(String lockPath) {
         assert mLocks.get(lockPath) == null: "mLocks.get(" + lockPath + ") == null";
-        DistributedLock distributedLock = new DistributedLockImpl(mZookeeperClient, lockPath);
+        InterProcessMutex distributedLock = new InterProcessMutex(mCurator, lockPath);
         mLocks.put(lockPath, distributedLock);
-        distributedLock.lock();
+        try {
+            distributedLock.acquire();
+        } catch (Exception ex) {
+            throw new RuntimeException("Unexpected ZK error", ex);
+        }
     }
 
     public void unlock(String lockPath) {
-        DistributedLock distributedLock = mLocks.get(lockPath);
+        InterProcessMutex distributedLock = mLocks.get(lockPath);
         assert distributedLock != null: "mLocks.get(" + lockPath + ") != null";
-        distributedLock.unlock();
+        try {
+            distributedLock.release();
+        } catch (Exception ex) {
+            throw new RuntimeException("Unexpected ZK error", ex);
+        }
         mLocks.remove(lockPath);
     }
 
@@ -112,10 +121,9 @@ public class ZookeeperConnector {
     }
 
     public long getCommittedOffsetCount(TopicPartition topicPartition) throws Exception {
-        ZooKeeper zookeeper = mZookeeperClient.get();
         String offsetPath = getCommittedOffsetPartitionPath(topicPartition);
         try {
-            byte[] data = zookeeper.getData(offsetPath, false, null);
+            byte[] data = mCurator.getData().forPath(offsetPath);
             return Long.parseLong(new String(data));
         } catch (KeeperException.NoNodeException exception) {
             LOG.warn("path {} does not exist in zookeeper", offsetPath);
@@ -124,9 +132,8 @@ public class ZookeeperConnector {
     }
 
     public List<Integer> getCommittedOffsetPartitions(String topic) throws Exception {
-        ZooKeeper zookeeper = mZookeeperClient.get();
         String topicPath = getCommittedOffsetTopicPath(topic);
-        List<String> partitions = zookeeper.getChildren(topicPath, false);
+        List<String> partitions = mCurator.getChildren().forPath(topicPath);
         LinkedList<Integer> result = new LinkedList<Integer>();
         for (String partitionPath : partitions) {
             String[] elements = partitionPath.split("/");
@@ -137,9 +144,8 @@ public class ZookeeperConnector {
     }
 
     public List<String> getCommittedOffsetTopics() throws Exception {
-        ZooKeeper zookeeper = mZookeeperClient.get();
         String offsetPath = getCommittedOffsetGroupPath();
-        List<String> topics = zookeeper.getChildren(offsetPath, false);
+        List<String> topics = mCurator.getChildren().forPath(offsetPath);
         LinkedList<String> result = new LinkedList<String>();
         for (String topicPath : topics) {
             String[] elements = topicPath.split("/");
@@ -150,14 +156,17 @@ public class ZookeeperConnector {
     }
 
     private void createMissingParents(String path) throws Exception {
-        ZooKeeper zookeeper = mZookeeperClient.get();
         assert path.charAt(0) == '/': path + ".charAt(0) == '/'";
         String[] elements = path.split("/");
         String prefix = "";
         for (int i = 1; i < elements.length - 1; ++i) {
             prefix += "/" + elements[i];
             try {
-                zookeeper.create(prefix, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                mCurator.create()
+                    .creatingParentsIfNeeded()
+                    .withMode(CreateMode.PERSISTENT)
+                    .withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE)
+                    .forPath(prefix);
                 LOG.info("created path {}", prefix);
             } catch (KeeperException.NodeExistsException exception) {
             }
@@ -166,7 +175,6 @@ public class ZookeeperConnector {
 
     public void setCommittedOffsetCount(TopicPartition topicPartition, long count)
             throws Exception {
-        ZooKeeper zookeeper = mZookeeperClient.get();
         String offsetPath = getCommittedOffsetPartitionPath(topicPartition);
         LOG.info("creating missing parents for zookeeper path {}", offsetPath);
         createMissingParents(offsetPath);
@@ -174,29 +182,27 @@ public class ZookeeperConnector {
         try {
             LOG.info("setting zookeeper path {} value {}", offsetPath, count);
             // -1 matches any version
-            zookeeper.setData(offsetPath, data, -1);
+            mCurator.setData().forPath(offsetPath, data);
         } catch (KeeperException.NoNodeException exception) {
-            zookeeper.create(offsetPath, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            LOG.warn("path {} does not exist in zookeeper", offsetPath);
         }
     }
 
     public void deleteCommittedOffsetTopicCount(String topic) throws Exception {
-        ZooKeeper zookeeper = mZookeeperClient.get();
         List<Integer> partitions = getCommittedOffsetPartitions(topic);
         for (Integer partition : partitions) {
             TopicPartition topicPartition = new TopicPartition(topic, partition);
             String offsetPath = getCommittedOffsetPartitionPath(topicPartition);
             LOG.info("deleting path {}", offsetPath);
-            zookeeper.delete(offsetPath, -1);
+            mCurator.delete().forPath(offsetPath);
         }
     }
 
     public void deleteCommittedOffsetPartitionCount(TopicPartition topicPartition)
             throws Exception {
         String offsetPath = getCommittedOffsetPartitionPath(topicPartition);
-        ZooKeeper zookeeper = mZookeeperClient.get();
         LOG.info("deleting path {}", offsetPath);
-        zookeeper.delete(offsetPath, -1);
+        mCurator.delete().forPath(offsetPath);
     }
 
     protected void setConfig(SecorConfig config) {
