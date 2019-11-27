@@ -510,8 +510,8 @@
             <!-- Thrift source generate plugin. -->
             <plugin>
                 <groupId>com.twitter</groupId>
-                <artifactId>maven-finagle-thrift-plugin</artifactId>
-                <version>0.0.9</version>
+                <artifactId>scrooge-maven-plugin</artifactId>
+                <version>19.11.0</version>
                 <executions>
                     <execution>
                         <id>thrift-sources</id>
@@ -519,14 +519,6 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
-                        <configuration>
-                            <thriftGenerators>
-                                <thriftGenerator>finagle</thriftGenerator>
-                            </thriftGenerators>
-                            <thriftOpts>
-                                <thriftOpt>finagle</thriftOpt>
-                            </thriftOpts>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>thrift-test-sources</id>
@@ -534,20 +526,14 @@
                         <goals>
                             <goal>testCompile</goal>
                         </goals>
-                        <configuration>
-                            <thriftGenerators>
-                                <thriftGenerator>finagle</thriftGenerator>
-                            </thriftGenerators>
-                            <thriftOpts>
-                                <thriftOpt>finagle</thriftOpt>
-                            </thriftOpts>
-                        </configuration>
                     </execution>
                 </executions>
                 <configuration>
-                    <thriftGenerators>
-                        <thriftGenerator>finagle</thriftGenerator>
-                    </thriftGenerators>
+                    <thriftOpts>
+                        <thriftOpt>--finagle</thriftOpt>
+                    </thriftOpts>
+                    <language>java</language>
+                    <buildExtractedThrift>true</buildExtractedThrift>
                 </configuration>
             </plugin>
             <plugin>
