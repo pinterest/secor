@@ -23,16 +23,17 @@ import com.google.common.base.Strings;
 import org.apache.commons.lang.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.recipes.cache.NodeCache;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
-import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -43,7 +44,7 @@ import java.util.List;
  *
  * @author Pawel Garbacki (pawel@pinterest.com)
  */
-public class ZookeeperConnector {
+public class ZookeeperConnector implements Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(ZookeeperConnector.class);
 
     private SecorConfig mConfig;
@@ -56,9 +57,23 @@ public class ZookeeperConnector {
 
     public ZookeeperConnector(SecorConfig config) {
         mConfig = config;
-        mCurator = CuratorFrameworkFactory.newClient(mConfig.getZookeeperQuorum(), new RetryOneTime(3000));
+        mCurator = CuratorFrameworkFactory.newClient(mConfig.getZookeeperQuorum(),
+            new ExponentialBackoffRetry(1000, 3));
         mCurator.start();
+        try {
+            mCurator.blockUntilConnected();
+        } catch (InterruptedException ex) {
+            throw new RuntimeException("Interrupted while waiting for ZK", ex);
+        }
+
         mLocks = new HashMap<String, InterProcessMutex>();
+    }
+
+    @Override
+    public void close() throws IOException  {
+        if (mCurator != null) {
+            mCurator.close();
+        }
     }
 
     private Iterable<InetSocketAddress> getZookeeperAddresses() {
@@ -156,21 +171,14 @@ public class ZookeeperConnector {
     }
 
     private void createMissingParents(String path) throws Exception {
-        assert path.charAt(0) == '/': path + ".charAt(0) == '/'";
-        String[] elements = path.split("/");
-        String prefix = "";
-        for (int i = 1; i < elements.length - 1; ++i) {
-            prefix += "/" + elements[i];
-            try {
-                mCurator.create()
-                    .creatingParentsIfNeeded()
-                    .withMode(CreateMode.PERSISTENT)
-                    .withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE)
-                    .forPath(prefix);
-                LOG.info("created path {}", prefix);
-            } catch (KeeperException.NodeExistsException exception) {
-            }
-        }
+      Stat stat = mCurator.checkExists().forPath(path);
+      if (stat == null) {
+        mCurator.create()
+            .creatingParentsIfNeeded()
+            .withMode(CreateMode.PERSISTENT)
+            .withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE)
+            .forPath(path);
+      }
     }
 
     public void setCommittedOffsetCount(TopicPartition topicPartition, long count)
@@ -184,7 +192,7 @@ public class ZookeeperConnector {
             // -1 matches any version
             mCurator.setData().forPath(offsetPath, data);
         } catch (KeeperException.NoNodeException exception) {
-            LOG.warn("path {} does not exist in zookeeper", offsetPath);
+            LOG.warn("Failed to set value to path " + offsetPath, exception);
         }
     }
 
