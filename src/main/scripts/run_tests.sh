@@ -262,6 +262,8 @@ verify() {
       echo "Success file count: $count"
       if [ "$count" != "$2" ]; then
         echo -e "\e[1;41;97m_SUCCESS files not as expected: $2 \e[0m"
+        echo "See log ${LOGS_DIR}/secor_${RUNMODE}.log for more details"
+        tail -n 50 ${LOGS_DIR}/secor_${RUNMODE}.log
         echo "See log ${LOGS_DIR}/finalizer.log for more details"
         tail -n 50 ${LOGS_DIR}/finalizer.log
         exit 1
