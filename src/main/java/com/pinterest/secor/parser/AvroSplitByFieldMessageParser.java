@@ -68,7 +68,7 @@ public class AvroSplitByFieldMessageParser extends TimestampedMessageParser impl
 
     @Override
     public String[] extractPartitions(Message message) throws Exception {
-        GenericRecord record = schemaRegistryClient.decodeMessage(message.getTopic(), message.getPayload());
+        GenericRecord record = schemaRegistryClient.deserialize(message.getTopic(), message.getPayload());
         if (record == null) {
             throw new RuntimeException("Failed to parse message as Avro object");
         }
