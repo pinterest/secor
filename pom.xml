@@ -528,7 +528,7 @@
             <plugin>
                 <groupId>com.twitter</groupId>
                 <artifactId>scrooge-maven-plugin</artifactId>
-                <version>19.12.0</version>
+                <version>20.1.0</version>
                 <executions>
                     <execution>
                         <id>thrift-sources</id>
