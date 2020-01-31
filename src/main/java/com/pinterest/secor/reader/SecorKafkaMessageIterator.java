@@ -117,6 +117,7 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator, Rebalanc
         optionalConfig(config.getSslProvider(), conf -> props.put("ssl.provider", conf));
         optionalConfig(config.getSslTruststoreType(), conf -> props.put("ssl.truststore.type", conf));
         optionalConfig(config.getNewConsumerPartitionAssignmentStrategyClass(), conf -> props.put("partition.assignment.strategy", conf));
+        optionalConfig(config.getMetaDataRefreshInterval(), conf -> props.put("metadata.max.age.ms", conf));
 
         mZookeeperConnector = new ZookeeperConnector(config);
         mRecordsBatch = new ArrayDeque<>();
@@ -143,7 +144,6 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator, Rebalanc
     @Override
     public void subscribe(RebalanceHandler handler, SecorConfig config) {
         ConsumerRebalanceListener reBalanceListener = new SecorConsumerRebalanceListener(mKafkaConsumer, mZookeeperConnector, getSkipZookeeperOffsetSeek(config), config.getNewConsumerAutoOffsetReset(), handler);
-        ;
 
         String[] subscribeList = config.getKafkaTopicList();
         if (Strings.isNullOrEmpty(subscribeList[0])) {

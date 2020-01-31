@@ -273,10 +273,21 @@ public class Uploader {
             final long size = mFileRegistry.getSize(topicPartition);
             final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
             LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
-            shouldUpload = forceUpload ||
-                           size >= mConfig.getMaxFileSizeBytes() ||
-                           modificationAgeSec >= mConfig.getMaxFileAgeSeconds() ||
-                           isRequiredToUploadAtTime(topicPartition);
+
+            boolean fileSizeTrigger = size >= mConfig.getMaxFileSizeBytes();
+            boolean fileAgeTrigger = modificationAgeSec >= mConfig.getMaxFileAgeSeconds();
+            boolean uploadTimeTrigger = isRequiredToUploadAtTime(topicPartition);
+            shouldUpload = forceUpload || fileAgeTrigger
+                    || fileSizeTrigger
+                    || uploadTimeTrigger;
+
+            if (shouldUpload) {
+                String reason = forceUpload ? "forceUpload"
+                        : fileAgeTrigger ? String.format("fileAgeSec %s is larger than config value %s", modificationAgeSec, mConfig.getMaxFileAgeSeconds())
+                        : fileSizeTrigger ? String.format("fileSizeBytes %s is larger than config value %s", size, mConfig.getMaxFileSizeBytes())
+                        : String.format("requiredToUploadAtMinute %s", mConfig.getUploadMinuteMark());
+                LOG.info("UploadFile with topic partition [{}] flag set because [" + reason + "]", topicPartition);
+            }
         }
         if (shouldUpload) {
             long newOffsetCount = mZookeeperConnector.getCommittedOffsetCount(topicPartition);

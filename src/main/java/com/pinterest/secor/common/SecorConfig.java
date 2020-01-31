@@ -26,7 +26,11 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  * One-stop shop for Secor configuration options.
@@ -219,6 +223,10 @@ public class SecorConfig {
 
     public String getFetchMinBytes() {
         return getString("kafka.fetch.min.bytes");
+    }
+
+    public String getMetaDataRefreshInterval() {
+        return getString("kafka.metadata.max.age.ms", "90000");
     }
 
     public String getFetchMaxBytes() {
