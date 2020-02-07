@@ -25,6 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.jayway.jsonpath.JsonPath;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 import java.util.List;
 
 /**
@@ -37,11 +41,20 @@ import java.util.List;
 public class SplitByFieldMessageParser extends TimestampedMessageParser implements Partitioner {
     private static final Logger LOG = LoggerFactory.getLogger(SplitByFieldMessageParser.class);
     private final String mSplitFieldName;
+    protected SimpleDateFormat outputFormatter;
+    protected Object inputPattern;
+    protected SimpleDateFormat inputFormatter;
 
     public SplitByFieldMessageParser(SecorConfig config) {
         super(config);
 
         mSplitFieldName = config.getMessageSplitFieldName();
+        TimeZone timeZone = config.getTimeZone();
+        inputPattern = mConfig.getMessageTimestampInputPattern();
+        if (inputPattern != null){
+            inputFormatter = new SimpleDateFormat(inputPattern.toString());
+            inputFormatter.setTimeZone(timeZone);
+        }
     }
 
     @Override
@@ -84,12 +97,21 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
 
     protected long extractTimestampMillis(JSONObject jsonObject) {
         Object fieldValue = getJsonFieldValue(jsonObject);
-        if (fieldValue != null) {
-            return toMillis(Double.valueOf(fieldValue.toString()).longValue());
-        } else {
-            LOG.warn("Failed to extract timestamp from the message");
-            return 0;
+        if (fieldValue != null && !fieldValue.toString().isEmpty()) {
+            if (inputFormatter != null){
+                String thing = "bad value";
+                try {
+                    return inputFormatter.parse(fieldValue.toString()).getTime();
+                } catch (Exception e) {
+                    LOG.warn("Impossible to convert date = {} with the input pattern = {}. Using date default = dt=1970-01-01",
+                               fieldValue.toString(), inputPattern.toString());
+                }
+            }else{
+                return toMillis(Double.valueOf(fieldValue.toString()).longValue());
+            }
         }
+        LOG.warn("Failed to extract timestamp from the message");
+        return 0;
     }
 
     protected String getAttribute(JSONObject json, String path) {
