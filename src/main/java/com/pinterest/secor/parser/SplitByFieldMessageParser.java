@@ -75,10 +75,11 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
     }
 
     protected String extractEventType(JSONObject jsonObject) {
-        if (getAttribute(jsonObject, mSplitFieldName) == null) {
+        String eventType = getAttribute(jsonObject, mSplitFieldName);
+        if ( eventType == null ) {
             throw new RuntimeException("Could not find key " + mSplitFieldName + " in Json message");
         }
-        return getAttribute(jsonObject, mSplitFieldName);
+        return eventType;
     }
 
     protected long extractTimestampMillis(JSONObject jsonObject) {

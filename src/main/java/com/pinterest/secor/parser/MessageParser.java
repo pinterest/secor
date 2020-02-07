@@ -22,6 +22,7 @@ import com.pinterest.secor.message.ParsedMessage;
 import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.jayway.jsonpath.JsonPath;
 
 import java.util.regex.Pattern;
 
@@ -37,6 +38,7 @@ import java.util.regex.Pattern;
 public abstract class MessageParser {
     protected SecorConfig mConfig;
     protected String[] mNestedFields;
+    protected String mTimestampFieldName;
     protected final String offsetPrefix;
     private static final Logger LOG = LoggerFactory.getLogger(MessageParser.class);
 
@@ -49,6 +51,7 @@ public abstract class MessageParser {
             !mConfig.getMessageTimestampNameSeparator().isEmpty()) {
             String separatorPattern = Pattern.quote(mConfig.getMessageTimestampNameSeparator());
             mNestedFields = mConfig.getMessageTimestampName().split(separatorPattern);
+            mTimestampFieldName = String.join( ".", mNestedFields);
         }
     }
 
@@ -68,22 +71,14 @@ public abstract class MessageParser {
     public Object getJsonFieldValue(JSONObject jsonObject) {
         Object fieldValue = null;
         if (mNestedFields != null) {
-            Object finalValue = null;
-            for (int i=0; i < mNestedFields.length; i++) {
-                if (!jsonObject.containsKey(mNestedFields[i])) {
-                    LOG.warn("Could not find key {} in message", mConfig.getMessageTimestampName());
-                    break;
-                }
-                if (i < (mNestedFields.length -1)) {
-                    jsonObject = (JSONObject) jsonObject.get(mNestedFields[i]);
-                } else {
-                    finalValue = jsonObject.get(mNestedFields[i]);
-                }
-            }
-            fieldValue = finalValue;
+            fieldValue = getAttribute(jsonObject, mTimestampFieldName);
         } else {
             fieldValue = jsonObject.get(mConfig.getMessageTimestampName());
         }
         return fieldValue;
+    }
+
+    protected String getAttribute(JSONObject json, String path) {
+        return JsonPath.read(json.toString(), path);
     }
 }
