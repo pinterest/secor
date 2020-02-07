@@ -23,6 +23,7 @@ import net.minidev.json.JSONValue;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.jayway.jsonpath.JsonPath;
 
 import java.util.List;
 
@@ -74,10 +75,10 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
     }
 
     protected String extractEventType(JSONObject jsonObject) {
-        if (!jsonObject.containsKey(mSplitFieldName)) {
+        if (getAttribute(jsonObject, mSplitFieldName) == null) {
             throw new RuntimeException("Could not find key " + mSplitFieldName + " in Json message");
         }
-        return jsonObject.get(mSplitFieldName).toString();
+        return getAttribute(jsonObject, mSplitFieldName);
     }
 
     protected long extractTimestampMillis(JSONObject jsonObject) {
@@ -87,5 +88,9 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
         } else {
             throw new RuntimeException("Failed to extract timestamp from the message");
         }
+    }
+
+    protected String getAttribute(JSONObject json, String path) {
+        return JsonPath.read(json.toString(), path);
     }
 }

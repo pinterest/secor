@@ -353,6 +353,11 @@
             <artifactId>orc-core</artifactId>
             <version>1.5.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+            <version>2.4.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -448,7 +453,7 @@
 			<plugin>
 				<groupId>com.github.os72</groupId>
 				<artifactId>protoc-jar-maven-plugin</artifactId>
-				<version>3.6.0.2</version>
+				<version>3.11.1</version>
 				<executions>
 					<execution>
 						<id>protobuf-test-sources</id>
