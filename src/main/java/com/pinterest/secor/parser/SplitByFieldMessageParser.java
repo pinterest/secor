@@ -87,7 +87,8 @@ public class SplitByFieldMessageParser extends TimestampedMessageParser implemen
         if (fieldValue != null) {
             return toMillis(Double.valueOf(fieldValue.toString()).longValue());
         } else {
-            throw new RuntimeException("Failed to extract timestamp from the message");
+            LOG.warn("Failed to extract timestamp from the message");
+            return 0;
         }
     }
 
