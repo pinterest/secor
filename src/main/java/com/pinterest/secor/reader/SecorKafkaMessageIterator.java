@@ -146,7 +146,7 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator, Rebalanc
         ;
 
         String[] subscribeList = config.getKafkaTopicList();
-        if (Strings.isNullOrEmpty(subscribeList[0])) {
+        if (subscribeList.length == 0 || Strings.isNullOrEmpty(subscribeList[0])) {
             mKafkaConsumer.subscribe(Pattern.compile(config.getKafkaTopicFilter()), reBalanceListener);
         } else {
             mKafkaConsumer.subscribe(Arrays.asList(subscribeList), reBalanceListener);
