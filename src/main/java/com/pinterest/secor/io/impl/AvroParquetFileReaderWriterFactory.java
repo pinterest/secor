@@ -127,10 +127,14 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            GenericRecord record = schemaRegistry.deserialize(topic, keyValue.getValue());
-            LOG.trace("Writing record {}", record);
-            if (record != null){
-                writer.write(record);
+            try {
+                GenericRecord record = schemaRegistry.deserialize(topic, keyValue.getValue());
+                LOG.trace("Writing record {}", record);
+                if (record != null) {
+                    writer.write(record);
+                }
+            } catch (Exception ex) {
+                LOG.error("Failed to write but will continue with next messages. Error message = " +  ex.getMessage());
             }
         }
 

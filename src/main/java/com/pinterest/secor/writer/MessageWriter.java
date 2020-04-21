@@ -83,9 +83,9 @@ public class MessageWriter {
         if (isLegacyConsumer && message.getOffset() != lastSeenOffset + 1) {
             StatsUtil.incr("secor.consumer_rebalance_count." + topicPartition.getTopic());
             // There was a rebalancing event since we read the last message.
-            LOG.info("offset of message {} does not follow sequentially the last seen offset {}. " +
+            LOG.info("offset of message topic = {}, partition = {},  offset = {}, kafkaf key = {} does not follow sequentially the last seen offset {}. " +
                             "Deleting files in topic {} partition {}",
-                    message, lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
+                    message.getTopic(), message.getKafkaPartition(), message.getOffset(), message.getKafkaKey(), lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
 
             mFileRegistry.deleteTopicPartition(topicPartition);
             if (mDeterministicUploadPolicyTracker != null) {

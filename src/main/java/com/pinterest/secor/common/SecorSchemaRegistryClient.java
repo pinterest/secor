@@ -68,7 +68,6 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
         GenericRecord record = (GenericRecord) deserializer.deserialize(topic, message);
         if (record != null) {
             Schema schema = record.getSchema();
-            schemas.put(topic, schema);
         }
         return record;
     }
@@ -84,9 +83,14 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
      */
     public Schema getSchema(String topic) {
         Schema schema = schemas.get(topic);
+        if(schema != null) {
+            LOG.info("Found the schema in memory map for topic " + topic);
+            LOG.info("schema = " + schema.toString(true));
+        }
         if (schema == null) {
             try {
                 SchemaMetadata schemaMetadata = schemaRegistryClient.getLatestSchemaMetadata(topic + "-value");
+                LOG.info("Pulled schema from schema registry api for topic = " +  topic + ", schema id = " + schemaMetadata.getId() + ", schema = " + schemaMetadata.getSchema() + ", schema version = " + schemaMetadata.getVersion());
                 schema = schemaRegistryClient.getByID(schemaMetadata.getId());
                 schemas.put(topic, schema);
             } catch (IOException e) {

@@ -176,7 +176,7 @@ public class Consumer extends Thread {
                 long now = System.currentTimeMillis();
 
                 if (nMsgPulls % 1000 == 0 || now - timeStamp > 60 * 1000) {
-                    LOG.info("nMsgPulls: " + nMsgPulls + " lastChecked: " + lastChecked);
+                    LOG.debug("nMsgPulls: " + nMsgPulls + " lastChecked: " + lastChecked);
                     timeStamp = now;
                 }
 
@@ -201,7 +201,7 @@ public class Consumer extends Thread {
 
     protected void checkUploadPolicy(boolean forceUpload) {
         try {
-            LOG.info("checkUploadPolicy invoked, " + mOffsetTracker.toString() + ", " + spc.toString());
+            LOG.debug("checkUploadPolicy invoked, " + mOffsetTracker.toString() + ", " + spc.toString());
             mUploader.applyPolicy(forceUpload);
         } catch (Exception e) {
             throw new RuntimeException("Failed to apply upload policy", e);
