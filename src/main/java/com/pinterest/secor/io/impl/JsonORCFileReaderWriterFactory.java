@@ -183,6 +183,7 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
             if (jsonElement instanceof JsonObject) {
                 writeOne((JsonObject) jsonElement);
             } else if (jsonElement instanceof JsonArray) {
+                // save each element in the array as a separate record
                 for (JsonElement arrayElement : (JsonArray) jsonElement) {
                     if (arrayElement instanceof JsonObject) {
                         writeOne((JsonObject) arrayElement);
