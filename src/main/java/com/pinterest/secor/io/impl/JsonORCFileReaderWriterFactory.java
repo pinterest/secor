@@ -20,15 +20,16 @@ package com.pinterest.secor.io.impl;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.io.compress.Lz4Codec;
 import org.apache.hadoop.io.compress.SnappyCodec;
-import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
@@ -41,6 +42,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.LogFilePath;
@@ -57,7 +60,7 @@ import com.pinterest.secor.util.orc.schema.ORCSchemaProvider;
 
 /**
  * ORC reader/writer implementation
- * 
+ *
  * @author Ashish (ashu.impetus@gmail.com)
  *
  */
@@ -128,7 +131,7 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
                 return null;
             }
             rowIndex++;
-            return new KeyValue(offset++, sw.toString().getBytes("UTF-8"));
+            return new KeyValue(offset++, sw.toString().getBytes(StandardCharsets.UTF_8));
         }
 
         @Override
@@ -176,10 +179,26 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
+            JsonElement jsonElement = gson.fromJson(new String(keyValue.getValue()), JsonElement.class);
+            if (jsonElement instanceof JsonObject) {
+                writeOne((JsonObject) jsonElement);
+            } else if (jsonElement instanceof JsonArray) {
+                // save each element in the array as a separate record
+                for (JsonElement arrayElement : (JsonArray) jsonElement) {
+                    if (arrayElement instanceof JsonObject) {
+                        writeOne((JsonObject) arrayElement);
+                    } else {
+                        throw new IOException("Cannot write " + keyValue + ": unsupported type " + jsonElement);
+                    }
+                }
+            } else {
+                throw new IOException("Cannot write " + keyValue + ": unsupported type " + jsonElement);
+            }
+        }
+
+        private void writeOne(JsonObject object) throws IOException {
             rowIndex = batch.size++;
-            VectorColumnFiller.fillRow(rowIndex, converters, schema, batch,
-                    gson.fromJson(new String(keyValue.getValue()),
-                            JsonObject.class));
+            VectorColumnFiller.fillRow(rowIndex, converters, schema, batch, object);
             if (batch.size == batch.getMaxSize()) {
                 writer.addRowBatch(batch);
                 batch.reset();
@@ -195,7 +214,7 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
 
     /**
      * Used for returning the compression kind used in ORC
-     * 
+     *
      * @param codec
      * @return
      */

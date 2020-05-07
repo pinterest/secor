@@ -56,7 +56,7 @@ public class JsonORCFileReaderWriterFactoryTest {
         FileWriter fileWriter = factory.BuildFileWriter(tempLogFilePath, codec);
     }
 
-    private void runCommonTest(String schema, String topic, String... jsonRecords) throws Exception {
+    private ReadWriteRecords runTest(String schema, String topic, String... jsonRecords) throws Exception {
         PropertiesConfiguration properties = new PropertiesConfiguration();
         properties.setProperty("secor.orc.schema.provider", DEFAULT_ORC_SCHEMA_PROVIDER);
         properties.setProperty(String.format("secor.orc.message.schema.%s", topic), schema);
@@ -67,7 +67,11 @@ public class JsonORCFileReaderWriterFactoryTest {
         LogFilePath tempLogFilePath = getTempLogFilePath(topic);
         KeyValue[] written = writeRecords(factory, tempLogFilePath, jsonRecords);
         KeyValue[] read = readRecords(factory, tempLogFilePath, jsonRecords.length);
+        return new ReadWriteRecords(written, read);
+    }
 
+    private void runCommonTest(String schema, String topic, String... jsonRecords) throws Exception {
+        ReadWriteRecords records = runTest(schema, topic, jsonRecords);
         for (int i = 0; i < jsonRecords.length; i++) {
             // String comparisons make debugging a bit easier, albeit induce greater memory footprint.
             // For example, byte array comparison yields an error message like:
@@ -84,7 +88,7 @@ public class JsonORCFileReaderWriterFactoryTest {
             //
             //     assertArrayEquals(written[i].getValue(), read[i].getValue())
             //
-            assertEquals(new String(written[i].getValue()), new String(read[i].getValue()));
+            assertEquals(new String(records.written[i].getValue()), new String(records.read[i].getValue()));
         }
     }
 
@@ -214,5 +218,28 @@ public class JsonORCFileReaderWriterFactoryTest {
             "{\"v1\":1234}",
             "{\"v1\":{\"v2\":null,\"v3\":1048576}}"
         );
+    }
+
+    @Test
+    public void testReadListOfObject() throws Exception {
+        ReadWriteRecords records = runTest(
+            "struct<name:string\\,age:int>",
+            "list-of-objects",
+            "[{\"name\":\"Jon Smith\",\"age\":99}]"
+        );
+        assertEquals(1, records.read.length);
+        assertEquals(1, records.written.length);
+        assertEquals("[{\"name\":\"Jon Smith\",\"age\":99}]", new String(records.written[0].getValue()));
+        assertEquals("{\"name\":\"Jon Smith\",\"age\":99}", new String(records.read[0].getValue()));
+    }
+
+    private static final class ReadWriteRecords {
+        private final KeyValue[] written;
+        private final KeyValue[] read;
+
+        private ReadWriteRecords(KeyValue[] written, KeyValue[] read) {
+            this.written = written;
+            this.read = read;
+        }
     }
 }
