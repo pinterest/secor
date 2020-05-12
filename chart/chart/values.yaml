@@ -1,0 +1,52 @@
+secor:
+  replicas: 10
+  image:
+    tag: "2016-10-12" 
+    name: giosg/secor
+  env:
+    ZOOKEEPER_QUORUM: zookeeper.service.fsn1-prod.giosg.local:2181
+    ZOOKEEPER_TIMEOUT: 60000
+    AWS_ACCESS_KEY: AKIAX55KEK4DUAGP327I
+    AWS_SECRET_KEY: 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
+    SECOR_S3_BUCKET: giosg-secor-prod
+    SECOR_S3_PATH: backup
+    KAFKA_SEED_BROKER_HOST: prod-kafka-001.node.fsn1-prod.giosg.local
+    SECOR_COMPRESSION_CODEC: org.apache.hadoop.io.compress.GzipCodec
+    SECOR_KAFKA_TOPIC_FILTER: '(^customer_|^)events_prod$$'
+    SECOR_MESSAGE_PARSER: com.pinterest.secor.parser.DateMessageParser
+    SECOR_TIMESTAMP_NAME: collector_created_at
+    SECOR_TIMESTAMP_PATTERN: yyyy-MM-dd'T'
+    SECOR_GROUP: giosg-secor-kafka-prod
+
+  resources:
+    limits:
+      memory: "1200Mi"
+      cpu: "2.0"
+    requests:
+      memory: "1Gi"
+      cpu: "1.0"
+
+secormon:
+  replicas: 1
+  image:
+    tag: "2016-10-12" 
+    name: giosg/secor
+
+  # additional environment variables. secormon inherits all the variables from secor.
+  env: {}
+
+  resources:
+    limits:
+      memory: "1Gi"
+      cpu: "1.0"
+    requests:
+      memory: "600Mi"
+      cpu: "500m"
+
+statsd-exporter:
+  image:
+    tag: v0.8.0
+  port:
+    "9125"
+  prefix: "secor"
+  maxudpsize: "2048"

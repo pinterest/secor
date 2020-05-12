@@ -1,0 +1,37 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ include "secor.component.deployment.secor" . }}
+  labels:
+    {{- include "secor.labels" . | nindent 4 }}
+    component: secor
+spec:
+  replicas: {{ .Values.secor.replicas }}
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      {{- include "secor.matchLabels" . | nindent 6 }}
+      component: secor
+  template:
+    metadata:
+      labels:
+        {{- include "secor.matchLabels" . | nindent 8 }}
+        component: secor
+    spec:
+      imagePullSecrets:
+        - name: giosg.hub.docker.com
+      containers:
+        - name: secor
+          image: {{ .Values.secor.image.name }}:{{ .Values.secor.image.tag }}
+          resources:
+            {{- toYaml .Values.secor.resources | nindent 12 }}
+          command: ["{{ $.Values.secor.entrypoint }}"]
+          args: []
+          env:
+          {{- range $index, $value := .Values.secor.env }}
+            - name: {{ $index }}
+              value: {{ $value | quote }}
+          {{- end }}
+            - name: SECOR_STATSD_HOSTPORT
+              value: {{ .Release.Name }}-statsd-exporter:{{ index .Values "statsd-exporter" "port" }}

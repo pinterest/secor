@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "statsd-exporter.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "statsd-exporter.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "statsd-exporter.chart" . }}
+data:
+  statsd_mapping.conf: |
+    defaults:
+      timer_type: histogram
+      buckets: [.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10]
+      match_type: glob
+
+    mappings:
+    - match: (.*)milliseconds
+      name: ${1}seconds
+      match_type: regex

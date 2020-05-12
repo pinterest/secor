@@ -1,0 +1,50 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ include "statsd-exporter.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "statsd-exporter.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "statsd-exporter.chart" . }}
+spec:
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "statsd-exporter.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "statsd-exporter.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9102'
+        deployment_id: {{ randAlphaNum 10 | quote }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: prom/statsd-exporter:{{ .Values.image.tag }}
+          args:
+            - --statsd.mapping-config=/config/statsd_mapping.conf
+          ports:
+            - name: statsd
+              containerPort: 9125
+            - name: http
+              containerPort: 9102
+          resources:
+            limits:
+              memory: "200Mi"
+              cpu: "1.0"
+            requests:
+              memory: "30Mi"
+              cpu: "50m"
+          volumeMounts:
+            - mountPath: /config
+              name: mapping-conf
+      volumes:
+        - name: mapping-conf
+          configMap:
+            name: {{ include "statsd-exporter.fullname" . }}

@@ -1,0 +1,21 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ include "statsd-exporter.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "statsd-exporter.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "statsd-exporter.chart" . }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ include "statsd-exporter.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - protocol: TCP
+      port: 9102
+      name: http
+    - protocol: UDP
+      port: 9125
+      name: statsd
