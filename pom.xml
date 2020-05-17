@@ -27,14 +27,6 @@
             <name>Pawel Garbacki</name>
         </developer>
         <developer>
-            <id>yuyang</id>
-            <name>Yu Yang</name>
-        </developer>
-        <developer>
-            <id>ramki</id>
-            <name>Ramki Venkatachalam</name>
-        </developer>
-        <developer>
             <id>hcai</id>
             <name>Henry Cai</name>
         </developer>
@@ -53,6 +45,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <parquet.version>1.9.0</parquet.version>
 
+        <!-- Whether we will using legazy old consumer kafka-legacy or new consumer kafka-2.0.0 -->
         <!-- Name of the directory below src/main/config that contains kafka-version-specific settings -->
         <kafka.properties>kafka-legacy</kafka.properties>
     </properties>
