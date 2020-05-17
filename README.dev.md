@@ -1,5 +1,12 @@
 # Secor developer notes
 
+## Run tests (optional)
+```sh
+cd ${SECOR_INSTALL_DIR}
+./scripts/run_tests.sh
+# OR:
+MVN_PROFILE=<profile> ./scripts/run_tests.sh
+```
 
 ## Dependencies
 
