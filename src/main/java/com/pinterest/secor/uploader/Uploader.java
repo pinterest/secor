@@ -130,7 +130,12 @@ public class Uploader {
                     uploadHandles.add(mUploadManager.upload(path));
                 }
                 for (Handle<?> uploadHandle : uploadHandles) {
-                    uploadHandle.get();
+                    try {
+                        uploadHandle.get();
+                    } catch (Exception ex) {
+                        mMetricCollector.increment("uploader.upload.failures", topicPartition.getTopic());
+                        throw ex;
+                    }
                 }
                 mFileRegistry.deleteTopicPartition(topicPartition);
                 if (mDeterministicUploadPolicyTracker != null) {
@@ -146,6 +151,7 @@ public class Uploader {
                 LOG.warn("Zookeeper committed offset didn't match for topic {} partition {}: {} vs {}",
                          topicPartition.getTopic(), topicPartition.getTopic(), zookeeperCommittedOffsetCount,
                          committedOffsetCount);
+                mMetricCollector.increment("uploader.offset_mismatches", topicPartition.getTopic());
             }
         } finally {
             mZookeeperConnector.unlock(lockPath);
@@ -282,6 +288,7 @@ public class Uploader {
             } else if (newOffsetCount > lastSeenOffset) {  // && oldOffset < newOffset
                 LOG.debug("last seen offset {} is lower than committed offset count {}. Deleting files in topic {} partition {}",
                         lastSeenOffset, newOffsetCount,topicPartition.getTopic(), topicPartition.getPartition());
+                mMetricCollector.increment("uploader.partition_deletes", topicPartition.getTopic());
                 // There was a rebalancing event and someone committed an offset beyond that of the
                 // current message.  We need to delete the local file.
                 mFileRegistry.deleteTopicPartition(topicPartition);
@@ -292,6 +299,7 @@ public class Uploader {
                 LOG.debug("previous committed offset count {} is lower than committed offset {} is lower than or equal to last seen offset {}. " +
                                 "Trimming files in topic {} partition {}",
                         oldOffsetCount, newOffsetCount, lastSeenOffset, topicPartition.getTopic(), topicPartition.getPartition());
+                mMetricCollector.increment("uploader.partition_trims", topicPartition.getTopic());
                 // There was a rebalancing event and someone committed an offset lower than that
                 // of the current message.  We need to trim local files.
                 trimFiles(topicPartition, newOffsetCount);
