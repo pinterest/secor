@@ -18,11 +18,11 @@ Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage
 
 ## Setup/Configuration Guide
 
-Setup/Configuration instruction is available in [DESIGN.setup.md](DESIGN.setup.md).
+Setup/Configuration instruction is available in [README.setup.md](README.setup.md).
 
 ### Secor configuration for Kubernetes/GKE environment
 
-Extra Setup instruction for Kubernetes/GKE environment is available in [DESIGN.kubernetes.md](DESIGN.kubernetes.md).
+Extra Setup instruction for Kubernetes/GKE environment is available in [README.kubernetes.md](README.kubernetes.md).
 
 ## Detailed design
 
