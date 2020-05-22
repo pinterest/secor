@@ -18,9 +18,15 @@
  */
 package com.pinterest.secor.monitoring;
 
+import com.pinterest.secor.common.SecorConfig;
+
 import com.twitter.ostrich.stats.Stats;
 
 public class OstrichMetricCollector implements MetricCollector {
+    @Override
+    public void initialize(SecorConfig config) {
+    }
+
     @Override
     public void increment(String label, String topic) {
         Stats.incr(label);

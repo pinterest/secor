@@ -18,12 +18,20 @@
  */
 package com.pinterest.secor.monitoring;
 
+import com.pinterest.secor.common.SecorConfig;
+
 /**
  * Component which may be used to post metrics.
  *
  * All methods should be non-blocking and do not throw exceptions.
  */
 public interface MetricCollector {
+    /**
+     * Initialize the collector with SecorConfig
+     * @param config
+     */
+    void initialize(SecorConfig config);
+
     /**
      * Increments the specified counter by one.
      * Convenience method equivalent to {@link #increment(String, int, String)}.
