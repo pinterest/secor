@@ -756,7 +756,15 @@ public class SecorConfig {
     public String getMetricsCollectorClass() {
         return getString("secor.monitoring.metrics.collector.class");
     }
-    
+
+    public boolean getMicroMeterCollectorJmxEnabled() {
+        return getBoolean("secor.monitoring.metrics.collector.micrometer.jmx.enabled");
+    }
+
+    public boolean getMicroMeterCollectorStatsdEnabled() {
+        return getBoolean("secor.monitoring.metrics.collector.micrometer.statsd.enabled");
+    }
+
     /**
      * This method is used for fetching all the properties which start with the given prefix.
      * It returns a Map of all those key-val.

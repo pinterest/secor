@@ -93,6 +93,7 @@ public class Consumer extends Thread {
         mKafkaMessageIterator = KafkaMessageIteratorFactory.getIterator(mConfig.getKafkaMessageIteratorClass(), mConfig);
         mMessageReader = new MessageReader(mConfig, mOffsetTracker, mKafkaMessageIterator);
         mMetricCollector = ReflectionUtil.createMetricCollector(mConfig.getMetricsCollectorClass());
+        mMetricCollector.initialize(mConfig);
 
         FileRegistry fileRegistry = new FileRegistry(mConfig);
         UploadManager uploadManager = ReflectionUtil.createUploadManager(mConfig.getUploadManagerClass(), mConfig);

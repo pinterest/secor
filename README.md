@@ -11,7 +11,7 @@ Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage
   - **horizontal scalability**: scaling the system out to handle more load is as easy as starting extra Secor processes. Reducing the resource footprint can be achieved by killing any of the running Secor processes. Neither ramping up nor down has any impact on data consistency,
   - **output partitioning**: Secor parses incoming messages and puts them under partitioned s3 paths to enable direct import into systems like [Hive]. day,hour,minute level partitions are supported by secor
   - **configurable upload policies**: commit points controlling when data is persisted in S3 are configured through size-based and time-based policies (e.g., upload data when local buffer reaches size of 100MB and at least once per hour),
-  - **monitoring**: metrics tracking various performance properties are exposed through [Ostrich] and optionally exported to [OpenTSDB] / [statsD],
+  - **monitoring**: metrics tracking various performance properties are exposed through [Ostrich], [Micrometer] and optionally exported to [OpenTSDB] / [statsD],
   - **customizability**: external log message parser may be loaded by updating the configuration,
   - **event transformation**: external message level transformation can be done by using customized class.
   - **Qubole interface**: Secor connects to [Qubole] to add finalized output partitions to Hive tables.
@@ -89,6 +89,7 @@ If you have any questions or comments, you can reach us at [secor-users@googlegr
 [eventual consistency]:http://docs.aws.amazon.com/AmazonS3/latest/dev/Introduction.html#ConsistencyMode
 [Hive]:http://hive.apache.org/
 [Ostrich]: https://github.com/twitter/ostrich
+[Micrometer]: https://micrometer.io
 [OpenTSDB]: http://opentsdb.net/
 [Qubole]: http://www.qubole.com/
 [statsD]: https://github.com/etsy/statsd/
