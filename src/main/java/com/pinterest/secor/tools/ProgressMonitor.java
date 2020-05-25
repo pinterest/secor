@@ -204,42 +204,46 @@ public class ProgressMonitor {
             }
             List<Integer> partitions = mZookeeperConnector.getCommittedOffsetPartitions(topic);
             for (Integer partition : partitions) {
-                TopicPartition topicPartition = new TopicPartition(topic, partition);
-                Message committedMessage = mKafkaClient.getCommittedMessage(topicPartition);
-                long committedOffset = -1;
-                long committedTimestampMillis = -1;
-                if (committedMessage == null) {
-                    LOG.warn("no committed message found in topic {} partition {}", topic, partition);
-                    continue;
-                } else {
-                    committedOffset = committedMessage.getOffset();
-                    committedTimestampMillis = getTimestamp(committedMessage);
-                }
+                try {
+                    TopicPartition topicPartition = new TopicPartition(topic, partition);
+                    Message committedMessage = mKafkaClient.getCommittedMessage(topicPartition);
+                    long committedOffset = -1;
+                    long committedTimestampMillis = -1;
+                    if (committedMessage == null) {
+                        LOG.warn("no committed message found in topic {} partition {}", topic, partition);
+                        continue;
+                    } else {
+                        committedOffset = committedMessage.getOffset();
+                        committedTimestampMillis = getTimestamp(committedMessage);
+                    }
 
-                Message lastMessage = mKafkaClient.getLastMessage(topicPartition);
-                if (lastMessage == null) {
-                    LOG.warn("no message found in topic {} partition {}", topic, partition);
-                } else {
-                    long lastOffset = lastMessage.getOffset();
-                    long lastTimestampMillis = getTimestamp(lastMessage);
-                    assert committedOffset <= lastOffset: Long.toString(committedOffset) + " <= " +
-                        lastOffset;
+                    Message lastMessage = mKafkaClient.getLastMessage(topicPartition);
+                    if (lastMessage == null) {
+                        LOG.warn("no message found in topic {} partition {}", topic, partition);
+                    } else {
+                        long lastOffset = lastMessage.getOffset();
+                        long lastTimestampMillis = getTimestamp(lastMessage);
+                        assert committedOffset <= lastOffset: Long.toString(committedOffset) + " <= " +
+                            lastOffset;
 
-                    long offsetLag = lastOffset - committedOffset;
-                    long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
-                    Map<String, String> tags = ImmutableMap.of(
-                            Stat.STAT_KEYS.TOPIC.getName(), topic,
-                            Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition),
-                            Stat.STAT_KEYS.GROUP.getName(), mConfig.getKafkaGroup()
-                    );
+                        long offsetLag = lastOffset - committedOffset;
+                        long timestampMillisLag = lastTimestampMillis - committedTimestampMillis;
+                        Map<String, String> tags = ImmutableMap.of(
+                                Stat.STAT_KEYS.TOPIC.getName(), topic,
+                                Stat.STAT_KEYS.PARTITION.getName(), Integer.toString(partition),
+                                Stat.STAT_KEYS.GROUP.getName(), mConfig.getKafkaGroup()
+                        );
 
-                    long timestamp = System.currentTimeMillis() / 1000;
-                    stats.add(Stat.createInstance(metricName("lag.offsets"), tags, Long.toString(offsetLag), timestamp));
-                    stats.add(Stat.createInstance(metricName("lag.seconds"), tags, Long.toString(timestampMillisLag / 1000), timestamp));
+                        long timestamp = System.currentTimeMillis() / 1000;
+                        stats.add(Stat.createInstance(metricName("lag.offsets"), tags, Long.toString(offsetLag), timestamp));
+                        stats.add(Stat.createInstance(metricName("lag.seconds"), tags, Long.toString(timestampMillisLag / 1000), timestamp));
 
-                    LOG.debug("topic {} partition {} committed offset {} last offset {} committed timestamp {} last timestamp {}",
-                            topic, partition, committedOffset, lastOffset,
-                            (committedTimestampMillis / 1000), (lastTimestampMillis / 1000));
+                        LOG.debug("topic {} partition {} committed offset {} last offset {} committed timestamp {} last timestamp {}",
+                                topic, partition, committedOffset, lastOffset,
+                                (committedTimestampMillis / 1000), (lastTimestampMillis / 1000));
+                    }
+                } catch (RuntimeException e) {
+                    LOG.warn(e.getMessage(), e);
                 }
             }
         }
