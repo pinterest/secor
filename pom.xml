@@ -804,6 +804,9 @@
             <properties>
                 <kafka.properties>kafka-2.0.0</kafka.properties>
             </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
@@ -862,9 +865,6 @@
                     </plugin>
                 </plugins>
             </build>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
