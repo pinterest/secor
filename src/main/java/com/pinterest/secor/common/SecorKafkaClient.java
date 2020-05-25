@@ -28,6 +28,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.thrift.TException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -40,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 
 public class SecorKafkaClient implements KafkaClient {
     public static final int MAX_READ_POLL_ATTEMPTS = 10;
+    private static final Logger LOG = LoggerFactory.getLogger(SecorKafkaClient.class);
     private KafkaConsumer<byte[], byte[]> mKafkaConsumer;
     private AdminClient mKafkaAdminClient;
     private ZookeeperConnector mZookeeperConnector;
@@ -95,7 +98,7 @@ public class SecorKafkaClient implements KafkaClient {
         }
 
         if (message == null) {
-            throw new RuntimeException("unable to fetch message after " + MAX_READ_POLL_ATTEMPTS + " Retries");
+            LOG.warn("unable to fetch message after " + MAX_READ_POLL_ATTEMPTS + " Retries");
         }
         return message;
     }
