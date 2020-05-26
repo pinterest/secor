@@ -45,4 +45,21 @@ public class ZookeeperConnectorTest {
         zookeeperConnector.setConfig(secorConfig);
         Assert.assertEquals(expectedOffsetPath, zookeeperConnector.getCommittedOffsetGroupPath());
     }
+
+    @Test
+    public void testGetLastSeenOffsetGroupPath() throws Exception {
+        verifyLastSeen("/", "/consumers/secor_cg/lastSeen");
+        verifyLastSeen("/chroot", "/chroot/consumers/secor_cg/lastSeen");
+        verifyLastSeen("/chroot/", "/chroot/consumers/secor_cg/lastSeen");
+    }
+
+    protected void verifyLastSeen(String zookeeperPath, String expectedOffsetPath) {
+        ZookeeperConnector zookeeperConnector = new ZookeeperConnector();
+        PropertiesConfiguration properties = new PropertiesConfiguration();
+        properties.setProperty("kafka.zookeeper.path", zookeeperPath);
+        properties.setProperty("secor.kafka.group", "secor_cg");
+        SecorConfig secorConfig = new SecorConfig(properties);
+        zookeeperConnector.setConfig(secorConfig);
+        Assert.assertEquals(expectedOffsetPath, zookeeperConnector.getLastSeenOffsetGroupPath());
+    }
 }

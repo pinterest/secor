@@ -277,6 +277,10 @@ public class SecorConfig {
         return getBoolean("secor.upload.on.shutdown");
     }
 
+    public boolean getUploadLastSeenOffset() {
+        return getBoolean("secor.upload.last.seen.offset", false);
+    }
+
     public boolean getDeterministicUpload() {
         return getBoolean("secor.upload.deterministic");
     }
