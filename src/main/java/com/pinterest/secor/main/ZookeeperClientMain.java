@@ -87,8 +87,10 @@ public class ZookeeperClientMain {
                     ((Number) commandLine.getParsedOptionValue("partition")).intValue();
                 TopicPartition topicPartition = new TopicPartition(topic, partition);
                 zookeeperConnector.deleteCommittedOffsetPartitionCount(topicPartition);
+                zookeeperConnector.deleteLastSeenOffsetPartitionCount(topicPartition);
             } else {
                 zookeeperConnector.deleteCommittedOffsetTopicCount(topic);
+                zookeeperConnector.deleteLastSeenOffsetTopicCount(topic);
             }
         } catch (Throwable t) {
             LOG.error("Zookeeper client failed", t);

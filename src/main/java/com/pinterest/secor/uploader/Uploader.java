@@ -62,6 +62,7 @@ public class Uploader {
     protected UploadManager mUploadManager;
     protected MessageReader mMessageReader;
     private DeterministicUploadPolicyTracker mDeterministicUploadPolicyTracker;
+    private boolean mUploadLastSeenOffset;
     protected String mTopicFilter;
 
     private boolean isOffsetsStorageKafka = false;
@@ -100,6 +101,7 @@ public class Uploader {
         if (mConfig.getOffsetsStorage().equals(SecorConstants.KAFKA_OFFSETS_STORAGE_KAFKA)) {
             isOffsetsStorageKafka = true;
         }
+        mUploadLastSeenOffset = mConfig.getUploadLastSeenOffset();
     }
 
     protected void uploadFiles(TopicPartition topicPartition) throws Exception {
@@ -121,6 +123,32 @@ public class Uploader {
             long zookeeperCommittedOffsetCount = mZookeeperConnector.getCommittedOffsetCount(
                     topicPartition);
             if (zookeeperCommittedOffsetCount == committedOffsetCount) {
+                if (mUploadLastSeenOffset) {
+                    long zkLastSeenOffset = mZookeeperConnector.getLastSeenOffsetCount(topicPartition);
+                    // If the in-memory lastSeenOffset is less than ZK's, this means there was a failed
+                    // attempt uploading for this topic partition and we already have some files uploaded
+                    // on S3, e.g.
+                    //     s3n://topic/partition/day/hour=0/offset1
+                    //     s3n://topic/partition/day/hour=1/offset1
+                    // Since our in-memory accumulated files (offsets) is less than what's on ZK, we
+                    // might have less files to upload, e.g.
+                    //     localfs://topic/partition/day/hour=0/offset1
+                    // If we continue uploading, we will upload this file:
+                    //     s3n://topic/partition/day/hour=0/offset1
+                    // But the next file to be uploaded will become:
+                    //     s3n://topic/partition/day/hour=1/offset2
+                    // So we will end up with 2 different files for hour=1/
+                    // We should wait a bit longer to have at least getting to the same offset as ZK's
+                    //
+                    // Note We use offset + 1 throughout secor when we persist to ZK
+                    if (lastSeenOffset + 1 < zkLastSeenOffset) {
+                        LOG.warn("TP {}, ZK lastSeenOffset {}, in-memory lastSeenOffset {}, skip uploading this time",
+                            topicPartition, zkLastSeenOffset, lastSeenOffset + 1);
+                        mMetricCollector.increment("uploader.offset_delays", topicPartition.getTopic());
+                    }
+                    LOG.info("Setting lastSeenOffset for {} with {}", topicPartition, lastSeenOffset + 1);
+                    mZookeeperConnector.setLastSeenOffsetCount(topicPartition, lastSeenOffset + 1);
+                }
                 LOG.info("uploading topic {} partition {}", topicPartition.getTopic(), topicPartition.getPartition());
                 // Deleting writers closes their streams flushing all pending data to the disk.
                 mFileRegistry.deleteWriters(topicPartition);
