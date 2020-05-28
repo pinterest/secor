@@ -515,6 +515,8 @@ for fkey in ${S3_FILESYSTEMS}; do
             post_and_finalizer_verify_test dt
             start_from_non_zero_offset_test
             move_offset_back_test
+        fi
+        if [ ${MESSAGE_TYPE} = "json" ]; then
             post_and_verify_compressed_test
         fi
     done
