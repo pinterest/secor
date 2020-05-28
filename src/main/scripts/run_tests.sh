@@ -500,24 +500,24 @@ for fkey in ${S3_FILESYSTEMS}; do
 
         echo "********************************************************"
         echo "Running tests for Message Type: ${MESSAGE_TYPE} and  ReaderWriter:${READER_WRITERS[${key}]} using filesystem: ${FILESYSTEM_TYPE}"
-        post_stop_and_verity_test "kafka" "true"
-        post_stop_and_verity_test "kafka" "false"
-        post_stop_and_verity_test "zookeeper" "true"
-        post_stop_and_verity_test "zookeeper" "false"
+        if [ ${MESSAGE_TYPE} = "binary" ]; then
+            post_stop_and_verity_test "kafka" "true"
+            post_stop_and_verity_test "kafka" "false"
+            post_stop_and_verity_test "zookeeper" "true"
+            post_stop_and_verity_test "zookeeper" "false"
+        else
+            post_stop_and_verity_test "zookeeper" "false"
+        fi
         post_and_verify_test
         if [ ${MESSAGE_TYPE} = "binary" ]; then
             # Testing finalizer in partition mode
             post_and_finalizer_verify_test hr
             post_and_finalizer_verify_test dt
+            start_from_non_zero_offset_test
+            move_offset_back_test
         fi
-        start_from_non_zero_offset_test
-        move_offset_back_test
         if [ ${MESSAGE_TYPE} = "json" ]; then
             post_and_verify_compressed_test
-        elif [ -z ${SKIP_COMPRESSED_BINARY} ]; then
-            post_and_verify_compressed_test
-        else
-            echo "Skipping compressed tests for ${MESSAGE_TYPE}"
         fi
     done
 done
