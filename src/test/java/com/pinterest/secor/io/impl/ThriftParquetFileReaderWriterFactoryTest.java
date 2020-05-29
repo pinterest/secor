@@ -23,6 +23,7 @@ import static org.junit.Assert.assertArrayEquals;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.parquet.hadoop.ParquetWriter;
 
 import org.apache.thrift.TDeserializer;
