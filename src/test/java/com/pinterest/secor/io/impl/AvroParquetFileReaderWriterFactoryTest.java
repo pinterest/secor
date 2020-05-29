@@ -30,6 +30,7 @@ import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
