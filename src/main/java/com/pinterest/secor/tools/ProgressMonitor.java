@@ -87,7 +87,7 @@ public class ProgressMonitor {
 
         if (mConfig.getStatsDHostPort() != null && !mConfig.getStatsDHostPort().isEmpty()) {
             HostAndPort hostPort = HostAndPort.fromString(mConfig.getStatsDHostPort());
-            mStatsDClient = new NonBlockingStatsDClient(null, hostPort.getHostText(), hostPort.getPort(),
+            mStatsDClient = new NonBlockingStatsDClient(null, hostPort.getHost(), hostPort.getPort(),
                     mConfig.getStatsDDogstatsdConstantTags());
         }
     }
