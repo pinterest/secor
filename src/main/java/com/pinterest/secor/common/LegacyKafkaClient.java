@@ -172,7 +172,7 @@ public class LegacyKafkaClient implements KafkaClient {
         }
         LOG.debug("leader for topic {} partition {} is {}", topicPartition.getTopic(), topicPartition.getPartition(), leader);
         final String clientName = getClientName(topicPartition);
-        return createConsumer(leader.getHostText(), leader.getPort(), clientName);
+        return createConsumer(leader.getHost(), leader.getPort(), clientName);
     }
 
     @Override
