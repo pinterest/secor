@@ -16,6 +16,10 @@ Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage
   - **event transformation**: external message level transformation can be done by using customized class.
   - **Qubole interface**: Secor connects to [Qubole] to add finalized output partitions to Hive tables.
 
+## Release Notes
+
+Release Notes for past versions can be found in [RELEASE.md](RELEASE.md).
+
 ## Setup/Configuration Guide
 
 Setup/Configuration instruction is available in [README.setup.md](README.setup.md).
