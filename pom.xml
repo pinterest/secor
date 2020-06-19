@@ -639,7 +639,7 @@
     <profiles>
         <profile>
             <id>release</id>
-            <!-- Matches kafka-0.10.2.0 , just this one includes gpg signing, javadoc etc -->
+            <!-- Matches kafka-2.0.0 , just this one includes gpg signing, javadoc etc -->
             <build>
                 <plugins>
                     <plugin>
@@ -648,9 +648,13 @@
                         <version>3.8.1</version>
                         <configuration>
                             <excludes>
-                                <exclude>com/pinterest/secor/common/SecorKafkaClient.java</exclude>
-                                <exclude>com/pinterest/secor/reader/SecorKafkaMessageIterator.java</exclude>
+                                <exclude>com/pinterest/secor/timestamp/*</exclude>
+                                <exclude>com/pinterest/secor/reader/LegacyKafkaMessageIterator.java</exclude>
+                                <exclude>com/pinterest/secor/common/LegacyKafkaClient.java</exclude>
                             </excludes>
+                            <testExcludes>
+                                <exclude>com/pinterest/secor/timestamp/*</exclude>
+                            </testExcludes>
                         </configuration>
                     </plugin>
                     <plugin>
@@ -678,6 +682,9 @@
                                 </goals>
                               </execution>
                           </executions>
+                        <configuration>
+                            <excludePackageNames>com.pinterest.secor.*</excludePackageNames>
+                        </configuration>
                     </plugin>
                     <plugin>
                       <groupId>org.apache.maven.plugins</groupId>
@@ -699,7 +706,7 @@
                 <dependencies>
                     <dependency>
                         <groupId>com.fasterxml.jackson.module</groupId>
-                        <artifactId>jackson-module-scala_2.10</artifactId>
+                        <artifactId>jackson-module-scala_2.11</artifactId>
                         <version>2.11.0</version>
                     </dependency>
                 </dependencies>
@@ -707,19 +714,13 @@
             <dependencies>
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
-                    <artifactId>kafka_2.10</artifactId>
-                    <version>0.10.2.2</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-simple</artifactId>
-                        </exclusion>
-                    </exclusions>
+                    <artifactId>kafka-clients</artifactId>
+                    <version>2.3.1</version>
                 </dependency>
                 <dependency>
                     <groupId>com.twitter</groupId>
-                    <artifactId>ostrich_2.10</artifactId>
-                    <version>9.18.0</version>
+                    <artifactId>ostrich_2.11</artifactId>
+                    <version>9.27.0</version>
                 </dependency>
             </dependencies>
         </profile>
