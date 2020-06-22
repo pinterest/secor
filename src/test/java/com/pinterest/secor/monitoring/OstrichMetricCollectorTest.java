@@ -40,7 +40,7 @@ public class OstrichMetricCollectorTest {
     public void incrementByOne() throws Exception {
         metricCollector.increment("expectedLabel", "ignored");
 
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(Stats.class);
         Stats.incr("expectedLabel");
     }
 
@@ -48,7 +48,7 @@ public class OstrichMetricCollectorTest {
     public void increment() throws Exception {
         metricCollector.increment("expectedLabel", 42, "ignored");
 
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(Stats.class);
         Stats.incr("expectedLabel", 42);
     }
 
@@ -56,7 +56,7 @@ public class OstrichMetricCollectorTest {
     public void metric() throws Exception {
         metricCollector.metric("expectedLabel", 42.0, "ignored");
 
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(Stats.class);
         Stats.addMetric("expectedLabel", 42);
     }
 
@@ -64,7 +64,7 @@ public class OstrichMetricCollectorTest {
     public void gauge() throws Exception {
         metricCollector.gauge("expectedLabel", 4.2, "ignored");
 
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(Stats.class);
         Stats.setGauge("expectedLabel", 4.2);
     }
 }

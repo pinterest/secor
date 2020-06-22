@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.DefaultCodec;
 import org.apache.hadoop.io.compress.GzipCodec;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -84,7 +85,7 @@ public class FileRegistryTest extends TestCase {
         Mockito.when(writer.getLength()).thenReturn(123L);
 
         FileWriter createdWriter = mRegistry.getOrCreateWriter(
-                mLogFilePath, null);
+                mLogFilePath, new DefaultCodec());
         assertTrue(createdWriter == writer);
 
         return writer;
@@ -97,16 +98,16 @@ public class FileRegistryTest extends TestCase {
         mRegistry.getOrCreateWriter(mLogFilePath, null);
 
         // Verify that the method has been called exactly once (the default).
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(ReflectionUtil.class);
         ReflectionUtil.createFileWriter(Mockito.any(String.class),
                 Mockito.any(LogFilePath.class),
                 Mockito.any(CompressionCodec.class),
                 Mockito.any(SecorConfig.class)
         );
 
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(FileUtil.class);
         FileUtil.delete(PATH);
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(FileUtil.class);
         FileUtil.delete(CRC_PATH);
 
         TopicPartition topicPartition = new TopicPartition("some_topic", 0);
@@ -160,12 +161,12 @@ public class FileRegistryTest extends TestCase {
         mRegistry.getOrCreateWriter(mLogFilePathGz, new GzipCodec());
 
         // Verify that the method has been called exactly once (the default).
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(FileUtil.class);
         FileUtil.delete(PATH_GZ);
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(FileUtil.class);
         FileUtil.delete(CRC_PATH);
 
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(ReflectionUtil.class);
         ReflectionUtil.createFileWriter(Mockito.any(String.class),
                 Mockito.any(LogFilePath.class),
                 Mockito.any(CompressionCodec.class),
@@ -190,9 +191,9 @@ public class FileRegistryTest extends TestCase {
         PowerMockito.mockStatic(FileUtil.class);
 
         mRegistry.deletePath(mLogFilePath);
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(FileUtil.class);
         FileUtil.delete(PATH);
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(FileUtil.class);
         FileUtil.delete(CRC_PATH);
 
         assertTrue(mRegistry.getPaths(mTopicPartition).isEmpty());
@@ -205,9 +206,9 @@ public class FileRegistryTest extends TestCase {
         PowerMockito.mockStatic(FileUtil.class);
 
         mRegistry.deleteTopicPartition(mTopicPartition);
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(FileUtil.class);
         FileUtil.delete(PATH);
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(FileUtil.class);
         FileUtil.delete(CRC_PATH);
 
         assertTrue(mRegistry.getTopicPartitions().isEmpty());
