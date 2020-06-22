@@ -147,7 +147,7 @@ public class UploaderTest extends TestCase {
 
         final String lockPath = "/secor/locks/some_topic/0";
         Mockito.verify(mZookeeperConnector).lock(lockPath);
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(FileUtil.class);
         FileUtil.moveToCloud(
                 "/some_parent_dir/some_topic/some_partition/some_other_partition/"
                         + "10_0_00000000000000000010",
@@ -195,7 +195,7 @@ public class UploaderTest extends TestCase {
 
         final String lockPath = "/secor/locks/some_topic/0";
         Mockito.verify(mZookeeperConnector).lock(lockPath);
-        PowerMockito.verifyStatic();
+        PowerMockito.verifyStatic(FileUtil.class);
         FileUtil.moveToCloud(
                 "/some_parent_dir/some_topic/some_partition/some_other_partition/"
                         + "10_0_00000000000000000010",

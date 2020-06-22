@@ -82,7 +82,7 @@ public class AvroFileReaderWriterFactory implements FileReaderWriterFactory {
         public AvroFileReader(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
             file = new File(logFilePath.getLogFilePath());
             file.getParentFile().mkdirs();
-            String topic = logFilePath.getTopic();
+            topic = logFilePath.getTopic();
             Schema schema = schemaRegistry.getSchema(topic);
 
             DatumReader datumReader = new SpecificDatumReader(schema);

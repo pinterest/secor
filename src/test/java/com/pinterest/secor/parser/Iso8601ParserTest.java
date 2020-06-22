@@ -24,11 +24,31 @@ import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.TimeZone;
 
 @RunWith(PowerMockRunner.class)
+@PowerMockIgnore({
+    "com.ctc.wstx.stax.*",
+    "com.ctc.wstx.io.*",
+    "com.sun.*",
+    "com.sun.org.apache.xalan.",
+    "com.sun.org.apache.xerces.",
+    "com.sun.xml.internal.stream.*",
+    "javax.activation.*",
+    "javax.management.",
+    "javax.xml.*",
+    "javax.xml.datatype.*",
+    "javax.xml.stream.*",
+    "javax.security.auth.login.*",
+    "javax.security.auth.spi.*",
+    "org.apache.hadoop.security.*",
+    "org.codehaus.stax2.*",
+    "org.w3c.",
+    "org.xml.",
+    "org.w3c.dom."})
 public class Iso8601ParserTest extends TestCase {
 
     private SecorConfig mConfig;
