@@ -145,6 +145,10 @@ public class SecorConfig {
         return getString("kafka.new.consumer.isolation.level");
     }
 
+    public String getMaxPollIntervalMs() {
+        return getString("kafka.new.consumer.max.poll.interval.ms");
+    }
+
     public String getMaxPollRecords() {
         return getString("kafka.new.consumer.max.poll.records");
     }
