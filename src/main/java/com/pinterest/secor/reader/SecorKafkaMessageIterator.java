@@ -103,6 +103,7 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator, Rebalanc
         optionalConfig(config.getSslTruststoreLocation(), conf -> props.put("ssl.truststore.location", conf));
         optionalConfig(config.getSslTruststorePassword(), conf -> props.put("ssl.truststore.password", conf));
         optionalConfig(config.getIsolationLevel(), conf -> props.put("isolation.level", conf));
+        optionalConfig(config.getMaxPollIntervalMs(), conf -> props.put("max.poll.interval.ms", conf));
         optionalConfig(config.getMaxPollRecords(), conf -> props.put("max.poll.records", conf));
         optionalConfig(config.getSaslClientCallbackHandlerClass(), conf -> props.put("sasl.client.callback.handler.class", conf));
         optionalConfig(config.getSaslJaasConfig(), conf -> props.put("sasl.jaas.config", conf));
