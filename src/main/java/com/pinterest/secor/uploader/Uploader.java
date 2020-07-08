@@ -299,8 +299,10 @@ public class Uploader {
         } else {
             final long size = mFileRegistry.getSize(topicPartition);
             final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
+            final int fileCount = mFileRegistry.getActiveFileCount();
             LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
             shouldUpload = forceUpload ||
+                           activeFileCountExceeded(fileCount) ||
                            size >= mConfig.getMaxFileSizeBytes() ||
                            modificationAgeSec >= mConfig.getMaxFileAgeSeconds() ||
                            isRequiredToUploadAtTime(topicPartition);
@@ -337,6 +339,10 @@ public class Uploader {
                 checkTopicPartition(topicPartition, forceUpload);
             }
         }
+    }
+
+    private boolean activeFileCountExceeded(int fileCount) {
+        return mConfig.getMaxActiveFiles() > -1 && fileCount > mConfig.getMaxActiveFiles();
     }
 
     /**
