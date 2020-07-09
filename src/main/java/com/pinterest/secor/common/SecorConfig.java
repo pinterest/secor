@@ -277,6 +277,10 @@ public class SecorConfig {
         return getLong("secor.max.file.age.seconds");
     }
 
+    public int getMaxActiveFiles() {
+        return getInt("secor.max.file.count", -1);
+    }
+
     public boolean getUploadOnShutdown() {
         return getBoolean("secor.upload.on.shutdown");
     }
@@ -612,10 +616,6 @@ public class SecorConfig {
       return writerDelimiter;
     }
 
-    public String getPerfTestTopicPrefix() {
-    	return getString("secor.kafka.perf_topic_prefix");
-    }
-
     public String getZookeeperPath() {
         return getString("secor.zookeeper.path");
     }
@@ -776,15 +776,15 @@ public class SecorConfig {
     /**
      * This method is used for fetching all the properties which start with the given prefix.
      * It returns a Map of all those key-val.
-     * 
+     *
      * e.g.
      * a.b.c=val1
      * a.b.d=val2
      * a.b.e=val3
-     * 
+     *
      * If prefix is a.b then,
      * These will be fetched as a map {c = val1, d = val2, e = val3}
-     * 
+     *
      * @param prefix property prefix
      * @return
      */
@@ -806,7 +806,7 @@ public class SecorConfig {
     public Map<String, String> getAvroMessageSchema() {
         return getPropertyMapForPrefix("secor.avro.message.schema");
     }
-    
+
     public String getORCSchemaProviderClass(){
         return getString("secor.orc.schema.provider");
     }

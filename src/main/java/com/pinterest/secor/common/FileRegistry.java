@@ -258,13 +258,12 @@ public class FileRegistry {
      * @param topicPartition The topic partition to get the age of.
      * @return Age of the most recently created file in the topic partition or -1 if the partition
      *     does not contain any files.
-     * @throws IOException on error
      */
-    public long getModificationAgeSec(TopicPartition topicPartition) throws IOException {
+    public long getModificationAgeSec(TopicPartition topicPartition) {
         return getModificationAgeSec(new TopicPartitionGroup(topicPartition));
     }
 
-    public long getModificationAgeSec(TopicPartitionGroup topicPartitionGroup) throws IOException {
+    public long getModificationAgeSec(TopicPartitionGroup topicPartitionGroup) {
         long now = System.currentTimeMillis() / 1000L;
         long result;
         if (mConfig.getFileAgeYoungest()) {
@@ -296,5 +295,9 @@ public class FileRegistry {
         StatsUtil.setLabel("secor.modification_age_sec." + topicPartitionGroup.getTopic() + "." +
             Arrays.toString(topicPartitionGroup.getPartitions()), Long.toString(result));
         return result;
+    }
+
+    public int getActiveFileCount() {
+        return mWriters.size();
     }
 }
