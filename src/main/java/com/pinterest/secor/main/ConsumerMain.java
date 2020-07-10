@@ -20,9 +20,12 @@ package com.pinterest.secor.main;
 
 import com.pinterest.secor.common.OstrichAdminService;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.ShutdownHookRegistry;
 import com.pinterest.secor.consumer.Consumer;
+import com.pinterest.secor.io.StagingDirectoryCleaner;
 import com.pinterest.secor.tools.LogFileDeleter;
 import com.pinterest.secor.util.FileUtil;
+import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.RateLimitUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +57,8 @@ public class ConsumerMain {
         }
         try {
             SecorConfig config = SecorConfig.load();
+            String stagingDirectoryPath = config.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
+            ShutdownHookRegistry.registerHook(10, new StagingDirectoryCleaner(stagingDirectoryPath));
             OstrichAdminService ostrichService = new OstrichAdminService(config.getOstrichPort());
             ostrichService.start();
             FileUtil.configure(config);
