@@ -198,11 +198,6 @@ public class FileUtil {
         }
     }
 
-    public static void deleteOnExit(String path) {
-        File file = new File(path);
-        file.deleteOnExit();
-    }
-
     public static void moveToCloud(String srcLocalPath, String dstCloudPath) throws IOException {
         Path srcPath = new Path(srcLocalPath);
         Path dstPath = new Path(dstCloudPath);

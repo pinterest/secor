@@ -18,10 +18,7 @@
  */
 package com.pinterest.secor.consumer;
 
-import com.pinterest.secor.common.DeterministicUploadPolicyTracker;
-import com.pinterest.secor.common.FileRegistry;
-import com.pinterest.secor.common.OffsetTracker;
-import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.*;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.monitoring.MetricCollector;
@@ -116,7 +113,7 @@ public class Consumer extends Thread {
             if (mDeterministicUploadPolicyTracker != null) {
                 throw new RuntimeException("Can't set secor.upload.on.shutdown with secor.upload.deterministic!");
             }
-            Runtime.getRuntime().addShutdownHook(this.new FinalUploadShutdownHook());
+            ShutdownHookRegistry.registerHook(1, new FinalUploadShutdownHook());
         }
     }
 
