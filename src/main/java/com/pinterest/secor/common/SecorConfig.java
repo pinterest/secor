@@ -766,11 +766,19 @@ public class SecorConfig {
     }
 
     public boolean getMicroMeterCollectorJmxEnabled() {
-        return getBoolean("secor.monitoring.metrics.collector.micrometer.jmx.enabled");
+        return getBoolean("secor.monitoring.metrics.collector.micrometer.jmx.enabled", false);
     }
 
     public boolean getMicroMeterCollectorStatsdEnabled() {
-        return getBoolean("secor.monitoring.metrics.collector.micrometer.statsd.enabled");
+        return getBoolean("secor.monitoring.metrics.collector.micrometer.statsd.enabled", false);
+    }
+
+    public boolean getMicroMeterCollectorPrometheusEnabled() {
+        return getBoolean("secor.monitoring.metrics.collector.micrometer.prometheus.enabled", false);
+    }
+
+    public int getMicroMeterCacheSize() {
+        return getInt("secor.monitoring.metrics.collector.micrometer.cache.size", 500);
     }
 
     /**

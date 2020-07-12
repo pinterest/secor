@@ -18,15 +18,17 @@
  */
 package com.pinterest.secor.main;
 
-import com.pinterest.secor.common.OstrichAdminService;
+import com.pinterest.secor.common.monitoring.OstrichAdminService;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.ShutdownHookRegistry;
 import com.pinterest.secor.consumer.Consumer;
 import com.pinterest.secor.io.StagingDirectoryCleaner;
+import com.pinterest.secor.monitoring.MetricCollector;
 import com.pinterest.secor.tools.LogFileDeleter;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.RateLimitUtil;
+import com.pinterest.secor.util.ReflectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +61,11 @@ public class ConsumerMain {
             SecorConfig config = SecorConfig.load();
             String stagingDirectoryPath = config.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
             ShutdownHookRegistry.registerHook(10, new StagingDirectoryCleaner(stagingDirectoryPath));
-            OstrichAdminService ostrichService = new OstrichAdminService(config.getOstrichPort());
+
+            MetricCollector metricCollector = ReflectionUtil.createMetricCollector(config.getMetricsCollectorClass());
+            metricCollector.initialize(config);
+
+            OstrichAdminService ostrichService = new OstrichAdminService(config);
             ostrichService.start();
             FileUtil.configure(config);
 
@@ -70,7 +76,7 @@ public class ConsumerMain {
             LOG.info("starting {} consumer threads", config.getConsumerThreads());
             LinkedList<Consumer> consumers = new LinkedList<Consumer>();
             for (int i = 0; i < config.getConsumerThreads(); ++i) {
-                Consumer consumer = new Consumer(config);
+                Consumer consumer = new Consumer(config, metricCollector);
                 consumers.add(consumer);
                 consumer.start();
             }
