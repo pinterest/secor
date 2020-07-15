@@ -19,26 +19,36 @@
 package com.pinterest.secor.monitoring;
 
 import com.pinterest.secor.common.SecorConfig;
-
-import com.google.common.util.concurrent.AtomicDouble;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.jmx.JmxConfig;
 import io.micrometer.jmx.JmxMeterRegistry;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.micrometer.statsd.StatsdConfig;
 import io.micrometer.statsd.StatsdMeterRegistry;
-
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * MicorMeter meters can integrate with many different metrics backend 
  * (StatsD/Promethus/Graphite/JMX etc, see https://micrometer.io/docs)
  */
 public class MicroMeterMetricCollector implements MetricCollector {
+    private static final Logger LOG = LoggerFactory.getLogger(MicroMeterMetricCollector.class);
+
+    private final Map<String, Double> mGaugeCache = new HashMap<>();
+    private SecorConfig mConfig;
+
     @Override
     public void initialize(SecorConfig config) {
+        mConfig = config;
+
         if (config.getMicroMeterCollectorStatsdEnabled()) {
             MeterRegistry statsdRegistry =
                 new StatsdMeterRegistry(StatsdConfig.DEFAULT, Clock.SYSTEM);
@@ -48,6 +58,11 @@ public class MicroMeterMetricCollector implements MetricCollector {
         if (config.getMicroMeterCollectorJmxEnabled()) {
             MeterRegistry jmxRegistry = new JmxMeterRegistry(JmxConfig.DEFAULT, Clock.SYSTEM);
             Metrics.addRegistry(jmxRegistry);
+        }
+
+        if (config.getMicroMeterCollectorPrometheusEnabled()) {
+            MeterRegistry prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+            Metrics.addRegistry(prometheusRegistry);
         }
     }
 
@@ -63,13 +78,22 @@ public class MicroMeterMetricCollector implements MetricCollector {
 
     @Override
     public void metric(String label, double value, String topic) {
-        Metrics.gauge(label, Collections.singletonList(
-            Tag.of("topic", topic)), new AtomicDouble(0)).set(value);
+        gauge(label, value, topic);
     }
 
     @Override
     public void gauge(String label, double value, String topic) {
+        String key = label + "_" + topic;
+        if (!mGaugeCache.containsKey(key) && mGaugeCache.size() >= mConfig.getMicroMeterCacheSize()) {
+            LOG.error("Gauge cache size reached maximum, this may result in inaccurate metrics, "
+                    + "you can increase cache size by changing "
+                    + "\"secor.monitoring.metrics.collector.micrometer.cache.size\" property.");
+            return;
+        }
+
+        mGaugeCache.put(key, value);
         Metrics.gauge(label, Collections.singletonList(
-            Tag.of("topic", topic)), new AtomicDouble(0)).set(value);
+                Tag.of("topic", topic)), mGaugeCache, g -> g.get(key));
     }
+
 }

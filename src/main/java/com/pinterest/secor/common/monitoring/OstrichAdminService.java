@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pinterest.secor.common;
+package com.pinterest.secor.common.monitoring;
 
+import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.util.StatsUtil;
 import com.twitter.ostrich.admin.AdminServiceFactory;
 import com.twitter.ostrich.admin.CustomHttpHandler;
@@ -30,6 +31,7 @@ import scala.Option;
 import scala.collection.JavaConversions;
 import scala.collection.Map$;
 import scala.collection.immutable.List$;
+import scala.collection.immutable.Map;
 import scala.util.matching.Regex;
 
 import java.util.Arrays;
@@ -44,13 +46,17 @@ import java.util.concurrent.TimeUnit;
 public class OstrichAdminService {
     private static final Logger LOG = LoggerFactory.getLogger(OstrichAdminService.class);
     private final int mPort;
+    private final boolean mPrometheusEnabled;
 
-    public OstrichAdminService(int port) {
-        this.mPort = port;
+    public OstrichAdminService(SecorConfig config) {
+        mPort = config.getOstrichPort();
+        mPrometheusEnabled = config.getMicroMeterCollectorPrometheusEnabled();
     }
 
     public void start() {
         Duration[] defaultLatchIntervals = {Duration.apply(1, TimeUnit.MINUTES)};
+        Map<String, CustomHttpHandler> handlers = mPrometheusEnabled ?
+                new Map.Map1<>("/prometheus", new PrometheusHandler()) : Map$.MODULE$.empty();
         @SuppressWarnings("deprecation")
         AdminServiceFactory adminServiceFactory = new AdminServiceFactory(
             this.mPort,
@@ -58,7 +64,7 @@ public class OstrichAdminService {
             List$.MODULE$.<StatsFactory>empty(),
             Option.<String>empty(),
             List$.MODULE$.<Regex>empty(),
-            Map$.MODULE$.<String, CustomHttpHandler>empty(),
+            handlers,
             JavaConversions
                 .asScalaBuffer(Arrays.asList(defaultLatchIntervals)).toList()
         );

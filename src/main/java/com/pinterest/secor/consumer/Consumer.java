@@ -73,8 +73,9 @@ public class Consumer extends Thread {
     private volatile boolean mShuttingDown = false;
     private static volatile boolean mCallingSystemExit = false;
 
-    public Consumer(SecorConfig config) {
+    public Consumer(SecorConfig config, MetricCollector metricCollector) {
         mConfig = config;
+        mMetricCollector = metricCollector;
         isLegacyConsumer = true;
     }
 
@@ -89,8 +90,6 @@ public class Consumer extends Thread {
         }
         mKafkaMessageIterator = KafkaMessageIteratorFactory.getIterator(mConfig.getKafkaMessageIteratorClass(), mConfig);
         mMessageReader = new MessageReader(mConfig, mOffsetTracker, mKafkaMessageIterator);
-        mMetricCollector = ReflectionUtil.createMetricCollector(mConfig.getMetricsCollectorClass());
-        mMetricCollector.initialize(mConfig);
 
         FileRegistry fileRegistry = new FileRegistry(mConfig);
         UploadManager uploadManager = ReflectionUtil.createUploadManager(mConfig.getUploadManagerClass(), mConfig);
