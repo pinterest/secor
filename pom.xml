@@ -686,7 +686,8 @@
                               </execution>
                           </executions>
                         <configuration>
-                            <excludePackageNames>com.pinterest.secor.*</excludePackageNames>
+                            <source>8</source>
+                            <excludePackageNames>com.pinterest.secor.timestamp:com.pinterest.secor.reader:com.pinterest.secor.common:com.pinterest.secor.thrift</excludePackageNames>
                         </configuration>
                     </plugin>
                     <plugin>
