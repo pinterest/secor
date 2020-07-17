@@ -75,7 +75,9 @@ public class Uploader {
      * @param offsetTracker Tracker of the current offset of topics partitions
      * @param fileRegistry Registry of log files on a per-topic and per-partition basis
      * @param uploadManager Manager of the physical upload of log files to the remote repository
+     * @param messageReader messageReader
      * @param metricCollector component that ingest metrics into monitoring system
+     * @param deterministicUploadPolicyTracker deterministicUploadPolicyTracker
      */
     public void init(SecorConfig config, OffsetTracker offsetTracker, FileRegistry fileRegistry,
                      UploadManager uploadManager, MessageReader messageReader, MetricCollector metricCollector,
@@ -354,6 +356,7 @@ public class Uploader {
      * This method could be subclassed to provide an alternate policy. The custom uploader
      * class name would need to be specified in the secor.upload.class.
      *
+     * @param forceUpload forceUpload
      * @throws Exception if any error occurs while appying the policy
      */
     public void applyPolicy(boolean forceUpload) throws Exception {
