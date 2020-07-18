@@ -1,5 +1,15 @@
 # Secor release notes
 
+## v0.29
+* [Javadoc Update: fix a few missing params and exclude a few packages](https://github.com/pinterest/secor/pull/1463)
+* [Add native support for Prometheus](https://github.com/pinterest/secor/pull/1452)
+* [Rework cleanup process on shutdown](https://github.com/pinterest/secor/pull/1449)
+* [Add secor.max.active.files property to controll active file count](https://github.com/pinterest/secor/pull/1443)
+* [Add max.poll.interval.ms kafka producer setting](https://github.com/pinterest/secor/pull/1408)
+* [Fix various unit test failures related to powermock running in JDK 11](https://github.com/pinterest/secor/pull/1400)
+* [Upgrade guava to 24.1.1 to address the following security issue](https://github.com/pinterest/secor/pull/1394)
+* [Upgrade parquet version from 1.9.0 to 1.11.0](https://github.com/pinterest/secor/pull/1361)
+
 ## v0.28
 
 * [Change default build profile to kafka-2.0.0 to work with kafka client library 2.0.0 and above](https://github.com/pinterest/secor/commit/556ca7838604e84ec3442173836551a5e8e6b807)
