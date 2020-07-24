@@ -47,7 +47,7 @@
 
         <!-- Whether we will using legazy old consumer kafka-legacy or new consumer kafka-2.0.0 -->
         <!-- Name of the directory below src/main/config that contains kafka-version-specific settings -->
-        <kafka.properties>kafka-legacy</kafka.properties>
+        <kafka.properties>kafka-2.0.0</kafka.properties>
     </properties>
 
     <distributionManagement>
@@ -730,6 +730,9 @@
         </profile>
         <profile>
             <id>kafka-0.8.2.1</id>
+            <properties>
+                <kafka.properties>kafka-legacy</kafka.properties>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -767,6 +770,9 @@
         </profile>
         <profile>
             <id>kafka-1.0.0</id>
+            <properties>
+                <kafka.properties>kafka-legacy</kafka.properties>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -806,9 +812,6 @@
         </profile>
         <profile>
             <id>kafka-2.0.0</id>
-            <properties>
-                <kafka.properties>kafka-2.0.0</kafka.properties>
-            </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -855,6 +858,9 @@
         </profile>
         <profile>
             <id>kafka-0.10.2.0</id>
+            <properties>
+                <kafka.properties>kafka-legacy</kafka.properties>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -900,6 +906,9 @@
         </profile>
         <profile>
             <id>kafka-0.10.0.1</id>
+            <properties>
+                <kafka.properties>kafka-legacy</kafka.properties>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
