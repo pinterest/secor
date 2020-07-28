@@ -220,10 +220,8 @@ public class Uploader {
         mFileRegistry.deleteWriter(srcPath);
         try {
             CompressionCodec codec = null;
-            String extension = "";
             if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
                 codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
-                extension = codec.getDefaultExtension();
             }
             reader = createReader(srcPath, codec);
             KeyValue keyVal;
@@ -235,7 +233,7 @@ public class Uploader {
                         dstPath = new LogFilePath(localPrefix, srcPath.getTopic(),
                                                   srcPath.getPartitions(), srcPath.getGeneration(),
                                                   srcPath.getKafkaPartition(), startOffset,
-                                                  extension);
+                                                  srcPath.getExtension());
                         writer = mFileRegistry.getOrCreateWriter(dstPath,
                         		codec);
                     }

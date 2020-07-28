@@ -119,15 +119,15 @@ public class LogFilePath {
         // Parse basename.
         String basename = pathElements[pathElements.length - 1];
         // Remove extension.
-        int lastIndexOf = basename.lastIndexOf('.');
-        if (lastIndexOf >= 0) {
-            mExtension = basename.substring(lastIndexOf, basename.length());
-            basename = basename.substring(0, lastIndexOf);
+        int indexOfSeparator = basename.indexOf('.');
+        if (indexOfSeparator >= 0) {
+            mExtension = basename.substring(indexOfSeparator);
+            basename = basename.substring(0, indexOfSeparator);
         } else {
             mExtension = "";
         }
         String[] basenameElements = basename.split("_");
-        assert basenameElements.length == 3: Integer.toString(basenameElements.length) + " == 3";
+        assert basenameElements.length == 3: basenameElements.length + " == 3";
         mGeneration = Integer.parseInt(basenameElements[0]);
         mKafkaPartitions = new int[]{Integer.parseInt(basenameElements[1])};
         mOffsets = new long[]{Long.parseLong(basenameElements[2])};
