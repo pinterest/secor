@@ -441,7 +441,7 @@
                                 <argument>--pretty=format:build_revision=%H</argument>
                                 <argument>-n1</argument>
                             </arguments>
-                            <outputFile>target/classes/com/pinterest/secor/common/build.properties</outputFile>
+                            <outputFile>target/classes/com/pinterest/secor/common/monitoring/build.properties</outputFile>
                         </configuration>
                     </execution>
                 </executions>
