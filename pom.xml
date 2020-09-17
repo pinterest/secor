@@ -373,7 +373,7 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-jmx</artifactId>
-            <version>1.5.4</version>
+            <version>1.5.5</version>
         </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>
