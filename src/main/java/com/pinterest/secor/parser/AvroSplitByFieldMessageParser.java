@@ -77,7 +77,7 @@ public class AvroSplitByFieldMessageParser extends TimestampedMessageParser impl
         long timestampMillis = extractTimestampMillis(record);
 
         String[] timestampPartitions = generatePartitions(timestampMillis, mUsingHourly, mUsingMinutely);
-        return (String[]) ArrayUtils.addAll(new String[]{mFieldPrefix + eventType}, timestampPartitions);
+        return (String[]) ArrayUtils.addAll(timestampPartitions, new String[]{mFieldPrefix + eventType});
     }
 
     @Override
