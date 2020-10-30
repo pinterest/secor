@@ -43,7 +43,7 @@
         <maven.compiler.target>1.6</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <parquet.version>1.11.1</parquet.version>
+        <parquet.version>master-SNAPSHOT</parquet.version>
 
         <!-- Whether we will using legazy old consumer kafka-legacy or new consumer kafka-2.0.0 -->
         <!-- Name of the directory below src/main/config that contains kafka-version-specific settings -->
@@ -82,6 +82,11 @@
     </dependencyManagement>
 
     <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://www.jitpack.io</url>
+            <!-- needed for parquet-mr fork -->
+        </repository>
         <repository>
             <id>Twitter public Maven repo</id>
             <url>https://maven.twttr.com</url>
@@ -125,7 +130,7 @@
             <version>1.10.0</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.parquet</groupId>
+            <groupId>com.github.remerge.parquet-mr</groupId>
             <artifactId>parquet-avro</artifactId>
             <version>${parquet.version}</version>
         </dependency>
@@ -254,27 +259,27 @@
 
         <!-- Parquet file format dependencies -->
         <dependency>
-            <groupId>org.apache.parquet</groupId>
+            <groupId>com.github.remerge.parquet-mr</groupId>
             <artifactId>parquet-common</artifactId>
             <version>${parquet.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.parquet</groupId>
+            <groupId>com.github.remerge.parquet-mr</groupId>
             <artifactId>parquet-encoding</artifactId>
             <version>${parquet.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.parquet</groupId>
+            <groupId>com.github.remerge.parquet-mr</groupId>
             <artifactId>parquet-column</artifactId>
             <version>${parquet.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.parquet</groupId>
+            <groupId>com.github.remerge.parquet-mr</groupId>
             <artifactId>parquet-hadoop</artifactId>
             <version>${parquet.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.parquet</groupId>
+            <groupId>com.github.remerge.parquet-mr</groupId>
             <artifactId>parquet-protobuf</artifactId>
             <version>${parquet.version}</version>
             <exclusions>
@@ -285,7 +290,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.parquet</groupId>
+            <groupId>com.github.remerge.parquet-mr</groupId>
             <artifactId>parquet-thrift</artifactId>
             <version>${parquet.version}</version>
             <exclusions>
