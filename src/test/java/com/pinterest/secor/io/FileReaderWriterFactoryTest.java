@@ -109,12 +109,13 @@ public class FileReaderWriterFactoryTest extends TestCase {
     }
 
     private void mockDelimitedTextFileWriter(boolean isCompressed) throws Exception {
+        /*
         PowerMockito.mockStatic(FileSystem.class);
         FileSystem fs = Mockito.mock(FileSystem.class);
         Mockito.when(
                 FileSystem.get(Mockito.any(URI.class),
                         Mockito.any(Configuration.class))).thenReturn(fs);
-
+        */
         Path fsPath = (!isCompressed) ? new Path(PATH) : new Path(PATH_GZ);
 
         GzipCodec codec = PowerMockito.mock(GzipCodec.class);
@@ -126,8 +127,13 @@ public class FileReaderWriterFactoryTest extends TestCase {
         FSDataOutputStream fileOutputStream = Mockito
                 .mock(FSDataOutputStream.class);
 
+        PowerMockito.stub(PowerMockito.method(FileSystem.class, "open", Path.class)).toReturn(fileInputStream);
+        PowerMockito.stub(PowerMockito.method(FileSystem.class, "create", Path.class)).toReturn(fileOutputStream);
+
+        /*
         Mockito.when(fs.open(fsPath)).thenReturn(fileInputStream);
         Mockito.when(fs.create(fsPath)).thenReturn(fileOutputStream);
+        */
 
         CompressionInputStream inputStream = Mockito
                 .mock(CompressionInputStream.class);
