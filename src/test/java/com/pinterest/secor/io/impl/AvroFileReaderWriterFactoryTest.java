@@ -92,8 +92,14 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
     }
 
     @Test
+    public void testAvroReadWriteWithAvroNoConfig() throws Exception {
+        setupConfig(null);
+        runTest();
+    }
+
+    @Test
     public void testAvroReadWriteRoundTrip() throws Exception {
-        setupConfig("null");
+        setupConfig("none");
         runTest();
     }
 

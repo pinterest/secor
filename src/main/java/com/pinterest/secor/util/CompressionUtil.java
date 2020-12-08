@@ -46,10 +46,13 @@ public class CompressionUtil {
 
     /**
      * Retrieve Avro compression codec from config in param : avro.compression.codec
+     * List of default supported avro compression code
+     * @see org.apache.avro.file.CodecFactory
+     *
      * @param config secor configuration
      * @return codec as a String or null (No compression if not set)
      */
     public static String getAvroCompressionCodec(SecorConfig config) {
-        return config.getAvroCompressionCodec();
+        return (config.getAvroCompressionCodec() != null && config.getAvroCompressionCodec().toLowerCase() == "none") ? null : config.getAvroCompressionCodec();
     }
 }
