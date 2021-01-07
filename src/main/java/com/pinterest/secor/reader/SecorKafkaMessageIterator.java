@@ -154,12 +154,9 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator, Rebalanc
         }
     }
 
-
     private boolean getSkipZookeeperOffsetSeek(SecorConfig config) {
-
         String dualCommitEnabled = config.getDualCommitEnabled();
         String offsetStorage = config.getOffsetsStorage();
-        return offsetStorage.equals("kafka") && dualCommitEnabled.equals("true");
-
+        return offsetStorage.equals("kafka") && dualCommitEnabled.equals("false");
     }
 }
