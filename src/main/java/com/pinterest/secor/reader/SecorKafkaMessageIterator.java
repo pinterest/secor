@@ -159,4 +159,12 @@ public class SecorKafkaMessageIterator implements KafkaMessageIterator, Rebalanc
         String offsetStorage = config.getOffsetsStorage();
         return offsetStorage.equals("kafka") && dualCommitEnabled.equals("false");
     }
+
+    @Override
+    public long getKafkaCommitedOffsetCount(final com.pinterest.secor.common.TopicPartition topicPartition) {
+        TopicPartition kafkaTopicPartition = new TopicPartition(topicPartition.getTopic(), topicPartition.getPartition());
+        OffsetAndMetadata offsetAndMetadata = mKafkaConsumer.committed(kafkaTopicPartition);
+
+        return offsetAndMetadata.offset();
+    }
 }

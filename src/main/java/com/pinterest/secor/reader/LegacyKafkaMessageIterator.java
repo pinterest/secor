@@ -18,11 +18,14 @@
  */
 package com.pinterest.secor.reader;
 
+import com.google.common.collect.ImmutableMap;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
 import com.pinterest.secor.util.IdUtil;
+import kafka.common.OffsetAndMetadata;
+import kafka.common.TopicAndPartition;
 import kafka.consumer.Blacklist;
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
@@ -99,7 +102,11 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
 
     @Override
     public void commit(TopicPartition topicPartition, long offset) {
-        mConsumerConnector.commitOffsets();
+        TopicAndPartition kafkaTopicPartition = new TopicAndPartition(topicPartition.getTopic(), topicPartition.getPartition());
+        kafka.common.OffsetAndMetadata offsetAndMetadata = OffsetAndMetadata.apply(offset);
+
+        LOG.info("committing {} offset {} to kafka", topicPartition, offset);
+        mConsumerConnector.commitOffsets(ImmutableMap.of(kafkaTopicPartition, offsetAndMetadata), true);
     }
 
     private ConsumerConfig createConsumerConfig() throws UnknownHostException {
@@ -142,5 +149,10 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
         }
 
         return new ConsumerConfig(props);
+    }
+
+    @Override
+    public long getKafkaCommitedOffsetCount(final TopicPartition topicPartition) {
+        throw new RuntimeException("Legacy Kafka consumer does not support storing offsets only in Kafka!");
     }
 }
