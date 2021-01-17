@@ -20,6 +20,7 @@ package com.pinterest.secor.reader;
 
 import com.google.common.collect.ImmutableMap;
 import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.SecorConstants;
 import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.timestamp.KafkaMessageTimestampFactory;
@@ -124,6 +125,10 @@ public class LegacyKafkaMessageIterator implements KafkaMessageIterator {
         // Properties required to upgrade from kafka 0.8.x to 0.9.x
         props.put("dual.commit.enabled", mConfig.getDualCommitEnabled());
         props.put("offsets.storage", mConfig.getOffsetsStorage());
+
+        if (mConfig.getDualCommitEnabled().equals("false") && mConfig.getOffsetsStorage() == SecorConstants.KAFKA_OFFSETS_STORAGE_KAFKA) {
+            throw new RuntimeException("Legacy Kafka consumer does not support storing offsets only in Kafka!");
+        }
 
         props.put("partition.assignment.strategy", mConfig.getPartitionAssignmentStrategy());
         if (mConfig.getRebalanceMaxRetries() != null &&
