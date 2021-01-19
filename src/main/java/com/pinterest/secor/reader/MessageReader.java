@@ -119,4 +119,8 @@ public class MessageReader {
     public void commit(TopicPartition topicPartition, long offset) {
         mKafkaMessageIterator.commit(topicPartition, offset);
     }
+
+    public long getCommitedOffsetCount(TopicPartition topicPartition) {
+        return mKafkaMessageIterator.getKafkaCommitedOffsetCount(topicPartition);
+    }
 }
