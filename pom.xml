@@ -363,7 +363,7 @@
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure-storage</artifactId>
-            <version>8.6.5</version>
+            <version>8.6.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.orc</groupId>
