@@ -43,7 +43,7 @@
         <maven.compiler.target>1.6</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <parquet.version>master-SNAPSHOT</parquet.version>
+        <parquet.version>1f0bfa8419</parquet.version>
 
         <!-- Whether we will using legazy old consumer kafka-legacy or new consumer kafka-2.0.0 -->
         <!-- Name of the directory below src/main/config that contains kafka-version-specific settings -->
