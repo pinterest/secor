@@ -23,17 +23,22 @@ import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.jmx.JmxConfig;
 import io.micrometer.jmx.JmxMeterRegistry;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.micrometer.statsd.StatsdConfig;
 import io.micrometer.statsd.StatsdMeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * MicorMeter meters can integrate with many different metrics backend 
@@ -53,16 +58,19 @@ public class MicroMeterMetricCollector implements MetricCollector {
             MeterRegistry statsdRegistry =
                 new StatsdMeterRegistry(StatsdConfig.DEFAULT, Clock.SYSTEM);
             Metrics.addRegistry(statsdRegistry);
+            registerSystemMetrics(statsdRegistry);
         }
 
         if (config.getMicroMeterCollectorJmxEnabled()) {
             MeterRegistry jmxRegistry = new JmxMeterRegistry(JmxConfig.DEFAULT, Clock.SYSTEM);
             Metrics.addRegistry(jmxRegistry);
+            registerSystemMetrics(jmxRegistry);
         }
 
         if (config.getMicroMeterCollectorPrometheusEnabled()) {
             MeterRegistry prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
             Metrics.addRegistry(prometheusRegistry);
+            registerSystemMetrics(prometheusRegistry);
         }
     }
 
@@ -96,4 +104,10 @@ public class MicroMeterMetricCollector implements MetricCollector {
                 Tag.of("topic", topic)), mGaugeCache, g -> g.get(key));
     }
 
+    private void registerSystemMetrics(MeterRegistry registry) {
+        new JvmMemoryMetrics().bindTo(registry);
+        new JvmGcMetrics().bindTo(registry);
+        new ProcessorMetrics().bindTo(registry);
+        new JvmThreadMetrics().bindTo(registry);
+    }
 }
