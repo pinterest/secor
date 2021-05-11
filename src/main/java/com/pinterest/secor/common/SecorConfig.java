@@ -273,6 +273,14 @@ public class SecorConfig {
         return getInt("secor.consumer.max_bad_messages", 1000);
     }
 
+    public boolean getBadMessagesTopicEnabled() {
+        return getBoolean("secor.consumer.bad_message.topic.enabled", false);
+    }
+
+    public String getBadMessagesTopicSuffix() {
+        return getString("secor.consumer.bad_message.topic.suffix", "_BAD_MESSAGES");
+    }
+
     public long getMaxFileSizeBytes() {
         return getLong("secor.max.file.size.bytes");
     }

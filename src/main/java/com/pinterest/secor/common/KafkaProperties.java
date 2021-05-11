@@ -72,4 +72,11 @@ public class KafkaProperties {
         
         return props;
     }
+
+    public static Properties getProducerProperties(SecorConfig secorConfig) throws UnknownHostException {
+        Properties props = getCommonProperties(secorConfig);
+        props.putAll(getSecurityProperties(secorConfig));
+
+        return props;
+    }
 }
