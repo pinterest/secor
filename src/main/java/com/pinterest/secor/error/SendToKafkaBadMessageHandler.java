@@ -49,6 +49,22 @@ public class SendToKafkaBadMessageHandler implements BadMessageHandler {
             messageHeaders
         );
 
-        return mKafkaProducer.send(record);
+        return mKafkaProducer.send(record, (recordMetadata, kafkaException) -> {
+            if (kafkaException != null) {
+                LOG.trace("Failed to send message to Kafka: {}", message, kafkaException);
+            } else {
+                Message sentMessage = new Message(
+                    recordMetadata.topic(), 
+                    recordMetadata.partition(), 
+                    recordMetadata.offset(), 
+                    message.getKafkaKey(), 
+                    message.getPayload(), 
+                    recordMetadata.timestamp(), 
+                    message.getHeaders()
+                );
+
+                LOG.info("Sent message to Kafka: {}", sentMessage);
+            }
+        });
     }
 }
