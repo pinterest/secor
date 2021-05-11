@@ -21,8 +21,8 @@ import org.slf4j.LoggerFactory;
 public class SendToKafkaBadMessageHandler implements BadMessageHandler {
     private static final Logger LOG = LoggerFactory.getLogger(SendToKafkaBadMessageHandler.class);
 
-    private KafkaProducer<byte[], byte[]> mKafkaProducer;
-    private String mTopicSuffix;
+    private final KafkaProducer<byte[], byte[]> mKafkaProducer;
+    private final String mTopicSuffix;
 
     public SendToKafkaBadMessageHandler(SecorConfig config) throws UnknownHostException {
         mKafkaProducer = new KafkaProducer<>(KafkaProperties.getProducerProperties(config));
