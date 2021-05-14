@@ -23,6 +23,8 @@ import com.pinterest.secor.common.FileRegistry;
 import com.pinterest.secor.common.OffsetTracker;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.ShutdownHookRegistry;
+import com.pinterest.secor.error.BadMessageHandler;
+import com.pinterest.secor.error.SendToKafkaBadMessageHandler;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.monitoring.MetricCollector;
@@ -39,6 +41,8 @@ import com.pinterest.secor.uploader.Uploader;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.writer.MessageWriter;
 import java.io.IOException;
+import java.net.UnknownHostException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,6 +75,7 @@ public class Consumer extends Thread {
     // TODO(pawel): we should keep a count per topic partition.
     private boolean isLegacyConsumer;
     private final double mMaxBadMessages;
+    private final BadMessageHandler mBadMessageHandler;
     protected double mBadMessages;
     // If we aren't configured to upload on shutdown, then don't bother to check
     // the volatile variable.
@@ -78,11 +83,12 @@ public class Consumer extends Thread {
     private volatile boolean mShuttingDown = false;
     private static volatile boolean mCallingSystemExit = false;
 
-    public Consumer(SecorConfig config, MetricCollector metricCollector) {
+    public Consumer(SecorConfig config, MetricCollector metricCollector) throws UnknownHostException {
         mConfig = config;
         mMetricCollector = metricCollector;
         isLegacyConsumer = true;
         mMaxBadMessages = config.getMaxBadMessages();
+        mBadMessageHandler = config.getBadMessagesTopicEnabled() ? new SendToKafkaBadMessageHandler(config) : null;
     }
 
     private void init() throws Exception {
@@ -273,6 +279,9 @@ public class Consumer extends Thread {
         }
         if (LOG.isTraceEnabled()) {
             LOG.trace("Failed to write message raw: {}; parsed: {}", rawMessage, parsedMessage, exception);
+        }
+        if (mBadMessageHandler != null) {
+            mBadMessageHandler.handleMessage(rawMessage, exception);
         }
     }
 }

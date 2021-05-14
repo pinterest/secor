@@ -66,6 +66,7 @@ Secor is distributed under [Apache License, Version 2.0](http://www.apache.org/l
   * [Credit Karma](https://www.creditkarma.com)
   * [GO-JEK](http://gojekengineering.com/)
   * [Nextperf](http://www.nextperf.com)
+  * [OLX Brasil](https://www.olx.com.br/)
   * [PayTM](https://www.paytm.com)
   * [Pinterest](https://www.pinterest.com)
   * [Rakuten](http://techblog.rakuten.co.jp/)
