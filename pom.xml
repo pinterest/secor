@@ -142,12 +142,12 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.11.1018</version>
+            <version>1.11.1022</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-sts</artifactId>
-            <version>1.11.1017</version>
+            <version>1.11.1022</version>
         </dependency>
         <dependency>
             <groupId>net.java.dev.jets3t</groupId>
@@ -338,7 +338,7 @@
         <dependency>
             <groupId>org.msgpack</groupId>
             <artifactId>jackson-dataformat-msgpack</artifactId>
-            <version>0.8.23</version>
+            <version>0.8.24</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>
@@ -358,7 +358,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>1.113.16</version>
+            <version>1.114.0</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
