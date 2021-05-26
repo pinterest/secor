@@ -37,17 +37,19 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecorSchemaRegistryClient.class);
+    private static final Map<String, Schema> schemas = new ConcurrentHashMap<>();
 
+    private final String schemaRegistryNameSuffix;
+    protected SchemaRegistryClient schemaRegistryClient;
     protected KafkaAvroDeserializer deserializer;
     protected KafkaAvroSerializer serializer;
-    private final static Map<String, Schema> schemas = new ConcurrentHashMap<>();
-    protected SchemaRegistryClient schemaRegistryClient;
 
     public SecorSchemaRegistryClient(SecorConfig config) {
         try {
             Properties props = new Properties();
             props.put("schema.registry.url", config.getSchemaRegistryUrl());
             schemaRegistryClient = new CachedSchemaRegistryClient(config.getSchemaRegistryUrl(), 30);
+            schemaRegistryNameSuffix = config.getSchemaRegistryNameSuffix();
             init(config);
         } catch (Exception e) {
             LOG.error("Error initalizing schema registry", e);
@@ -86,7 +88,7 @@ public class SecorSchemaRegistryClient implements AvroSchemaRegistry {
         Schema schema = schemas.get(topic);
         if (schema == null) {
             try {
-                SchemaMetadata schemaMetadata = schemaRegistryClient.getLatestSchemaMetadata(topic + "-value");
+                SchemaMetadata schemaMetadata = schemaRegistryClient.getLatestSchemaMetadata(topic + schemaRegistryNameSuffix);
                 schema = schemaRegistryClient.getByID(schemaMetadata.getId());
                 schemas.put(topic, schema);
             } catch (IOException e) {

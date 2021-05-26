@@ -389,6 +389,10 @@ public class SecorConfig {
 
     public String getSchemaRegistryUrl(){ return getString("schema.registry.url"); }
 
+    public String getSchemaRegistryNameSuffix(){ 
+        return getString("schema.registry.name.suffix", "-value"); 
+    }
+
     public String getMessageParserClass() {
         return getString("secor.message.parser.class");
     }
