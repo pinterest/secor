@@ -26,6 +26,7 @@ import com.pinterest.secor.io.FileReader;
 import com.pinterest.secor.io.FileWriter;
 import com.pinterest.secor.io.KeyValue;
 import com.pinterest.secor.util.AvroSerializer;
+import com.pinterest.secor.util.CompressionUtil;
 import junit.framework.TestCase;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -51,11 +52,12 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
     private SecorSchemaRegistryClient secorSchemaRegistryClient;
     private GenericRecord msg1;
     private GenericRecord msg2;
+    private Schema schema;
 
     @Override
     public void setUp() throws Exception {
 
-        Schema schema = SchemaBuilder.record("UnitTestRecord")
+        schema = SchemaBuilder.record("UnitTestRecord")
                 .fields()
                 .name("data").type().stringType().noDefault()
                 .name("timestamp").type().nullable().longType().noDefault()
@@ -66,20 +68,48 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
         msg2 = builder.set("data", "bar").set("timestamp", 1467176344L).build();
 
         writer = new SpecificDatumWriter(schema);
+    }
 
+    protected void setupConfig(String avroCodec) throws Exception {
         config = Mockito.mock(SecorConfig.class);
         when(config.getSchemaRegistryUrl()).thenReturn("test");
         secorSchemaRegistryClient = Mockito.mock(SecorSchemaRegistryClient.class);
+
         when(secorSchemaRegistryClient.getSchema(anyString())).thenReturn(schema);
+        when(config.getAvroCompressionCodec()).thenReturn(avroCodec);
+
         mFactory = new AvroFileReaderWriterFactory(config);
         when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg1))).thenReturn(msg1);
         when(secorSchemaRegistryClient.deserialize("test-avro-topic", AvroSerializer.serialize(writer, msg2))).thenReturn(msg2);
-        mFactory.schemaRegistry = secorSchemaRegistryClient;
 
+        mFactory.schemaRegistry = secorSchemaRegistryClient;
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        Mockito.reset(config,secorSchemaRegistryClient);
+    }
+
+    @Test
+    public void testAvroReadWriteWithAvroNoConfig() throws Exception {
+        setupConfig(null);
+        runTest();
     }
 
     @Test
     public void testAvroReadWriteRoundTrip() throws Exception {
+        setupConfig("none");
+        runTest();
+    }
+
+    @Test
+    public void testAvroCompressionSetting() throws Exception {
+        setupConfig("deflate");
+        runTest();
+    }
+
+    protected void runTest() throws Exception {
         when(config.getFileReaderWriterFactory())
                 .thenReturn(AvroFileReaderWriterFactory.class.getName());
 
@@ -113,5 +143,4 @@ public class AvroFileReaderWriterFactoryTest extends TestCase {
         assertArrayEquals(kv2.getValue(), kvout.getValue());
         assertEquals(msg2, secorSchemaRegistryClient.deserialize("test-avro-topic", kvout.getValue()));
     }
-
 }

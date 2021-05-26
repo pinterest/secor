@@ -21,6 +21,7 @@ package com.pinterest.secor.util;
 import java.util.Collections;
 import java.util.LinkedList;
 
+import com.pinterest.secor.common.SecorConfig;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
@@ -37,9 +38,21 @@ public class CompressionUtil {
     public static CompressionCodec createCompressionCodec(String className)
             throws Exception {
         Configuration configuration = new Configuration();
-        CompressionCodecFactory.setCodecClasses(configuration,new LinkedList<Class>(Collections.singletonList(Class.forName(className))));
+        CompressionCodecFactory.setCodecClasses(configuration,new LinkedList<>(Collections.singletonList(Class.forName(className))));
         CompressionCodecFactory ccf = new CompressionCodecFactory(
                 configuration);
         return ccf.getCodecByClassName(className);
+    }
+
+    /**
+     * Retrieve Avro compression codec from config in param : avro.compression.codec
+     * List of default supported avro compression code
+     * @see org.apache.avro.file.CodecFactory
+     *
+     * @param config secor configuration
+     * @return codec as a String or null (No compression if not set)
+     */
+    public static String getAvroCompressionCodec(SecorConfig config) {
+        return (config.getAvroCompressionCodec() != null && config.getAvroCompressionCodec().toLowerCase() == "none") ? null : config.getAvroCompressionCodec();
     }
 }

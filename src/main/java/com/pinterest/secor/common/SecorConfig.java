@@ -830,4 +830,8 @@ public class SecorConfig {
     public String getORCSchemaProviderClass(){
         return getString("secor.orc.schema.provider");
     }
+
+    public String getAvroCompressionCodec() {
+        return getString("avro.compression.codec", null);
+    }
 }
