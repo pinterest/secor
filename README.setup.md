@@ -144,3 +144,13 @@ java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.
 ## Secor configuration for Kubernetes/GKE environment
 
 Extra Setup instruction for Kubernetes/GKE environment is available in [DESIGN.kubernetes.md](DESIGN.kubernetes.md).
+
+## Secor IAM role / Instance profile authentication
+in order to make AWS instance profile authentication work, perform the following steps:
+  set S3_UPLOAD_MANAGER to com.pinterest.secor.uploader.HadoopS3UploadManager
+  set S3_FS to s3a
+  unset AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY variables
+  create AWS role providing read/write access to S3 buckets
+  link AWS Instance profile to taht role and launch secor instance with that instance profile 
+Note: Secor Instance profile authentication currently doesn't work with AWS China as of version 0.29
+  
