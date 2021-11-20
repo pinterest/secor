@@ -66,6 +66,10 @@ public class SecorKafkaClient implements KafkaClient {
         org.apache.kafka.common.TopicPartition kafkaTopicPartition = new org.apache.kafka.common.TopicPartition(topicPartition.getTopic(), topicPartition.getPartition());
         mKafkaConsumer.assign(Collections.singleton(kafkaTopicPartition));
         long endOffset = mKafkaConsumer.endOffsets(Collections.singleton(kafkaTopicPartition)).get(kafkaTopicPartition);
+        // https://github.com/pinterest/secor/issues/2155#issue-1054846748
+        if (endOffset == 0) {
+            return null;
+        }
         mKafkaConsumer.seek(kafkaTopicPartition, endOffset - 1);
 
         return readSingleMessage(mKafkaConsumer);
