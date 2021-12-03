@@ -29,4 +29,6 @@ public interface KafkaMessageIterator {
     Message next();
     void init(SecorConfig config) throws UnknownHostException;
     void commit(TopicPartition topicPartition, long offset);
+
+    long getKafkaCommitedOffsetCount(TopicPartition topicPartition);
 }

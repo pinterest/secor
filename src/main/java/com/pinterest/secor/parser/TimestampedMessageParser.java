@@ -113,7 +113,7 @@ public abstract class TimestampedMessageParser extends MessageParser implements 
     }
 
     static String usingMinuteFormat(SecorConfig config) {
-        return config.getString("partitioner.granularity.min.format", "mm");
+        return config.getString("partitioner.granularity.minute.format", "mm");
     }
 
     static String usingDatePrefix(SecorConfig config) {

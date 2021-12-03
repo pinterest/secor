@@ -18,7 +18,11 @@
  */
 package com.pinterest.secor.consumer;
 
-import com.pinterest.secor.common.*;
+import com.pinterest.secor.common.DeterministicUploadPolicyTracker;
+import com.pinterest.secor.common.FileRegistry;
+import com.pinterest.secor.common.OffsetTracker;
+import com.pinterest.secor.common.SecorConfig;
+import com.pinterest.secor.common.ShutdownHookRegistry;
 import com.pinterest.secor.message.Message;
 import com.pinterest.secor.message.ParsedMessage;
 import com.pinterest.secor.monitoring.MetricCollector;
@@ -34,10 +38,9 @@ import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.uploader.Uploader;
 import com.pinterest.secor.util.ReflectionUtil;
 import com.pinterest.secor.writer.MessageWriter;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * Consumer is a top-level component coordinating reading, writing, and uploading Kafka log
@@ -51,6 +54,7 @@ import java.io.IOException;
  */
 public class Consumer extends Thread {
     private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);
+    private static final double DECAY = 0.999;
 
     protected SecorConfig mConfig;
     protected MetricCollector mMetricCollector;
@@ -66,7 +70,8 @@ public class Consumer extends Thread {
 
     // TODO(pawel): we should keep a count per topic partition.
     private boolean isLegacyConsumer;
-    protected double mUnparsableMessages;
+    private final double mMaxBadMessages;
+    protected double mBadMessages;
     // If we aren't configured to upload on shutdown, then don't bother to check
     // the volatile variable.
     private boolean mUploadOnShutdown;
@@ -77,6 +82,7 @@ public class Consumer extends Thread {
         mConfig = config;
         mMetricCollector = metricCollector;
         isLegacyConsumer = true;
+        mMaxBadMessages = config.getMaxBadMessages();
     }
 
     private void init() throws Exception {
@@ -86,7 +92,7 @@ public class Consumer extends Thread {
                 mConfig.getMaxFileTimestampRangeMillis(), mConfig.getMaxInputPayloadSizeBytes()
             );
         } else {
-          mDeterministicUploadPolicyTracker = null;
+            mDeterministicUploadPolicyTracker = null;
         }
         mKafkaMessageIterator = KafkaMessageIteratorFactory.getIterator(mConfig.getKafkaMessageIteratorClass(), mConfig);
         mMessageReader = new MessageReader(mConfig, mOffsetTracker, mKafkaMessageIterator);
@@ -105,7 +111,7 @@ public class Consumer extends Thread {
         mMessageWriter = new MessageWriter(mConfig, mOffsetTracker, fileRegistry, mDeterministicUploadPolicyTracker);
         mMessageParser = ReflectionUtil.createMessageParser(mConfig.getMessageParserClass(), mConfig);
         mMessageTransformer = ReflectionUtil.createMessageTransformer(mConfig.getMessageTransformerClass(), mConfig);
-        mUnparsableMessages = 0.;
+        mBadMessages = 0.;
 
         mUploadOnShutdown = mConfig.getUploadOnShutdown();
         if (mUploadOnShutdown) {
@@ -146,8 +152,7 @@ public class Consumer extends Thread {
                 // init() cannot be called in the constructor since it contains logic dependent on the
                 // thread id.
                 init();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw new RuntimeException("Failed to initialize the consumer", e);
             }
             // check upload policy every N seconds or 10,000 messages/consumer timeouts
@@ -210,11 +215,7 @@ public class Consumer extends Thread {
         }
         if (rawMessage != null) {
             // Before parsing, update the offset and remove any redundant data
-            try {
-                mMessageWriter.adjustOffset(rawMessage, isLegacyConsumer);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to adjust offset.", e);
-            }
+            adjustOffsets(rawMessage);
             ParsedMessage parsedMessage = null;
             try {
                 Message transformedMessage = mMessageTransformer.transform(rawMessage);
@@ -223,37 +224,12 @@ public class Consumer extends Thread {
                 }
 
                 parsedMessage = mMessageParser.parse(transformedMessage);
-                final double DECAY = 0.999;
-                mUnparsableMessages *= DECAY;
-            } catch (Throwable e) {
-                mMetricCollector.increment("consumer.message_errors.count", rawMessage.getTopic());
 
-                mUnparsableMessages++;
-                final double MAX_UNPARSABLE_MESSAGES = 1000.;
-                if (mUnparsableMessages > MAX_UNPARSABLE_MESSAGES) {
-                    throw new RuntimeException("Failed to parse message " + rawMessage, e);
+                if (parsedMessage != null) {
+                    writeMessage(rawMessage, parsedMessage);
                 }
-                LOG.warn("Failed to parse message {}", rawMessage, e);
-            }
-
-            if (parsedMessage != null) {
-                try {
-                    mMessageWriter.write(parsedMessage);
-
-                    mMetricCollector.metric("consumer.message_size_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
-                    mMetricCollector.increment("consumer.throughput_bytes", rawMessage.getPayload().length, rawMessage.getTopic());
-                } catch (Exception e) {
-                    // Log the full stringification of parsedMessage at DEBUG level, but include only a truncated
-                    // version in the thrown exception, since messages can be ginormous and this exception often
-                    // just indicates an IO error unrelated to the message content.
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("Failed to write message " + parsedMessage, e);
-                    }
-                    throw new RuntimeException("Failed to write message " + parsedMessage.toTruncatedString(), e);
-                }
-                if (mDeterministicUploadPolicyTracker != null) {
-                  mDeterministicUploadPolicyTracker.track(rawMessage);
-                }
+            } catch (Exception e) {
+                handleWriteError(rawMessage, parsedMessage, e);
             }
         }
         return true;
@@ -266,5 +242,37 @@ public class Consumer extends Thread {
      */
     public OffsetTracker getOffsetTracker() {
         return this.mOffsetTracker;
+    }
+
+    private void adjustOffsets(Message rawMessage) {
+        try {
+            mMessageWriter.adjustOffset(rawMessage, isLegacyConsumer);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to adjust offset.", e);
+        }
+    }
+
+    private void writeMessage(Message rawMessage, ParsedMessage parsedMessage) throws Exception {
+        mMessageWriter.write(parsedMessage);
+        mBadMessages *= DECAY;
+        mMetricCollector.metric("consumer.message_size_bytes", rawMessage.getPayload().length,
+                rawMessage.getTopic());
+        mMetricCollector.increment("consumer.throughput_bytes", rawMessage.getPayload().length,
+                rawMessage.getTopic());
+
+        if (mDeterministicUploadPolicyTracker != null) {
+            mDeterministicUploadPolicyTracker.track(rawMessage);
+        }
+    }
+
+    private void handleWriteError(Message rawMessage, ParsedMessage parsedMessage, Exception exception) {
+        mMetricCollector.increment("consumer.message_errors.count", rawMessage.getTopic());
+        mBadMessages++;
+        if (mMaxBadMessages != -1 && mBadMessages > mMaxBadMessages) {
+            throw new RuntimeException("Failed to write message " + rawMessage, exception);
+        }
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Failed to write message raw: {}; parsed: {}", rawMessage, parsedMessage, exception);
+        }
     }
 }

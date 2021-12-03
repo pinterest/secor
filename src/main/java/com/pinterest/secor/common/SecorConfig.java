@@ -269,6 +269,10 @@ public class SecorConfig {
         return getInt("secor.consumer.threads");
     }
 
+    public int getMaxBadMessages() {
+        return getInt("secor.consumer.max_bad_messages", 1000);
+    }
+
     public long getMaxFileSizeBytes() {
         return getLong("secor.max.file.size.bytes");
     }

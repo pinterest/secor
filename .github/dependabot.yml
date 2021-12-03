@@ -1,0 +1,54 @@
+version: 2
+updates:
+- package-ecosystem: maven
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "13:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: com.amazonaws:aws-java-sdk-s3
+    versions:
+    - 1.11.1002
+    - 1.11.947
+    - 1.11.977
+    - 1.11.982
+    - 1.11.993
+  - dependency-name: com.fasterxml.jackson.core:jackson-databind
+    versions:
+    - 2.12.3
+  - dependency-name: org.apache.thrift:libthrift
+    versions:
+    - 0.14.0
+  - dependency-name: net.minidev:json-smart
+    versions:
+    - 2.4.4
+    - 2.4.5
+  - dependency-name: org.apache.kafka:kafka_2.11
+    versions:
+    - 5.5.4-ce
+  - dependency-name: com.fasterxml.jackson.module:jackson-module-scala_2.11
+    versions:
+    - 2.12.2
+    - 2.12.3
+  - dependency-name: com.amazonaws:aws-java-sdk-sts
+    versions:
+    - 1.11.944
+    - 1.11.977
+    - 1.11.982
+    - 1.11.990
+    - 1.11.992
+    - 1.11.993
+    - 1.11.995
+  - dependency-name: com.twitter:scrooge-maven-plugin
+    versions:
+    - 21.2.0
+    - 21.3.0
+  - dependency-name: io.confluent:kafka-avro-serializer
+    versions:
+    - 6.1.0
+    - 6.1.1
+  - dependency-name: org.apache.kafka:kafka-clients
+    versions:
+    - 6.1.0-ce
+    - 6.1.1-ce

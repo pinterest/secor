@@ -66,6 +66,7 @@ public class Uploader {
     protected String mTopicFilter;
 
     private boolean isOffsetsStorageKafka = false;
+    private boolean isOffsetsStorageZookeeper = false;
 
 
     /**
@@ -104,9 +105,13 @@ public class Uploader {
             isOffsetsStorageKafka = true;
         }
         mUploadLastSeenOffset = mConfig.getUploadLastSeenOffset();
+        if (mConfig.getOffsetsStorage().equals(SecorConstants.KAFKA_OFFSETS_STORAGE_ZK) || mConfig.getDualCommitEnabled().equals("true")) {
+            isOffsetsStorageZookeeper = true;
+        }
     }
 
     protected void uploadFiles(TopicPartition topicPartition) throws Exception {
+        LOG.debug("Uploading for: " + topicPartition);
         long committedOffsetCount = mOffsetTracker.getTrueCommittedOffsetCount(topicPartition);
         long lastSeenOffset = mOffsetTracker.getLastSeenOffset(topicPartition);
 
@@ -122,10 +127,10 @@ public class Uploader {
         mZookeeperConnector.lock(lockPath);
         try {
             // Check if the committed offset has changed.
-            long zookeeperCommittedOffsetCount = mZookeeperConnector.getCommittedOffsetCount(
-                    topicPartition);
-            if (zookeeperCommittedOffsetCount == committedOffsetCount) {
-                if (mUploadLastSeenOffset) {
+            long remoteComittedOffsetCount = getRemoteComittedOffsetCount(topicPartition);
+            if (remoteComittedOffsetCount == committedOffsetCount) {
+                //This is probably not possible in Kafka without zookeeper
+                if (mUploadLastSeenOffset && isOffsetsStorageZookeeper) {
                     long zkLastSeenOffset = mZookeeperConnector.getLastSeenOffsetCount(topicPartition);
                     // If the in-memory lastSeenOffset is less than ZK's, this means there was a failed
                     // attempt uploading for this topic partition and we already have some files uploaded
@@ -171,15 +176,21 @@ public class Uploader {
                 if (mDeterministicUploadPolicyTracker != null) {
                     mDeterministicUploadPolicyTracker.reset(topicPartition);
                 }
-                mZookeeperConnector.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
+
                 mOffsetTracker.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
+
                 if (isOffsetsStorageKafka) {
                     mMessageReader.commit(topicPartition, lastSeenOffset + 1);
                 }
+
+                if (isOffsetsStorageZookeeper) {
+                    mZookeeperConnector.setCommittedOffsetCount(topicPartition, lastSeenOffset + 1);
+                }
+
                 mMetricCollector.increment("uploader.file_uploads.count", paths.size(), topicPartition.getTopic());
             } else {
                 LOG.warn("Zookeeper committed offset didn't match for topic {} partition {}: {} vs {}",
-                         topicPartition.getTopic(), topicPartition.getTopic(), zookeeperCommittedOffsetCount,
+                        topicPartition.getTopic(), topicPartition.getTopic(), remoteComittedOffsetCount,
                          committedOffsetCount);
                 mMetricCollector.increment("uploader.offset_mismatches", topicPartition.getTopic());
             }
@@ -308,16 +319,15 @@ public class Uploader {
                            isRequiredToUploadAtTime(topicPartition);
         }
         if (shouldUpload) {
-            long newOffsetCount = mZookeeperConnector.getCommittedOffsetCount(topicPartition);
+            long newOffsetCount = getRemoteComittedOffsetCount(topicPartition);
             long oldOffsetCount = mOffsetTracker.setCommittedOffsetCount(topicPartition,
                     newOffsetCount);
             long lastSeenOffset = mOffsetTracker.getLastSeenOffset(topicPartition);
             if (oldOffsetCount == newOffsetCount) {
-                LOG.debug("Uploading for: " + topicPartition);
                 uploadFiles(topicPartition);
             } else if (newOffsetCount > lastSeenOffset) {  // && oldOffset < newOffset
                 LOG.debug("last seen offset {} is lower than committed offset count {}. Deleting files in topic {} partition {}",
-                        lastSeenOffset, newOffsetCount,topicPartition.getTopic(), topicPartition.getPartition());
+                        lastSeenOffset, newOffsetCount, topicPartition.getTopic(), topicPartition.getPartition());
                 mMetricCollector.increment("uploader.partition_deletes", topicPartition.getTopic());
                 // There was a rebalancing event and someone committed an offset beyond that of the
                 // current message.  We need to delete the local file.
@@ -343,6 +353,15 @@ public class Uploader {
 
     private boolean activeFileCountExceeded(int fileCount) {
         return mConfig.getMaxActiveFiles() > -1 && fileCount > mConfig.getMaxActiveFiles();
+    }
+
+    private long getRemoteComittedOffsetCount(TopicPartition topicPartition) throws Exception {
+        //If storing offsets in Zookeeper is enabled we are going to always use those offsets.
+        if (isOffsetsStorageZookeeper) {
+            return mZookeeperConnector.getCommittedOffsetCount(topicPartition);
+        } else {
+            return mMessageReader.getCommitedOffsetCount(topicPartition);
+        }
     }
 
     /**
