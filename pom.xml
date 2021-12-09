@@ -801,7 +801,7 @@
                 <dependency>
                     <groupId>org.apache.kafka</groupId>
                     <artifactId>kafka_2.11</artifactId>
-                    <version>1.0.0</version>
+                    <version>5.5.7-ce</version>
                 </dependency>
                 <dependency>
                     <groupId>com.twitter</groupId>
