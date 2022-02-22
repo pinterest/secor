@@ -634,6 +634,7 @@
                 <version>2.22.2</version>
                 <configuration>
                     <useSystemClassLoader>false</useSystemClassLoader>
+                	<forkCount>1.5C</forkCount>
                 </configuration>
             </plugin>
         </plugins>
