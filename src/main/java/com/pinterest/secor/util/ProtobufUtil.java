@@ -219,7 +219,7 @@ public class ProtobufUtil {
             while(null != (cause = result.getCause())  && (result != cause) ) {
                 result = cause;
             }
-            LOG.error("Unable to translate JSON string to protobuf message: {}. Assuming it's a protobuf message", result.getMessage());
+            LOG.warn("Unable to translate JSON string to protobuf message: {}. Assuming it's a protobuf message", result.getMessage());
         }
         return decodeProtobufMessage(topic, payload);
     }
