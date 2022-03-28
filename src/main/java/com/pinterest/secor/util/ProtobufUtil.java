@@ -211,8 +211,15 @@ public class ProtobufUtil {
                 return decodeJsonMessage(topic, payload);
             }
         } catch (InvalidProtocolBufferException e) {
-            //When trimming files, the Uploader will read and then decode messages in protobuf format
-            LOG.debug("Unable to translate JSON string {} to protobuf message", new String(payload, Charsets.UTF_8));
+            // When trimming files, the Uploader will read and then decode messages in protobuf format
+           
+            // json exceptions are forwarded as invalidProtocolBufferException
+            Throwable cause = null; 
+            Throwable result = e;
+            while(null != (cause = result.getCause())  && (result != cause) ) {
+                result = cause;
+            }
+            LOG.warn("Unable to translate JSON string to protobuf message: {}. Assuming it's a protobuf message", result.getMessage());
         }
         return decodeProtobufMessage(topic, payload);
     }

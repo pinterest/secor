@@ -502,9 +502,12 @@ for fkey in ${S3_FILESYSTEMS}; do
         echo "Running tests for Message Type: ${MESSAGE_TYPE} and  ReaderWriter:${READER_WRITERS[${key}]} using filesystem: ${FILESYSTEM_TYPE}"
         if [ ${MESSAGE_TYPE} = "binary" ]; then
             post_stop_and_verity_test "kafka" "true"
-            post_stop_and_verity_test "kafka" "false"
             post_stop_and_verity_test "zookeeper" "true"
             post_stop_and_verity_test "zookeeper" "false"
+            if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
+              post_stop_and_verity_test "kafka" "false"
+            fi
+
         else
             post_stop_and_verity_test "zookeeper" "false"
         fi
