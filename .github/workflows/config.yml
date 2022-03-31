@@ -1,0 +1,37 @@
+name: CI
+
+on: [push, pull_request]
+
+env:
+  PATH: "$PATH:$HOME/.s3cmd SECOR_LOCAL_S3=true S3CMD=2.0.1"
+
+jobs:
+  lint_and_test:
+    runs-on: ubuntu-latest
+    name: test
+    strategy:
+      matrix:
+        mvn_profiles: [
+          'kafka-2.0.0', 'kafka-1.0.0',
+          'kafka-0.10.2.0', 'kafka-0.8.2.1'
+        ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: "setup"
+        run: |
+          wget https://github.com/s3tools/s3cmd/archive/v$S3CMD.tar.gz -O /tmp/s3cmd.tar.gz
+          tar -xzf /tmp/s3cmd.tar.gz -C $HOME
+          mv $HOME/s3cmd-$S3CMD $HOME/.s3cmd
+          cd $HOME/.s3cmd && python setup.py install --user && cd -
+          gem install fakes3 -v 1.2.1
