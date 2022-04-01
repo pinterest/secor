@@ -3,7 +3,6 @@ name: CI
 on: [push, pull_request]
 
 env:
-  PATH: $PATH:$HOME/.s3cmd
   SECOR_LOCAL_S3: true
   S3CMD: 2.0.1
 
@@ -41,6 +40,7 @@ jobs:
       - name: "run"
         env:
           MVN_PROFILE: ${{ matrix.mvn_profiles }}
+          PATH: $PATH:$HOME/.s3cmd
         run: |
           make dependency_tree
           make unit
