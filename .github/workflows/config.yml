@@ -24,6 +24,10 @@ jobs:
           distribution: 'temurin'
           java-version: '8'
           cache: 'maven'
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7
+          bundler-cache: true
       - uses: actions/cache@v1
         with:
           path: ~/.m2/repository
