@@ -44,8 +44,8 @@ jobs:
       - name: "run"
         env:
           MVN_PROFILE: ${{ matrix.mvn_profiles }}
-          PATH: $PATH:$HOME/.s3cmd
         run: |
+          PATH=$PATH:$HOME/.s3cmd
           make dependency_tree
           make unit
           make integration
