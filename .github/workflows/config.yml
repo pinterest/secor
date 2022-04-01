@@ -34,7 +34,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: "setup"
+      - name: "install dependencies"
         run: |
           wget https://github.com/s3tools/s3cmd/archive/v$S3CMD.tar.gz -O /tmp/s3cmd.tar.gz
           tar -xzf /tmp/s3cmd.tar.gz -C $HOME
