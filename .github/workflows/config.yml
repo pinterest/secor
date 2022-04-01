@@ -30,4 +30,3 @@ jobs:
         run: |
           make dependency_tree
           make unit
-          make integration
