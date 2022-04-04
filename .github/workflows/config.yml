@@ -45,7 +45,7 @@ jobs:
         env:
           MVN_PROFILE: ${{ matrix.mvn_profiles }}
         run: |
-          PATH=$PATH:$HOME/.s3cmd
+          export PATH=$PATH:$HOME/.s3cmd
           echo "127.0.0.1 test-bucket.localhost" | sudo tee -a /etc/hosts
           make dependency_tree
           make unit
