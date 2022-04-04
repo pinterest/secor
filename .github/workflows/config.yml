@@ -33,7 +33,7 @@ jobs:
       - name: Python 3.5
         uses: actions/setup-python@v3
         with:
-          python-version: 3.5.2
+          python-version: 3.5.4
       - uses: actions/cache@v1
         with:
           path: ~/.m2/repository
