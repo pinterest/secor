@@ -47,7 +47,6 @@ jobs:
           tar -xzf /tmp/s3cmd.tar.gz -C $HOME
           mv $HOME/s3cmd-$S3CMD $HOME/.s3cmd
           cd $HOME/.s3cmd && python setup.py install --user && cd -
-          pip install python-magic-bin
           gem install fakes3 -v 1.2.1
       - name: "run"
         env:
