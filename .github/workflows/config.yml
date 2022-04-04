@@ -28,6 +28,9 @@ jobs:
         with:
           ruby-version: 2.7
           bundler-cache: true
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
       - uses: actions/cache@v1
         with:
           path: ~/.m2/repository
