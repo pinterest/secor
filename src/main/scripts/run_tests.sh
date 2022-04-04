@@ -61,7 +61,7 @@ S3_FILESYSTEMS=${S3_FILESYSTEMS:-s3n}
 
 # The minimum wait time is 10 seconds plus delta.  Secor is configured to upload files older than
 # 10 seconds and we need to make sure that everything ends up on s3 before starting verification.
-WAIT_TIME=${SECOR_WAIT_TIME:-130}
+WAIT_TIME=${SECOR_WAIT_TIME:-30}
 BASE_DIR=$(dirname $0)
 CONF_DIR=${BASE_DIR}/..
 
