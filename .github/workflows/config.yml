@@ -34,7 +34,7 @@ jobs:
       - name: Python 3.7
         uses: actions/setup-python@v3
         with:
-          python-version: 3.7
+          python-version: 2.7.18
       - uses: actions/cache@v1
         with:
           path: ~/.m2/repository
