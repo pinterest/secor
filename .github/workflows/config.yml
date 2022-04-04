@@ -22,7 +22,7 @@ jobs:
       - uses: joschi/setup-jdk@v2
         with:
           java-version: '11'
-          release: 'openjdk8'
+          release: 'jdk8u172-b00-20180716180'
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.7
