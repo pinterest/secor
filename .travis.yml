@@ -10,12 +10,9 @@ addons:
     - test-bucket.localhost
 env:
   global:
-    - PATH=$PATH:$HOME/.s3cmd SECOR_LOCAL_S3=true S3CMD=2.0.1
+    - PATH=$PATH:$HOME/.s3cmd SECOR_LOCAL_S3=true S3CMD=2.2.0
   matrix:
     - MVN_PROFILE=kafka-2.0.0
-    - MVN_PROFILE=kafka-1.0.0
-    - MVN_PROFILE=kafka-0.10.2.0
-    - MVN_PROFILE=kafka-0.8.2.1
 jdk:
   - openjdk8
 before_install:
