@@ -137,12 +137,12 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java-util</artifactId>
-            <version>3.17.3</version>
+            <version>3.20.0</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.191</version>
+            <version>1.12.192</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
