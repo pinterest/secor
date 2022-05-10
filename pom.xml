@@ -385,6 +385,11 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
             <version>1.5.5</version>
         </dependency>
+        <dependency>
+            <groupId>com.fullcontact.platform</groupId>
+            <artifactId>protobufs</artifactId>
+            <version>21.11.11</version>
+        </dependency>
     </dependencies>
 
     <build>
