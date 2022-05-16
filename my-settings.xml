@@ -3,7 +3,7 @@
     <servers>
         <server>
             <id>full-contact</id>
-            <username>${env.ARTIFACTORY_USER}</username>
+            <username>${env.ARTIFACTORY_USERNAME}</username>
             <password>${env.ARTIFACTORY_PASSWORD}</password>
         </server>
     </servers>
