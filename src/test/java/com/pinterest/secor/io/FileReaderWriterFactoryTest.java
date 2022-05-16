@@ -111,6 +111,17 @@ public class FileReaderWriterFactoryTest extends TestCase {
     private void mockDelimitedTextFileWriter(boolean isCompressed) throws Exception {
         Path fsPath = (!isCompressed) ? new Path(PATH) : new Path(PATH_GZ);
 
+        // This code chunk makes a dummy mock that invokes the argument matcher for FileSystem to avoid order dependency
+        PowerMockito.mockStatic(SequenceFile.class);
+        SequenceFile.Writer dummyWriter = Mockito
+                .mock(SequenceFile.Writer.class);
+        Mockito.when(
+                SequenceFile.createWriter(Mockito.any(FileSystem.class),
+                        Mockito.any(Configuration.class),
+                        Mockito.eq(fsPath), Mockito.eq(LongWritable.class),
+                        Mockito.eq(BytesWritable.class)))
+                .thenReturn(dummyWriter);
+
         GzipCodec codec = PowerMockito.mock(GzipCodec.class);
         PowerMockito.whenNew(GzipCodec.class).withNoArguments()
                 .thenReturn(codec);
