@@ -100,7 +100,7 @@ public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterF
 
     protected class ProtobufParquetFileWriter implements FileWriter {
 
-        private ProtoParquetWriter<Message> writer;
+        private WriteCompliantProtoParquetWriter<Message> writer;
         private String topic;
 
         public ProtobufParquetFileWriter(LogFilePath logFilePath, CompressionCodec codec) throws IOException {
@@ -108,7 +108,7 @@ public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterF
             CompressionCodecName codecName = CompressionCodecName
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
-            writer = new ProtoParquetWriter<Message>(path, protobufUtil.getMessageClass(topic), codecName,
+            writer = new WriteCompliantProtoParquetWriter<Message>(path, protobufUtil.getMessageClass(topic), codecName,
                     blockSize, pageSize, enableDictionary, validating);
         }
 
