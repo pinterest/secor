@@ -36,6 +36,7 @@ import org.apache.parquet.schema.LogicalTypeAnnotation.MapLogicalTypeAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// Copied from ProtoWriteSupport in parquet-mr, but with write compliant schema set to true
 public class WriteCompliantProtoWriteSupport<T extends MessageOrBuilder> extends WriteSupport<T> {
     private static final Logger LOG = LoggerFactory.getLogger(WriteCompliantProtoWriteSupport.class);
     public static final String PB_CLASS_WRITE = "parquet.proto.writeClass";

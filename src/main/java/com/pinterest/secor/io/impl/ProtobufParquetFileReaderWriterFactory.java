@@ -108,6 +108,7 @@ public class ProtobufParquetFileReaderWriterFactory implements FileReaderWriterF
             CompressionCodecName codecName = CompressionCodecName
                     .fromCompressionCodec(codec != null ? codec.getClass() : null);
             topic = logFilePath.getTopic();
+            // using write compliant parquet writer
             writer = new WriteCompliantProtoParquetWriter<Message>(path, protobufUtil.getMessageClass(topic), codecName,
                     blockSize, pageSize, enableDictionary, validating);
         }
