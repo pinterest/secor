@@ -399,7 +399,7 @@
         <dependency>
             <groupId>com.fullcontact.platform</groupId>
             <artifactId>protobufs</artifactId>
-            <version>21.10.36</version>
+            <version>22.3.17</version>
         </dependency>
     </dependencies>
 
