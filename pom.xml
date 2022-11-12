@@ -635,6 +635,15 @@
                 <configuration>
                     <useSystemClassLoader>false</useSystemClassLoader>
                 	<forkCount>1.5C</forkCount>
+			<argLine>
+                        --illegal-access=permit
+                        --add-opens java.base/java.io=ALL-UNNAMED
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.net=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                        --add-opens java.base/java.util.stream=ALL-UNNAMED
+                        --add-opens java.base/java.util.regex=ALL-UNNAMED
+                    </argLine>
                 </configuration>
             </plugin>
         </plugins>
