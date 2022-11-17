@@ -143,7 +143,7 @@ java -ea -Dlog4j.configuration=log4j.prod.properties -Dconfig=secor.prod.backup.
 
 ## Secor configuration for Kubernetes/GKE environment
 
-Extra Setup instruction for Kubernetes/GKE environment is available in [DESIGN.kubernetes.md](DESIGN.kubernetes.md).
+Extra Setup instruction for Kubernetes/GKE environment is available in [README.kubernetes.md](README.kubernetes.md).
 
 ## Secor IAM role / Instance profile authentication
 in order to make AWS instance profile authentication work, perform the following steps:
