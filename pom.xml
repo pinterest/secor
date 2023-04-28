@@ -142,7 +142,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.211</version>
+            <version>1.12.458</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
@@ -202,7 +202,7 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs-client</artifactId>
-            <version>2.9.2</version>
+            <version>3.3.5</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
