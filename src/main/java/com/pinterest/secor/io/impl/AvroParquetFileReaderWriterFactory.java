@@ -134,8 +134,8 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
                 if (record != null){
                     writer.write(record);
                 }
-            } catch (AvroTypeException ex){
-                LOG.warn("Skipped record due to avro type exception: " + ex.getMessage());
+            } catch (Exception ex){
+                LOG.warn("Skipped record due to deserialization exception: " + ex.getMessage());
             }
         }
 
