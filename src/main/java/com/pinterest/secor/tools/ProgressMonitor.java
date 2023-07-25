@@ -256,11 +256,17 @@ public class ProgressMonitor {
     }
 
     private long getTimestamp(Message message) throws Exception {
-        if (mMessageParser instanceof TimestampedMessageParser) {
-            return ((TimestampedMessageParser)mMessageParser).getTimestampMillis(message);
-        } else {
+        try {
+            if (mMessageParser instanceof TimestampedMessageParser) {
+                return ((TimestampedMessageParser)mMessageParser).getTimestampMillis(message);
+            } else {
+                return -1;
+            }
+        } catch (Exception ex){
+            LOG.warn("Could not parse timestamp, returning -1: " + ex.getMessage());
             return -1;
         }
+
     }
 
     /**

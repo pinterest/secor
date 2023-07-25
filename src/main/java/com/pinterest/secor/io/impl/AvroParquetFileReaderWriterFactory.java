@@ -37,6 +37,7 @@ import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.avro.AvroTypeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,10 +128,14 @@ public class AvroParquetFileReaderWriterFactory implements FileReaderWriterFacto
 
         @Override
         public void write(KeyValue keyValue) throws IOException {
-            GenericRecord record = schemaRegistry.deserialize(topic, keyValue.getValue());
-            LOG.trace("Writing record {}", record);
-            if (record != null){
-                writer.write(record);
+            try{
+                GenericRecord record = schemaRegistry.deserialize(topic, keyValue.getValue());
+                LOG.trace("Writing record {}", record);
+                if (record != null){
+                    writer.write(record);
+                }
+            } catch (AvroTypeException ex){
+                LOG.warn("Skipped record due to avro type exception: " + ex.getMessage());
             }
         }
 
