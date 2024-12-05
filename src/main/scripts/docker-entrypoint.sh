@@ -121,6 +121,11 @@ if [ ! -z "$SECOR_MESSAGE_PARSER" ]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.message.parser.class=$SECOR_MESSAGE_PARSER"
     echo "secor.message.parser.class=$SECOR_MESSAGE_PARSER"
 fi
+
+if [ ! -z "$KAFKA_AUTH_ENABLED" ]; then
+    sed -i -r "s/KUSERNAME/${KAFKA_AUTH_SASL_USERNAME}/g" /opt/secor/secor.common.properties
+    sed -i -r "s/KPASSWORD/${KAFKA_AUTH_SASL_PASSWORD}/g" /opt/secor/secor.common.properties
+fi
 SECOR_CONFIG="$SECOR_CONFIG $SECOR_EXTRA_OPTS"
 
 
