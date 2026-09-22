@@ -1,5 +1,9 @@
 # Pinterest Secor
 
+### Deprecated
+This repository is no longer maintained and will be archived on 2026-09-25. No further issues, pull requests, or updates will be accepted. The existing code and history will remain available for reference.
+
+
 [![Build Status](https://travis-ci.org/pinterest/secor.svg)](https://travis-ci.org/pinterest/secor)
 
 Secor is a service persisting [Kafka] logs to [Amazon S3], [Google Cloud Storage], [Microsoft Azure Blob Storage] and [Openstack Swift].
